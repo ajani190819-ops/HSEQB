@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>QuizSync Pro</title>
+  <title>HSE Quiz Bowl Tracker</title>
   <style>
     :root {
       --primary-color: #667eea;
@@ -69,7 +69,7 @@
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: linear-gradient(135deg, var(--background-start) 0%, var(--background-end) 100%);
       min-height: 100vh;
-      padding: 20px;
+      padding: 10px;
     }
     
     .container {
@@ -85,22 +85,35 @@
     .header {
       background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
       color: white;
-      padding: 30px;
+      padding: 20px;
       text-align: center;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
     }
     
     .header h1 {
-      font-size: 2.5em;
-      margin-bottom: 10px;
+      font-size: clamp(1.5em, 5vw, 2.5em);
+      flex: 1;
+      min-width: 200px;
+    }
+    
+    .header-controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
     }
     
     .content {
-      padding: 30px;
+      padding: clamp(15px, 5vw, 30px);
     }
     
     .section {
-      margin-bottom: 30px;
-      padding: 20px;
+      margin-bottom: 20px;
+      padding: clamp(15px, 4vw, 20px);
       background: var(--section-bg);
       border-radius: 8px;
       border: 1px solid var(--border-color);
@@ -110,7 +123,7 @@
     .section h2 {
       color: var(--primary-color);
       margin-bottom: 15px;
-      font-size: 1.5em;
+      font-size: clamp(1.2em, 4vw, 1.5em);
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -151,6 +164,7 @@
       margin-bottom: 5px;
       font-weight: 600;
       color: var(--text-color);
+      font-size: clamp(0.9em, 2vw, 1em);
     }
     
     .input-group input, .input-group textarea, .input-group select {
@@ -173,12 +187,13 @@
     .player-pool-item {
       display: inline-block;
       margin: 5px;
-      padding: 5px 10px;
+      padding: 8px 12px;
       background: var(--hover-bg);
       border-radius: 4px;
       font-size: 0.9em;
       color: var(--text-color);
       border: 1px solid var(--border-color);
+      word-break: break-word;
     }
     
     .player-pool-item .remove {
@@ -203,17 +218,22 @@
       background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
       color: white;
       border: none;
-      padding: 12px 24px;
+      padding: clamp(8px, 2vw, 12px) clamp(16px, 4vw, 24px);
       border-radius: 6px;
-      font-size: 1em;
+      font-size: clamp(0.85em, 2vw, 1em);
       cursor: pointer;
       transition: transform 0.2s, box-shadow 0.2s;
       font-weight: 600;
+      white-space: nowrap;
     }
     
     .button:hover {
       transform: translateY(-2px);
       box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    .button:active {
+      transform: translateY(0);
     }
     
     .button-secondary {
@@ -232,9 +252,9 @@
       background: var(--card-bg);
       color: var(--primary-color);
       border: 2px solid var(--primary-color);
-      padding: 12px 20px;
+      padding: clamp(8px, 2vw, 12px) clamp(12px, 3vw, 20px);
       border-radius: 6px;
-      font-size: 1em;
+      font-size: clamp(0.8em, 1.8vw, 1em);
       cursor: pointer;
       transition: all 0.2s;
       font-weight: 600;
@@ -248,14 +268,14 @@
     
     .point-type-buttons, .category-buttons {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
       gap: 10px;
     }
     
     .player-buttons {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 8px;
     }
     
     .team-section {
@@ -269,23 +289,24 @@
     
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 15px;
       margin-top: 20px;
     }
     
     .stat-card {
       background: var(--card-bg);
-      padding: 20px;
+      padding: 15px;
       border-radius: 8px;
       border-left: 4px solid var(--primary-color);
       box-shadow: var(--shadow-sm);
       border: 1px solid var(--border-color);
+      font-size: clamp(0.85em, 2vw, 1em);
     }
     
     .team-stat-card {
       background: var(--card-bg);
-      padding: 20px;
+      padding: 15px;
       border-radius: 8px;
       border-left: 4px solid var(--secondary-color);
       box-shadow: var(--shadow-sm);
@@ -293,30 +314,54 @@
       grid-column: 1 / -1;
     }
     
-    .player-stat-card {
-      background: var(--card-bg);
-      padding: 15px;
-      border-radius: 6px;
-      border-left: 3px solid var(--primary-color);
+    .stat-card h3, .team-stat-card h3 {
+      color: var(--primary-color);
       margin-bottom: 10px;
+      font-size: clamp(1em, 2.5vw, 1.2em);
+    }
+    
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    .stat-row:last-child {
+      border-bottom: none;
+    }
+    
+    .stat-label {
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+    
+    .stat-value {
+      color: var(--primary-color);
+      font-weight: bold;
     }
     
     .log-entry {
-      background: var(--card-bg);
-      padding: 15px;
-      margin-bottom: 10px;
-      border-radius: 6px;
-      border-left: 4px solid var(--success-color);
+      padding: 10px;
+      background: var(--hover-bg);
+      margin: 8px 0;
+      border-radius: 4px;
+      border-left: 3px solid var(--primary-color);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border: 1px solid var(--border-color);
+      flex-wrap: wrap;
+      gap: 5px;
+      font-size: clamp(0.8em, 2vw, 0.95em);
     }
     
     .log-container {
       max-height: 400px;
       overflow-y: auto;
-      padding: 5px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 10px;
+      background: var(--card-bg);
     }
     
     .button-group {
@@ -328,9 +373,8 @@
     .switch {
       position: relative;
       display: inline-block;
-      width: 60px;
-      height: 30px;
-      margin-right: 10px;
+      width: 50px;
+      height: 24px;
     }
     
     .switch input {
@@ -346,20 +390,20 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background-color: var(--input-border);
-      transition: .4s;
-      border-radius: 30px;
+      background-color: #ccc;
+      transition: 0.4s;
+      border-radius: 24px;
     }
     
     .slider:before {
       position: absolute;
       content: "";
-      height: 22px;
-      width: 22px;
-      left: 4px;
-      bottom: 4px;
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
       background-color: white;
-      transition: .4s;
+      transition: 0.4s;
       border-radius: 50%;
     }
     
@@ -368,48 +412,175 @@
     }
     
     input:checked + .slider:before {
-      transform: translateX(30px);
+      transform: translateX(26px);
     }
     
     .theme-controls {
       display: flex;
       align-items: center;
-      gap: 20px;
-      margin-bottom: 20px;
-      padding: 15px;
+      gap: 10px;
+    }
+    
+    .session-info {
       background: var(--card-bg);
+      padding: 15px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      margin-bottom: 20px;
+      font-size: clamp(0.85em, 2vw, 1em);
+    }
+    
+    .session-info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 5px 0;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+    
+    .session-controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      animation: fadeIn 0.3s ease;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    .modal-content {
+      background-color: var(--card-bg);
+      margin: auto;
+      padding: 20px;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 500px;
+      max-height: 80vh;
+      overflow-y: auto;
+      animation: slideIn 0.3s ease;
+    }
+    
+    @keyframes slideIn {
+      from { transform: translateY(-50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    
+    .modal-header h2 {
+      color: var(--primary-color);
+      margin: 0;
+    }
+    
+    .close-modal {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: var(--text-color);
+    }
+    
+    .sessions-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+    }
+    
+    .session-card {
+      background: var(--section-bg);
+      padding: 15px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    
+    .session-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .session-card-title {
+      color: var(--primary-color);
+      font-weight: bold;
+      margin-bottom: 8px;
+      font-size: clamp(0.95em, 2vw, 1.1em);
+    }
+    
+    .session-card-details {
+      font-size: 0.85em;
+      color: var(--text-secondary);
+      margin-bottom: 10px;
+    }
+    
+    .session-card-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    
+    .session-card-actions button {
+      flex: 1;
+      min-width: 80px;
+    }
+    
+    .export-options {
+      margin-top: 15px;
+      padding: 15px;
+      background: var(--section-bg);
       border-radius: 8px;
       border: 1px solid var(--border-color);
     }
     
-    .theme-toggle {
+    .export-options label {
       display: flex;
       align-items: center;
+      margin: 10px 0;
+      cursor: pointer;
     }
     
-    .theme-toggle-label {
-      font-weight: 600;
-      color: var(--text-color);
+    .export-options input[type="checkbox"] {
+      margin-right: 10px;
+      width: auto;
+      cursor: pointer;
     }
     
     #playerPoolDisplay {
-      background: var(--input-bg);
-      padding: 15px;
+      padding: 10px;
+      min-height: 40px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
       border-radius: 6px;
-      margin-bottom: 20px;
-      max-height: 150px;
-      overflow-y: auto;
-      border: 1px solid var(--input-border);
-      color: var(--text-color);
     }
     
     .team-section input[type="text"] {
+      padding: 8px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      width: 100%;
       background: var(--input-bg);
       color: var(--input-text);
-      border: 2px solid var(--input-border);
-      padding: 8px 12px;
-      border-radius: 6px;
-      font-size: 0.9em;
     }
     
     .team-section input[type="text"]:focus {
@@ -423,147 +594,111 @@
     
     ::-webkit-scrollbar-track {
       background: var(--section-bg);
-      border-radius: 4px;
+      border-radius: 10px;
     }
     
     ::-webkit-scrollbar-thumb {
       background: var(--primary-color);
-      border-radius: 4px;
+      border-radius: 10px;
     }
     
     ::-webkit-scrollbar-thumb:hover {
       background: var(--secondary-color);
     }
     
-    .value {
-      font-size: 1.5em;
-      font-weight: bold;
-      color: var(--primary-color);
-      margin-top: 10px;
-    }
-    
-    .team-value {
-      font-size: 1.8em;
-      font-weight: bold;
-      color: var(--secondary-color);
-      margin-top: 10px;
-    }
-    
-    .stat-card h3 {
-      color: var(--text-color);
-      margin-bottom: 10px;
-    }
-    
-    .team-stat-card h3 {
-      color: var(--secondary-color);
-      margin-bottom: 10px;
-      font-size: 1.3em;
-    }
-    
-    .stat-row {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 5px;
-    }
-    
-    .stat-label {
-      color: var(--text-secondary);
-      font-size: 0.9em;
-    }
-    
-    .stat-value {
-      font-weight: bold;
-      color: var(--primary-color);
-    }
-    
-    .warning-stat {
-      color: var(--warning-color);
-    }
-    
-    .success-stat {
+    .auto-save-indicator {
+      font-size: 0.75em;
       color: var(--success-color);
+      margin-left: 10px;
     }
     
-    .data-import-export {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 20px;
-      margin-bottom: 20px;
-    }
-    
-    .import-export-card {
-      background: var(--card-bg);
-      padding: 20px;
-      border-radius: 8px;
-      border: 1px solid var(--border-color);
-    }
-    
-    .team-players-container {
-      margin-top: 10px;
-      padding: 15px;
-      background: var(--section-bg);
-      border-radius: 6px;
-      border: 1px solid var(--border-color);
-    }
-    
-    .category-section {
-      transition: opacity 0.3s ease, max-height 0.3s ease;
-    }
-    
-    .category-section.hidden {
-      opacity: 0.5;
-      pointer-events: none;
-    }
-    
-    .no-category-note {
-      color: var(--warning-color);
-      font-style: italic;
-      margin-top: 10px;
-      display: none;
-    }
-    
-    .no-category-note.show {
-      display: block;
-    }
-    
-    .file-upload {
-      position: relative;
+    .status-badge {
       display: inline-block;
-      width: 100%;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 0.75em;
+      font-weight: bold;
     }
     
-    .file-upload-label {
-      display: block;
-      padding: 10px;
-      background: var(--input-bg);
-      border: 2px dashed var(--input-border);
-      border-radius: 6px;
-      text-align: center;
-      cursor: pointer;
-      transition: border-color 0.3s;
-      color: var(--text-color);
+    .status-badge.active {
+      background: var(--success-color);
+      color: white;
     }
     
-    .file-upload-label:hover {
-      border-color: var(--primary-color);
+    .status-badge.inactive {
+      background: var(--warning-color);
+      color: #333;
     }
     
-    .export-options {
-      padding: 10px 0;
-    }
-    
-    .export-options label {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
-      cursor: pointer;
-      color: var(--text-color);
-    }
-    
-    .export-options input[type="checkbox"] {
-      width: auto;
-      cursor: pointer;
+    @media (max-width: 768px) {
+      body {
+        padding: 5px;
+      }
+      
+      .header {
+        flex-direction: column;
+        text-align: center;
+      }
+      
+      .header h1 {
+        width: 100%;
+      }
+      
+      .header-controls {
+        width: 100%;
+        justify-content: center;
+      }
+      
+      .content {
+        padding: 12px;
+      }
+      
+      .section {
+        padding: 12px;
+        margin-bottom: 15px;
+      }
+      
+      .point-type-buttons, .category-buttons {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      
+      .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      
+      .stat-card {
+        padding: 12px;
+      }
+      
+      .button-group {
+        flex-direction: column;
+      }
+      
+      .button-group button {
+        width: 100%;
+      }
+      
+      .button {
+        width: 100%;
+      }
+      
+      .log-container {
+        max-height: 300px;
+      }
+      
+      .player-buttons {
+        gap: 6px;
+      }
+      
+      .button-point-type, .button-category, .button-player {
+        flex: 1;
+        min-width: 120px;
+      }
+      
+      .sessions-list {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -571,232 +706,373 @@
   <div id="app" class="container">
     <!-- Header -->
     <div class="header">
-      <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 10px;">
-        <span style="font-size: 3em;">⚡</span>
-        <h1 style="margin: 0;">QuizSync Pro</h1>
-      </div>
-      <p style="font-size: 1.1em; opacity: 0.95; margin-bottom: 5px;">Quiz Bowl Scoring & Analytics</p>
-      <div style="margin-top: 15px; padding: 10px 20px; background: rgba(255, 255, 255, 0.2); border-radius: 6px; font-size: 0.9em;">
-        💾 All data saved locally in your browser
+      <h1>🎯 HSE Quiz Bowl Tracker</h1>
+      <div class="header-controls">
+        <div class="theme-controls">
+          <label class="switch">
+            <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode()">
+            <span class="slider"></span>
+          </label>
+          <span>Dark Mode</span>
+        </div>
       </div>
     </div>
     
     <div class="content">
-      <!-- Setup & Configuration -->
+      <!-- Session Management -->
       <div class="section">
-        <h2 onclick="toggleSection('setup')">
-          ⚙️ Setup & Configuration
-          <span class="toggle-icon collapsed" id="setupToggle">▼</span>
-        </h2>
-        <div class="collapsible-content collapsed" id="setupContent">
-          <!-- Dark Mode Toggle -->
-          <div class="theme-controls">
-            <div class="theme-toggle">
-              <label class="switch">
-                <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode()">
-                <span class="slider"></span>
-              </label>
-              <span class="theme-toggle-label">Dark Mode</span>
+        <h2>📋 Current Session <span id="autosaveStatus" class="auto-save-indicator">✓ Auto-saving</span> <span class="toggle-icon">▼</span></h2>
+        <div class="collapsible-content">
+          <div class="session-info">
+            <div class="session-info-row">
+              <span>Session Name:</span>
+              <strong id="sessionName">New Session</strong>
+            </div>
+            <div class="session-info-row">
+              <span>Created:</span>
+              <strong id="sessionCreated">--</strong>
+            </div>
+            <div class="session-info-row">
+              <span>Last Updated:</span>
+              <strong id="sessionLastUpdated">--</strong>
+            </div>
+            <div class="session-info-row">
+              <span>Total Answers Recorded:</span>
+              <strong id="sessionAnswerCount">0</strong>
             </div>
           </div>
-          
-          <h3 style="color: var(--primary-color); margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
-            <span>👥</span> Player Management
-          </h3>
-          
-          <div class="data-import-export">
-            <div class="import-export-card">
-              <h4 style="color: var(--primary-color); margin-bottom: 10px;">Import Players</h4>
-              <p style="color: var(--text-secondary); font-size: 0.9em; margin-bottom: 15px;">
-                Import players from CSV or text file (one name per line or comma-separated)
-              </p>
-              <div class="file-upload">
-                <input type="file" id="playerImportFile" accept=".csv,.txt" onchange="handlePlayerImport(event)" style="display: none;">
-                <label for="playerImportFile" class="file-upload-label">
-                  📁 Choose file to import
-                </label>
-              </div>
-            </div>
-            
-            <div class="import-export-card">
-              <h4 style="color: var(--primary-color); margin-bottom: 10px;">Manual Entry</h4>
-              <div class="input-group">
-                <label>Add Players (comma-separated):</label>
-                <input type="text" id="playerInput" placeholder="e.g., Blake, Davis, Thomas, Rezwan" onkeypress="handlePlayerInputEnter(event)">
-              </div>
-              <div class="button-group" style="margin-top: 10px;">
-                <button class="button" onclick="addToPlayerPool()">Add to Pool</button>
-                <button class="button button-secondary" onclick="clearPlayerPool()">Clear Pool</button>
-              </div>
-            </div>
+          <div class="session-controls">
+            <input type="text" id="newSessionName" placeholder="Enter session name..." style="flex: 1;">
+            <button class="button" onclick="createNewSession()">+ New Session</button>
+            <button class="button button-secondary" onclick="openSessionsModal()">📂 Load Session</button>
           </div>
-          
-          <!-- Player Pool Display -->
-          <div id="playerPoolDisplay">
-            <p style="color: var(--text-secondary); font-style: italic;">No players in pool yet</p>
-          </div>
-          
-          <!-- Teams -->
-          <h3 style="color: var(--primary-color); margin: 30px 0 15px 0; display: flex; align-items: center; gap: 10px;">
-            <span>🏆</span> Team Management
-          </h3>
-          <div id="teamsContainer"></div>
-          <button class="button" onclick="addTeam()" style="margin-top: 10px;">+ Add Team</button>
-          
-          <!-- Categories -->
-          <h3 style="color: var(--primary-color); margin: 30px 0 15px 0; display: flex; align-items: center; gap: 10px;">
-            <span>📚</span> Question Categories
-          </h3>
-          <div class="input-group">
-            <input type="text" id="categoryInput" value="Literature, History, Science, Art, Music, Geography, Religion, Soc. Stu., Mythology, Current Events, Sports, Pop Culture">
-          </div>
-          <button class="button" onclick="saveCategories()">Update Categories</button>
         </div>
       </div>
-      
-      <!-- Record Answer -->
+
+      <!-- Player Pool Section -->
       <div class="section">
-        <h2>⚡ Record Answer</h2>
-        <div style="display: grid; gap: 20px;">
-          <!-- Player Selection -->
+        <h2>👥 Player Pool <span class="toggle-icon">▼</span></h2>
+        <div class="collapsible-content">
+          <div class="input-group">
+            <label>Add Player:</label>
+            <input type="text" id="playerInput" placeholder="Enter player name..." onkeypress="handlePlayerInputEnter(event)">
+          </div>
+          <div class="button-group">
+            <button class="button" onclick="addToPlayerPool()">Add Player</button>
+            <button class="button button-secondary" onclick="clearPlayerPool()">Clear All Players</button>
+          </div>
+          <div class="input-group">
+            <label>Or Import Players (CSV/TXT):</label>
+            <input type="file" id="playerImport" accept=".csv,.txt" onchange="handlePlayerImport(event)">
+          </div>
+          <div id="playerPoolDisplay" style="margin-top: 15px;"></div>
+        </div>
+      </div>
+
+      <!-- Teams Section -->
+      <div class="section">
+        <h2>🏆 Teams <span class="toggle-icon">▼</span></h2>
+        <div class="collapsible-content">
+          <div class="input-group">
+            <label>Team Name:</label>
+            <input type="text" id="teamNameInput" placeholder="Enter team name...">
+          </div>
+          <button class="button" onclick="addTeam()">+ Add Team</button>
+          <div id="teamsContainer" style="margin-top: 20px;"></div>
+        </div>
+      </div>
+
+      <!-- Categories Section -->
+      <div class="section">
+        <h2>📚 Categories <span class="toggle-icon">▼</span></h2>
+        <div class="collapsible-content">
+          <div class="input-group">
+            <label>Category (comma-separated):</label>
+            <textarea id="categoriesInput" placeholder="e.g., Science, History, Literature, Math..." rows="3"></textarea>
+          </div>
+          <button class="button" onclick="saveCategories()">Save Categories</button>
+          <div id="categoriesDisplay" style="margin-top: 15px;"></div>
+        </div>
+      </div>
+
+      <!-- Answer Recording Section -->
+      <div class="section">
+        <h2>➕ Record Answer <span class="toggle-icon">▼</span></h2>
+        <div class="collapsible-content">
           <div class="input-group">
             <label>Select Player:</label>
-            <div class="player-buttons" id="playerButtons">
-              <p style="color: var(--text-secondary); font-style: italic; margin: 10px 0;">
-                Add players to get started
-              </p>
-            </div>
+            <div id="playerButtonsContainer" class="player-buttons"></div>
           </div>
-          
-          <!-- Point Type -->
+
           <div class="input-group">
             <label>Point Type:</label>
             <div class="point-type-buttons">
-              <button class="button-point-type" onclick="selectPointType('Toss-up (10)')">Toss-up (10)</button>
-              <button class="button-point-type" onclick="selectPointType('Bonus (10)')">Bonus (10)</button>
-              <button class="button-point-type" onclick="selectPointType('Neg (-5)')">Neg (-5)</button>
-              <button class="button-point-type" onclick="selectPointType('Power (15)')">Power (15)</button>
+              <button class="button-point-type" onclick="selectPointType('Toss-up')">Toss-up (+10)</button>
+              <button class="button-point-type" onclick="selectPointType('Bonus')">Bonus (+15)</button>
+              <button class="button-point-type" onclick="selectPointType('Neg')">Neg (-5)</button>
+              <button class="button-point-type" onclick="selectPointType('Power')">Power (+20)</button>
             </div>
           </div>
-          
-          <!-- Category -->
-          <div class="input-group category-section" id="categorySection">
+
+          <div class="input-group">
             <label>Category:</label>
-            <div class="category-buttons" id="categoryButtons"></div>
+            <div id="categoryButtonsContainer" class="category-buttons"></div>
           </div>
-          
-          <div class="no-category-note" id="noCategoryNote">
-            Note: Negs do not require a category selection.
-          </div>
-        </div>
-        <button class="button button-success" onclick="recordAnswer()" style="margin-top: 15px; width: 100%;">
-          ✓ Record Answer
-        </button>
-      </div>
-      
-      <!-- Statistics -->
-      <div class="section">
-        <h2>📊 Live Statistics & Leaderboard</h2>
-        <div class="stats-grid" id="statsGrid"></div>
-      </div>
-      
-      <!-- Answer Log -->
-      <div class="section">
-        <h2>📋 Answer History (<span id="answerCount">0</span> total)</h2>
-        <div class="log-container" id="logContainer">
-          <p style="text-align: center; padding: 20px; color: var(--text-secondary); font-style: italic;">
-            No answers recorded yet
-          </p>
+
+          <button class="button button-success" onclick="recordAnswer()" style="width: 100%; margin-top: 10px;">Record Answer</button>
         </div>
       </div>
-      
-      <!-- Data Management -->
+
+      <!-- Statistics Section -->
       <div class="section">
-        <h2>💾 Export & Data Management</h2>
-        
-        <div class="data-import-export">
-          <div class="import-export-card">
-            <h4 style="color: var(--primary-color); margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
-              <span>📊</span> Export Options
-            </h4>
-            <div class="export-options">
-              <label>
-                <input type="checkbox" id="exportFullLog" checked>
-                <span>Full Answer Log</span>
-              </label>
-              <label>
-                <input type="checkbox" id="exportPlayerStats" checked>
-                <span>Player Statistics</span>
-              </label>
-            </div>
+        <h2>📊 Statistics <span class="toggle-icon">▼</span></h2>
+        <div class="collapsible-content">
+          <div id="statisticsContainer"></div>
+        </div>
+      </div>
+
+      <!-- Answer Log Section -->
+      <div class="section">
+        <h2>📝 Answer Log <span class="toggle-icon">▼</span></h2>
+        <div class="collapsible-content">
+          <button class="button button-danger" onclick="clearAnswerLog()">Clear Log</button>
+          <div id="answerLog" class="log-container" style="margin-top: 15px;"></div>
+        </div>
+      </div>
+
+      <!-- Export Section -->
+      <div class="section">
+        <h2>📥 Export Data <span class="toggle-icon">▼</span></h2>
+        <div class="collapsible-content">
+          <div class="export-options">
+            <p style="margin-bottom: 10px;"><strong>Select what to include:</strong></p>
+            <label>
+              <input type="checkbox" id="exportPlayers" checked> Players & Scores
+            </label>
+            <label>
+              <input type="checkbox" id="exportAnswerLog" checked> Answer Log
+            </label>
+            <label>
+              <input type="checkbox" id="exportTeamStats" checked> Team Statistics
+            </label>
+          </div>
+          <div class="button-group" style="margin-top: 15px;">
+            <button class="button button-success" onclick="exportToExcel()">📊 Export to Excel</button>
+            <button class="button button-secondary" onclick="exportToJSON()">📄 Export as JSON</button>
           </div>
         </div>
-        
-        <div class="button-group" style="margin-top: 20px;">
-          <button class="button button-success" onclick="exportToExcel()">
-            📥 Download Report (CSV)
-          </button>
-          <button class="button button-danger" onclick="resetAllData()">
-            🗑️ Reset All Data
-          </button>
+      </div>
+
+      <!-- Danger Zone -->
+      <div class="section" style="border: 2px solid var(--danger-color);">
+        <h2 style="color: var(--danger-color);">⚠️ Danger Zone <span class="toggle-icon">▼</span></h2>
+        <div class="collapsible-content">
+          <button class="button button-danger" onclick="resetAllData()">Delete All Data</button>
+          <p style="margin-top: 10px; font-size: 0.85em; color: var(--text-secondary);">This action cannot be undone. Make sure to export your data first!</p>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- Sessions Modal -->
+  <div id="sessionsModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Load Session</h2>
+        <button class="close-modal" onclick="closeSessionsModal()">×</button>
+      </div>
+      <div id="sessionsList" class="sessions-list"></div>
+    </div>
+  </div>
+
   <script>
-    // State variables - all stored in memory
+    // Constants
+    const STORAGE_KEY = 'quizBowlSessions';
+    const CURRENT_SESSION_KEY = 'currentSession';
+    const AUTO_SAVE_INTERVAL = 5000; // 5 seconds
+
+    // State variables
     let state = {
-      darkMode: false,
-      playerPool: [],
-      teams: [],
-      categories: ['Literature', 'History', 'Science', 'Art', 'Music', 'Geography', 'Religion', 'Soc. Stu.', 'Mythology', 'Current Events', 'Sports', 'Pop Culture'],
-      answerLog: [],
-      selectedPlayer: '',
-      selectedPointType: '',
-      selectedCategory: '',
-      collapsedSections: { setup: true }
+      sessions: {},
+      currentSessionId: null,
+      selectedPlayer: null,
+      selectedPointType: null,
+      selectedCategory: null,
+      categories: []
     };
-
-    // LocalStorage wrapper functions
-    function saveToLocalStorage() {
-      try {
-        localStorage.setItem('quizSyncProData', JSON.stringify(state));
-      } catch (error) {
-        console.error('Error saving to localStorage:', error);
-      }
-    }
-
-    function loadFromLocalStorage() {
-      try {
-        const saved = localStorage.getItem('quizSyncProData');
-        if (saved) {
-          const loadedState = JSON.parse(saved);
-          state = { ...state, ...loadedState };
-          
-          // Apply dark mode if saved
-          if (state.darkMode) {
-            document.getElementById('app').classList.add('dark-mode');
-            document.getElementById('darkModeToggle').checked = true;
-          }
-          
-          // Update category input
-          if (state.categories) {
-            document.getElementById('categoryInput').value = state.categories.join(', ');
-          }
-        }
-      } catch (error) {
-        console.error('Error loading from localStorage:', error);
-      }
-    }
 
     // Initialize
     document.addEventListener('DOMContentLoaded', () => {
-      loadFromLocalStorage();
+      loadAllData();
       renderAll();
+      setupAutoSave();
+      setupSectionToggle();
     });
 
+    // ============ STORAGE FUNCTIONS ============
+    function loadAllData() {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        state.sessions = JSON.parse(stored);
+      }
+      
+      const currentId = localStorage.getItem(CURRENT_SESSION_KEY);
+      if (currentId && state.sessions[currentId]) {
+        state.currentSessionId = currentId;
+      } else if (Object.keys(state.sessions).length > 0) {
+        state.currentSessionId = Object.keys(state.sessions)[0];
+      } else {
+        createNewSession();
+      }
+      
+      loadSessionData();
+    }
+
+    function loadSessionData() {
+      if (!state.currentSessionId || !state.sessions[state.currentSessionId]) {
+        createNewSession();
+        return;
+      }
+      
+      const session = state.sessions[state.currentSessionId];
+      state.categories = session.categories || [];
+    }
+
+    function saveAllData() {
+      if (state.currentSessionId && state.sessions[state.currentSessionId]) {
+        state.sessions[state.currentSessionId].categories = state.categories;
+        state.sessions[state.currentSessionId].lastUpdated = new Date().toISOString();
+      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.sessions));
+      localStorage.setItem(CURRENT_SESSION_KEY, state.currentSessionId);
+    }
+
+    function setupAutoSave() {
+      setInterval(() => {
+        saveAllData();
+        updateAutoSaveIndicator();
+      }, AUTO_SAVE_INTERVAL);
+    }
+
+    function updateAutoSaveIndicator() {
+      const indicator = document.getElementById('autosaveStatus');
+      if (indicator) {
+        indicator.textContent = '✓ Auto-saved';
+        indicator.style.color = 'var(--success-color)';
+      }
+    }
+
+    // ============ SESSION MANAGEMENT ============
+    function createNewSession() {
+      const sessionId = Date.now().toString();
+      const sessionName = document.getElementById('newSessionName')?.value || `Session ${new Date().toLocaleDateString()}`;
+      
+      state.sessions[sessionId] = {
+        id: sessionId,
+        name: sessionName,
+        created: new Date().toISOString(),
+        lastUpdated: new Date().toISOString(),
+        players: {},
+        teams: [],
+        categories: [],
+        answers: [],
+        answerLog: []
+      };
+      
+      state.currentSessionId = sessionId;
+      loadSessionData();
+      saveAllData();
+      
+      document.getElementById('newSessionName').value = '';
+      renderAll();
+    }
+
+    function openSessionsModal() {
+      document.getElementById('sessionsModal').style.display = 'block';
+      renderSessionsList();
+    }
+
+    function closeSessionsModal() {
+      document.getElementById('sessionsModal').style.display = 'none';
+    }
+
+    function renderSessionsList() {
+      const list = document.getElementById('sessionsList');
+      const sessions = state.sessions;
+      
+      if (Object.keys(sessions).length === 0) {
+        list.innerHTML = '<p>No sessions found.</p>';
+        return;
+      }
+      
+      list.innerHTML = Object.values(sessions).map(session => `
+        <div class="session-card">
+          <div class="session-card-title">${session.name}</div>
+          <div class="session-card-details">
+            <div>Created: ${new Date(session.created).toLocaleString()}</div>
+            <div>Answers: ${session.answerLog ? session.answerLog.length : 0}</div>
+            <div>Players: ${Object.keys(session.players).length}</div>
+          </div>
+          <div class="session-card-actions">
+            <button class="button" onclick="loadSession('${session.id}')">Load</button>
+            <button class="button button-danger" onclick="deleteSession('${session.id}')">Delete</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function loadSession(sessionId) {
+      state.currentSessionId = sessionId;
+      loadSessionData();
+      saveAllData();
+      renderAll();
+      closeSessionsModal();
+    }
+
+    function deleteSession(sessionId) {
+      if (confirm(`Delete session "${state.sessions[sessionId].name}"? This cannot be undone.`)) {
+        delete state.sessions[sessionId];
+        if (state.currentSessionId === sessionId) {
+          state.currentSessionId = Object.keys(state.sessions)[0] || null;
+          if (!state.currentSessionId) {
+            createNewSession();
+          }
+        }
+        saveAllData();
+        renderSessionsList();
+        renderAll();
+      }
+    }
+
+    function getCurrentSession() {
+      return state.sessions[state.currentSessionId] || null;
+    }
+
+    // ============ UI FUNCTIONS ============
+    function setupSectionToggle() {
+      document.querySelectorAll('.section h2').forEach(h2 => {
+        h2.addEventListener('click', function() {
+          const icon = this.querySelector('.toggle-icon');
+          const content = this.nextElementSibling;
+          icon.classList.toggle('collapsed');
+          content.classList.toggle('collapsed');
+        });
+      });
+    }
+
+    function toggleDarkMode() {
+      document.body.classList.toggle('dark-mode');
+      localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+    }
+
+    // Load dark mode preference
+    if (localStorage.getItem('darkMode') === 'true') {
+      document.body.classList.add('dark-mode');
+      document.getElementById('darkModeToggle').checked = true;
+    }
+
     function renderAll() {
+      renderSessionInfo();
       renderPlayerPool();
       renderPlayerButtons();
       renderTeams();
@@ -805,43 +1081,39 @@
       renderStatistics();
     }
 
-    // UI Functions
-    function toggleSection(section) {
-      state.collapsedSections[section] = !state.collapsedSections[section];
-      const content = document.getElementById(section + 'Content');
-      const toggle = document.getElementById(section + 'Toggle');
+    function renderSessionInfo() {
+      const session = getCurrentSession();
+      if (!session) return;
       
-      if (state.collapsedSections[section]) {
-        content.classList.add('collapsed');
-        toggle.classList.add('collapsed');
-      } else {
-        content.classList.remove('collapsed');
-        toggle.classList.remove('collapsed');
-      }
-      saveToLocalStorage();
+      document.getElementById('sessionName').textContent = session.name;
+      document.getElementById('sessionCreated').textContent = new Date(session.created).toLocaleString();
+      document.getElementById('sessionLastUpdated').textContent = new Date(session.lastUpdated).toLocaleString();
+      document.getElementById('sessionAnswerCount').textContent = (session.answerLog || []).length;
     }
 
-    function toggleDarkMode() {
-      state.darkMode = !state.darkMode;
-      if (state.darkMode) {
-        document.getElementById('app').classList.add('dark-mode');
-      } else {
-        document.getElementById('app').classList.remove('dark-mode');
-      }
-      saveToLocalStorage();
-    }
-
-    // Player management
+    // ============ PLAYER MANAGEMENT ============
     function addToPlayerPool() {
-      const input = document.getElementById('playerInput').value;
-      if (input.trim()) {
-        const newPlayers = input.split(',').map(p => p.trim()).filter(p => p && !state.playerPool.includes(p));
-        state.playerPool = [...state.playerPool, ...newPlayers];
-        document.getElementById('playerInput').value = '';
-        renderPlayerPool();
-        renderPlayerButtons();
-        saveToLocalStorage();
+      const input = document.getElementById('playerInput');
+      const player = input.value.trim();
+      
+      if (!player) {
+        alert('Please enter a player name.');
+        return;
       }
+      
+      const session = getCurrentSession();
+      if (!session.players) session.players = {};
+      
+      if (session.players[player]) {
+        alert('Player already exists.');
+        return;
+      }
+      
+      session.players[player] = { name: player, points: 0, answers: [] };
+      input.value = '';
+      saveAllData();
+      renderPlayerPool();
+      renderPlayerButtons();
     }
 
     function handlePlayerInputEnter(event) {
@@ -851,490 +1123,503 @@
     }
 
     function removeFromPlayerPool(player) {
-      state.playerPool = state.playerPool.filter(p => p !== player);
-      state.teams = state.teams.map(team => ({
-        ...team,
-        players: team.players.filter(p => p !== player)
-      }));
+      const session = getCurrentSession();
+      delete session.players[player];
+      saveAllData();
       renderPlayerPool();
       renderPlayerButtons();
-      renderTeams();
-      saveToLocalStorage();
     }
 
     function clearPlayerPool() {
-      if (confirm('Clear all players from the pool?')) {
-        state.playerPool = [];
+      if (confirm('Clear all players?')) {
+        const session = getCurrentSession();
+        session.players = {};
+        saveAllData();
         renderPlayerPool();
         renderPlayerButtons();
-        saveToLocalStorage();
       }
     }
 
     function renderPlayerPool() {
-      const container = document.getElementById('playerPoolDisplay');
-      if (state.playerPool.length === 0) {
-        container.innerHTML = '<p style="color: var(--text-secondary); font-style: italic;">No players in pool yet</p>';
-      } else {
-        container.innerHTML = state.playerPool.map(player => 
-          `<div class="player-pool-item">
-            ${player}
-            <span class="remove" onclick="removeFromPlayerPool('${player.replace(/'/g, "\\'")}')">×</span>
-          </div>`
-        ).join('');
+      const session = getCurrentSession();
+      const display = document.getElementById('playerPoolDisplay');
+      const players = Object.keys(session.players || {});
+      
+      if (players.length === 0) {
+        display.innerHTML = '<p style="color: var(--text-secondary);">No players added yet.</p>';
+        return;
       }
+      
+      display.innerHTML = players.map(player => `
+        <span class="player-pool-item">
+          ${player}
+          <span class="remove" onclick="removeFromPlayerPool('${player}')">×</span>
+        </span>
+      `).join('');
     }
 
     function renderPlayerButtons() {
-      const container = document.getElementById('playerButtons');
-      if (state.playerPool.length === 0) {
-        container.innerHTML = '<p style="color: var(--text-secondary); font-style: italic; margin: 10px 0;">Add players to get started</p>';
-      } else {
-        container.innerHTML = state.playerPool.map(player => 
-          `<button class="button-player ${state.selectedPlayer === player ? 'selected' : ''}" 
-                   onclick="selectPlayer('${player.replace(/'/g, "\\'")}')">
-            ${player}
-          </button>`
-        ).join('');
-      }
+      const session = getCurrentSession();
+      const container = document.getElementById('playerButtonsContainer');
+      const players = Object.keys(session.players || {});
+      
+      container.innerHTML = players.map(player => `
+        <button class="button-player ${state.selectedPlayer === player ? 'selected' : ''}" 
+          onclick="selectPlayer('${player}')">${player}</button>
+      `).join('');
     }
 
     function selectPlayer(player) {
-      state.selectedPlayer = player;
+      state.selectedPlayer = state.selectedPlayer === player ? null : player;
       renderPlayerButtons();
     }
 
-    // Player Import
     function handlePlayerImport(event) {
       const file = event.target.files[0];
       if (!file) return;
       
       const reader = new FileReader();
-      
       reader.onload = (e) => {
-        try {
-          const content = e.target.result;
-          let importedPlayers = [];
-          
-          if (file.name.endsWith('.csv') || file.name.endsWith('.txt')) {
-            const rows = content.split('\n');
-            importedPlayers = rows
-              .map(row => row.split(',')[0].trim())
-              .filter(name => name && name !== 'Name' && name !== 'Player');
-          } else {
-            alert('Please use CSV or TXT files.');
-            return;
+        const text = e.target.result;
+        const players = text.split('\n').map(p => p.trim()).filter(p => p);
+        
+        const session = getCurrentSession();
+        if (!session.players) session.players = {};
+        
+        players.forEach(player => {
+          if (!session.players[player]) {
+            session.players[player] = { name: player, points: 0, answers: [] };
           }
-          
-          if (importedPlayers.length === 0) {
-            alert('No valid player names found in the file.');
-            return;
-          }
-          
-          const newPlayers = importedPlayers.filter(p => 
-            !state.playerPool.includes(p) && p.trim() !== ''
-          );
-          
-          if (newPlayers.length > 0) {
-            state.playerPool = [...state.playerPool, ...newPlayers];
-            event.target.value = '';
-            renderPlayerPool();
-            renderPlayerButtons();
-            saveToLocalStorage();
-            alert(`Successfully imported ${newPlayers.length} new player(s):\n${newPlayers.join(', ')}`);
-          } else {
-            alert('All players in the file already exist in the pool.');
-          }
-        } catch (error) {
-          console.error('Import error:', error);
-          alert('Error importing file. Please check the file format.');
-        }
+        });
+        
+        saveAllData();
+        renderPlayerPool();
+        renderPlayerButtons();
       };
-      
       reader.readAsText(file);
+      event.target.value = '';
     }
 
-    // Team management
+    // ============ TEAM MANAGEMENT ============
     function addTeam() {
-      const newTeam = {
-        id: Date.now(),
-        name: `Team ${state.teams.length + 1}`,
-        players: []
-      };
-      state.teams = [...state.teams, newTeam];
+      const input = document.getElementById('teamNameInput');
+      const teamName = input.value.trim();
+      
+      if (!teamName) {
+        alert('Please enter a team name.');
+        return;
+      }
+      
+      const session = getCurrentSession();
+      const teamId = Date.now().toString();
+      session.teams.push({ id: teamId, name: teamName, playerMembers: [] });
+      input.value = '';
+      saveAllData();
       renderTeams();
-      saveToLocalStorage();
     }
 
     function removeTeam(teamId) {
-      state.teams = state.teams.filter(t => t.id !== teamId);
+      const session = getCurrentSession();
+      session.teams = session.teams.filter(t => t.id !== teamId);
+      saveAllData();
       renderTeams();
-      saveToLocalStorage();
     }
 
     function updateTeamName(teamId, newName) {
-      state.teams = state.teams.map(t => t.id === teamId ? {...t, name: newName} : t);
-      saveToLocalStorage();
+      const session = getCurrentSession();
+      const team = session.teams.find(t => t.id === teamId);
+      if (team) {
+        team.name = newName;
+        saveAllData();
+      }
     }
 
     function togglePlayerInTeam(teamId, player) {
-      state.teams = state.teams.map(team => {
-        if (team.id === teamId) {
-          const isInTeam = team.players.includes(player);
-          return {
-            ...team,
-            players: isInTeam 
-              ? team.players.filter(p => p !== player)
-              : [...team.players, player]
-          };
-        }
-        return team;
-      });
+      const session = getCurrentSession();
+      const team = session.teams.find(t => t.id === teamId);
+      if (!team) return;
+      
+      const index = team.playerMembers.indexOf(player);
+      if (index > -1) {
+        team.playerMembers.splice(index, 1);
+      } else {
+        team.playerMembers.push(player);
+      }
+      saveAllData();
       renderTeams();
-      renderStatistics();
-      saveToLocalStorage();
     }
 
     function renderTeams() {
+      const session = getCurrentSession();
       const container = document.getElementById('teamsContainer');
-      container.innerHTML = state.teams.map(team => `
-        <div class="team-section">
-          <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-            <input type="text" value="${team.name}" 
-                   onchange="updateTeamName(${team.id}, this.value)"
-                   style="flex: 1; margin-right: 10px; padding: 8px; font-size: 1.1em; font-weight: bold;">
-            <button class="button button-danger" onclick="removeTeam(${team.id})">Remove</button>
-          </div>
-          <div class="team-players-container">
-            <strong style="color: var(--text-color)">Players:</strong>
+      const teams = session.teams || [];
+      
+      if (teams.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-secondary);">No teams created yet.</p>';
+        return;
+      }
+      
+      container.innerHTML = teams.map(team => {
+        const players = Object.keys(session.players || {});
+        return `
+          <div class="team-section">
+            <input type="text" value="${team.name}" onchange="updateTeamName('${team.id}', this.value)" />
             <div style="margin-top: 10px;">
-              ${state.playerPool.map(player => `
-                <button class="button-player ${team.players.includes(player) ? 'selected' : ''}"
-                        onclick="togglePlayerInTeam(${team.id}, '${player.replace(/'/g, "\\'")}')"
-                        style="margin: 5px;">
+              ${players.map(player => `
+                <label style="display: inline-block; margin-right: 15px; cursor: pointer;">
+                  <input type="checkbox" ${team.playerMembers.includes(player) ? 'checked' : ''} 
+                    onchange="togglePlayerInTeam('${team.id}', '${player}')">
                   ${player}
-                </button>
+                </label>
               `).join('')}
             </div>
+            <button class="button button-danger" onclick="removeTeam('${team.id}')" style="margin-top: 10px;">Remove Team</button>
           </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
-    // Category management
+    // ============ CATEGORY MANAGEMENT ============
     function saveCategories() {
-      const input = document.getElementById('categoryInput').value;
+      const input = document.getElementById('categoriesInput').value;
       state.categories = input.split(',').map(c => c.trim()).filter(c => c);
+      saveAllData();
       renderCategories();
-      saveToLocalStorage();
     }
 
     function renderCategories() {
-      const container = document.getElementById('categoryButtons');
-      container.innerHTML = state.categories.map(cat => 
-        `<button class="button-category ${state.selectedCategory === cat ? 'selected' : ''}"
-                 onclick="selectCategory('${cat.replace(/'/g, "\\'")}')"
-                 style="padding: 10px 16px; font-size: 0.9em;">
-          ${cat}
-        </button>`
-      ).join('');
+      const container = document.getElementById('categoryButtonsContainer');
+      
+      if (state.categories.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-secondary); grid-column: 1/-1;">No categories added yet.</p>';
+        return;
+      }
+      
+      container.innerHTML = state.categories.map(category => `
+        <button class="button-category ${state.selectedCategory === category ? 'selected' : ''}" 
+          onclick="selectCategory('${category}')">${category}</button>
+      `).join('');
     }
 
     function selectCategory(category) {
-      state.selectedCategory = category;
+      state.selectedCategory = state.selectedCategory === category ? null : category;
       renderCategories();
     }
 
-    // Answer recording
+    // ============ ANSWER RECORDING ============
     function selectPointType(type) {
-      state.selectedPointType = type;
-      
-      // Clear selected point type buttons
+      state.selectedPointType = state.selectedPointType === type ? null : type;
+      renderPointTypeButtons();
+    }
+
+    function renderPointTypeButtons() {
       document.querySelectorAll('.button-point-type').forEach(btn => {
         btn.classList.remove('selected');
+        if (btn.textContent.includes(state.selectedPointType)) {
+          btn.classList.add('selected');
+        }
       });
-      
-      // Add selected to clicked button
-      event.target.classList.add('selected');
-      
-      const categorySection = document.getElementById('categorySection');
-      const noCategoryNote = document.getElementById('noCategoryNote');
-      
-      if (type === 'Neg (-5)') {
-        state.selectedCategory = '';
-        categorySection.classList.add('hidden');
-        noCategoryNote.classList.add('show');
-      } else {
-        categorySection.classList.remove('hidden');
-        noCategoryNote.classList.remove('show');
-      }
-      renderCategories();
     }
 
     function recordAnswer() {
+      const session = getCurrentSession();
+      
       if (!state.selectedPlayer) {
-        alert('Please select a player');
+        alert('Please select a player.');
         return;
       }
       if (!state.selectedPointType) {
-        alert('Please select a point type');
+        alert('Please select a point type.');
         return;
       }
-      if (state.selectedPointType !== 'Neg (-5)' && !state.selectedCategory) {
-        alert('Please select a category (not required for Negs)');
+      if (!state.selectedCategory) {
+        alert('Please select a category.');
         return;
       }
       
-      const pointsMatch = state.selectedPointType.match(/-?\d+/);
-      const points = pointsMatch ? parseInt(pointsMatch[0]) : 0;
+      const pointMap = { 'Toss-up': 10, 'Bonus': 15, 'Neg': -5, 'Power': 20 };
+      const points = pointMap[state.selectedPointType];
       
-      const entry = {
-        id: Date.now(),
-        timestamp: new Date().toLocaleString(),
+      const answer = {
+        id: Date.now().toString(),
         player: state.selectedPlayer,
-        type: state.selectedPointType,
-        category: state.selectedCategory || 'N/A',
-        points: points
+        pointType: state.selectedPointType,
+        category: state.selectedCategory,
+        points: points,
+        timestamp: new Date().toISOString()
       };
       
-      state.answerLog = [entry, ...state.answerLog];
+      session.answerLog.push(answer);
+      session.players[state.selectedPlayer].answers.push(answer);
+      session.players[state.selectedPlayer].points += points;
+      
+      saveAllData();
+      renderAll();
       
       // Reset selections
-      state.selectedPlayer = '';
-      state.selectedPointType = '';
-      state.selectedCategory = '';
-      
-      // Clear UI selections
-      document.querySelectorAll('.button-point-type').forEach(btn => {
-        btn.classList.remove('selected');
-      });
-      
-      const categorySection = document.getElementById('categorySection');
-      const noCategoryNote = document.getElementById('noCategoryNote');
-      categorySection.classList.remove('hidden');
-      noCategoryNote.classList.remove('show');
-      
+      state.selectedPlayer = null;
+      state.selectedPointType = null;
+      state.selectedCategory = null;
       renderPlayerButtons();
+      renderPointTypeButtons();
       renderCategories();
-      renderAnswerLog();
-      renderStatistics();
-      saveToLocalStorage();
     }
 
-    function deleteAnswer(id) {
-      if (confirm('Delete this answer?')) {
-        state.answerLog = state.answerLog.filter(a => a.id !== id);
-        renderAnswerLog();
-        renderStatistics();
-        saveToLocalStorage();
+    function deleteAnswer(answerId) {
+      const session = getCurrentSession();
+      const answer = session.answerLog.find(a => a.id === answerId);
+      
+      if (!answer) return;
+      
+      session.players[answer.player].points -= answer.points;
+      session.players[answer.player].answers = session.players[answer.player].answers.filter(a => a.id !== answerId);
+      session.answerLog = session.answerLog.filter(a => a.id !== answerId);
+      
+      saveAllData();
+      renderAll();
+    }
+
+    function clearAnswerLog() {
+      if (confirm('Clear all answers? This cannot be undone.')) {
+        const session = getCurrentSession();
+        session.answerLog = [];
+        Object.keys(session.players).forEach(player => {
+          session.players[player].points = 0;
+          session.players[player].answers = [];
+        });
+        saveAllData();
+        renderAll();
       }
     }
 
     function renderAnswerLog() {
-      const container = document.getElementById('logContainer');
-      document.getElementById('answerCount').textContent = state.answerLog.length;
+      const session = getCurrentSession();
+      const container = document.getElementById('answerLog');
+      const answers = session.answerLog || [];
       
-      if (state.answerLog.length === 0) {
-        container.innerHTML = '<p style="text-align: center; padding: 20px; color: var(--text-secondary); font-style: italic;">No answers recorded yet</p>';
-      } else {
-        container.innerHTML = state.answerLog.map(entry => `
-          <div class="log-entry">
-            <div>
-              <div style="font-weight: bold; margin-bottom: 5px;">
-                ${entry.player} - ${entry.type}
-              </div>
-              <div style="font-size: 0.9em; color: var(--text-secondary);">
-                ${entry.category} | ${entry.timestamp}
-              </div>
-            </div>
-            <button class="button button-danger" 
-                    onclick="deleteAnswer(${entry.id})"
-                    style="padding: 8px 16px;">
-              Delete
-            </button>
-          </div>
-        `).join('');
-      }
-    }
-
-    // Statistics
-    function calculatePlayerStats() {
-      const stats = {};
-      
-      state.playerPool.forEach(player => {
-        stats[player] = {
-          totalPoints: 0,
-          tossups: 0,
-          bonuses: 0,
-          negs: 0,
-          powers: 0,
-          totalQuestions: 0
-        };
-      });
-      
-      state.answerLog.forEach(entry => {
-        if (stats[entry.player]) {
-          stats[entry.player].totalPoints += entry.points;
-          stats[entry.player].totalQuestions++;
-          
-          if (entry.type.includes('Toss-up')) stats[entry.player].tossups++;
-          if (entry.type.includes('Bonus')) stats[entry.player].bonuses++;
-          if (entry.type.includes('Neg')) stats[entry.player].negs++;
-          if (entry.type.includes('Power')) stats[entry.player].powers++;
-        }
-      });
-      
-      return stats;
-    }
-
-    function calculateTeamStats() {
-      const teamStats = {};
-      
-      state.teams.forEach(team => {
-        teamStats[team.id] = {
-          name: team.name,
-          totalPoints: 0,
-          players: team.players
-        };
-      });
-      
-      state.answerLog.forEach(entry => {
-        const team = state.teams.find(t => t.players.includes(entry.player));
-        if (team && teamStats[team.id]) {
-          teamStats[team.id].totalPoints += entry.points;
-        }
-      });
-      
-      return teamStats;
-    }
-
-    function renderStatistics() {
-      const playerStats = calculatePlayerStats();
-      const teamStats = calculateTeamStats();
-      
-      const sortedPlayers = Object.entries(playerStats)
-        .sort(([, a], [, b]) => b.totalPoints - a.totalPoints);
-      
-      const sortedTeams = Object.entries(teamStats)
-        .sort(([, a], [, b]) => b.totalPoints - a.totalPoints);
-      
-      const container = document.getElementById('statsGrid');
-      
-      let html = sortedPlayers.map(([player, stats], index) => {
-        const avg = stats.totalQuestions > 0 ? (stats.totalPoints / stats.totalQuestions).toFixed(1) : '0.0';
-        return `
-          <div class="stat-card">
-            <h3>#${index + 1} ${player}</h3>
-            <div class="value">${stats.totalPoints} pts</div>
-            <div class="stat-row">
-              <span class="stat-label">Toss-ups:</span>
-              <span class="stat-value">${stats.tossups}</span>
-            </div>
-            <div class="stat-row">
-              <span class="stat-label">Bonuses:</span>
-              <span class="stat-value">${stats.bonuses}</span>
-            </div>
-            <div class="stat-row">
-              <span class="stat-label">Negs:</span>
-              <span class="stat-value warning-stat">${stats.negs}</span>
-            </div>
-            <div class="stat-row">
-              <span class="stat-label">Powers:</span>
-              <span class="stat-value success-stat">${stats.powers}</span>
-            </div>
-            <div class="stat-row">
-              <span class="stat-label">Avg:</span>
-              <span class="stat-value">${avg}</span>
-            </div>
-          </div>
-        `;
-      }).join('');
-      
-      if (sortedTeams.length > 0) {
-        html += `
-          <div class="team-stat-card">
-            <h3>Team Standings</h3>
-            ${sortedTeams.map(([id, stats], index) => `
-              <div class="player-stat-card">
-                <div style="display: flex; justify-content: space-between;">
-                  <strong>#${index + 1} ${stats.name}</strong>
-                  <span class="team-value">${stats.totalPoints} pts</span>
-                </div>
-                <div style="font-size: 0.9em; color: var(--text-secondary); margin-top: 5px;">
-                  Players: ${stats.players.join(', ')}
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        `;
-      }
-      
-      container.innerHTML = html;
-    }
-
-    // Export
-    function exportToExcel() {
-      if (state.answerLog.length === 0) {
-        alert('No data to export!');
+      if (answers.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-secondary);">No answers recorded yet.</p>';
         return;
       }
       
-      const exportFullLog = document.getElementById('exportFullLog').checked;
-      const exportPlayerStats = document.getElementById('exportPlayerStats').checked;
-      
-      let csvContent = 'QuizSync Pro - Answer Log & Statistics\n';
-      csvContent += `Exported: ${new Date().toLocaleString()}\n\n`;
-      
-      if (exportFullLog) {
-        csvContent += 'Timestamp,Player,Point Type,Category,Points\n';
-        state.answerLog.forEach(e => {
-          csvContent += `"${e.timestamp}","${e.player}","${e.type}","${e.category}",${e.points}\n`;
-        });
-      }
-      
-      if (exportPlayerStats) {
-        const stats = calculatePlayerStats();
-        csvContent += '\n\nPlayer Statistics\n';
-        csvContent += 'Player,Total Points,Tossups,Bonuses,Negs,Powers,Total Questions,Average\n';
-        
-        Object.keys(stats).forEach(player => {
-          const s = stats[player];
-          const avg = s.totalQuestions > 0 ? (s.totalPoints / s.totalQuestions).toFixed(1) : '0.0';
-          csvContent += `"${player}",${s.totalPoints},${s.tossups},${s.bonuses},${s.negs},${s.powers},${s.totalQuestions},${avg}\n`;
-        });
-      }
-      
-      const blob = new Blob([csvContent], { type: 'text/csv' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `QuizSync_Report_${new Date().toISOString().slice(0, 10)}.csv`;
-      a.click();
-      window.URL.revokeObjectURL(url);
-      
-      alert('Report exported successfully!');
+      container.innerHTML = answers.map((answer, index) => `
+        <div class="log-entry">
+          <span>
+            <strong>${index + 1}. ${answer.player}</strong> - ${answer.pointType} 
+            (${answer.points > 0 ? '+' : ''}${answer.points} pts) - ${answer.category}
+          </span>
+          <button class="button button-danger" onclick="deleteAnswer('${answer.id}')" style="padding: 4px 8px; font-size: 0.8em;">Delete</button>
+        </div>
+      `).join('');
     }
 
-    // Reset all data
+    // ============ STATISTICS ============
+    function calculatePlayerStats() {
+      const session = getCurrentSession();
+      const stats = [];
+      
+      Object.values(session.players || {}).forEach(player => {
+        const answers = player.answers || [];
+        stats.push({
+          name: player.name,
+          points: player.points,
+          totalAnswers: answers.length,
+          tossupsCorrect: answers.filter(a => a.pointType === 'Toss-up').length,
+          bonusPoints: answers.filter(a => a.pointType === 'Bonus').length * 15,
+          negs: answers.filter(a => a.pointType === 'Neg').length,
+          powers: answers.filter(a => a.pointType === 'Power').length
+        });
+      });
+      
+      return stats.sort((a, b) => b.points - a.points);
+    }
+
+    function calculateTeamStats() {
+      const session = getCurrentSession();
+      const teamStats = [];
+      
+      (session.teams || []).forEach(team => {
+        let totalPoints = 0;
+        let totalAnswers = 0;
+        
+        team.playerMembers.forEach(playerName => {
+          const player = session.players[playerName];
+          if (player) {
+            totalPoints += player.points;
+            totalAnswers += (player.answers || []).length;
+          }
+        });
+        
+        teamStats.push({
+          name: team.name,
+          totalPoints: totalPoints,
+          totalAnswers: totalAnswers,
+          members: team.playerMembers,
+          averagePerMember: team.playerMembers.length > 0 ? (totalPoints / team.playerMembers.length).toFixed(2) : 0
+        });
+      });
+      
+      return teamStats.sort((a, b) => b.totalPoints - a.totalPoints);
+    }
+
+    function renderStatistics() {
+      const container = document.getElementById('statisticsContainer');
+      const playerStats = calculatePlayerStats();
+      const teamStats = calculateTeamStats();
+      
+      let html = '<div class="stats-grid">';
+      
+      // Team statistics
+      if (teamStats.length > 0) {
+        teamStats.forEach(team => {
+          html += `
+            <div class="team-stat-card">
+              <h3>🏆 ${team.name}</h3>
+              <div class="stat-row">
+                <span class="stat-label">Total Points:</span>
+                <span class="stat-value">${team.totalPoints}</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Total Answers:</span>
+                <span class="stat-value">${team.totalAnswers}</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Average per Member:</span>
+                <span class="stat-value">${team.averagePerMember}</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Members:</span>
+                <span>${team.members.join(', ') || 'None'}</span>
+              </div>
+            </div>
+          `;
+        });
+      }
+      
+      // Player statistics
+      if (playerStats.length > 0) {
+        playerStats.forEach((stat, index) => {
+          html += `
+            <div class="stat-card">
+              <h3>#${index + 1} ${stat.name}</h3>
+              <div class="stat-row">
+                <span class="stat-label">Total Points:</span>
+                <span class="stat-value">${stat.points}</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Answers Recorded:</span>
+                <span class="stat-value">${stat.totalAnswers}</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Toss-ups Correct:</span>
+                <span class="stat-value">${stat.tossupsCorrect}</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Bonus Points:</span>
+                <span class="stat-value">${stat.bonusPoints}</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Negs:</span>
+                <span class="stat-value">${stat.negs}</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Powers:</span>
+                <span class="stat-value">${stat.powers}</span>
+              </div>
+            </div>
+          `;
+        });
+      } else {
+        html += '<p style="color: var(--text-secondary);">No statistics available yet.</p>';
+      }
+      
+      html += '</div>';
+      container.innerHTML = html;
+    }
+
+    // ============ EXPORT FUNCTIONS ============
+    function exportToExcel() {
+      const session = getCurrentSession();
+      if (!session) return;
+      
+      const includeAll = true;
+      const playerStats = calculatePlayerStats();
+      const teamStats = calculateTeamStats();
+      
+      // Create CSV content
+      let csv = [];
+      
+      // Player Statistics
+      if (document.getElementById('exportPlayers').checked) {
+        csv.push('Player Statistics');
+        csv.push('Player Name,Total Points,Total Answers,Toss-ups,Bonuses,Negs,Powers');
+        playerStats.forEach(stat => {
+          csv.push(`${stat.name},${stat.points},${stat.totalAnswers},${stat.tossupsCorrect},${stat.bonusPoints / 15},${stat.negs},${stat.powers}`);
+        });
+        csv.push('');
+      }
+      
+      // Team Statistics
+      if (document.getElementById('exportTeamStats').checked && teamStats.length > 0) {
+        csv.push('Team Statistics');
+        csv.push('Team Name,Total Points,Total Answers,Members');
+        teamStats.forEach(team => {
+          csv.push(`${team.name},${team.totalPoints},${team.totalAnswers},"${team.members.join(', ')}"`);
+        });
+        csv.push('');
+      }
+      
+      // Answer Log
+      if (document.getElementById('exportAnswerLog').checked) {
+        csv.push('Answer Log');
+        csv.push('Player,Point Type,Category,Points,Timestamp');
+        (session.answerLog || []).forEach(answer => {
+          csv.push(`${answer.player},${answer.pointType},${answer.category},${answer.points},${new Date(answer.timestamp).toLocaleString()}`);
+        });
+      }
+      
+      const csvContent = csv.join('\n');
+      downloadFile(csvContent, `quiz-bowl-${session.name}-${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
+    }
+
+    function exportToJSON() {
+      const session = getCurrentSession();
+      if (!session) return;
+      
+      const exportData = {
+        sessionName: session.name,
+        created: session.created,
+        lastUpdated: session.lastUpdated,
+        players: session.players,
+        teams: session.teams,
+        answerLog: session.answerLog,
+        categories: state.categories
+      };
+      
+      const jsonContent = JSON.stringify(exportData, null, 2);
+      downloadFile(jsonContent, `quiz-bowl-${session.name}-${new Date().toISOString().split('T')[0]}.json`, 'application/json');
+    }
+
+    function downloadFile(content, filename, mimeType) {
+      const element = document.createElement('a');
+      element.setAttribute('href', `data:${mimeType};charset=utf-8,` + encodeURIComponent(content));
+      element.setAttribute('download', filename);
+      element.style.display = 'none';
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
+    }
+
+    // ============ RESET FUNCTION ============
     function resetAllData() {
-      if (confirm('Are you sure you want to reset ALL data? This cannot be undone!')) {
-        if (confirm('This will delete all players, teams, categories, and answer history. Continue?')) {
-          state = {
-            darkMode: state.darkMode, // Keep dark mode preference
-            playerPool: [],
-            teams: [],
-            categories: ['Literature', 'History', 'Science', 'Art', 'Music', 'Geography', 'Religion', 'Soc. Stu.', 'Mythology', 'Current Events', 'Sports', 'Pop Culture'],
-            answerLog: [],
-            selectedPlayer: '',
-            selectedPointType: '',
-            selectedCategory: '',
-            collapsedSections: { setup: true }
-          };
-          
-          document.getElementById('categoryInput').value = state.categories.join(', ');
-          saveToLocalStorage();
+      if (confirm('Delete all sessions and data? This cannot be undone!')) {
+        if (confirm('Are you absolutely sure? This will delete everything.')) {
+          localStorage.setItem(STORAGE_KEY, '{}');
+          localStorage.setItem(CURRENT_SESSION_KEY, '');
+          state.sessions = {};
+          state.currentSessionId = null;
+          createNewSession();
           renderAll();
-          alert('All data has been reset!');
         }
       }
     }
