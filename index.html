@@ -98,14 +98,9 @@
       overflow-y: auto;
       overflow-x: hidden;
       transition: all 0.3s ease;
-      scrollbar-width: thin;
-      scrollbar-color: var(--primary-color) transparent;
-      scrollbar-gutter: stable;
+      scrollbar-width: none;
     }
-    .container::-webkit-scrollbar { width: 8px; height: 8px; }
-    .container::-webkit-scrollbar-track { background: transparent; }
-    .container::-webkit-scrollbar-thumb { background: var(--primary-color); border-radius: 10px; }
-    .container::-webkit-scrollbar-thumb:hover { background: var(--primary-dark); }
+    .container::-webkit-scrollbar { display: none; }
     
     .header {
       background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
@@ -123,6 +118,8 @@
       z-index: 200;
       overflow-x: hidden;
     }
+    
+
     
     .header h1 {
       font-size: clamp(1.8em, 5vw, 2.8em);
@@ -1032,7 +1029,7 @@
     <div class="header">
       <!-- Sidebar open button - shown when sidebar collapsed -->
       <button class="sidebar-open-btn" onclick="toggleSidebar()" title="Show sidebar">&#9654; Menu</button>
-      <h1>HSE Quiz Bowl Tracker <span class="version-badge">v29</span></h1>
+      <h1>HSE Quiz Bowl Tracker <span class="version-badge" id="versionBadge">V1</span></h1>
 
       <!-- Session name chip shown below title -->
       <div class="header-session-name" id="headerSessionName"></div>
@@ -1280,6 +1277,30 @@
   </div>
 
   <script>
+    // ============ VERSION UPDATE ============
+    function updateVersionBadge() {
+      const xhr = new XMLHttpRequest();
+      xhr.open('GET', 'version.txt', true);
+      xhr.onload = function() {
+        if (xhr.status === 200) {
+          const versionBadge = document.getElementById('versionBadge');
+          if (versionBadge) {
+            versionBadge.textContent = xhr.responseText.trim();
+          }
+        }
+      };
+      xhr.onerror = function() {
+        console.warn('Could not load version.txt');
+      };
+      xhr.send();
+    }
+    // Update version on page load
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', updateVersionBadge);
+    } else {
+      updateVersionBadge();
+    }
+    
     // ============ FIREBASE ============
     const firebaseConfig = {
       apiKey: "AIzaSyCRkK3IpRXeQC9JH73iC0tC-mjq5nulaAo",
