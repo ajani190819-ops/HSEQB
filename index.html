@@ -2193,15 +2193,20 @@
 
     // ============ RESET ============
     function resetAllData() {
-      if (confirm('Delete all sessions and data? This cannot be undone!')) {
-        if (confirm('Are you absolutely sure? This will delete everything.')) {
-          sessionsRef.remove().catch(err => showFirebaseError('Reset failed: ' + err.message));
-          localStorage.setItem(CURRENT_SESSION_KEY, '');
-          state.sessions = {};
-          state.currentSessionId = null;
-          createNewSession();
-          renderAll();
-        }
+      const entered = prompt('Enter the admin password to delete all data:');
+      if (entered === null) return; // cancelled
+      if (entered !== 'Neg 5') {
+        alert('Incorrect password. No data was deleted.');
+        return;
+      }
+      if (confirm('Password accepted. Delete ALL sessions and data? This cannot be undone!')) {
+        sessionsRef.remove().catch(err => showFirebaseError('Reset failed: ' + err.message));
+        globalPlayersRef.remove().catch(err => showFirebaseError('Reset failed: ' + err.message));
+        localStorage.setItem(CURRENT_SESSION_KEY, '');
+        state.sessions = {};
+        state.currentSessionId = null;
+        createNewSession();
+        renderAll();
       }
     }
   </script>
