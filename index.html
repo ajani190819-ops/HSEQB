@@ -787,26 +787,44 @@
 
     @media (max-width: 768px) {
       body { padding: 8px; }
-      .header { padding: 24px 16px; flex-direction: column; text-align: center; gap: 16px; }
-      .header h1 { width: 100%; }
-  
-    .header-session-name {
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      bottom: 14px;
-      font-size: 0.8em;
-      font-weight: 600;
-      color: rgba(255,255,255,0.75);
-      letter-spacing: 0.4px;
-      white-space: nowrap;
-      pointer-events: none;
-    }
-    .header-session-name::before {
-      content: 'Session: ';
-      opacity: 0.6;
-    }
-    .header-controls { width: 100%; justify-content: center; }
+      /* Mobile header: stack everything vertically, no absolute positioning */
+      .header {
+        padding: 16px;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+      }
+      .header h1 {
+        position: static;
+        transform: none;
+        white-space: normal;
+        text-align: center;
+        width: 100%;
+        font-size: clamp(1.3em, 6vw, 1.8em);
+      }
+      .sidebar-open-btn {
+        position: static;
+        transform: none;
+        display: none; /* shown via JS when sidebar collapsed */
+        width: auto;
+        margin: 0 auto;
+      }
+      .layout.collapsed .header .sidebar-open-btn {
+        display: inline-flex;
+      }
+      .header-session-name {
+        position: static;
+        transform: none;
+        white-space: normal;
+        text-align: center;
+        width: 100%;
+      }
+      .header-controls {
+        position: static;
+        transform: none;
+        width: 100%;
+        justify-content: center;
+      }
       .content { padding: 16px; }
       .section { padding: 16px; margin-bottom: 12px; }
       .point-type-buttons, .category-buttons { grid-template-columns: repeat(2, 1fr); gap: 8px; }
