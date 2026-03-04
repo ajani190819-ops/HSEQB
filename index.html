@@ -1256,11 +1256,17 @@
     });
 
     // ============ GLOBAL PLAYER POOL ============
-    // Players are stored globally in Firebase so they sync across all sessions
+    // Global players live at /globalPlayers in Firebase.
+    // Rules: ADDITIVE ONLY — adding a player anywhere adds them everywhere.
+    //        Removing from a session does NOT remove from the global list.
+    //        saveGlobalPlayers only ever ADDS new names, never removes.
+
     function setupGlobalPlayers() {
       if (playersUnsubscribe) playersUnsubscribe();
       playersUnsubscribe = globalPlayersRef.on('value', (snapshot) => {
         const data = snapshot.val() || {};
+        // Wait until sessions are loaded before applying
+        if (!state.currentSessionId) return;
         applyGlobalPlayersToSession(data);
       });
     }
@@ -1276,20 +1282,33 @@
         }
       });
       if (changed) {
-        saveAllData();
+        // Save the updated session to Firebase (adds new players to this session)
+        sessionsRef.child(state.currentSessionId)
+          .set(state.sessions[state.currentSessionId])
+          .catch(err => showFirebaseError('Player sync failed: ' + err.message));
         renderPlayerPool();
         renderPlayerButtons();
         renderTeams();
       }
     }
 
-    function saveGlobalPlayers() {
-      const session = getCurrentSession();
-      if (!session) return;
-      const playerMap = {};
-      Object.keys(session.players).forEach(name => { playerMap[name] = true; });
-      globalPlayersRef.set(playerMap).catch(err => showFirebaseError('Player sync failed: ' + err.message));
+    // Only ADD the given names to the global list — never overwrite or remove
+    function saveGlobalPlayers(names) {
+      const updates = {};
+      (Array.isArray(names) ? names : [names]).forEach(name => {
+        if (name) updates[name] = true;
+      });
+      if (Object.keys(updates).length === 0) return;
+      globalPlayersRef.update(updates)
+        .catch(err => showFirebaseError('Player sync failed: ' + err.message));
     }
+
+    // Remove a player from the global list (explicit admin action only)
+    function removeGlobalPlayer(name) {
+      globalPlayersRef.child(name).remove()
+        .catch(err => showFirebaseError('Player sync failed: ' + err.message));
+    }
+
 
     // ============ STORAGE ============
     function loadAllData() {
@@ -1321,6 +1340,10 @@
         }
 
         loadSessionData();
+        // Now that session is loaded, apply global players immediately
+        globalPlayersRef.once('value').then(snapshot => {
+          applyGlobalPlayersToSession(snapshot.val() || {});
+        });
         setLoadingState(false);
         renderAll();
       }, (error) => {
@@ -1626,7 +1649,7 @@
       session.players[player] = { name: player, points: 0, answers: [] };
       input.value = '';
       saveAllData();
-      saveGlobalPlayers();
+      saveGlobalPlayers([player]);
       renderPlayerPool();
       renderPlayerButtons();
       renderTeams();
@@ -1640,7 +1663,7 @@
       const session = getCurrentSession();
       delete session.players[player];
       saveAllData();
-      saveGlobalPlayers();
+      // Note: does NOT remove from global list — use removeGlobalPlayer() for that
       renderPlayerPool();
       renderPlayerButtons();
       renderTeams();
@@ -1651,7 +1674,7 @@
         const session = getCurrentSession();
         session.players = {};
         saveAllData();
-        saveGlobalPlayers();
+        // Note: does NOT remove from global list
         renderPlayerPool();
         renderPlayerButtons();
         renderTeams();
@@ -1711,7 +1734,7 @@
           }
         });
         saveAllData();
-        saveGlobalPlayers();
+        saveGlobalPlayers(players);
         renderPlayerPool();
         renderPlayerButtons();
         renderTeams();
@@ -1980,6 +2003,13 @@
 
     function renderStatistics() {
       const container = document.getElementById('statisticsContainer');
+
+      // Remember which cards are currently open before rebuilding the DOM
+      const openCards = new Set();
+      container.querySelectorAll('.stat-card:not(.collapsed), .team-stat-card:not(.collapsed)').forEach(card => {
+        const nameEl = card.querySelector('.player-name, .team-name');
+        if (nameEl) openCards.add(nameEl.textContent.trim());
+      });
       const playerStats = calculatePlayerStats();
       const teamStats = calculateTeamStats();
       const activePlayers = playerStats.filter(stat => stat.totalAnswers > 0);
@@ -2037,6 +2067,16 @@
 
       html += '</div>';
       container.innerHTML = html;
+
+      // Restore previously open cards
+      if (openCards.size > 0) {
+        container.querySelectorAll('.stat-card, .team-stat-card').forEach(card => {
+          const nameEl = card.querySelector('.player-name, .team-name');
+          if (nameEl && openCards.has(nameEl.textContent.trim())) {
+            card.classList.remove('collapsed');
+          }
+        });
+      }
     }
 
     function toggleStatCard(event) {
