@@ -71,28 +71,46 @@
     }
     
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
+    html { scroll-behavior: smooth; height: 100%; overflow: hidden; }
+
+    /* Transparent scrollbar track globally */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--primary-color); border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--primary-dark); }
+    * { scrollbar-width: thin; scrollbar-color: var(--primary-color) transparent; }
+
     
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
       background: linear-gradient(135deg, var(--background-start) 0%, var(--background-end) 100%);
-      min-height: 100vh;
+      height: 100vh;
+      overflow: hidden;
       color: var(--text-color);
     }
     
     .container {
       width: 100%;
+      height: 100vh;
       background: var(--bg-color);
       border-radius: 0;
       box-shadow: none;
-      overflow: hidden;
+      overflow-y: auto;
+      overflow-x: hidden;
       transition: all 0.3s ease;
+      scrollbar-width: thin;
+      scrollbar-color: var(--primary-color) transparent;
+      scrollbar-gutter: stable;
     }
+    .container::-webkit-scrollbar { width: 8px; height: 8px; }
+    .container::-webkit-scrollbar-track { background: transparent; }
+    .container::-webkit-scrollbar-thumb { background: var(--primary-color); border-radius: 10px; }
+    .container::-webkit-scrollbar-thumb:hover { background: var(--primary-dark); }
     
     .header {
       background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
       color: white;
-      padding: 36px 24px 52px;
+      padding: 36px 34px 52px 24px;
       text-align: center;
       display: flex;
       justify-content: center;
@@ -100,7 +118,10 @@
       flex-wrap: wrap;
       gap: 20px;
       box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
-      position: relative;
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      overflow-x: hidden;
     }
     
     .header h1 {
@@ -115,6 +136,20 @@
     }
     
 
+
+    .version-badge {
+      font-size: 0.38em;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: rgba(255,255,255,0.8);
+      padding: 3px 8px;
+      border-radius: 20px;
+      vertical-align: middle;
+      position: relative;
+      top: -4px;
+    }
     .header-session-name {
       position: absolute;
       left: 50%;
@@ -163,9 +198,13 @@
       overflow-y: auto;
       overflow-x: visible;
       padding-right: 6px;
-      /* Scroll the sidebar independently while page scrolls */
       scrollbar-width: thin;
+      scrollbar-color: var(--primary-color) transparent;
     }
+    .sidebar::-webkit-scrollbar { width: 6px; }
+    .sidebar::-webkit-scrollbar-track { background: transparent; }
+    .sidebar::-webkit-scrollbar-thumb { background: var(--primary-color); border-radius: 10px; }
+    .sidebar::-webkit-scrollbar-thumb:hover { background: var(--primary-dark); }
 
     .main { min-height: 60vh; }
 
@@ -755,10 +794,7 @@
       border-radius: 8px;
     }
     
-    ::-webkit-scrollbar { width: 8px; height: 8px; }
-    ::-webkit-scrollbar-track { background: var(--section-bg); border-radius: 10px; }
-    ::-webkit-scrollbar-thumb { background: var(--primary-color); border-radius: 10px; }
-    ::-webkit-scrollbar-thumb:hover { background: var(--primary-dark); }
+
     
     .auto-save-indicator {
       font-size: 0.78em;
@@ -812,7 +848,21 @@
       .layout.collapsed .header .sidebar-open-btn {
         display: inline-flex;
       }
-      .header-session-name {
+  
+    .version-badge {
+      font-size: 0.38em;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: rgba(255,255,255,0.8);
+      padding: 3px 8px;
+      border-radius: 20px;
+      vertical-align: middle;
+      position: relative;
+      top: -4px;
+    }
+    .header-session-name {
         position: static;
         transform: none;
         white-space: normal;
@@ -847,6 +897,69 @@
     /* Always show the nav bar */
     .sidebar-nav { display: flex !important; }
 
+
+    /* ===== Custom sidebar section dropdown ===== */
+    .sidebar-jump-wrapper {
+      flex: 1;
+      position: relative;
+    }
+    .sidebar-jump-btn {
+      width: 100%;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.3);
+      background: rgba(255,255,255,0.15);
+      color: white;
+      font-weight: 600;
+      font-size: 0.9em;
+      cursor: pointer;
+      font-family: inherit;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.2s;
+    }
+    .sidebar-jump-btn:hover { background: rgba(255,255,255,0.25); }
+    .sidebar-jump-arrow { font-size: 0.85em; opacity: 0.8; transition: transform 0.2s; }
+    .sidebar-jump-wrapper.open .sidebar-jump-arrow { transform: rotate(180deg); }
+    .sidebar-jump-menu {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      right: 0;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      z-index: 300;
+      overflow: hidden;
+    }
+    .sidebar-jump-wrapper.open .sidebar-jump-menu { display: block; }
+    .sidebar-jump-menu button {
+      display: block;
+      width: 100%;
+      padding: 10px 14px;
+      text-align: left;
+      background: none;
+      border: none;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-color);
+      font-size: 0.9em;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s;
+    }
+    .sidebar-jump-menu button:last-child { border-bottom: none; }
+    .sidebar-jump-menu button:hover { background: var(--section-bg); }
+    .sidebar-jump-menu button.active-item {
+      color: var(--primary-color);
+      font-weight: 700;
+      background: var(--section-bg);
+    }
+
     /* ===== Sidebar Nav Bar ===== */
     .sidebar-nav {
       display: flex;
@@ -862,24 +975,7 @@
       z-index: 10;
     }
 
-    .sidebar-jump {
-      flex: 1;
-      padding: 8px 10px;
-      border-radius: 6px;
-      border: none;
-      background: rgba(255,255,255,0.18);
-      color: white;
-      font-weight: 600;
-      font-size: 0.9em;
-      cursor: pointer;
-      outline: none;
-      font-family: inherit;
-      backdrop-filter: blur(4px);
-    }
-    .sidebar-jump option {
-      background: var(--card-bg);
-      color: var(--text-color);
-    }
+
     .sidebar-jump:focus { box-shadow: 0 0 0 3px rgba(255,255,255,0.3); }
 
     .sidebar-close-btn {
@@ -936,7 +1032,7 @@
     <div class="header">
       <!-- Sidebar open button - shown when sidebar collapsed -->
       <button class="sidebar-open-btn" onclick="toggleSidebar()" title="Show sidebar">&#9654; Menu</button>
-      <h1>HSE Quiz Bowl Tracker</h1>
+      <h1>HSE Quiz Bowl Tracker <span class="version-badge">v29</span></h1>
 
       <!-- Session name chip shown below title -->
       <div class="header-session-name" id="headerSessionName"></div>
@@ -956,15 +1052,21 @@
 
           <!-- Sidebar Nav Bar -->
           <div class="sidebar-nav">
-            <select class="sidebar-jump" id="sidebarSectionSelect" onchange="showSection(this.value)">
-              <option value="sec-session">Session</option>
-              <option value="sec-players">Players</option>
-              <option value="sec-teams">Teams</option>
-              <option value="sec-categories">Categories</option>
-              <option value="sec-export">Export Data</option>
-              <option value="sec-visual">Visual Settings</option>
-              <option value="sec-danger">Danger Zone</option>
-            </select>
+            <div class="sidebar-jump-wrapper" id="sidebarJumpWrapper">
+              <button class="sidebar-jump-btn" id="sidebarJumpBtn" onclick="toggleJumpDropdown()" type="button">
+                <span id="sidebarJumpLabel">Session</span>
+                <span class="sidebar-jump-arrow">▾</span>
+              </button>
+              <div class="sidebar-jump-menu" id="sidebarJumpMenu">
+                <button onclick="showSection('sec-session')">Session</button>
+                <button onclick="showSection('sec-players')">Players</button>
+                <button onclick="showSection('sec-teams')">Teams</button>
+                <button onclick="showSection('sec-categories')">Categories</button>
+                <button onclick="showSection('sec-export')">Export / Import</button>
+                <button onclick="showSection('sec-visual')">Visual Settings</button>
+                <button onclick="showSection('sec-danger')">Danger Zone</button>
+              </div>
+            </div>
             <button class="sidebar-close-btn" onclick="toggleSidebar()" title="Hide sidebar">&#9664; Hide</button>
           </div>
 
@@ -1256,8 +1358,7 @@
       // Only activate the section (no DOM thrash needed since sidebar starts hidden)
       const savedSection = localStorage.getItem('activeSidebarSection') || 'sec-session';
       showSection(savedSection);
-      const sel = document.getElementById('sidebarSectionSelect');
-      if (sel) sel.value = savedSection;
+      updateJumpDropdown(savedSection);
       // Restore dark mode
       if (localStorage.getItem('darkMode') === 'true') {
         document.body.classList.add('dark-mode');
@@ -1565,14 +1666,49 @@
       const el = document.getElementById(id);
       if (el) {
         el.classList.add('active-section');
-        // Make sure its content is expanded
         const cont = el.querySelector('.collapsible-content');
         const icon = el.querySelector('.toggle-icon');
         if (cont) cont.classList.remove('collapsed');
         if (icon) icon.classList.remove('collapsed');
       }
       localStorage.setItem('activeSidebarSection', id);
+      // Update custom dropdown label and active item
+      updateJumpDropdown(id);
+      // Close the dropdown menu
+      const wrapper = document.getElementById('sidebarJumpWrapper');
+      if (wrapper) wrapper.classList.remove('open');
     }
+
+    function updateJumpDropdown(activeId) {
+      const labels = {
+        'sec-session': 'Session',
+        'sec-players': 'Players',
+        'sec-teams': 'Teams',
+        'sec-categories': 'Categories',
+        'sec-export': 'Export / Import',
+        'sec-visual': 'Visual Settings',
+        'sec-danger': 'Danger Zone'
+      };
+      const labelEl = document.getElementById('sidebarJumpLabel');
+      if (labelEl && labels[activeId]) labelEl.textContent = labels[activeId];
+      // Highlight active item in menu
+      document.querySelectorAll('.sidebar-jump-menu button').forEach(btn => {
+        btn.classList.toggle('active-item', btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(activeId));
+      });
+    }
+
+    function toggleJumpDropdown() {
+      const wrapper = document.getElementById('sidebarJumpWrapper');
+      if (wrapper) wrapper.classList.toggle('open');
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      const wrapper = document.getElementById('sidebarJumpWrapper');
+      if (wrapper && !wrapper.contains(e.target)) {
+        wrapper.classList.remove('open');
+      }
+    });
 
     function toggleSidebar() {
       const layout = document.getElementById('appLayout');
