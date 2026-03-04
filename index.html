@@ -1002,15 +1002,6 @@
                 <input type="file" accept=".csv,.txt" onchange="handlePlayerImport(event)" />
               </div>
 
-              <div class="input-group">
-                <label>Default Roster (persists across sessions):</label>
-                <input type="file" accept=".csv,.txt" onchange="handleDefaultPlayersImport(event)" />
-              </div>
-              <div class="button-group" style="margin-bottom: 14px;">
-                <button class="button button-secondary" onclick="applyDefaultPlayersToSession()">Apply Default Roster</button>
-                <button class="button button-danger" onclick="clearStoredDefaultPlayers()">Clear Default</button>
-              </div>
-
               <div id="playerPoolDisplay"></div>
             </div>
           </div>
@@ -1182,7 +1173,9 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const sessionsRef = db.ref('sessions');
+    const globalPlayersRef = db.ref('globalPlayers');
     let firebaseUnsubscribe = null;
+    let playersUnsubscribe = null;
 
     // Firebase converts arrays to objects with numeric keys — this fixes that
     function toArray(val) {
@@ -1237,6 +1230,7 @@
     // ============ INIT ============
     document.addEventListener('DOMContentLoaded', () => {
       loadAllData(); // Firebase listener calls renderAll() once data loads
+      setupGlobalPlayers(); // Sync global player pool across sessions
       setupAutoSave();
       setupSectionToggle();
       applySidebarState();
@@ -1260,6 +1254,38 @@
         document.documentElement.style.setProperty('--primary-color', ac);
       }
     });
+
+    // ============ GLOBAL PLAYER POOL ============
+    // Players are stored globally in Firebase so they sync across all sessions
+    function setupGlobalPlayers() {
+      if (playersUnsubscribe) playersUnsubscribe();
+      playersUnsubscribe = globalPlayersRef.on('value', (snapshot) => {
+        const data = snapshot.val() || {};
+        // Sync global players into current session without overwriting scores/answers
+        const session = getCurrentSession();
+        if (!session) return;
+        let changed = false;
+        Object.keys(data).forEach(name => {
+          if (!session.players[name]) {
+            session.players[name] = { name, points: 0, answers: [] };
+            changed = true;
+          }
+        });
+        if (changed) {
+          renderPlayerPool();
+          renderPlayerButtons();
+          renderTeams();
+        }
+      });
+    }
+
+    function saveGlobalPlayers() {
+      const session = getCurrentSession();
+      if (!session) return;
+      const playerMap = {};
+      Object.keys(session.players).forEach(name => { playerMap[name] = true; });
+      globalPlayersRef.set(playerMap).catch(err => showFirebaseError('Player sync failed: ' + err.message));
+    }
 
     // ============ STORAGE ============
     function loadAllData() {
@@ -1381,21 +1407,6 @@
         answers: [],
         answerLog: []
       };
-
-      // Apply stored default roster
-      try {
-        const stored = localStorage.getItem('defaultPlayers');
-        if (stored) {
-          const roster = JSON.parse(stored);
-          if (Array.isArray(roster)) {
-            roster.forEach(p => {
-              if (p && !state.sessions[sessionId].players[p]) {
-                state.sessions[sessionId].players[p] = { name: p, points: 0, answers: [] };
-              }
-            });
-          }
-        }
-      } catch(e) { console.warn('Could not apply default players', e); }
 
       state.currentSessionId = sessionId;
       loadSessionData();
@@ -1592,6 +1603,7 @@
       session.players[player] = { name: player, points: 0, answers: [] };
       input.value = '';
       saveAllData();
+      saveGlobalPlayers();
       renderPlayerPool();
       renderPlayerButtons();
       renderTeams();
@@ -1605,6 +1617,7 @@
       const session = getCurrentSession();
       delete session.players[player];
       saveAllData();
+      saveGlobalPlayers();
       renderPlayerPool();
       renderPlayerButtons();
       renderTeams();
@@ -1615,6 +1628,7 @@
         const session = getCurrentSession();
         session.players = {};
         saveAllData();
+        saveGlobalPlayers();
         renderPlayerPool();
         renderPlayerButtons();
         renderTeams();
@@ -1674,6 +1688,7 @@
           }
         });
         saveAllData();
+        saveGlobalPlayers();
         renderPlayerPool();
         renderPlayerButtons();
         renderTeams();
@@ -1682,47 +1697,8 @@
       event.target.value = '';
     }
 
-    function handleDefaultPlayersImport(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const players = parsePlayersFromText(e.target.result);
-        try { localStorage.setItem('defaultPlayers', JSON.stringify(players)); }
-        catch(err) { console.error('Failed to save default players', err); }
-        applyDefaultPlayersToSession();
-        alert('Default roster saved and applied to current session.');
-      };
-      reader.readAsText(file);
-      event.target.value = '';
-    }
 
-    function applyDefaultPlayersToSession() {
-      const stored = localStorage.getItem('defaultPlayers');
-      if (!stored) { alert('No stored default roster found. Import a CSV/TXT first.'); return; }
-      let players;
-      try { players = JSON.parse(stored); }
-      catch(e) { alert('Stored default roster is invalid.'); return; }
-      const session = getCurrentSession();
-      if (!session) return;
-      if (!session.players) session.players = {};
-      players.forEach(p => {
-        if (p && !session.players[p]) {
-          session.players[p] = { name: p, points: 0, answers: [] };
-        }
-      });
-      saveAllData();
-      renderPlayerPool();
-      renderPlayerButtons();
-      renderTeams();
-    }
 
-    function clearStoredDefaultPlayers() {
-      if (confirm('Clear the stored default roster?')) {
-        localStorage.removeItem('defaultPlayers');
-        alert('Stored default roster cleared.');
-      }
-    }
 
     // ============ TEAMS ============
     function addTeam() {
