@@ -130,6 +130,59 @@
     .content {
       padding: clamp(20px, 6vw, 36px);
     }
+
+    /* Layout: sidebar + main */
+    .layout {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 20px;
+      align-self: start;
+      max-height: calc(100vh - 40px);
+      overflow-y: auto;
+      padding-right: 6px;
+    }
+
+    .main {
+      min-height: 60vh;
+    }
+
+    .sidebar-toggle {
+      background: transparent;
+      border: 2px solid rgba(255,255,255,0.15);
+      color: white;
+      padding: 8px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 700;
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    /* When sidebar collapsed on small screens */
+    .layout.collapsed {
+      grid-template-columns: 0 1fr;
+    }
+
+    @media (max-width: 900px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+      .sidebar {
+        position: relative;
+        max-height: none;
+        order: 2;
+      }
+      .main {
+        order: 1;
+      }
+    }
     
     .section {
       margin-bottom: 24px;
@@ -196,7 +249,7 @@
       letter-spacing: 0.3px;
     }
     
-    .input-group input, .input-group textarea, .input-group select {
+    .input-group input, .input-group textarea, .input-group select, .input-group input[type="file"] {
       width: 100%;
       padding: 12px 14px;
       border: 2px solid var(--input-border);
@@ -217,6 +270,50 @@
       outline: none;
       box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
       background: var(--input-bg);
+    }
+
+    /* Style native file input to match theme (modern browsers) */
+    input[type="file"] {
+      display: inline-block;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 2px solid var(--input-border);
+      background: var(--card-bg);
+      color: var(--input-text);
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.95em;
+    }
+
+    /* Style the file selector button where supported */
+    input[type="file"]::file-selector-button {
+      margin-right: 10px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: none;
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25);
+    }
+
+    /* Ensure the session name input follows the same styling */
+    #newSessionName {
+      padding: 12px 14px;
+      border: 2px solid var(--input-border);
+      border-radius: 8px;
+      background: var(--input-bg);
+      color: var(--input-text);
+      font-weight: 600;
+      font-size: 1em;
+      transition: all 0.2s;
+    }
+
+    #newSessionName:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.12);
+      outline: none;
     }
     
     .player-pool-item {
@@ -924,14 +1021,38 @@
         padding: 6px 12px;
       }
     }
+
+    /* Floating sidebar toggle on left side */
+    .sidebar-toggle-floating {
+      position: fixed;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1200;
+      cursor: pointer;
+      border: none;
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+      color: white;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+      font-size: 20px;
+    }
+
+    .sidebar-toggle-floating:hover { transform: translateY(-50%) scale(1.03); }
   </style>
 </head>
 <body>
   <div id="app" class="container">
     <!-- Header -->
     <div class="header">
-      <h1>🎯 HSE Quiz Bowl Tracker</h1>
+      <h1>HSE Quiz Bowl Tracker</h1>
       <div class="header-controls">
+        <!-- sidebar toggle moved to floating icon -->
         <div class="theme-controls">
           <label class="switch">
             <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode()">
@@ -943,160 +1064,183 @@
     </div>
     
     <div class="content">
-      <!-- Session Management -->
-      <div class="section">
-        <h2>📋 Current Session <span id="autosaveStatus" class="auto-save-indicator">✓ Auto-saving</span> <span class="toggle-icon">▼</span></h2>
-        <div class="collapsible-content">
-          <div class="session-info">
-            <div class="session-info-row">
-              <span>Session Name:</span>
-              <strong id="sessionName">New Session</strong>
-            </div>
-            <div class="session-info-row">
-              <span>Created:</span>
-              <strong id="sessionCreated">--</strong>
-            </div>
-            <div class="session-info-row">
-              <span>Last Updated:</span>
-              <strong id="sessionLastUpdated">--</strong>
-            </div>
-            <div class="session-info-row">
-              <span>Total Answers Recorded:</span>
-              <strong id="sessionAnswerCount">0</strong>
-            </div>
-          </div>
-          <div class="session-controls">
-            <input type="text" id="newSessionName" placeholder="Enter session name..." style="flex: 1;">
-            <button class="button" onclick="createNewSession()">+ New Session</button>
-            <button class="button button-secondary" onclick="openSessionsModal()">📂 Load Session</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Player Pool Section -->
-      <div class="section">
-        <h2>👥 Player Pool <span class="toggle-icon">▼</span></h2>
-        <div class="collapsible-content">
-          <div class="input-group">
-            <label>Add Player:</label>
-            <input type="text" id="playerInput" placeholder="Enter player name..." onkeypress="handlePlayerInputEnter(event)">
-          </div>
-          <div class="button-group">
-            <button class="button" onclick="addToPlayerPool()">Add Player</button>
-            <button class="button button-secondary" onclick="clearPlayerPool()">Clear All Players</button>
-          </div>
-          <div class="input-group">
-            <label>Or Import Players (CSV/TXT):</label>
-            <input type="file" id="playerImport" accept=".csv,.txt" onchange="handlePlayerImport(event)">
-          </div>
-          <div id="playerPoolDisplay" style="margin-top: 15px;"></div>
-        </div>
-      </div>
-
-      <!-- Teams Section -->
-      <div class="section">
-        <h2>🏆 Teams <span class="toggle-icon">▼</span></h2>
-        <div class="collapsible-content">
-          <div class="input-group">
-            <label>Team Name:</label>
-            <input type="text" id="teamNameInput" placeholder="Enter team name...">
-          </div>
-          <button class="button" onclick="addTeam()">+ Add Team</button>
-          <div id="teamsContainer" style="margin-top: 20px;"></div>
-        </div>
-      </div>
-
-      <!-- Categories Section -->
-      <div class="section">
-        <h2>📚 Categories <span class="toggle-icon">▼</span></h2>
-        <div class="collapsible-content">
-          <div class="input-group">
-            <label>Category (comma-separated):</label>
-            <textarea id="categoriesInput" placeholder="e.g., Science, History, Literature, Math..." rows="3"></textarea>
-          </div>
-          <button class="button" onclick="saveCategories()">Save Categories</button>
-          <div id="categoriesDisplay" style="margin-top: 15px;"></div>
-        </div>
-      </div>
-
-      <!-- Answer Recording Section -->
-      <div class="section">
-        <h2>➕ Record Answer <span class="toggle-icon">▼</span></h2>
-        <div class="collapsible-content">
-          <div class="input-group">
-            <label>Select Player:</label>
-            <div id="playerButtonsContainer" class="player-buttons"></div>
-          </div>
-
-          <div class="input-group">
-            <label>Point Type:</label>
-            <div class="point-type-buttons">
-              <button class="button-point-type" onclick="selectPointType('Toss-up')">Toss-up (+10)</button>
-              <button class="button-point-type" onclick="selectPointType('Bonus')">Bonus (+15)</button>
-              <button class="button-point-type" onclick="selectPointType('Neg')">Neg (-5)</button>
-              <button class="button-point-type" onclick="selectPointType('Power')">Power (+20)</button>
+      <div class="layout" id="appLayout">
+        <aside class="sidebar" id="sidebar">
+          <!-- Session Management (sidebar) -->
+          <div class="section">
+            <h2>Current Session <span id="autosaveStatus" class="auto-save-indicator">✓ Auto-saving</span></h2>
+            <div class="collapsible-content">
+              <div class="session-info">
+                <div class="session-info-row">
+                  <span>Session Name:</span>
+                  <strong id="sessionName">New Session</strong>
+                </div>
+                <div class="session-info-row">
+                  <span>Created:</span>
+                  <strong id="sessionCreated">--</strong>
+                </div>
+                <div class="session-info-row">
+                  <span>Last Updated:</span>
+                  <strong id="sessionLastUpdated">--</strong>
+                </div>
+                <div class="session-info-row">
+                  <span>Total Answers Recorded:</span>
+                  <strong id="sessionAnswerCount">0</strong>
+                </div>
+              </div>
+              <div class="session-controls">
+                <input type="text" id="newSessionName" placeholder="Enter session name...">
+                <button class="button" onclick="createNewSession()">+ New Session</button>
+                <button class="button button-secondary" onclick="openSessionsModal()">📂 Load Session</button>
+              </div>
             </div>
           </div>
 
-          <div class="input-group">
-            <label>Category:</label>
-            <div id="categoryButtonsContainer" class="category-buttons"></div>
+          <!-- Player Pool (sidebar) -->
+          <div class="section">
+            <h2>Player Pool</h2>
+            <div class="collapsible-content">
+              <div class="input-group">
+                <label>Add Player:</label>
+                <input type="text" id="playerInput" placeholder="Enter player name..." onkeypress="handlePlayerInputEnter(event)">
+              </div>
+              <div class="button-group">
+                <button class="button" onclick="addToPlayerPool()">Add Player</button>
+                <button class="button button-secondary" onclick="clearPlayerPool()">Clear All Players</button>
+              </div>
+              <div class="input-group">
+                <label>Or Import Players (CSV/TXT):</label>
+                <input type="file" id="playerImport" accept=".csv,.txt" onchange="handlePlayerImport(event)">
+              </div>
+              <div class="input-group">
+                <label>Default Roster (CSV/TXT) — will save to browser:</label>
+                <input type="file" id="defaultPlayersFile" accept=".csv,.txt" onchange="handleDefaultPlayersImport(event)">
+                <div style="margin-top:8px; display:flex; gap:8px;">
+                  <button class="button button-secondary" onclick="applyDefaultPlayersToSession()">Apply Stored Default</button>
+                  <button class="button" onclick="clearStoredDefaultPlayers()">Clear Stored Default</button>
+                </div>
+              </div>
+              <div id="playerPoolDisplay" style="margin-top: 15px;"></div>
+            </div>
           </div>
 
-          <button class="button button-success" onclick="recordAnswer()" style="width: 100%; margin-top: 10px;">Record Answer</button>
-        </div>
-      </div>
-
-      <!-- Statistics Section -->
-      <div class="section">
-        <h2>📊 Statistics <span class="toggle-icon">▼</span></h2>
-        <div class="collapsible-content">
-          <div id="statisticsContainer"></div>
-        </div>
-      </div>
-
-      <!-- Answer Log Section -->
-      <div class="section">
-        <h2>📝 Answer Log <span class="toggle-icon">▼</span></h2>
-        <div class="collapsible-content">
-          <button class="button button-danger" onclick="clearAnswerLog()">Clear Log</button>
-          <div id="answerLog" class="log-container" style="margin-top: 15px;"></div>
-        </div>
-      </div>
-
-      <!-- Export Section -->
-      <div class="section">
-        <h2>📥 Export Data <span class="toggle-icon">▼</span></h2>
-        <div class="collapsible-content">
-          <div class="export-options">
-            <p style="margin-bottom: 10px;"><strong>Select what to include:</strong></p>
-            <label>
-              <input type="checkbox" id="exportPlayers" checked> Players & Scores
-            </label>
-            <label>
-              <input type="checkbox" id="exportAnswerLog" checked> Answer Log
-            </label>
-            <label>
-              <input type="checkbox" id="exportTeamStats" checked> Team Statistics
-            </label>
+          <!-- Teams (sidebar) -->
+          <div class="section">
+            <h2>Teams</h2>
+            <div class="collapsible-content">
+              <div class="input-group">
+                <label>Team Name:</label>
+                <input type="text" id="teamNameInput" placeholder="Enter team name...">
+              </div>
+              <button class="button" onclick="addTeam()">+ Add Team</button>
+              <div id="teamsContainer" style="margin-top: 20px;"></div>
+            </div>
           </div>
-          <div class="button-group" style="margin-top: 15px;">
-            <button class="button button-success" onclick="exportToExcel()">📊 Export to Excel</button>
-            <button class="button button-secondary" onclick="exportToJSON()">📄 Export as JSON</button>
-          </div>
-        </div>
-      </div>
 
-      <!-- Danger Zone -->
-      <div class="section" style="border: 2px solid var(--danger-color);">
-        <h2 style="color: var(--danger-color);">⚠️ Danger Zone <span class="toggle-icon">▼</span></h2>
-        <div class="collapsible-content">
-          <button class="button button-danger" onclick="resetAllData()">Delete All Data</button>
-          <p style="margin-top: 10px; font-size: 0.85em; color: var(--text-secondary);">This action cannot be undone. Make sure to export your data first!</p>
-        </div>
+          <!-- Categories (sidebar) -->
+          <div class="section">
+            <h2>Categories</h2>
+            <div class="collapsible-content">
+              <div class="input-group">
+                <label>Category (comma-separated):</label>
+                <textarea id="categoriesInput" placeholder="e.g., Science, History, Literature, Math..." rows="3"></textarea>
+              </div>
+              <button class="button" onclick="saveCategories()">Save Categories</button>
+              <div id="categoriesDisplay" style="margin-top: 15px;"></div>
+            </div>
+          </div>
+
+          <!-- Export (sidebar) -->
+          <div class="section">
+            <h2>Export Data</h2>
+            <div class="collapsible-content">
+              <div class="export-options">
+                <p style="margin-bottom: 10px;"><strong>Select what to include:</strong></p>
+                <label>
+                  <input type="checkbox" id="exportPlayers" checked> Players & Scores
+                </label>
+                <label>
+                  <input type="checkbox" id="exportAnswerLog" checked> Answer Log
+                </label>
+                <label>
+                  <input type="checkbox" id="exportTeamStats" checked> Team Statistics
+                </label>
+              </div>
+              <div class="button-group" style="margin-top: 15px;">
+                <button class="button button-success" onclick="exportToExcel()">📊 Export to Excel</button>
+                <button class="button button-secondary" onclick="exportToJSON()">📄 Export as JSON</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Danger Zone (sidebar) -->
+          <div class="section" style="border: 2px solid var(--danger-color);">
+            <h2 style="color: var(--danger-color);">Danger Zone</h2>
+            <div class="collapsible-content">
+              <button class="button button-danger" onclick="resetAllData()">Delete All Data</button>
+              <p style="margin-top: 10px; font-size: 0.85em; color: var(--text-secondary);">This action cannot be undone. Make sure to export your data first!</p>
+            </div>
+          </div>
+        </aside>
+
+        <main class="main">
+          <!-- Answer Recording (main focus) -->
+          <div class="section" style="padding: 28px;">
+            <h2>Record Answer</h2>
+            <div class="collapsible-content">
+              <div class="input-group">
+                <label>Select Player:</label>
+                <div id="playerButtonsContainer" class="player-buttons"></div>
+              </div>
+
+              <div class="input-group">
+                <label>Point Type:</label>
+                <div class="point-type-buttons">
+                    <button class="button-point-type" onclick="selectPointType('Toss-up')">Toss-up (+10)</button>
+                    <button class="button-point-type" onclick="selectPointType('Bonus')">Bonus (+10)</button>
+                    <button class="button-point-type" onclick="selectPointType('Neg')">Neg (-5)</button>
+                    <button class="button-point-type" onclick="selectPointType('Power')">Power (+15)</button>
+                  </div>
+              </div>
+
+              <div class="input-group">
+                <label>Category:</label>
+                <div id="categoryButtonsContainer" class="category-buttons"></div>
+              </div>
+
+              <button class="button button-success" onclick="recordAnswer()" style="width: 100%; margin-top: 10px; padding: 16px; font-size: 1.05em;">Record Answer</button>
+            </div>
+          </div>
+
+          <!-- Statistics -->
+          <div class="section">
+            <h2>Statistics</h2>
+            <div class="collapsible-content">
+              <div id="statisticsContainer"></div>
+            </div>
+          </div>
+
+          <!-- Answer Log -->
+          <div class="section">
+            <h2>Answer Log</h2>
+            <div class="collapsible-content">
+              <button class="button button-danger" onclick="clearAnswerLog()">Clear Log</button>
+              <div id="answerLog" class="log-container" style="margin-top: 15px;"></div>
+            </div>
+          </div>
+        </main>
       </div>
     </div>
   </div>
+
+  <!-- Floating sidebar toggle (left side) -->
+  <button id="floatingSidebarToggle" class="sidebar-toggle-floating" onclick="toggleSidebar()" aria-label="Open Setup" title="Setup">
+    <svg width="20" height="14" viewBox="0 0 20 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect y="1" width="20" height="2" rx="1" fill="white"/>
+      <rect y="6" width="20" height="2" rx="1" fill="white"/>
+      <rect y="11" width="20" height="2" rx="1" fill="white"/>
+    </svg>
+  </button>
 
   <!-- Sessions Modal -->
   <div id="sessionsModal" class="modal">
@@ -1114,6 +1258,27 @@
     const STORAGE_KEY = 'quizBowlSessions';
     const CURRENT_SESSION_KEY = 'currentSession';
     const AUTO_SAVE_INTERVAL = 5000; // 5 seconds
+    const DEFAULT_CATEGORIES = [
+      'Art',
+      'Current Events',
+      'Geography',
+      'History',
+      'Literature',
+      'Math',
+      'Misc',
+      'Mythology',
+      'Music',
+      'Pop Culture',
+      'Religion',
+      'Science',
+      'Soc. Stu.',
+      'Sports'
+    ];
+
+    function getDefaultCategories() {
+      // Return a copy so callers can mutate safely
+      return [...DEFAULT_CATEGORIES];
+    }
 
     // State variables
     let state = {
@@ -1131,6 +1296,7 @@
       renderAll();
       setupAutoSave();
       setupSectionToggle();
+      applySidebarState();
     });
 
     // ============ STORAGE FUNCTIONS ============
@@ -1159,6 +1325,12 @@
       }
       
       const session = state.sessions[state.currentSessionId];
+      // Ensure default categories exist and are alphabetical
+      if (!session.categories || !Array.isArray(session.categories) || session.categories.length === 0) {
+        session.categories = getDefaultCategories();
+      }
+      // Normalize: sort alphabetically
+      session.categories = session.categories.sort((a, b) => a.localeCompare(b));
       state.categories = session.categories || [];
     }
 
@@ -1202,7 +1374,23 @@
         answers: [],
         answerLog: []
       };
-      
+      // If user has a stored default roster, populate players
+      try {
+        const stored = localStorage.getItem('defaultPlayers');
+        if (stored) {
+          const roster = JSON.parse(stored);
+          if (Array.isArray(roster) && roster.length > 0) {
+            roster.forEach(p => {
+              if (p && !state.sessions[sessionId].players[p]) {
+                state.sessions[sessionId].players[p] = { name: p, points: 0, answers: [] };
+              }
+            });
+          }
+        }
+      } catch (e) {
+        console.warn('Could not apply stored default players', e);
+      }
+
       state.currentSessionId = sessionId;
       loadSessionData();
       saveAllData();
@@ -1284,6 +1472,23 @@
       });
     }
 
+    // Sidebar toggle + persistence
+    function toggleSidebar() {
+      const layout = document.getElementById('appLayout');
+      if (!layout) return;
+      layout.classList.toggle('collapsed');
+      const collapsed = layout.classList.contains('collapsed');
+      localStorage.setItem('sidebarCollapsed', collapsed ? 'true' : 'false');
+    }
+
+    function applySidebarState() {
+      const layout = document.getElementById('appLayout');
+      if (!layout) return;
+      const collapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+      if (collapsed) layout.classList.add('collapsed');
+      else layout.classList.remove('collapsed');
+    }
+
     function toggleDarkMode() {
       document.body.classList.toggle('dark-mode');
       localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
@@ -1316,6 +1521,15 @@
     }
 
     // ============ PLAYER MANAGEMENT ============
+    // Utility: parse players from text allowing commas, semicolons, and newlines
+    function parsePlayersFromText(text) {
+      if (!text) return [];
+      // Replace CRLF with LF, then split on newline and commas/semicolons
+      const normalized = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+      // Split by newline first, then split each line by comma/semicolon
+      const items = normalized.split('\n').flatMap(line => line.split(/[,;]+/));
+      return items.map(p => p.trim()).filter(p => p);
+    }
     function addToPlayerPool() {
       const input = document.getElementById('playerInput');
       const player = input.value.trim();
@@ -1405,7 +1619,7 @@
       const reader = new FileReader();
       reader.onload = (e) => {
         const text = e.target.result;
-        const players = text.split('\n').map(p => p.trim()).filter(p => p);
+        const players = parsePlayersFromText(text);
         
         const session = getCurrentSession();
         if (!session.players) session.players = {};
@@ -1422,6 +1636,59 @@
       };
       reader.readAsText(file);
       event.target.value = '';
+    }
+
+    // Default roster import (saves to localStorage and applies to session)
+    function handleDefaultPlayersImport(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const text = e.target.result;
+        const players = parsePlayersFromText(text);
+        try {
+          localStorage.setItem('defaultPlayers', JSON.stringify(players));
+        } catch (err) {
+          console.error('Failed to save default players', err);
+        }
+        applyDefaultPlayersToSession();
+        alert('Default roster saved and applied to current session.');
+      };
+      reader.readAsText(file);
+      event.target.value = '';
+    }
+
+    function applyDefaultPlayersToSession() {
+      const stored = localStorage.getItem('defaultPlayers');
+      if (!stored) {
+        alert('No stored default roster found. Import a CSV/TXT first.');
+        return;
+      }
+      let players;
+      try {
+        players = JSON.parse(stored);
+      } catch (e) {
+        alert('Stored default roster is invalid. Clear and re-import.');
+        return;
+      }
+      const session = getCurrentSession();
+      if (!session) return;
+      if (!session.players) session.players = {};
+      players.forEach(p => {
+        if (p && !session.players[p]) {
+          session.players[p] = { name: p, points: 0, answers: [] };
+        }
+      });
+      saveAllData();
+      renderPlayerPool();
+      renderPlayerButtons();
+    }
+
+    function clearStoredDefaultPlayers() {
+      if (confirm('Clear the stored default roster?')) {
+        localStorage.removeItem('defaultPlayers');
+        alert('Stored default roster cleared.');
+      }
     }
 
     // ============ TEAM MANAGEMENT ============
@@ -1507,6 +1774,8 @@
     function saveCategories() {
       const input = document.getElementById('categoriesInput').value;
       state.categories = input.split(',').map(c => c.trim()).filter(c => c);
+      // Normalize and sort alphabetically
+      state.categories = state.categories.sort((a, b) => a.localeCompare(b));
       saveAllData();
       renderCategories();
     }
@@ -1561,7 +1830,7 @@
         return;
       }
       
-      const pointMap = { 'Toss-up': 10, 'Bonus': 15, 'Neg': -5, 'Power': 20 };
+      const pointMap = { 'Toss-up': 10, 'Bonus': 10, 'Neg': -5, 'Power': 15 };
       const points = pointMap[state.selectedPointType];
       
       const answer = {
@@ -1649,7 +1918,7 @@
           points: player.points,
           totalAnswers: answers.length,
           tossupsCorrect: answers.filter(a => a.pointType === 'Toss-up').length,
-          bonusPoints: answers.filter(a => a.pointType === 'Bonus').length * 15,
+          bonusPoints: answers.filter(a => a.pointType === 'Bonus').length * 10,
           negs: answers.filter(a => a.pointType === 'Neg').length,
           powers: answers.filter(a => a.pointType === 'Power').length
         });
@@ -1778,7 +2047,7 @@
         csv.push('Player Statistics');
         csv.push('Player Name,Total Points,Total Answers,Toss-ups,Bonuses,Negs,Powers');
         playerStats.forEach(stat => {
-          csv.push(`${stat.name},${stat.points},${stat.totalAnswers},${stat.tossupsCorrect},${stat.bonusPoints / 15},${stat.negs},${stat.powers}`);
+          csv.push(`${stat.name},${stat.points},${stat.totalAnswers},${stat.tossupsCorrect},${stat.bonusPoints / 10},${stat.negs},${stat.powers}`);
         });
         csv.push('');
       }
