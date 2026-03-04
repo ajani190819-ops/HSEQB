@@ -70,23 +70,14 @@
       --shadow-xl: 0 20px 40px rgba(0,0,0,0.6);
     }
     
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    
-    html {
-      scroll-behavior: smooth;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
     
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
       background: linear-gradient(135deg, var(--background-start) 0%, var(--background-end) 100%);
       min-height: 100vh;
-      padding: 8px 8px 0 0;
       color: var(--text-color);
-      overflow-y: scroll;
     }
     
     .container {
@@ -101,7 +92,7 @@
     .header {
       background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
       color: white;
-      padding: 32px 24px;
+      padding: 36px 24px 52px;
       text-align: center;
       display: flex;
       justify-content: center;
@@ -123,6 +114,23 @@
       white-space: nowrap;
     }
     
+
+    .header-session-name {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 14px;
+      font-size: 0.8em;
+      font-weight: 600;
+      color: rgba(255,255,255,0.75);
+      letter-spacing: 0.4px;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    .header-session-name::before {
+      content: 'Session: ';
+      opacity: 0.6;
+    }
     .header-controls {
       display: flex;
       gap: 16px;
@@ -140,7 +148,6 @@
       overflow: visible;
     }
 
-    /* Layout: sidebar + main */
     .layout {
       display: grid;
       grid-template-columns: 320px 1fr;
@@ -150,89 +157,39 @@
 
     .sidebar {
       position: sticky;
-      top: 20px;
+      top: 0;
       align-self: start;
-      height: 100vh;
+      max-height: 100vh;
       overflow-y: auto;
+      overflow-x: visible;
       padding-right: 6px;
+      /* Scroll the sidebar independently while page scrolls */
+      scrollbar-width: thin;
     }
 
-    .main {
-      min-height: 60vh;
-    }
+    .main { min-height: 60vh; }
 
-    .sidebar-toggle {
-      background: transparent;
-      border: 2px solid rgba(255,255,255,0.15);
-      color: white;
-      padding: 8px 10px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 700;
-      display: inline-flex;
-      gap: 8px;
-      align-items: center;
-    }
 
-    /* Header settings button (left of centered title) */
-    .sidebar-toggle-header {
-      position: absolute;
-      left: 16px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 44px;
-      height: 44px;
-      border-radius: 8px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1300;
-      cursor: pointer;
-      border: none;
-      background: rgba(255,255,255,0.08);
-      color: white;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
-    }
 
-    .sidebar-toggle-header svg { display: block; }
-    /* visual-toggle-header replaces sidebar-toggle-header - uses same styles */
-    .visual-toggle-header {
-      position: absolute;
-      left: 16px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 44px;
-      height: 44px;
-      border-radius: 8px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1300;
-      cursor: pointer;
-      border: none;
-      background: rgba(255,255,255,0.08);
-      color: white;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
-    }
-    .visual-toggle-header svg { display: block; }
-
-    /* When sidebar collapsed on small screens */
     .layout.collapsed {
-      grid-template-columns: 0 1fr;
+      grid-template-columns: 1fr;
     }
+
+    .layout.collapsed .sidebar {
+      overflow: hidden !important;
+      transform: translateX(-100%);
+      visibility: hidden;
+      width: 0 !important;
+      display: none !important;
+      padding: 0 !important;
+    }
+
 
     @media (max-width: 900px) {
-      .layout {
-        grid-template-columns: 1fr;
-      }
-      .sidebar {
-        position: relative;
-        max-height: none;
-        order: 2;
-      }
-      .main {
-        order: 1;
-      }
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { position: relative; max-height: none; order: 2; }
+      .main { order: 1; }
+
     }
     
     .section {
@@ -242,12 +199,9 @@
       border-radius: 12px;
       border: 1px solid var(--border-color);
       transition: all 0.3s ease;
+      overflow: visible;
     }
-    
-    .section:hover {
-      border-color: var(--primary-light);
-      box-shadow: var(--shadow-sm);
-    }
+    .section:hover { border-color: var(--primary-light); box-shadow: var(--shadow-sm); }
     
     .section h2 {
       color: var(--primary-color);
@@ -261,36 +215,30 @@
       font-weight: 600;
       transition: color 0.2s;
     }
-    
-    .section h2:hover {
-      color: var(--primary-dark);
-    }
+    .section h2:hover { color: var(--primary-dark); }
     
     .toggle-icon {
       font-size: 0.8em;
       transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
       display: inline-block;
     }
-    
-    .toggle-icon.collapsed {
-      transform: rotate(-90deg);
-    }
+    .toggle-icon.collapsed { transform: rotate(-90deg); }
     
     .collapsible-content {
       max-height: 2000px;
-      overflow: hidden;
-      transition: max-height 0.3s ease-out;
+      overflow: visible;
+      transition: max-height 0.3s ease-out, overflow 0s 0s;
     }
-    
     .collapsible-content.collapsed {
       max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease-out, overflow 0s 0.3s;
     }
     
     .input-group {
       margin-bottom: 18px;
       position: relative;
     }
-    
     .input-group label {
       display: block;
       margin-bottom: 8px;
@@ -299,8 +247,10 @@
       font-size: clamp(0.9em, 2vw, 1em);
       letter-spacing: 0.3px;
     }
-    
-    .input-group input, .input-group textarea, .input-group select, .input-group input[type="file"] {
+    .input-group input,
+    .input-group textarea,
+    .input-group select,
+    .input-group input[type="file"] {
       width: 100%;
       padding: 12px 14px;
       border: 2px solid var(--input-border);
@@ -311,19 +261,17 @@
       color: var(--input-text);
       font-family: inherit;
     }
-    
-    .input-group input::placeholder, .input-group textarea::placeholder {
-      color: var(--text-light);
-    }
-    
-    .input-group input:focus, .input-group textarea:focus, .input-group select:focus {
+    .input-group input::placeholder,
+    .input-group textarea::placeholder { color: var(--text-light); }
+    .input-group input:focus,
+    .input-group textarea:focus,
+    .input-group select:focus {
       border-color: var(--primary-color);
       outline: none;
       box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
       background: var(--input-bg);
     }
 
-    /* Style native file input to match theme (modern browsers) */
     input[type="file"] {
       display: inline-block;
       padding: 10px 12px;
@@ -335,8 +283,6 @@
       font-family: inherit;
       font-size: 0.95em;
     }
-
-    /* Style the file selector button where supported */
     input[type="file"]::file-selector-button {
       margin-right: 10px;
       padding: 8px 12px;
@@ -349,7 +295,6 @@
       box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25);
     }
 
-    /* Ensure the session name input follows the same styling */
     #newSessionName {
       padding: 12px 14px;
       border: 2px solid var(--input-border);
@@ -360,7 +305,6 @@
       font-size: 1em;
       transition: all 0.2s;
     }
-
     #newSessionName:focus {
       border-color: var(--primary-color);
       box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.12);
@@ -382,12 +326,7 @@
       box-shadow: var(--shadow-xs);
       transition: all 0.2s;
     }
-    
-    .player-pool-item:hover {
-      border-color: var(--primary-color);
-      box-shadow: var(--shadow-sm);
-    }
-    
+    .player-pool-item:hover { border-color: var(--primary-color); box-shadow: var(--shadow-sm); }
     .player-pool-item .remove {
       cursor: pointer;
       margin-left: 10px;
@@ -404,7 +343,6 @@
       align-items: center;
       justify-content: center;
     }
-    
     .player-pool-item .remove:hover {
       background: var(--danger-color);
       color: white;
@@ -427,64 +365,36 @@
       box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
       letter-spacing: 0.3px;
     }
-    
     .button::before {
       content: '';
       position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
       background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
       transition: left 0.5s;
     }
-    
-    .button:hover::before {
-      left: 100%;
-    }
-    
-    .button:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
-    }
-    
-    .button:active {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-    }
-    
-    .button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none;
-    }
+    .button:hover::before { left: 100%; }
+    .button:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4); }
+    .button:active { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); }
+    .button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
     
     .button-secondary {
       background: linear-gradient(135deg, var(--text-secondary) 0%, var(--text-light) 100%);
       box-shadow: 0 4px 12px rgba(96, 96, 96, 0.2);
     }
-    
-    .button-secondary:hover {
-      box-shadow: 0 8px 20px rgba(96, 96, 96, 0.3);
-    }
+    .button-secondary:hover { box-shadow: 0 8px 20px rgba(96, 96, 96, 0.3); }
     
     .button-danger {
       background: linear-gradient(135deg, var(--danger-color) 0%, var(--danger-light) 100%);
       box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
     }
-    
-    .button-danger:hover {
-      box-shadow: 0 8px 20px rgba(220, 53, 69, 0.4);
-    }
+    .button-danger:hover { box-shadow: 0 8px 20px rgba(220, 53, 69, 0.4); }
     
     .button-success {
       background: linear-gradient(135deg, var(--success-color) 0%, var(--success-secondary) 100%);
       box-shadow: 0 4px 12px rgba(17, 153, 142, 0.3);
     }
-    
-    .button-success:hover {
-      box-shadow: 0 8px 20px rgba(17, 153, 142, 0.4);
-    }
+    .button-success:hover { box-shadow: 0 8px 20px rgba(17, 153, 142, 0.4); }
     
     .button-point-type, .button-category, .button-player {
       background: var(--card-bg);
@@ -500,13 +410,11 @@
       box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
       letter-spacing: 0.2px;
     }
-    
     .button-point-type:hover, .button-category:hover, .button-player:hover {
       box-shadow: 0 6px 16px rgba(102, 126, 234, 0.3);
       border-color: var(--primary-light);
       transform: translateY(-2px);
     }
-    
     .button-point-type.selected, .button-category.selected, .button-player.selected {
       background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
       color: white;
@@ -519,30 +427,21 @@
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
       gap: 12px;
+      overflow: visible;
+      padding: 4px;
     }
-    
-    .player-buttons {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
+    .player-buttons { display: flex; flex-wrap: wrap; gap: 10px; overflow: visible; padding: 4px; }
     
     .team-section {
       margin-bottom: 20px;
       padding: 18px;
       background: var(--card-bg);
       border-radius: 10px;
-      border-left: 4px solid var(--primary-color);
       border: 1px solid var(--border-color);
       box-shadow: var(--shadow-sm);
       transition: all 0.3s;
     }
-    
-    .team-section:hover {
-      border-left-color: var(--primary-dark);
-      box-shadow: var(--shadow-md);
-    }
-    
+    .team-section:hover { box-shadow: var(--shadow-md); }
     .team-section input[type="text"] {
       padding: 10px 12px;
       border: 1px solid var(--input-border);
@@ -553,7 +452,6 @@
       font-weight: 600;
       transition: all 0.2s;
     }
-    
     .team-section input[type="text"]:focus {
       border-color: var(--primary-color);
       outline: none;
@@ -571,20 +469,13 @@
       background: var(--card-bg);
       padding: 18px;
       border-radius: 10px;
-      border-left: 4px solid var(--primary-color);
       border: 1px solid var(--border-color);
       box-shadow: var(--shadow-sm);
       font-size: clamp(0.85em, 2vw, 1em);
       transition: all 0.3s;
       cursor: pointer;
     }
-    
-    .stat-card:hover {
-      border-color: var(--primary-light);
-      box-shadow: var(--shadow-md);
-      transform: translateY(-2px);
-    }
-
+    .stat-card:hover { border-color: var(--primary-light); box-shadow: var(--shadow-md); transform: translateY(-2px); }
     .stat-card h3 {
       display: flex;
       align-items: center;
@@ -593,13 +484,9 @@
       user-select: none;
       margin: 0;
       font-size: 1.1em;
-      color: var(--text-primary);
+      color: var(--text-color);
     }
-
-    .stat-card h3::before {
-      display: none;
-    }
-
+    
     .stat-details {
       max-height: 1000px;
       overflow: hidden;
@@ -607,7 +494,6 @@
       opacity: 1;
       pointer-events: auto;
     }
-
     .stat-card.collapsed .stat-details,
     .team-stat-card.collapsed .stat-details {
       max-height: 0;
@@ -624,17 +510,8 @@
       box-shadow: var(--shadow-sm);
       margin-top: 10px;
     }
-
-    .overall-ranking ol {
-      margin: 12px 0 0 20px;
-      padding: 0;
-    }
-
-    .overall-ranking li {
-      padding: 6px 0;
-      color: var(--text-primary);
-      font-weight: 500;
-    }
+    .overall-ranking ol { margin: 12px 0 0 20px; padding: 0; }
+    .overall-ranking li { padding: 6px 0; color: var(--text-color); font-weight: 500; }
     
     .team-stat-card {
       background: var(--card-bg);
@@ -647,13 +524,7 @@
       transition: all 0.3s;
       cursor: pointer;
     }
-    
-    .team-stat-card:hover {
-      border-color: var(--primary-light);
-      box-shadow: var(--shadow-md);
-      transform: translateY(-2px);
-    }
-
+    .team-stat-card:hover { border-color: var(--primary-light); box-shadow: var(--shadow-md); transform: translateY(-2px); }
     .team-stat-card h3 {
       display: flex;
       align-items: center;
@@ -662,18 +533,11 @@
       user-select: none;
       margin: 0;
       font-size: 1.1em;
-      color: var(--text-primary);
+      color: var(--text-color);
     }
-
-    .player-score, .team-score {
-      color: var(--primary-color);
-      font-weight: 700;
-    }
-
-    .team-stat-card h3::before {
-      display: none;
-    }
-
+    
+    .player-score, .team-score { color: var(--primary-color); font-weight: 700; }
+    
     .stat-row {
       display: flex;
       justify-content: space-between;
@@ -681,22 +545,9 @@
       border-bottom: 1px solid var(--border-color);
       align-items: center;
     }
-    
-    .stat-row:last-child {
-      border-bottom: none;
-    }
-    
-    .stat-label {
-      font-weight: 600;
-      color: var(--text-secondary);
-      font-size: 0.95em;
-    }
-    
-    .stat-value {
-      color: var(--primary-color);
-      font-weight: 700;
-      font-size: 1.1em;
-    }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-label { font-weight: 600; color: var(--text-secondary); font-size: 0.95em; }
+    .stat-value { color: var(--primary-color); font-weight: 700; font-size: 1.1em; }
     
     .log-entry {
       padding: 12px;
@@ -713,11 +564,7 @@
       box-shadow: var(--shadow-xs);
       transition: all 0.2s;
     }
-    
-    .log-entry:hover {
-      box-shadow: var(--shadow-sm);
-      border-left-color: var(--primary-dark);
-    }
+    .log-entry:hover { box-shadow: var(--shadow-sm); border-left-color: var(--primary-dark); }
     
     .log-container {
       max-height: 450px;
@@ -729,11 +576,7 @@
       box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
     }
     
-    .button-group {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
+    .button-group { display: flex; gap: 12px; flex-wrap: wrap; }
     
     .switch {
       position: relative;
@@ -741,46 +584,30 @@
       width: 56px;
       height: 28px;
     }
-    
-    .switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-    
+    .switch input { opacity: 0; width: 0; height: 0; }
     .slider {
       position: absolute;
       cursor: pointer;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
+      top: 0; left: 0; right: 0; bottom: 0;
       background-color: #ccc;
       transition: 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
       border-radius: 28px;
       box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
     }
-    
     .slider:before {
       position: absolute;
       content: "";
-      height: 22px;
-      width: 22px;
-      left: 3px;
-      bottom: 3px;
+      height: 22px; width: 22px;
+      left: 3px; bottom: 3px;
       background-color: white;
       transition: 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
       border-radius: 50%;
       box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
-    
     input:checked + .slider {
       background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
     }
-    
-    input:checked + .slider:before {
-      transform: translateX(28px);
-    }
+    input:checked + .slider:before { transform: translateX(28px); }
     
     .theme-controls {
       display: flex;
@@ -791,11 +618,7 @@
       border-radius: 8px;
       backdrop-filter: blur(10px);
     }
-    
-    .theme-controls span {
-      font-weight: 600;
-      font-size: clamp(0.85em, 2vw, 1em);
-    }
+    .theme-controls span { font-weight: 600; font-size: clamp(0.85em, 2vw, 1em); }
     
     .session-info {
       background: var(--card-bg);
@@ -806,7 +629,6 @@
       font-size: clamp(0.85em, 2vw, 1em);
       box-shadow: var(--shadow-sm);
     }
-    
     .session-info-row {
       display: flex;
       justify-content: space-between;
@@ -817,46 +639,23 @@
       padding-bottom: 10px;
       border-bottom: 1px solid var(--border-color);
     }
+    .session-info-row:last-child { border-bottom: none; margin-bottom: 0; }
+    .session-info-row span:first-child { font-weight: 600; color: var(--text-secondary); }
+    .session-info-row strong { color: var(--primary-color); font-weight: 700; }
     
-    .session-info-row:last-child {
-      border-bottom: none;
-      margin-bottom: 0;
-    }
-    
-    .session-info-row span:first-child {
-      font-weight: 600;
-      color: var(--text-secondary);
-    }
-    
-    .session-info-row strong {
-      color: var(--primary-color);
-      font-weight: 700;
-    }
-    
-    .session-controls {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-top: 12px;
-    }
+    .session-controls { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
     
     .modal {
       display: none;
       position: fixed;
       z-index: 1000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
       background-color: rgba(0,0,0,0.6);
       backdrop-filter: blur(4px);
       animation: fadeIn 0.3s ease;
     }
-    
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     
     .modal-content {
       background-color: var(--card-bg);
@@ -870,7 +669,6 @@
       animation: slideIn 0.3s ease;
       box-shadow: var(--shadow-xl);
     }
-    
     @keyframes slideIn {
       from { transform: translateY(-30px); opacity: 0; }
       to { transform: translateY(0); opacity: 1; }
@@ -884,13 +682,7 @@
       padding-bottom: 16px;
       border-bottom: 2px solid var(--border-color);
     }
-    
-    .modal-header h2 {
-      color: var(--primary-color);
-      margin: 0;
-      font-weight: 700;
-      font-size: 1.5em;
-    }
+    .modal-header h2 { color: var(--primary-color); margin: 0; font-weight: 700; font-size: 1.5em; }
     
     .close-modal {
       background: none;
@@ -900,18 +692,13 @@
       color: var(--text-secondary);
       transition: all 0.2s;
       padding: 0;
-      width: 32px;
-      height: 32px;
+      width: 32px; height: 32px;
       display: flex;
       align-items: center;
       justify-content: center;
       border-radius: 6px;
     }
-    
-    .close-modal:hover {
-      background: var(--section-bg);
-      color: var(--primary-color);
-    }
+    .close-modal:hover { background: var(--section-bg); color: var(--primary-color); }
     
     .sessions-list {
       display: grid;
@@ -929,39 +716,11 @@
       cursor: pointer;
       box-shadow: var(--shadow-sm);
     }
-    
-    .session-card:hover {
-      transform: translateY(-4px);
-      box-shadow: var(--shadow-md);
-      border-color: var(--primary-color);
-    }
-    
-    .session-card-title {
-      color: var(--primary-color);
-      font-weight: 700;
-      margin-bottom: 10px;
-      font-size: clamp(1em, 2vw, 1.15em);
-    }
-    
-    .session-card-details {
-      font-size: 0.82em;
-      color: var(--text-secondary);
-      margin-bottom: 12px;
-      line-height: 1.6;
-    }
-    
-    .session-card-actions {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    
-    .session-card-actions button {
-      flex: 1;
-      min-width: 70px;
-      font-size: 0.85em;
-      padding: 8px 12px;
-    }
+    .session-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); border-color: var(--primary-color); }
+    .session-card-title { color: var(--primary-color); font-weight: 700; margin-bottom: 10px; font-size: clamp(1em, 2vw, 1.15em); }
+    .session-card-details { font-size: 0.82em; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.6; }
+    .session-card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .session-card-actions button { flex: 1; min-width: 70px; font-size: 0.85em; padding: 8px 12px; }
     
     .export-options {
       margin-top: 16px;
@@ -970,11 +729,7 @@
       border-radius: 8px;
       border: 1px solid var(--border-color);
     }
-    
-    .export-options p {
-      color: var(--text-color);
-    }
-    
+    .export-options p { color: var(--text-color); }
     .export-options label {
       display: flex;
       align-items: center;
@@ -984,15 +739,10 @@
       font-weight: 500;
       transition: all 0.2s;
     }
-    
-    .export-options label:hover {
-      color: var(--primary-color);
-    }
-    
+    .export-options label:hover { color: var(--primary-color); }
     .export-options input[type="checkbox"] {
       margin-right: 10px;
-      width: 18px;
-      height: 18px;
+      width: 18px; height: 18px;
       cursor: pointer;
       accent-color: var(--primary-color);
     }
@@ -1005,38 +755,23 @@
       border-radius: 8px;
     }
     
-    ::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
-    
-    ::-webkit-scrollbar-track {
-      background: var(--section-bg);
-      border-radius: 10px;
-    }
-    
-    ::-webkit-scrollbar-thumb {
-      background: var(--primary-color);
-      border-radius: 10px;
-      transition: background 0.2s;
-    }
-    
-    ::-webkit-scrollbar-thumb:hover {
-      background: var(--primary-dark);
-    }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: var(--section-bg); border-radius: 10px; }
+    ::-webkit-scrollbar-thumb { background: var(--primary-color); border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--primary-dark); }
     
     .auto-save-indicator {
-      font-size: 0.75em;
-      color: var(--success-color);
-      margin-left: 10px;
+      font-size: 0.78em;
       font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.9);
+      border: 1px solid rgba(255,255,255,0.3);
+      letter-spacing: 0.3px;
       animation: pulse 2s infinite;
     }
-    
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.7; }
-    }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
     
     .status-badge {
       display: inline-block;
@@ -1047,269 +782,258 @@
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
-    
-    .status-badge.active {
-      background: var(--success-color);
-      color: white;
-      box-shadow: 0 2px 8px rgba(17, 153, 142, 0.3);
-    }
-    
-    .status-badge.inactive {
-      background: var(--warning-color);
-      color: #333;
-      box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
-    }
-    
+    .status-badge.active { background: var(--success-color); color: white; box-shadow: 0 2px 8px rgba(17, 153, 142, 0.3); }
+    .status-badge.inactive { background: var(--warning-color); color: #333; box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3); }
+
     @media (max-width: 768px) {
-      body {
-        padding: 8px;
-      }
-      
-      .header {
-        padding: 24px 16px;
-        flex-direction: column;
-        text-align: center;
-        gap: 16px;
-      }
-      
-      .header h1 {
-        width: 100%;
-      }
-      
-      .header-controls {
-        width: 100%;
-        justify-content: center;
-      }
-      
-      .content {
-        padding: 16px;
-      }
-      
-      .section {
-        padding: 16px;
-        margin-bottom: 12px;
-      }
-      
-      .point-type-buttons, .category-buttons {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 8px;
-      }
-      
-      .stats-grid {
-        grid-template-columns: 1fr;
-        gap: 12px;
-      }
-      
-      .button-group {
-        flex-direction: column;
-      }
-      
-      .button-group button {
-        width: 100%;
-      }
-      
-      .button {
-        width: 100%;
-      }
-      
-      .log-container {
-        max-height: 350px;
-      }
-      
-      .player-buttons {
-        gap: 6px;
-      }
-      
-      .button-point-type, .button-category, .button-player {
-        flex: 1;
-        min-width: 100px;
-      }
-      
-      .sessions-list {
-        grid-template-columns: 1fr;
-      }
-      
-      .modal-content {
-        margin: 20px auto;
-        width: 95%;
-        padding: 20px;
-      }
-      
-      .theme-controls {
-        padding: 6px 12px;
-      }
+      body { padding: 8px; }
+      .header { padding: 24px 16px; flex-direction: column; text-align: center; gap: 16px; }
+      .header h1 { width: 100%; }
+  
+    .header-session-name {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 14px;
+      font-size: 0.8em;
+      font-weight: 600;
+      color: rgba(255,255,255,0.75);
+      letter-spacing: 0.4px;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    .header-session-name::before {
+      content: 'Session: ';
+      opacity: 0.6;
+    }
+    .header-controls { width: 100%; justify-content: center; }
+      .content { padding: 16px; }
+      .section { padding: 16px; margin-bottom: 12px; }
+      .point-type-buttons, .category-buttons { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+      .stats-grid { grid-template-columns: 1fr; gap: 12px; }
+      .button-group { flex-direction: column; }
+      .button-group button { width: 100%; }
+      .button { width: 100%; }
+      .log-container { max-height: 350px; }
+      .player-buttons { gap: 6px; }
+      .button-point-type, .button-category, .button-player { flex: 1; min-width: 100px; }
+      .sessions-list { grid-template-columns: 1fr; }
+      .modal-content { margin: 20px auto; width: 95%; padding: 20px; }
+      .theme-controls { padding: 6px 12px; }
     }
 
-    /* Floating sidebar toggle on left side */
-    .sidebar-toggle-floating {
-      position: fixed;
-      left: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 46px;
-      height: 46px;
-      border-radius: 50%;
+
+    /* ===== One-section-at-a-time sidebar ===== */
+    .sidebar .section { display: none; }
+    .sidebar .section.active-section { display: block; }
+    /* Always show the nav bar */
+    .sidebar-nav { display: flex !important; }
+
+    /* ===== Sidebar Nav Bar ===== */
+    .sidebar-nav {
       display: flex;
       align-items: center;
-      justify-content: center;
-      z-index: 1200;
-      cursor: pointer;
-      border: none;
+      gap: 8px;
+      padding: 10px 12px;
       background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+      border-radius: 10px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow-sm);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .sidebar-jump {
+      flex: 1;
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: none;
+      background: rgba(255,255,255,0.18);
       color: white;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.18);
-      font-size: 20px;
+      font-weight: 600;
+      font-size: 0.9em;
+      cursor: pointer;
+      outline: none;
+      font-family: inherit;
+      backdrop-filter: blur(4px);
     }
-
-    .sidebar-toggle-floating:hover { transform: translateY(-50%) scale(1.03); }
-
-    /* hide sidebar scrollbar when collapsed */
-    .layout.collapsed .sidebar {
-      overflow: hidden !important;
-      scrollbar-width: none; /* Firefox */
-      -ms-overflow-style: none; /* IE 10+ */
-      transform: translateX(-100%);
-      visibility: hidden;
-      width: 0 !important;
-      display: none !important;
-      padding: 0 !important;
+    .sidebar-jump option {
+      background: var(--card-bg);
+      color: var(--text-color);
     }
-    .layout.collapsed .sidebar::-webkit-scrollbar { width: 0; height: 0; }
+    .sidebar-jump:focus { box-shadow: 0 0 0 3px rgba(255,255,255,0.3); }
 
-    /* visual settings sidebar styles - shares same sidebar area */
-    .visual-sidebar { display: none; }
-    .layout.visual-open .sidebar { display: none; }
-    .layout.visual-open .visual-sidebar { display: block; }
-    /* make visual sidebar cover fully on mobile */
-    @media (max-width: 900px) {
-      .layout.visual-open .visual-sidebar {
-        position: fixed;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: 100%;
-        z-index: 1100;
-        background: var(--bg-color);
-      }
+    .sidebar-close-btn {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.85em;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      font-family: inherit;
+      transition: background 0.2s;
+      flex-shrink: 0;
     }
-    /* styling for palette toggle header button */
-    .visual-toggle-header {
+    .sidebar-close-btn:hover { background: rgba(255,255,255,0.28); }
+
+    /* ===== Sidebar open button (shown when sidebar is collapsed) ===== */
+    .sidebar-open-btn {
+      display: none;
       position: absolute;
       left: 16px;
       top: 50%;
       transform: translateY(-50%);
-      width: 44px;
-      height: 44px;
-      border-radius: 8px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1300;
-      cursor: pointer;
-      border: none;
-      background: rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.15);
       color: white;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 0.88em;
+      font-weight: 700;
+      cursor: pointer;
+      z-index: 10;
+      font-family: inherit;
+      transition: background 0.2s;
+      white-space: nowrap;
     }
-    .visual-toggle-header svg { display: block; }
+    .sidebar-open-btn:hover { background: rgba(255,255,255,0.25); }
+
+    .layout.collapsed ~ * .sidebar-open-btn,
+    .show-open-btn .sidebar-open-btn { display: inline-flex; align-items: center; gap: 6px; }
+
+
+
   </style>
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
 <body>
-  <div id="app" class="container">
+  <div class="container">
     <!-- Header -->
     <div class="header">
-      <button id="visualToggleHeader" class="visual-toggle-header" onclick="toggleVisualSidebar()" aria-label="Settings" title="Settings">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <path d="M12 15.5A3.5 3.5 0 1 0 12 8.5a3.5 3.5 0 0 0 0 7z" fill="white"/>
-          <path d="M19.4 13.1c.04-.36.06-.73.06-1.1s-.02-.74-.06-1.1l2.1-1.6a.5.5 0 0 0 .12-.63l-2-3.5a.5.5 0 0 0-.6-.22l-2.5 1a7.3 7.3 0 0 0-1.9-1.1l-.4-2.7a.5.5 0 0 0-.5-.42h-4a.5.5 0 0 0-.5.42l-.4 2.7c-.7.27-1.3.63-1.9 1.1l-2.5-1a.5.5 0 0 0-.6.22l-2 3.5a.5.5 0 0 0 .12.63l2.1 1.6c-.04.36-.06.73-.06 1.1s.02.74.06 1.1l-2.1 1.6a.5.5 0 0 0-.12.63l2 3.5c.14.24.41.34.65.25l2.5-1c.57.45 1.2.82 1.9 1.1l.4 2.7c.06.27.29.42.5.42h4c.21 0 .44-.15.5-.42l.4-2.7c.7-.27 1.3-.63 1.9-1.1l2.5 1c.25.09.51-.01.65-.25l2-3.5a.5.5 0 0 0-.12-.63l-2.1-1.6z" fill="white"/>
-        </svg>
-      </button>
+      <!-- Sidebar open button - shown when sidebar collapsed -->
+      <button class="sidebar-open-btn" onclick="toggleSidebar()" title="Show sidebar">&#9654; Menu</button>
       <h1>HSE Quiz Bowl Tracker</h1>
+
+      <!-- Session name chip shown below title -->
+      <div class="header-session-name" id="headerSessionName"></div>
+
+      <!-- Header right: autosave only -->
       <div class="header-controls">
-        <!-- theme controls moved into visual settings panel -->
+        <span id="autosaveStatus" class="auto-save-indicator">✓ Saved</span>
       </div>
     </div>
-    
+
+    <!-- Content -->
     <div class="content">
       <div class="layout" id="appLayout">
-        <aside class="sidebar" id="sidebar">
-          <!-- Session Management (sidebar) -->
-          <div class="section">
-            <h2>Current Session <span id="autosaveStatus" class="auto-save-indicator">✓ Auto-saving</span></h2>
+
+        <!-- ===== SIDEBAR ===== -->
+        <aside class="sidebar" id="mainSidebar">
+
+          <!-- Sidebar Nav Bar -->
+          <div class="sidebar-nav">
+            <select class="sidebar-jump" id="sidebarSectionSelect" onchange="showSection(this.value)">
+              <option value="sec-session">Session</option>
+              <option value="sec-players">Players</option>
+              <option value="sec-teams">Teams</option>
+              <option value="sec-categories">Categories</option>
+              <option value="sec-export">Export Data</option>
+              <option value="sec-visual">Visual Settings</option>
+              <option value="sec-danger">Danger Zone</option>
+            </select>
+            <button class="sidebar-close-btn" onclick="toggleSidebar()" title="Hide sidebar">&#9664; Hide</button>
+          </div>
+
+          <!-- Session Management -->
+          <div class="section" id="sec-session">
+            <h2>Session <span class="toggle-icon">▼</span></h2>
             <div class="collapsible-content">
               <div class="session-info">
                 <div class="session-info-row">
-                  <span>Session Name:</span>
-                  <strong id="sessionName">New Session</strong>
+                  <span>Name:</span>
+                  <strong id="sessionName">—</strong>
                 </div>
                 <div class="session-info-row">
                   <span>Created:</span>
-                  <strong id="sessionCreated">--</strong>
+                  <strong id="sessionCreated">—</strong>
                 </div>
                 <div class="session-info-row">
                   <span>Last Updated:</span>
-                  <strong id="sessionLastUpdated">--</strong>
+                  <strong id="sessionLastUpdated">—</strong>
                 </div>
                 <div class="session-info-row">
-                  <span>Total Answers Recorded:</span>
+                  <span>Answers:</span>
                   <strong id="sessionAnswerCount">0</strong>
                 </div>
               </div>
+
+              <div class="input-group">
+                <label>New Session Name:</label>
+                <input type="text" id="newSessionName" placeholder="Session name..." />
+              </div>
               <div class="session-controls">
-                <input type="text" id="newSessionName" placeholder="Enter session name...">
-                <button class="button" onclick="createNewSession()">+ New Session</button>
-                <button class="button button-secondary" onclick="openSessionsModal()">📂 Load Session</button>
+                <button class="button button-success" onclick="createNewSession()">+ New Session</button>
+                <button class="button" onclick="openSessionsModal()">Load</button>
               </div>
             </div>
           </div>
 
-          <!-- Player Pool (sidebar) -->
-          <div class="section">
-            <h2>Player Pool</h2>
+          <!-- Player Pool -->
+          <div class="section" id="sec-players">
+            <h2>Players <span class="toggle-icon">▼</span></h2>
             <div class="collapsible-content">
               <div class="input-group">
                 <label>Add Player:</label>
-                <input type="text" id="playerInput" placeholder="Enter player name..." onkeypress="handlePlayerInputEnter(event)">
+                <input type="text" id="playerInput" placeholder="Player name..." onkeydown="handlePlayerInputEnter(event)" />
               </div>
-              <div class="button-group">
+              <div class="button-group" style="margin-bottom: 14px;">
                 <button class="button" onclick="addToPlayerPool()">Add Player</button>
-                <button class="button button-secondary" onclick="clearPlayerPool()">Clear All Players</button>
+                <button class="button button-danger" onclick="clearPlayerPool()">Clear All</button>
               </div>
+
               <div class="input-group">
-                <label>Or Import Players (CSV/TXT):</label>
-                <input type="file" id="playerImport" accept=".csv,.txt" onchange="handlePlayerImport(event)">
+                <label>Import from File (CSV/TXT):</label>
+                <input type="file" accept=".csv,.txt" onchange="handlePlayerImport(event)" />
               </div>
+
               <div class="input-group">
-                <label>Default Roster (CSV/TXT) — will save to browser:</label>
-                <input type="file" id="defaultPlayersFile" accept=".csv,.txt" onchange="handleDefaultPlayersImport(event)">
-                <div style="margin-top:8px; display:flex; gap:8px;">
-                  <button class="button button-secondary" onclick="applyDefaultPlayersToSession()">Apply Stored Default</button>
-                  <button class="button" onclick="clearStoredDefaultPlayers()">Clear Stored Default</button>
-                </div>
+                <label>Default Roster (persists across sessions):</label>
+                <input type="file" accept=".csv,.txt" onchange="handleDefaultPlayersImport(event)" />
               </div>
-              <div id="playerPoolDisplay" style="margin-top: 15px;"></div>
+              <div class="button-group" style="margin-bottom: 14px;">
+                <button class="button button-secondary" onclick="applyDefaultPlayersToSession()">Apply Default Roster</button>
+                <button class="button button-danger" onclick="clearStoredDefaultPlayers()">Clear Default</button>
+              </div>
+
+              <div id="playerPoolDisplay"></div>
             </div>
           </div>
 
-          <!-- Teams (sidebar) -->
-          <div class="section">
-            <h2>Teams</h2>
+          <!-- Teams -->
+          <div class="section" id="sec-teams">
+            <h2>Teams <span class="toggle-icon">▼</span></h2>
             <div class="collapsible-content">
               <div class="input-group">
                 <label>Team Name:</label>
-                <input type="text" id="teamNameInput" placeholder="Enter team name...">
+                <input type="text" id="teamNameInput" placeholder="Team name..." />
               </div>
-              <button class="button" onclick="addTeam()">+ Add Team</button>
+              <button class="button" onclick="addTeam()">Add Team</button>
               <div id="teamsContainer" style="margin-top: 20px;"></div>
             </div>
           </div>
 
-          <!-- Categories (sidebar) -->
-          <div class="section">
-            <h2>Categories</h2>
+          <!-- Categories -->
+          <div class="section" id="sec-categories">
+            <h2>Categories <span class="toggle-icon">▼</span></h2>
             <div class="collapsible-content">
               <div class="input-group">
-                <label>Category (comma-separated):</label>
+                <label>Categories (comma-separated):</label>
                 <textarea id="categoriesInput" placeholder="e.g., Science, History, Literature, Math..." rows="3"></textarea>
               </div>
               <button class="button" onclick="saveCategories()">Save Categories</button>
@@ -1317,54 +1041,47 @@
             </div>
           </div>
 
-          <!-- Export (sidebar) -->
-          <div class="section">
-            <h2>Export Data</h2>
+          <!-- Export -->
+          <div class="section" id="sec-export">
+            <h2>Export Data <span class="toggle-icon">▼</span></h2>
             <div class="collapsible-content">
               <div class="export-options">
                 <p style="margin-bottom: 10px;"><strong>Select what to include:</strong></p>
-                <label>
-                  <input type="checkbox" id="exportPlayers" checked> Players & Scores
-                </label>
-                <label>
-                  <input type="checkbox" id="exportAnswerLog" checked> Answer Log
-                </label>
-                <label>
-                  <input type="checkbox" id="exportTeamStats" checked> Team Statistics
-                </label>
+                <label><input type="checkbox" id="exportPlayers" checked> Players &amp; Scores</label>
+                <label><input type="checkbox" id="exportAnswerLog" checked> Answer Log</label>
+                <label><input type="checkbox" id="exportTeamStats" checked> Team Statistics</label>
               </div>
               <div class="button-group" style="margin-top: 15px;">
-                <button class="button button-success" onclick="exportToExcel()">📊 Export to Excel</button>
-                <button class="button button-secondary" onclick="exportToJSON()">📄 Export as JSON</button>
+                <button class="button button-success" onclick="exportToExcel()">Export to Excel</button>
+                <button class="button button-secondary" onclick="exportToJSON()">Export as JSON</button>
+              </div>
+
+              <div style="margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border-color);">
+                <p style="font-weight: 600; margin-bottom: 10px; color: var(--text-color);">Import Session</p>
+                <p style="font-size: 0.85em; color: var(--text-secondary); margin-bottom: 12px;">Load a previously exported JSON file to resume a session.</p>
+                <div class="input-group">
+                  <label>Select JSON file:</label>
+                  <input type="file" id="importSessionFile" accept=".json" onchange="importFromJSON(event)" />
+                </div>
+                <div id="importStatus" style="font-size:0.85em; margin-top:8px; display:none;"></div>
               </div>
             </div>
           </div>
 
-          <!-- Danger Zone (sidebar) -->
-          <div class="section" style="border: 2px solid var(--danger-color);">
-            <h2 style="color: var(--danger-color);">Danger Zone</h2>
+          <!-- Visual Settings -->
+          <div class="section" id="sec-visual">
+            <h2>Visual Settings <span class="toggle-icon">▼</span></h2>
             <div class="collapsible-content">
-              <button class="button button-danger" onclick="resetAllData()">Delete All Data</button>
-              <p style="margin-top: 10px; font-size: 0.85em; color: var(--text-secondary);">This action cannot be undone. Make sure to export your data first!</p>
-            </div>
-          </div>
-        </aside>
-
-        <aside class="sidebar visual-sidebar" id="visualSidebar">
-          <div class="section">
-            <h2>Visual Settings</h2>
-            <div class="collapsible-content">
-                      <div class="input-group">
-                  <label>Theme</label>
-                  <div style="display:flex;align-items:center;gap:12px;">
-                    <label class="switch">
-                      <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode()">
-                      <span class="slider"></span>
-                    </label>
-                    <span>Dark Mode</span>
-                  </div>
+              <div class="input-group">
+                <label>Theme</label>
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <label class="switch">
+                    <input type="checkbox" id="darkModeToggle2" onchange="toggleDarkMode()">
+                    <span class="slider"></span>
+                  </label>
+                  <span>Dark Mode</span>
                 </div>
-
+              </div>
               <div class="input-group">
                 <label>Accent Color</label>
                 <select id="accentColorSelect" onchange="setAccentColor(this.value)">
@@ -1374,19 +1091,25 @@
                   <option value="#764ba2">Purple</option>
                 </select>
               </div>
+            </div>
+          </div>
 
-              <div style="margin-top:12px;" class="button-group">
-                <button class="button" onclick="applyVisualDefaults()">Apply</button>
-                <button class="button button-secondary" onclick="closeVisualSettings()">Close</button>
-              </div>
+          <!-- Danger Zone -->
+          <div class="section" id="sec-danger" style="border: 2px solid var(--danger-color);">
+            <h2 style="color: var(--danger-color);">Danger Zone <span class="toggle-icon">▼</span></h2>
+            <div class="collapsible-content">
+              <button class="button button-danger" onclick="resetAllData()">Delete All Data</button>
+              <p style="margin-top: 10px; font-size: 0.85em; color: var(--text-secondary);">This action cannot be undone. Export your data first!</p>
             </div>
           </div>
         </aside>
 
+        <!-- ===== MAIN ===== -->
         <main class="main">
-          <!-- Answer Recording (main focus) -->
-          <div class="section" style="padding: 28px;">
-            <h2>Record Answer</h2>
+
+          <!-- Record Answer -->
+          <div class="section" style="padding: 28px; overflow: visible;">
+            <h2>Record Answer <span class="toggle-icon">▼</span></h2>
             <div class="collapsible-content">
               <div class="input-group">
                 <label>Select Player:</label>
@@ -1396,11 +1119,11 @@
               <div class="input-group">
                 <label>Point Type:</label>
                 <div class="point-type-buttons">
-                    <button class="button-point-type" onclick="selectPointType('Toss-up')">Toss-up (+10)</button>
-                    <button class="button-point-type" onclick="selectPointType('Bonus')">Bonus (+10)</button>
-                    <button class="button-point-type" onclick="selectPointType('Neg')">Neg (-5)</button>
-                    <button class="button-point-type" onclick="selectPointType('Power')">Power (+15)</button>
-                  </div>
+                  <button class="button-point-type" onclick="selectPointType('Toss-up')">Toss-up (+10)</button>
+                  <button class="button-point-type" onclick="selectPointType('Bonus')">Bonus (+10)</button>
+                  <button class="button-point-type" onclick="selectPointType('Neg')">Neg (-5)</button>
+                  <button class="button-point-type" onclick="selectPointType('Power')">Power (+15)</button>
+                </div>
               </div>
 
               <div class="input-group">
@@ -1414,7 +1137,7 @@
 
           <!-- Statistics -->
           <div class="section">
-            <h2>Statistics</h2>
+            <h2>Statistics <span class="toggle-icon">▼</span></h2>
             <div class="collapsible-content">
               <div id="statisticsContainer"></div>
             </div>
@@ -1422,18 +1145,17 @@
 
           <!-- Answer Log -->
           <div class="section">
-            <h2>Answer Log</h2>
+            <h2>Answer Log <span class="toggle-icon">▼</span></h2>
             <div class="collapsible-content">
               <button class="button button-danger" onclick="clearAnswerLog()">Clear Log</button>
               <div id="answerLog" class="log-container" style="margin-top: 15px;"></div>
             </div>
           </div>
-        </main>
-      </div>
-    </div>
-  </div>
 
-  <!-- floating toggle removed; header contains gear toggle -->
+        </main>
+      </div><!-- /.layout -->
+    </div><!-- /.content -->
+  </div><!-- /.container -->
 
   <!-- Sessions Modal -->
   <div id="sessionsModal" class="modal">
@@ -1447,33 +1169,62 @@
   </div>
 
   <script>
-    // Constants
-    const STORAGE_KEY = 'quizBowlSessions';
-    const CURRENT_SESSION_KEY = 'currentSession';
-    const AUTO_SAVE_INTERVAL = 5000; // 5 seconds
-    const DEFAULT_CATEGORIES = [
-      'Art',
-      'Current Events',
-      'Geography',
-      'History',
-      'Literature',
-      'Math',
-      'Misc',
-      'Mythology',
-      'Music',
-      'Pop Culture',
-      'Religion',
-      'Science',
-      'Soc. Stu.',
-      'Sports'
-    ];
+    // ============ FIREBASE ============
+    const firebaseConfig = {
+      apiKey: "AIzaSyCRkK3IpRXeQC9JH73iC0tC-mjq5nulaAo",
+      authDomain: "hse-quiz-bowl.firebaseapp.com",
+      databaseURL: "https://hse-quiz-bowl-default-rtdb.firebaseio.com",
+      projectId: "hse-quiz-bowl",
+      storageBucket: "hse-quiz-bowl.firebasestorage.app",
+      messagingSenderId: "676670239956",
+      appId: "1:676670239956:web:9c569fc74ecf21de25f741"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const sessionsRef = db.ref('sessions');
+    let firebaseUnsubscribe = null;
 
-    function getDefaultCategories() {
-      // Return a copy so callers can mutate safely
-      return [...DEFAULT_CATEGORIES];
+    // Firebase converts arrays to objects with numeric keys — this fixes that
+    function toArray(val) {
+      if (!val) return [];
+      if (Array.isArray(val)) return val;
+      // Firebase object-from-array: keys are "0","1","2"...
+      return Object.keys(val).sort((a, b) => Number(a) - Number(b)).map(k => val[k]);
     }
 
-    // State variables
+    function normalizeSession(session) {
+      if (!session) return session;
+      // Fix top-level arrays
+      session.teams     = toArray(session.teams);
+      session.answerLog = toArray(session.answerLog);
+      session.answers   = toArray(session.answers);
+      session.categories = toArray(session.categories);
+      // Fix arrays inside each player
+      if (session.players) {
+        Object.values(session.players).forEach(player => {
+          player.answers = toArray(player.answers);
+        });
+      }
+      // Fix playerMembers array inside each team
+      session.teams.forEach(team => {
+        team.playerMembers = toArray(team.playerMembers);
+      });
+      return session;
+    }
+
+    // ============ CONSTANTS ============
+    const STORAGE_KEY = 'quizBowlSessions';
+    const CURRENT_SESSION_KEY = 'currentSession';
+    const AUTO_SAVE_INTERVAL = 5000;
+    const DEFAULT_CATEGORIES = [
+      'Art','Current Events','Geography','History','Literature',
+      'Math','Misc','Mythology','Music','Pop Culture',
+      'Religion','Science','Soc. Stu.','Sports'
+    ];
+
+    function getDefaultCategories() { return [...DEFAULT_CATEGORIES]; }
+
+    // ============ STATE ============
     let state = {
       sessions: {},
       currentSessionId: null,
@@ -1483,19 +1234,25 @@
       categories: []
     };
 
-    // Initialize
+    // ============ INIT ============
     document.addEventListener('DOMContentLoaded', () => {
-      loadAllData();
-      renderAll();
+      loadAllData(); // Firebase listener calls renderAll() once data loads
       setupAutoSave();
       setupSectionToggle();
       applySidebarState();
-      // Ensure visual sidebar starts closed
-      if (!localStorage.getItem('visualSidebarOpen')) {
-        localStorage.setItem('visualSidebarOpen', 'false');
+      // Init sidebar section: restore last used, or default to sec-session
+      // Only activate the section (no DOM thrash needed since sidebar starts hidden)
+      const savedSection = localStorage.getItem('activeSidebarSection') || 'sec-session';
+      showSection(savedSection);
+      const sel = document.getElementById('sidebarSectionSelect');
+      if (sel) sel.value = savedSection;
+      // Restore dark mode
+      if (localStorage.getItem('darkMode') === 'true') {
+        document.body.classList.add('dark-mode');
+        const dm2 = document.getElementById('darkModeToggle2');
+        if (dm2) dm2.checked = true;
       }
-      applyVisualState();
-      // restore accent color if previously set
+      // Restore accent color
       const ac = localStorage.getItem('accentColor');
       if (ac) {
         const sel = document.getElementById('accentColorSelect');
@@ -1504,23 +1261,61 @@
       }
     });
 
-    // ============ STORAGE FUNCTIONS ============
+    // ============ STORAGE ============
     function loadAllData() {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        state.sessions = JSON.parse(stored);
+      // UI prefs still from localStorage; session data comes from Firebase
+      // Show loading state
+      setLoadingState(true);
+
+      // Listen for real-time updates from Firebase
+      if (firebaseUnsubscribe) firebaseUnsubscribe();
+      firebaseUnsubscribe = sessionsRef.on('value', (snapshot) => {
+        const data = snapshot.val();
+        state.sessions = data || {};
+        // Normalize all sessions (Firebase converts arrays to objects)
+        Object.keys(state.sessions).forEach(id => {
+          state.sessions[id] = normalizeSession(state.sessions[id]);
+        });
+
+        const savedId = localStorage.getItem(CURRENT_SESSION_KEY);
+        if (savedId && state.sessions[savedId]) {
+          state.currentSessionId = savedId;
+        } else if (Object.keys(state.sessions).length > 0) {
+          state.currentSessionId = Object.keys(state.sessions)[0];
+          localStorage.setItem(CURRENT_SESSION_KEY, state.currentSessionId);
+        } else {
+          // No sessions exist at all — create one
+          setLoadingState(false);
+          createNewSession();
+          return;
+        }
+
+        loadSessionData();
+        setLoadingState(false);
+        renderAll();
+      }, (error) => {
+        console.error('Firebase read error:', error);
+        setLoadingState(false);
+        showFirebaseError('Could not connect to database. Check your internet connection.');
+      });
+    }
+
+    function setLoadingState(loading) {
+      const indicator = document.getElementById('autosaveStatus');
+      if (!indicator) return;
+      if (loading) {
+        indicator.textContent = '⟳ Connecting...';
+        indicator.style.color = 'rgba(255,255,255,0.7)';
       }
-      
-      const currentId = localStorage.getItem(CURRENT_SESSION_KEY);
-      if (currentId && state.sessions[currentId]) {
-        state.currentSessionId = currentId;
-      } else if (Object.keys(state.sessions).length > 0) {
-        state.currentSessionId = Object.keys(state.sessions)[0];
-      } else {
-        createNewSession();
+    }
+
+    function showFirebaseError(msg) {
+      const indicator = document.getElementById('autosaveStatus');
+      if (indicator) {
+        indicator.textContent = '! Offline';
+        indicator.style.color = '#ffcc00';
+        indicator.title = msg;
       }
-      
-      loadSessionData();
     }
 
     function loadSessionData() {
@@ -1528,15 +1323,16 @@
         createNewSession();
         return;
       }
-      
       const session = state.sessions[state.currentSessionId];
-      // Ensure default categories exist and are alphabetical
       if (!session.categories || !Array.isArray(session.categories) || session.categories.length === 0) {
         session.categories = getDefaultCategories();
       }
-      // Normalize: sort alphabetically
       session.categories = session.categories.sort((a, b) => a.localeCompare(b));
-      state.categories = session.categories || [];
+      state.categories = session.categories;
+
+      // Populate the categories textarea
+      const ta = document.getElementById('categoriesInput');
+      if (ta) ta.value = state.categories.join(', ');
     }
 
     function saveAllData() {
@@ -1544,8 +1340,13 @@
         state.sessions[state.currentSessionId].categories = state.categories;
         state.sessions[state.currentSessionId].lastUpdated = new Date().toISOString();
       }
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.sessions));
+      // Save current session ID locally (UI preference)
       localStorage.setItem(CURRENT_SESSION_KEY, state.currentSessionId);
+      // Write only the current session to Firebase (not all sessions)
+      if (state.currentSessionId && state.sessions[state.currentSessionId]) {
+        sessionsRef.child(state.currentSessionId).set(state.sessions[state.currentSessionId])
+          .catch(err => showFirebaseError('Save failed: ' + err.message));
+      }
     }
 
     function setupAutoSave() {
@@ -1558,15 +1359,16 @@
     function updateAutoSaveIndicator() {
       const indicator = document.getElementById('autosaveStatus');
       if (indicator) {
-        indicator.textContent = '✓ Auto-saved';
-        indicator.style.color = 'var(--success-color)';
+        indicator.textContent = '✓ Saved';
+        indicator.style.removeProperty('color');
       }
     }
 
-    // ============ SESSION MANAGEMENT ============
+    // ============ SESSIONS ============
     function createNewSession() {
       const sessionId = Date.now().toString();
-      const sessionName = document.getElementById('newSessionName')?.value || `Session ${new Date().toLocaleDateString()}`;
+      const nameInput = document.getElementById('newSessionName');
+      const sessionName = (nameInput && nameInput.value.trim()) || `Session ${new Date().toLocaleDateString()}`;
       
       state.sessions[sessionId] = {
         id: sessionId,
@@ -1575,16 +1377,17 @@
         lastUpdated: new Date().toISOString(),
         players: {},
         teams: [],
-        categories: [],
+        categories: getDefaultCategories(),
         answers: [],
         answerLog: []
       };
-      // If user has a stored default roster, populate players
+
+      // Apply stored default roster
       try {
         const stored = localStorage.getItem('defaultPlayers');
         if (stored) {
           const roster = JSON.parse(stored);
-          if (Array.isArray(roster) && roster.length > 0) {
+          if (Array.isArray(roster)) {
             roster.forEach(p => {
               if (p && !state.sessions[sessionId].players[p]) {
                 state.sessions[sessionId].players[p] = { name: p, points: 0, answers: [] };
@@ -1592,15 +1395,12 @@
             });
           }
         }
-      } catch (e) {
-        console.warn('Could not apply stored default players', e);
-      }
+      } catch(e) { console.warn('Could not apply default players', e); }
 
       state.currentSessionId = sessionId;
       loadSessionData();
       saveAllData();
-      
-      document.getElementById('newSessionName').value = '';
+      if (nameInput) nameInput.value = '';
       renderAll();
     }
 
@@ -1615,20 +1415,21 @@
 
     function renderSessionsList() {
       const list = document.getElementById('sessionsList');
-      const sessions = state.sessions;
-      
-      if (Object.keys(sessions).length === 0) {
-        list.innerHTML = '<p>No sessions found.</p>';
+      if (Object.keys(state.sessions).length === 0) {
+        list.innerHTML = '<p style="color:var(--text-secondary)">No sessions found.</p>';
         return;
       }
-      
-      list.innerHTML = Object.values(sessions).map(session => `
+      list.innerHTML = Object.values(state.sessions).map(session => `
         <div class="session-card">
           <div class="session-card-title">${session.name}</div>
           <div class="session-card-details">
             <div>Created: ${new Date(session.created).toLocaleString()}</div>
-            <div>Answers: ${session.answerLog ? session.answerLog.length : 0}</div>
-            <div>Players: ${Object.keys(session.players).length}</div>
+            <div>Answers: ${(session.answerLog || []).length}</div>
+            <div>Players: ${(() => {
+              const inTeam = new Set();
+              (session.teams || []).forEach(t => (t.playerMembers || []).forEach(p => inTeam.add(p)));
+              return inTeam.size;
+            })()}</div>
           </div>
           <div class="session-card-actions">
             <button class="button" onclick="loadSession('${session.id}')">Load</button>
@@ -1648,14 +1449,17 @@
 
     function deleteSession(sessionId) {
       if (confirm(`Delete session "${state.sessions[sessionId].name}"? This cannot be undone.`)) {
+        const wasActive = state.currentSessionId === sessionId;
+        sessionsRef.child(sessionId).remove().catch(err => showFirebaseError('Delete failed: ' + err.message));
         delete state.sessions[sessionId];
-        if (state.currentSessionId === sessionId) {
+        if (wasActive) {
           state.currentSessionId = Object.keys(state.sessions)[0] || null;
-          if (!state.currentSessionId) {
-            createNewSession();
+          if (!state.currentSessionId) createNewSession();
+          else {
+            localStorage.setItem(CURRENT_SESSION_KEY, state.currentSessionId);
+            loadSessionData();
           }
         }
-        saveAllData();
         renderSessionsList();
         renderAll();
       }
@@ -1665,142 +1469,136 @@
       return state.sessions[state.currentSessionId] || null;
     }
 
-    // ============ UI FUNCTIONS ============
+    // ============ UI ============
     function setupSectionToggle() {
       document.querySelectorAll('.section h2').forEach(h2 => {
         h2.addEventListener('click', function() {
           const icon = this.querySelector('.toggle-icon');
           const content = this.nextElementSibling;
-          icon.classList.toggle('collapsed');
-          content.classList.toggle('collapsed');
+          if (icon) icon.classList.toggle('collapsed');
+          if (content) content.classList.toggle('collapsed');
         });
       });
     }
 
-    // Sidebar toggle + persistence
+
+    function showSection(id) {
+      // Show only the selected sidebar section
+      document.querySelectorAll('.sidebar .section').forEach(sec => {
+        sec.classList.remove('active-section');
+      });
+      const el = document.getElementById(id);
+      if (el) {
+        el.classList.add('active-section');
+        // Make sure its content is expanded
+        const cont = el.querySelector('.collapsible-content');
+        const icon = el.querySelector('.toggle-icon');
+        if (cont) cont.classList.remove('collapsed');
+        if (icon) icon.classList.remove('collapsed');
+      }
+      localStorage.setItem('activeSidebarSection', id);
+    }
+
     function toggleSidebar() {
       const layout = document.getElementById('appLayout');
       if (!layout) return;
       layout.classList.toggle('collapsed');
-      const collapsed = layout.classList.contains('collapsed');
-      localStorage.setItem('sidebarCollapsed', collapsed ? 'true' : 'false');
+      const isCollapsed = layout.classList.contains('collapsed');
+      localStorage.setItem('sidebarCollapsed', isCollapsed ? 'true' : 'false');
+      updateOpenBtn(isCollapsed);
     }
+
+    function updateOpenBtn(isCollapsed) {
+      const btn = document.querySelector('.sidebar-open-btn');
+      if (!btn) return;
+      if (isCollapsed) {
+        btn.style.display = 'inline-flex';
+        btn.innerHTML = '&#9654; Menu';
+        btn.onclick = function() { toggleSidebar(); };
+      } else {
+        btn.style.display = 'none';
+      }
+    }
+
+
 
     function applySidebarState() {
       const layout = document.getElementById('appLayout');
       if (!layout) return;
-      const collapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-      if (collapsed) layout.classList.add('collapsed');
+      // Default to collapsed if no preference has ever been saved
+      const saved = localStorage.getItem('sidebarCollapsed');
+      const isCollapsed = saved === null ? true : saved === 'true';
+      if (isCollapsed) layout.classList.add('collapsed');
       else layout.classList.remove('collapsed');
+      updateOpenBtn(isCollapsed);
     }
 
     function toggleDarkMode() {
       document.body.classList.toggle('dark-mode');
-      localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+      const isDark = document.body.classList.contains('dark-mode');
+      localStorage.setItem('darkMode', isDark);
+      const dm2 = document.getElementById('darkModeToggle2');
+      if (dm2) dm2.checked = isDark;
     }
 
-    // Load dark mode preference (safely)
-    if (localStorage.getItem('darkMode') === 'true') {
-      document.body.classList.add('dark-mode');
-      const dm = document.getElementById('darkModeToggle');
-      if (dm) dm.checked = true;
-    }
 
-    function renderAll() {
-      renderSessionInfo();
-      renderPlayerPool();
-      renderPlayerButtons();
-      renderTeams();
-      renderCategories();
-      renderAnswerLog();
-      renderStatistics();
-    }
 
-    // visual settings panel handlers
-    function toggleVisualSidebar() {
-      const layout = document.getElementById('appLayout');
-      if (!layout) return;
-      layout.classList.toggle('visual-open');
-      localStorage.setItem('visualSidebarOpen', layout.classList.contains('visual-open') ? 'true' : 'false');
-    }
-
-    function closeVisualSettings() {
-      const layout = document.getElementById('appLayout');
-      if (!layout) return;
-      layout.classList.remove('visual-open');
-      localStorage.setItem('visualSidebarOpen', 'false');
-    }
-
-    function applyVisualState() {
-      const layout = document.getElementById('appLayout');
-      if (!layout) return;
-      const open = localStorage.getItem('visualSidebarOpen') === 'true';
-      if (open) {
-        layout.classList.add('visual-open');
-      } else {
-        layout.classList.remove('visual-open');
-      }
-    }
 
     function setAccentColor(color) {
       document.documentElement.style.setProperty('--primary-color', color);
       localStorage.setItem('accentColor', color);
     }
 
-    function applyVisualDefaults() {
-      const ac = localStorage.getItem('accentColor');
-      if (ac) document.documentElement.style.setProperty('--primary-color', ac);
-      alert('Visual settings applied.');
+
+    function renderAll() {
+      renderSessionInfo();
+      renderPlayerPool();
+      renderPlayerButtons();
+      renderPointTypeButtons();
+      renderTeams();
+      renderCategories();
+      renderAnswerLog();
+      renderStatistics();
     }
 
     function renderSessionInfo() {
       const session = getCurrentSession();
       if (!session) return;
-      
       document.getElementById('sessionName').textContent = session.name;
+      const chip = document.getElementById('headerSessionName');
+      if (chip) chip.textContent = session.name;
       document.getElementById('sessionCreated').textContent = new Date(session.created).toLocaleString();
       document.getElementById('sessionLastUpdated').textContent = new Date(session.lastUpdated).toLocaleString();
       document.getElementById('sessionAnswerCount').textContent = (session.answerLog || []).length;
     }
 
-    // ============ PLAYER MANAGEMENT ============
-    // Utility: parse players from text allowing commas, semicolons, and newlines
+    // ============ PLAYERS ============
     function parsePlayersFromText(text) {
       if (!text) return [];
-      // Replace CRLF with LF, then split on newline and commas/semicolons
       const normalized = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-      // Split by newline first, then split each line by comma/semicolon
       const items = normalized.split('\n').flatMap(line => line.split(/[,;]+/));
       return items.map(p => p.trim()).filter(p => p);
     }
+
     function addToPlayerPool() {
       const input = document.getElementById('playerInput');
       const player = input.value.trim();
-      
-      if (!player) {
-        alert('Please enter a player name.');
-        return;
-      }
+      if (!player) { alert('Please enter a player name.'); return; }
       
       const session = getCurrentSession();
       if (!session.players) session.players = {};
-      
-      if (session.players[player]) {
-        alert('Player already exists.');
-        return;
-      }
+      if (session.players[player]) { alert('Player already exists.'); return; }
       
       session.players[player] = { name: player, points: 0, answers: [] };
       input.value = '';
       saveAllData();
       renderPlayerPool();
       renderPlayerButtons();
+      renderTeams();
     }
 
     function handlePlayerInputEnter(event) {
-      if (event.key === 'Enter') {
-        addToPlayerPool();
-      }
+      if (event.key === 'Enter') addToPlayerPool();
     }
 
     function removeFromPlayerPool(player) {
@@ -1809,6 +1607,7 @@
       saveAllData();
       renderPlayerPool();
       renderPlayerButtons();
+      renderTeams();
     }
 
     function clearPlayerPool() {
@@ -1818,6 +1617,7 @@
         saveAllData();
         renderPlayerPool();
         renderPlayerButtons();
+        renderTeams();
       }
     }
 
@@ -1825,12 +1625,10 @@
       const session = getCurrentSession();
       const display = document.getElementById('playerPoolDisplay');
       const players = Object.keys(session.players || {});
-      
       if (players.length === 0) {
-        display.innerHTML = '<p style="color: var(--text-secondary);">No players added yet.</p>';
+        display.innerHTML = '<p style="color:var(--text-secondary)">No players added yet.</p>';
         return;
       }
-      
       display.innerHTML = players.map(player => `
         <span class="player-pool-item">
           ${player}
@@ -1842,24 +1640,17 @@
     function renderPlayerButtons() {
       const session = getCurrentSession();
       const container = document.getElementById('playerButtonsContainer');
-      
-      // Collect all players that are in at least one team
       const playersInTeams = new Set();
       (session.teams || []).forEach(team => {
-        (team.playerMembers || []).forEach(player => {
-          playersInTeams.add(player);
-        });
+        (team.playerMembers || []).forEach(player => playersInTeams.add(player));
       });
-      
       const players = Array.from(playersInTeams);
-      
       if (players.length === 0) {
-        container.innerHTML = '<p style="color: var(--text-secondary);">No players in any team yet.</p>';
+        container.innerHTML = '<p style="color:var(--text-secondary)">No players in any team yet.</p>';
         return;
       }
-      
       container.innerHTML = players.map(player => `
-        <button class="button-player ${state.selectedPlayer === player ? 'selected' : ''}" 
+        <button class="button-player ${state.selectedPlayer === player ? 'selected' : ''}"
           onclick="selectPlayer('${player}')">${player}</button>
       `).join('');
     }
@@ -1872,42 +1663,33 @@
     function handlePlayerImport(event) {
       const file = event.target.files[0];
       if (!file) return;
-      
       const reader = new FileReader();
       reader.onload = (e) => {
-        const text = e.target.result;
-        const players = parsePlayersFromText(text);
-        
+        const players = parsePlayersFromText(e.target.result);
         const session = getCurrentSession();
         if (!session.players) session.players = {};
-        
         players.forEach(player => {
           if (!session.players[player]) {
             session.players[player] = { name: player, points: 0, answers: [] };
           }
         });
-        
         saveAllData();
         renderPlayerPool();
         renderPlayerButtons();
+        renderTeams();
       };
       reader.readAsText(file);
       event.target.value = '';
     }
 
-    // Default roster import (saves to localStorage and applies to session)
     function handleDefaultPlayersImport(event) {
       const file = event.target.files[0];
       if (!file) return;
       const reader = new FileReader();
       reader.onload = (e) => {
-        const text = e.target.result;
-        const players = parsePlayersFromText(text);
-        try {
-          localStorage.setItem('defaultPlayers', JSON.stringify(players));
-        } catch (err) {
-          console.error('Failed to save default players', err);
-        }
+        const players = parsePlayersFromText(e.target.result);
+        try { localStorage.setItem('defaultPlayers', JSON.stringify(players)); }
+        catch(err) { console.error('Failed to save default players', err); }
         applyDefaultPlayersToSession();
         alert('Default roster saved and applied to current session.');
       };
@@ -1917,17 +1699,10 @@
 
     function applyDefaultPlayersToSession() {
       const stored = localStorage.getItem('defaultPlayers');
-      if (!stored) {
-        alert('No stored default roster found. Import a CSV/TXT first.');
-        return;
-      }
+      if (!stored) { alert('No stored default roster found. Import a CSV/TXT first.'); return; }
       let players;
-      try {
-        players = JSON.parse(stored);
-      } catch (e) {
-        alert('Stored default roster is invalid. Clear and re-import.');
-        return;
-      }
+      try { players = JSON.parse(stored); }
+      catch(e) { alert('Stored default roster is invalid.'); return; }
       const session = getCurrentSession();
       if (!session) return;
       if (!session.players) session.players = {};
@@ -1939,6 +1714,7 @@
       saveAllData();
       renderPlayerPool();
       renderPlayerButtons();
+      renderTeams();
     }
 
     function clearStoredDefaultPlayers() {
@@ -1948,19 +1724,13 @@
       }
     }
 
-    // ============ TEAM MANAGEMENT ============
+    // ============ TEAMS ============
     function addTeam() {
       const input = document.getElementById('teamNameInput');
       const teamName = input.value.trim();
-      
-      if (!teamName) {
-        alert('Please enter a team name.');
-        return;
-      }
-      
+      if (!teamName) { alert('Please enter a team name.'); return; }
       const session = getCurrentSession();
-      const teamId = Date.now().toString();
-      session.teams.push({ id: teamId, name: teamName, playerMembers: [] });
+      session.teams.push({ id: Date.now().toString(), name: teamName, playerMembers: [] });
       input.value = '';
       saveAllData();
       renderTeams();
@@ -1971,86 +1741,86 @@
       session.teams = session.teams.filter(t => t.id !== teamId);
       saveAllData();
       renderTeams();
+      renderPlayerButtons();
     }
 
     function updateTeamName(teamId, newName) {
       const session = getCurrentSession();
       const team = session.teams.find(t => t.id === teamId);
-      if (team) {
-        team.name = newName;
-        saveAllData();
-      }
+      if (team) { team.name = newName; saveAllData(); }
     }
 
     function togglePlayerInTeam(teamId, player) {
       const session = getCurrentSession();
       const team = session.teams.find(t => t.id === teamId);
       if (!team) return;
-      
       const index = team.playerMembers.indexOf(player);
-      if (index > -1) {
-        team.playerMembers.splice(index, 1);
-      } else {
-        team.playerMembers.push(player);
-      }
+      if (index > -1) team.playerMembers.splice(index, 1);
+      else team.playerMembers.push(player);
       saveAllData();
       renderTeams();
+      renderPlayerButtons();
     }
 
     function renderTeams() {
       const session = getCurrentSession();
       const container = document.getElementById('teamsContainer');
       const teams = session.teams || [];
-      
       if (teams.length === 0) {
-        container.innerHTML = '<p style="color: var(--text-secondary);">No teams created yet.</p>';
+        container.innerHTML = '<p style="color:var(--text-secondary)">No teams created yet.</p>';
         return;
       }
-      
       container.innerHTML = teams.map(team => {
         const players = Object.keys(session.players || {});
         return `
           <div class="team-section">
             <input type="text" value="${team.name}" onchange="updateTeamName('${team.id}', this.value)" />
-            <div style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px;">
-              ${players.length === 0 ? '<p style="color: var(--text-secondary);">No players available.</p>' : players.map(player => `
-                <button class="button-category ${team.playerMembers.includes(player) ? 'selected' : ''}" 
-                  onclick="togglePlayerInTeam('${team.id}', '${player}')">${player}</button>
-              `).join('')}
+            <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;">
+              ${players.length === 0
+                ? '<p style="color:var(--text-secondary)">No players available.</p>'
+                : players.map(player => `
+                    <button class="button-category ${team.playerMembers.includes(player) ? 'selected' : ''}"
+                      onclick="togglePlayerInTeam('${team.id}', '${player}')">${player}</button>
+                  `).join('')}
             </div>
-            <button class="button button-danger" onclick="removeTeam('${team.id}')" style="margin-top: 10px;">Remove Team</button>
+            <button class="button button-danger" onclick="removeTeam('${team.id}')" style="margin-top:10px;">Remove Team</button>
           </div>
         `;
       }).join('');
     }
 
-    // ============ CATEGORY MANAGEMENT ============
+    // ============ CATEGORIES ============
     function saveCategories() {
       const input = document.getElementById('categoriesInput').value;
-      state.categories = input.split(',').map(c => c.trim()).filter(c => c);
-      // Normalize and sort alphabetically
-      state.categories = state.categories.sort((a, b) => a.localeCompare(b));
+      state.categories = input.split(',').map(c => c.trim()).filter(c => c).sort((a, b) => a.localeCompare(b));
       saveAllData();
       renderCategories();
     }
 
     function renderCategories() {
       const container = document.getElementById('categoryButtonsContainer');
-      
       if (state.categories.length === 0) {
-        container.innerHTML = '<p style="color: var(--text-secondary); grid-column: 1/-1;">No categories added yet.</p>';
+        container.innerHTML = '<p style="color:var(--text-secondary);grid-column:1/-1">No categories added yet.</p>';
         return;
       }
-      
       container.innerHTML = state.categories.map(category => `
-        <button class="button-category ${state.selectedCategory === category ? 'selected' : ''}" 
+        <button class="button-category ${state.selectedCategory === category ? 'selected' : ''}"
+          data-category="${category}"
           onclick="selectCategory('${category}')">${category}</button>
       `).join('');
     }
 
     function selectCategory(category) {
-      state.selectedCategory = state.selectedCategory === category ? null : category;
-      renderCategories();
+      const prev = state.selectedCategory;
+      state.selectedCategory = prev === category ? null : category;
+      // Toggle classes in-place so CSS transitions fire
+      document.querySelectorAll('#categoryButtonsContainer .button-category').forEach(btn => {
+        if (btn.dataset.category === state.selectedCategory) {
+          btn.classList.add('selected');
+        } else {
+          btn.classList.remove('selected');
+        }
+      });
     }
 
     // ============ ANSWER RECORDING ============
@@ -2062,7 +1832,8 @@
     function renderPointTypeButtons() {
       document.querySelectorAll('.button-point-type').forEach(btn => {
         btn.classList.remove('selected');
-        if (btn.textContent.includes(state.selectedPointType)) {
+        const labels = { 'Toss-up': 'Toss-up', 'Bonus': 'Bonus', 'Neg': 'Neg', 'Power': 'Power' };
+        if (state.selectedPointType && btn.textContent.includes(labels[state.selectedPointType])) {
           btn.classList.add('selected');
         }
       });
@@ -2070,19 +1841,9 @@
 
     function recordAnswer() {
       const session = getCurrentSession();
-      
-      if (!state.selectedPlayer) {
-        alert('Please select a player.');
-        return;
-      }
-      if (!state.selectedPointType) {
-        alert('Please select a point type.');
-        return;
-      }
-      if (!state.selectedCategory) {
-        alert('Please select a category.');
-        return;
-      }
+      if (!state.selectedPlayer) { alert('Please select a player.'); return; }
+      if (!state.selectedPointType) { alert('Please select a point type.'); return; }
+      if (!state.selectedCategory) { alert('Please select a category.'); return; }
       
       const pointMap = { 'Toss-up': 10, 'Bonus': 10, 'Neg': -5, 'Power': 15 };
       const points = pointMap[state.selectedPointType];
@@ -2096,32 +1857,29 @@
         timestamp: new Date().toISOString()
       };
       
+      if (!session.answerLog) session.answerLog = [];
       session.answerLog.push(answer);
+      if (!session.players[state.selectedPlayer].answers) session.players[state.selectedPlayer].answers = [];
       session.players[state.selectedPlayer].answers.push(answer);
       session.players[state.selectedPlayer].points += points;
       
       saveAllData();
-      renderAll();
       
       // Reset selections
       state.selectedPlayer = null;
       state.selectedPointType = null;
       state.selectedCategory = null;
-      renderPlayerButtons();
-      renderPointTypeButtons();
-      renderCategories();
+      
+      renderAll();
     }
 
     function deleteAnswer(answerId) {
       const session = getCurrentSession();
       const answer = session.answerLog.find(a => a.id === answerId);
-      
       if (!answer) return;
-      
       session.players[answer.player].points -= answer.points;
       session.players[answer.player].answers = session.players[answer.player].answers.filter(a => a.id !== answerId);
       session.answerLog = session.answerLog.filter(a => a.id !== answerId);
-      
       saveAllData();
       renderAll();
     }
@@ -2143,19 +1901,17 @@
       const session = getCurrentSession();
       const container = document.getElementById('answerLog');
       const answers = session.answerLog || [];
-      
       if (answers.length === 0) {
-        container.innerHTML = '<p style="color: var(--text-secondary);">No answers recorded yet.</p>';
+        container.innerHTML = '<p style="color:var(--text-secondary)">No answers recorded yet.</p>';
         return;
       }
-      
-      container.innerHTML = answers.map((answer, index) => `
+      container.innerHTML = [...answers].reverse().map((answer, index) => `
         <div class="log-entry">
           <span>
-            <strong>${index + 1}. ${answer.player}</strong> - ${answer.pointType} 
-            (${answer.points > 0 ? '+' : ''}${answer.points} pts) - ${answer.category}
+            <strong>${answers.length - index}. ${answer.player}</strong> — ${answer.pointType}
+            (${answer.points > 0 ? '+' : ''}${answer.points} pts) — ${answer.category}
           </span>
-          <button class="button button-danger" onclick="deleteAnswer('${answer.id}')" style="padding: 4px 8px; font-size: 0.8em;">Delete</button>
+          <button class="button button-danger" onclick="deleteAnswer('${answer.id}')" style="padding:4px 8px;font-size:0.8em;">Delete</button>
         </div>
       `).join('');
     }
@@ -2163,11 +1919,9 @@
     // ============ STATISTICS ============
     function calculatePlayerStats() {
       const session = getCurrentSession();
-      const stats = [];
-      
-      Object.values(session.players || {}).forEach(player => {
+      return Object.values(session.players || {}).map(player => {
         const answers = player.answers || [];
-        stats.push({
+        return {
           name: player.name,
           points: player.points,
           totalAnswers: answers.length,
@@ -2175,20 +1929,20 @@
           bonusPoints: answers.filter(a => a.pointType === 'Bonus').length * 10,
           negs: answers.filter(a => a.pointType === 'Neg').length,
           powers: answers.filter(a => a.pointType === 'Power').length
-        });
+        };
+      }).sort((a, b) => {
+        if (b.points !== a.points) return b.points - a.points;
+        // Tiebreaker 1: more powers wins
+        if (b.powers !== a.powers) return b.powers - a.powers;
+        // Tiebreaker 2: fewer negs wins
+        return a.negs - b.negs;
       });
-      
-      return stats.sort((a, b) => b.points - a.points);
     }
 
     function calculateTeamStats() {
       const session = getCurrentSession();
-      const teamStats = [];
-      
-      (session.teams || []).forEach(team => {
-        let totalPoints = 0;
-        let totalAnswers = 0;
-        
+      return (session.teams || []).map(team => {
+        let totalPoints = 0, totalAnswers = 0;
         team.playerMembers.forEach(playerName => {
           const player = session.players[playerName];
           if (player) {
@@ -2196,129 +1950,194 @@
             totalAnswers += (player.answers || []).length;
           }
         });
-        
-        teamStats.push({
+        return {
           name: team.name,
-          totalPoints: totalPoints,
-          totalAnswers: totalAnswers,
+          totalPoints,
+          totalAnswers,
           members: team.playerMembers,
           averagePerMember: team.playerMembers.length > 0 ? (totalPoints / team.playerMembers.length).toFixed(2) : 0
-        });
-      });
-      
-      return teamStats.sort((a, b) => b.totalPoints - a.totalPoints);
+        };
+      }).sort((a, b) => b.totalPoints - a.totalPoints);
+    }
+
+    function buildRankingList(players) {
+      let html = '';
+      let rank = 1;
+      for (let i = 0; i < players.length; i++) {
+        const stat = players[i];
+        const prev = players[i - 1];
+        const tied = prev && prev.points === stat.points && prev.powers === stat.powers && prev.negs === stat.negs;
+        if (i > 0 && !tied) rank = i + 1;
+        const suffix = rank === 1 ? 'st' : rank === 2 ? 'nd' : rank === 3 ? 'rd' : 'th';
+        const pwLabel = stat.powers > 0 ? ' &middot; ' + stat.powers + 'pw' : '';
+        const negLabel = stat.negs > 0 ? ' &middot; ' + stat.negs + 'neg' : '';
+        html += '<li style="padding:6px 0; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">'
+              + '<span><strong style="color:var(--primary-color); min-width:42px; display:inline-block;">' + rank + suffix + '</strong> ' + stat.name + '</span>'
+              + '<span style="color:var(--text-secondary); font-size:0.92em;">' + stat.points + ' pts' + pwLabel + negLabel + '</span>'
+              + '</li>';
+      }
+      return html;
     }
 
     function renderStatistics() {
       const container = document.getElementById('statisticsContainer');
       const playerStats = calculatePlayerStats();
       const teamStats = calculateTeamStats();
-      
-      let html = '<div class="stats-grid">';
-      
-      // Team statistics
-      if (teamStats.length > 0) {
-        teamStats.forEach(team => {
-          html += `
-            <div class="team-stat-card collapsed">
-              <h3 onclick="toggleStatCard(event)"><span class="team-name">${team.name}</span><span class="team-score">${team.totalPoints} pts</span></h3>
-              <div class="stat-details">
-                <div class="stat-row">
-                  <span class="stat-label">Total Points:</span>
-                  <span class="stat-value">${team.totalPoints}</span>
-                </div>
-                <div class="stat-row">
-                  <span class="stat-label">Total Answers:</span>
-                  <span class="stat-value">${team.totalAnswers}</span>
-                </div>
-                <div class="stat-row">
-                  <span class="stat-label">Average per Member:</span>
-                  <span class="stat-value">${team.averagePerMember}</span>
-                </div>
-                <div class="stat-row">
-                  <span class="stat-label">Members:</span>
-                  <span>${team.members.join(', ') || 'None'}</span>
-                </div>
-              </div>
-            </div>
-          `;
-        });
-      }
-      
-      // Player statistics - only show players with activity
       const activePlayers = playerStats.filter(stat => stat.totalAnswers > 0);
+
+      let html = '<div class="stats-grid">';
+
+      teamStats.forEach(team => {
+        html += `
+          <div class="team-stat-card collapsed">
+            <h3 onclick="toggleStatCard(event)">
+              <span class="team-name">${team.name}</span>
+              <span class="team-score">${team.totalPoints} pts</span>
+            </h3>
+            <div class="stat-details">
+              <div class="stat-row"><span class="stat-label">Total Points:</span><span class="stat-value">${team.totalPoints}</span></div>
+              <div class="stat-row"><span class="stat-label">Total Answers:</span><span class="stat-value">${team.totalAnswers}</span></div>
+              <div class="stat-row"><span class="stat-label">Avg per Member:</span><span class="stat-value">${team.averagePerMember}</span></div>
+              <div class="stat-row"><span class="stat-label">Members:</span><span>${team.members.join(', ') || 'None'}</span></div>
+            </div>
+          </div>
+        `;
+      });
+
       if (activePlayers.length > 0) {
-        activePlayers.forEach((stat) => {
+        activePlayers.forEach(stat => {
           html += `
             <div class="stat-card collapsed">
-              <h3 onclick="toggleStatCard(event)"><span class="player-name">${stat.name}</span><span class="player-score">${stat.points} pts</span></h3>
+              <h3 onclick="toggleStatCard(event)">
+                <span class="player-name">${stat.name}</span>
+                <span class="player-score">${stat.points} pts</span>
+              </h3>
               <div class="stat-details">
-                <div class="stat-row">
-                  <span class="stat-label">Total Points:</span>
-                  <span class="stat-value">${stat.points}</span>
-                </div>
-                <div class="stat-row">
-                  <span class="stat-label">Answers Recorded:</span>
-                  <span class="stat-value">${stat.totalAnswers}</span>
-                </div>
-                <div class="stat-row">
-                  <span class="stat-label">Toss-ups Correct:</span>
-                  <span class="stat-value">${stat.tossupsCorrect}</span>
-                </div>
-                <div class="stat-row">
-                  <span class="stat-label">Bonus Points:</span>
-                  <span class="stat-value">${stat.bonusPoints}</span>
-                </div>
-                <div class="stat-row">
-                  <span class="stat-label">Negs:</span>
-                  <span class="stat-value">${stat.negs}</span>
-                </div>
-                <div class="stat-row">
-                  <span class="stat-label">Powers:</span>
-                  <span class="stat-value">${stat.powers}</span>
-                </div>
+                <div class="stat-row"><span class="stat-label">Total Points:</span><span class="stat-value">${stat.points}</span></div>
+                <div class="stat-row"><span class="stat-label">Answers:</span><span class="stat-value">${stat.totalAnswers}</span></div>
+                <div class="stat-row"><span class="stat-label">Toss-ups:</span><span class="stat-value">${stat.tossupsCorrect}</span></div>
+                <div class="stat-row"><span class="stat-label">Bonus Pts:</span><span class="stat-value">${stat.bonusPoints}</span></div>
+                <div class="stat-row"><span class="stat-label">Negs:</span><span class="stat-value">${stat.negs}</span></div>
+                <div class="stat-row"><span class="stat-label">Powers:</span><span class="stat-value">${stat.powers}</span></div>
               </div>
             </div>
           `;
         });
+
+        html += `
+          <div class="overall-ranking">
+            <h3 style="margin-top:0;">Player Rankings</h3>
+            <ol style="list-style:none; margin:12px 0 0 0; padding:0;">
+              ${buildRankingList(activePlayers)}
+            </ol>
+          </div>
+        `;
       } else {
-        html += '<p style="color: var(--text-secondary);">No statistics available yet.</p>';
+        html += '<p style="color:var(--text-secondary)">No statistics available yet.</p>';
       }
-      
-      // Overall Ranking Section
-      if (activePlayers.length > 0) {
-        html += '<div class="overall-ranking"><h3 style="margin-top: 0;">Player Rankings</h3><ol>';
-        activePlayers.forEach((stat, index) => {
-          html += `<li>${stat.name} - ${stat.points} pts</li>`;
-        });
-        html += '</ol></div>';
-      }
-      
+
       html += '</div>';
       container.innerHTML = html;
     }
 
     function toggleStatCard(event) {
-      // Find the parent stat-card or team-stat-card
-      let card = event.currentTarget.closest('.stat-card, .team-stat-card');
-      if (card) {
-        card.classList.toggle('collapsed');
-      }
+      const card = event.currentTarget.closest('.stat-card, .team-stat-card');
+      if (card) card.classList.toggle('collapsed');
     }
 
-    // ============ EXPORT FUNCTIONS ============
+    // ============ EXPORT ============
+    function importFromJSON(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const statusEl = document.getElementById('importStatus');
+      statusEl.style.display = 'block';
+      statusEl.style.color = 'var(--text-secondary)';
+      statusEl.textContent = 'Reading file...';
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+
+          // Validate that it looks like a quiz bowl export
+          if (!data.sessionName || (!data.players && !data.answerLog)) {
+            throw new Error('File does not appear to be a valid Quiz Bowl session export.');
+          }
+
+          // Check if a session with this name already exists
+          const existingId = Object.keys(state.sessions).find(
+            id => state.sessions[id].name === data.sessionName
+          );
+
+          const proceed = existingId
+            ? confirm(`A session named "${data.sessionName}" already exists. Overwrite it?`)
+            : true;
+
+          if (!proceed) {
+            statusEl.textContent = 'Import cancelled.';
+            event.target.value = '';
+            return;
+          }
+
+          const sessionId = existingId || Date.now().toString();
+
+          // Rebuild the session object, being tolerant of missing fields
+          const importedSession = {
+            id: sessionId,
+            name: data.sessionName || 'Imported Session',
+            created: data.created || new Date().toISOString(),
+            lastUpdated: new Date().toISOString(),
+            players: data.players || {},
+            teams: data.teams || [],
+            categories: data.categories || [],
+            answers: data.answers || [],
+            answerLog: data.answerLog || []
+          };
+
+          // Re-link answer objects inside each player (answerLog is source of truth)
+          // Rebuild player answer arrays from answerLog to ensure consistency
+          Object.keys(importedSession.players).forEach(name => {
+            importedSession.players[name].answers = importedSession.answerLog.filter(
+              a => a.player === name
+            );
+            // Recalculate points from answers to ensure accuracy
+            importedSession.players[name].points = importedSession.players[name].answers.reduce(
+              (sum, a) => sum + (a.points || 0), 0
+            );
+          });
+
+          state.sessions[sessionId] = importedSession;
+          state.currentSessionId = sessionId;
+          loadSessionData();
+          saveAllData();
+          renderAll();
+
+          statusEl.style.color = 'var(--success-color)';
+          statusEl.textContent = `Session "${importedSession.name}" imported successfully with ${importedSession.answerLog.length} answer(s).`;
+        } catch (err) {
+          statusEl.style.color = 'var(--danger-color)';
+          statusEl.textContent = 'Import failed: ' + err.message;
+        }
+        event.target.value = '';
+      };
+
+      reader.onerror = () => {
+        statusEl.style.color = 'var(--danger-color)';
+        statusEl.textContent = 'Failed to read file.';
+        event.target.value = '';
+      };
+
+      reader.readAsText(file);
+    }
+
     function exportToExcel() {
       const session = getCurrentSession();
       if (!session) return;
-      
-      const includeAll = true;
       const playerStats = calculatePlayerStats();
       const teamStats = calculateTeamStats();
-      
-      // Create CSV content
       let csv = [];
-      
-      // Player Statistics
+
       if (document.getElementById('exportPlayers').checked) {
         csv.push('Player Statistics');
         csv.push('Player Name,Total Points,Total Answers,Toss-ups,Bonuses,Negs,Powers');
@@ -2327,8 +2146,7 @@
         });
         csv.push('');
       }
-      
-      // Team Statistics
+
       if (document.getElementById('exportTeamStats').checked && teamStats.length > 0) {
         csv.push('Team Statistics');
         csv.push('Team Name,Total Points,Total Answers,Members');
@@ -2337,8 +2155,7 @@
         });
         csv.push('');
       }
-      
-      // Answer Log
+
       if (document.getElementById('exportAnswerLog').checked) {
         csv.push('Answer Log');
         csv.push('Player,Point Type,Category,Points,Timestamp');
@@ -2346,15 +2163,13 @@
           csv.push(`${answer.player},${answer.pointType},${answer.category},${answer.points},${new Date(answer.timestamp).toLocaleString()}`);
         });
       }
-      
-      const csvContent = csv.join('\n');
-      downloadFile(csvContent, `quiz-bowl-${session.name}-${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
+
+      downloadFile(csv.join('\n'), `quiz-bowl-${session.name}-${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
     }
 
     function exportToJSON() {
       const session = getCurrentSession();
       if (!session) return;
-      
       const exportData = {
         sessionName: session.name,
         created: session.created,
@@ -2364,26 +2179,24 @@
         answerLog: session.answerLog,
         categories: state.categories
       };
-      
-      const jsonContent = JSON.stringify(exportData, null, 2);
-      downloadFile(jsonContent, `quiz-bowl-${session.name}-${new Date().toISOString().split('T')[0]}.json`, 'application/json');
+      downloadFile(JSON.stringify(exportData, null, 2), `quiz-bowl-${session.name}-${new Date().toISOString().split('T')[0]}.json`, 'application/json');
     }
 
     function downloadFile(content, filename, mimeType) {
-      const element = document.createElement('a');
-      element.setAttribute('href', `data:${mimeType};charset=utf-8,` + encodeURIComponent(content));
-      element.setAttribute('download', filename);
-      element.style.display = 'none';
-      document.body.appendChild(element);
-      element.click();
-      document.body.removeChild(element);
+      const el = document.createElement('a');
+      el.setAttribute('href', `data:${mimeType};charset=utf-8,` + encodeURIComponent(content));
+      el.setAttribute('download', filename);
+      el.style.display = 'none';
+      document.body.appendChild(el);
+      el.click();
+      document.body.removeChild(el);
     }
 
-    // ============ RESET FUNCTION ============
+    // ============ RESET ============
     function resetAllData() {
       if (confirm('Delete all sessions and data? This cannot be undone!')) {
         if (confirm('Are you absolutely sure? This will delete everything.')) {
-          localStorage.setItem(STORAGE_KEY, '{}');
+          sessionsRef.remove().catch(err => showFirebaseError('Reset failed: ' + err.message));
           localStorage.setItem(CURRENT_SESSION_KEY, '');
           state.sessions = {};
           state.currentSessionId = null;
