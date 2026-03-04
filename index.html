@@ -1261,22 +1261,26 @@
       if (playersUnsubscribe) playersUnsubscribe();
       playersUnsubscribe = globalPlayersRef.on('value', (snapshot) => {
         const data = snapshot.val() || {};
-        // Sync global players into current session without overwriting scores/answers
-        const session = getCurrentSession();
-        if (!session) return;
-        let changed = false;
-        Object.keys(data).forEach(name => {
-          if (!session.players[name]) {
-            session.players[name] = { name, points: 0, answers: [] };
-            changed = true;
-          }
-        });
-        if (changed) {
-          renderPlayerPool();
-          renderPlayerButtons();
-          renderTeams();
+        applyGlobalPlayersToSession(data);
+      });
+    }
+
+    function applyGlobalPlayersToSession(data) {
+      const session = getCurrentSession();
+      if (!session) return;
+      let changed = false;
+      Object.keys(data).forEach(name => {
+        if (!session.players[name]) {
+          session.players[name] = { name, points: 0, answers: [] };
+          changed = true;
         }
       });
+      if (changed) {
+        saveAllData();
+        renderPlayerPool();
+        renderPlayerButtons();
+        renderTeams();
+      }
     }
 
     function saveGlobalPlayers() {
@@ -1410,9 +1414,24 @@
 
       state.currentSessionId = sessionId;
       loadSessionData();
-      saveAllData();
-      if (nameInput) nameInput.value = '';
-      renderAll();
+
+      // Eagerly populate global players into the new session before saving
+      globalPlayersRef.once('value').then(snapshot => {
+        const data = snapshot.val() || {};
+        Object.keys(data).forEach(name => {
+          if (!state.sessions[sessionId].players[name]) {
+            state.sessions[sessionId].players[name] = { name, points: 0, answers: [] };
+          }
+        });
+        saveAllData();
+        if (nameInput) nameInput.value = '';
+        renderAll();
+      }).catch(() => {
+        // Fallback: save even if global players can't be fetched
+        saveAllData();
+        if (nameInput) nameInput.value = '';
+        renderAll();
+      });
     }
 
     function openSessionsModal() {
@@ -1453,6 +1472,10 @@
     function loadSession(sessionId) {
       state.currentSessionId = sessionId;
       loadSessionData();
+      // Apply global players to this session in case new ones were added elsewhere
+      globalPlayersRef.once('value').then(snapshot => {
+        applyGlobalPlayersToSession(snapshot.val() || {});
+      });
       saveAllData();
       renderAll();
       closeSessionsModal();
