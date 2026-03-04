@@ -32,7 +32,7 @@
       --input-border: #e1e4e8;
       --input-text: #1a1a2e;
       --hover-bg: #f0f3f8;
-      --border-color: #e1e4e8;
+      --border-color: #a8acb1;
       
       --shadow-xs: 0 1px 2px rgba(0,0,0,0.05);
       --shadow-sm: 0 2px 4px rgba(0,0,0,0.08);
@@ -61,7 +61,7 @@
       --input-border: #30363d;
       --input-text: #e6e6e6;
       --hover-bg: #21262d;
-      --border-color: #30363d;
+      --border-color: #3f444d;
       
       --shadow-xs: 0 1px 2px rgba(0,0,0,0.3);
       --shadow-sm: 0 2px 4px rgba(0,0,0,0.3);
@@ -84,16 +84,16 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
       background: linear-gradient(135deg, var(--background-start) 0%, var(--background-end) 100%);
       min-height: 100vh;
-      padding: 12px;
+      padding: 8px 8px 0 0;
       color: var(--text-color);
+      overflow-y: scroll;
     }
     
     .container {
-      max-width: 1400px;
-      margin: 0 auto;
+      width: 100%;
       background: var(--bg-color);
-      border-radius: 16px;
-      box-shadow: var(--shadow-xl);
+      border-radius: 0;
+      box-shadow: none;
       overflow: hidden;
       transition: all 0.3s ease;
     }
@@ -136,7 +136,8 @@
     }
     
     .content {
-      padding: clamp(20px, 6vw, 36px);
+      padding: clamp(20px, 6vw, 32px);
+      overflow: visible;
     }
 
     /* Layout: sidebar + main */
@@ -151,7 +152,7 @@
       position: sticky;
       top: 20px;
       align-self: start;
-      max-height: calc(100vh - 40px);
+      height: 100vh;
       overflow-y: auto;
       padding-right: 6px;
     }
@@ -501,8 +502,9 @@
     }
     
     .button-point-type:hover, .button-category:hover, .button-player:hover {
-      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
-      border-color: var(--primary-dark);
+      box-shadow: 0 6px 16px rgba(102, 126, 234, 0.3);
+      border-color: var(--primary-light);
+      transform: translateY(-2px);
     }
     
     .button-point-type.selected, .button-category.selected, .button-player.selected {
@@ -578,7 +580,7 @@
     }
     
     .stat-card:hover {
-      border-left-color: var(--primary-dark);
+      border-color: var(--primary-light);
       box-shadow: var(--shadow-md);
       transform: translateY(-2px);
     }
@@ -586,36 +588,52 @@
     .stat-card h3 {
       display: flex;
       align-items: center;
-      gap: 8px;
+      justify-content: space-between;
       cursor: pointer;
       user-select: none;
+      margin: 0;
+      font-size: 1.1em;
+      color: var(--text-primary);
     }
 
     .stat-card h3::before {
-      content: '▶';
-      display: inline-block;
-      transition: transform 0.3s;
-      font-size: 0.8em;
-    }
-
-    .stat-card.collapsed h3::before {
-      transform: rotate(0deg);
-    }
-
-    .stat-card:not(.collapsed) h3::before {
-      transform: rotate(90deg);
+      display: none;
     }
 
     .stat-details {
       max-height: 1000px;
       overflow: hidden;
-      transition: max-height 0.3s ease-out, opacity 0.3s;
+      transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
       opacity: 1;
+      pointer-events: auto;
     }
 
-    .stat-card.collapsed .stat-details {
+    .stat-card.collapsed .stat-details,
+    .team-stat-card.collapsed .stat-details {
       max-height: 0;
       opacity: 0;
+      pointer-events: none;
+    }
+    
+    .overall-ranking {
+      grid-column: 1 / -1;
+      background: var(--card-bg);
+      padding: 18px;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-sm);
+      margin-top: 10px;
+    }
+
+    .overall-ranking ol {
+      margin: 12px 0 0 20px;
+      padding: 0;
+    }
+
+    .overall-ranking li {
+      padding: 6px 0;
+      color: var(--text-primary);
+      font-weight: 500;
     }
     
     .team-stat-card {
@@ -631,7 +649,7 @@
     }
     
     .team-stat-card:hover {
-      border-left-color: var(--secondary-dark);
+      border-color: var(--primary-light);
       box-shadow: var(--shadow-md);
       transform: translateY(-2px);
     }
@@ -639,24 +657,21 @@
     .team-stat-card h3 {
       display: flex;
       align-items: center;
-      gap: 8px;
+      justify-content: space-between;
       cursor: pointer;
       user-select: none;
+      margin: 0;
+      font-size: 1.1em;
+      color: var(--text-primary);
+    }
+
+    .player-score, .team-score {
+      color: var(--primary-color);
+      font-weight: 700;
     }
 
     .team-stat-card h3::before {
-      content: '▶';
-      display: inline-block;
-      transition: transform 0.3s;
-      font-size: 0.8em;
-    }
-
-    .team-stat-card.collapsed h3::before {
-      transform: rotate(0deg);
-    }
-
-    .team-stat-card:not(.collapsed) h3::before {
-      transform: rotate(90deg);
+      display: none;
     }
 
     .stat-row {
@@ -1351,14 +1366,6 @@
                 </div>
 
               <div class="input-group">
-                <label>Compact UI</label>
-                <label class="switch">
-                  <input type="checkbox" id="compactModeToggle" onchange="toggleCompactMode()">
-                  <span class="slider"></span>
-                </label>
-              </div>
-
-              <div class="input-group">
                 <label>Accent Color</label>
                 <select id="accentColorSelect" onchange="setAccentColor(this.value)">
                   <option value="#667eea">Indigo</option>
@@ -1488,12 +1495,7 @@
         localStorage.setItem('visualSidebarOpen', 'false');
       }
       applyVisualState();
-      // restore compact/accent if previously set
-      if (localStorage.getItem('compactMode') === 'true') {
-        const cm = document.getElementById('compactModeToggle');
-        if (cm) cm.checked = true;
-        document.body.classList.add('compact-mode');
-      }
+      // restore accent color if previously set
       const ac = localStorage.getItem('accentColor');
       if (ac) {
         const sel = document.getElementById('accentColorSelect');
@@ -1740,22 +1742,13 @@
       }
     }
 
-    function toggleCompactMode() {
-      const compact = document.getElementById('compactModeToggle')?.checked;
-      if (compact) document.body.classList.add('compact-mode');
-      else document.body.classList.remove('compact-mode');
-      localStorage.setItem('compactMode', compact ? 'true' : 'false');
-    }
-
     function setAccentColor(color) {
       document.documentElement.style.setProperty('--primary-color', color);
       localStorage.setItem('accentColor', color);
     }
 
     function applyVisualDefaults() {
-      const compactStored = localStorage.getItem('compactMode') === 'true';
       const ac = localStorage.getItem('accentColor');
-      if (compactStored) document.body.classList.add('compact-mode');
       if (ac) document.documentElement.style.setProperty('--primary-color', ac);
       alert('Visual settings applied.');
     }
@@ -2019,13 +2012,10 @@
         return `
           <div class="team-section">
             <input type="text" value="${team.name}" onchange="updateTeamName('${team.id}', this.value)" />
-            <div style="margin-top: 10px;">
-              ${players.map(player => `
-                <label style="display: inline-block; margin-right: 15px; cursor: pointer;">
-                  <input type="checkbox" ${team.playerMembers.includes(player) ? 'checked' : ''} 
-                    onchange="togglePlayerInTeam('${team.id}', '${player}')">
-                  ${player}
-                </label>
+            <div style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px;">
+              ${players.length === 0 ? '<p style="color: var(--text-secondary);">No players available.</p>' : players.map(player => `
+                <button class="button-category ${team.playerMembers.includes(player) ? 'selected' : ''}" 
+                  onclick="togglePlayerInTeam('${team.id}', '${player}')">${player}</button>
               `).join('')}
             </div>
             <button class="button button-danger" onclick="removeTeam('${team.id}')" style="margin-top: 10px;">Remove Team</button>
@@ -2230,8 +2220,8 @@
       if (teamStats.length > 0) {
         teamStats.forEach(team => {
           html += `
-            <div class="team-stat-card collapsed" onclick="toggleStatCard(this)">
-              <h3>${team.name}</h3>
+            <div class="team-stat-card collapsed">
+              <h3 onclick="toggleStatCard(event)"><span class="team-name">${team.name}</span><span class="team-score">${team.totalPoints} pts</span></h3>
               <div class="stat-details">
                 <div class="stat-row">
                   <span class="stat-label">Total Points:</span>
@@ -2255,12 +2245,13 @@
         });
       }
       
-      // Player statistics
-      if (playerStats.length > 0) {
-        playerStats.forEach((stat, index) => {
+      // Player statistics - only show players with activity
+      const activePlayers = playerStats.filter(stat => stat.totalAnswers > 0);
+      if (activePlayers.length > 0) {
+        activePlayers.forEach((stat) => {
           html += `
-            <div class="stat-card collapsed" onclick="toggleStatCard(this)">
-              <h3>#${index + 1} ${stat.name}</h3>
+            <div class="stat-card collapsed">
+              <h3 onclick="toggleStatCard(event)"><span class="player-name">${stat.name}</span><span class="player-score">${stat.points} pts</span></h3>
               <div class="stat-details">
                 <div class="stat-row">
                   <span class="stat-label">Total Points:</span>
@@ -2294,12 +2285,25 @@
         html += '<p style="color: var(--text-secondary);">No statistics available yet.</p>';
       }
       
+      // Overall Ranking Section
+      if (activePlayers.length > 0) {
+        html += '<div class="overall-ranking"><h3 style="margin-top: 0;">Player Rankings</h3><ol>';
+        activePlayers.forEach((stat, index) => {
+          html += `<li>${stat.name} - ${stat.points} pts</li>`;
+        });
+        html += '</ol></div>';
+      }
+      
       html += '</div>';
       container.innerHTML = html;
     }
 
-    function toggleStatCard(element) {
-      element.classList.toggle('collapsed');
+    function toggleStatCard(event) {
+      // Find the parent stat-card or team-stat-card
+      let card = event.currentTarget.closest('.stat-card, .team-stat-card');
+      if (card) {
+        card.classList.toggle('collapsed');
+      }
     }
 
     // ============ EXPORT FUNCTIONS ============
