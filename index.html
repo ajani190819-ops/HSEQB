@@ -1837,8 +1837,9 @@
     function removeFromPlayerPool(player) {
       const session = getCurrentSession();
       delete session.players[player];
+      // Also remove from the global player list so they don't reappear
+      removeGlobalPlayer(player);
       saveAllData();
-      // Note: does NOT remove from global list — use removeGlobalPlayer() for that
       renderPlayerPool();
       renderPlayerButtons();
       renderTeams();
