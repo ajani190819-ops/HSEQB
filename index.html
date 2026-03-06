@@ -193,10 +193,18 @@
     .an-team-name { font-weight: 700; font-size: 1.05em; margin-bottom: 8px; }
     .an-team-pts { color: var(--primary); font-weight: 700; font-size: 1.3em; }
     /* Remove outline specifically from the analytics/tracker button */
+/* Permanently remove outline from analytics/tracker button */
+#analyticsBtn,
+#analyticsBtnMobile,
 #analyticsBtn:focus,
-#analyticsBtnMobile:focus {
-  outline: none;
-  box-shadow: none;
+#analyticsBtnMobile:focus,
+#analyticsBtn:active,
+#analyticsBtnMobile:active,
+#analyticsBtn:focus-visible,
+#analyticsBtnMobile:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-tap-highlight-color: transparent !important;
 }
 
     /* ── Mobile sidebar overlay ── */
@@ -1303,7 +1311,8 @@
         html+='</div>';
       }
 
-      // Recent Activity
+      // Recent Activity\
+      /*
       if(recentAnswers.length){
         html+='<div style="background:var(--card);border:2px solid var(--border);border-radius:10px;padding:18px;margin-bottom:var(--sp);box-shadow:var(--shadow-sm);">';
         html+='<h3 style="margin:0 0 12px;font-size:1.1em;color:var(--primary);">Recent Activity</h3>';
@@ -1312,7 +1321,7 @@
         });
         html+='</div>';
       }
-
+*/
       if(!totalAns) html+='<p style="color:var(--text2)">No answers recorded yet. Start tracking to see your team overview!</p>';
 
       el.innerHTML=html;
