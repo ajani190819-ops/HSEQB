@@ -1318,6 +1318,58 @@
     let firebaseUnsubscribe = null;
     let playersUnsubscribe = null;
 
+    // ---- Realtime sync + concurrency helpers ----
+    const clientId = (() => {
+      try {
+        const k = 'qb_clientId';
+        const existing = localStorage.getItem(k);
+        if (existing) return existing;
+        const fresh = (crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now().toString(36) + Math.random().toString(36).slice(2));
+        localStorage.setItem(k, fresh);
+        return fresh;
+      } catch {
+        return Date.now().toString(36) + Math.random().toString(36).slice(2);
+      }
+    })();
+
+    // Prevent UI "snapping back" due to async Firebase on('value') events.
+    // While we have a local write in flight, we ignore incoming snapshots for that session.
+    const writeInFlight = new Set();
+
+    function withWriteLock(sessionId, fn) {
+      writeInFlight.add(sessionId);
+      try {
+        return fn();
+      } finally {
+        // Small delay lets Firebase echo update settle before we start accepting remote snapshots again
+        setTimeout(() => writeInFlight.delete(sessionId), 300);
+      }
+    }
+
+    // Use transactions for any mutation that appends/removes to avoid last-write-wins overwrites.
+    function updateSessionAtomic(sessionId, mutator) {
+      writeInFlight.add(sessionId);
+      return sessionsRef.child(sessionId).transaction((current) => {
+        if (!current) return current;
+        const normalized = normalizeSession(current);
+        mutator(normalized);
+        normalized.lastUpdated = new Date().toISOString();
+        normalized.updatedBy = clientId;
+        return normalized;
+      }, (error, committed) => {
+        setTimeout(() => writeInFlight.delete(sessionId), 300);
+        if (error) showFirebaseError('Save failed: ' + error.message);
+        if (!committed) console.warn('Update not committed (conflict?)');
+      }, false);
+    }
+
+    function setSessionNonAtomic(sessionId, value) {
+      writeInFlight.add(sessionId);
+      return sessionsRef.child(sessionId).set(value).finally(() => {
+        setTimeout(() => writeInFlight.delete(sessionId), 300);
+      });
+    }
+
     // Firebase converts arrays to objects with numeric keys — this fixes that
     function toArray(val) {
       if (!val) return [];
@@ -1460,11 +1512,23 @@
       if (firebaseUnsubscribe) firebaseUnsubscribe();
       firebaseUnsubscribe = sessionsRef.on('value', (snapshot) => {
         const data = snapshot.val();
-        state.sessions = data || {};
-        // Normalize all sessions (Firebase converts arrays to objects)
-        Object.keys(state.sessions).forEach(id => {
-          state.sessions[id] = normalizeSession(state.sessions[id]);
-        });
+        const incoming = data || {};
+
+        // If we're currently writing a specific session, don't let remote echo overwrite local UI state.
+        // We'll still accept other sessions.
+        if (state.currentSessionId && writeInFlight.has(state.currentSessionId)) {
+          // Keep existing state.sessions for that session id, but refresh others.
+          Object.keys(incoming).forEach(id => {
+            if (id === state.currentSessionId) return;
+            incoming[id] = normalizeSession(incoming[id]);
+            state.sessions[id] = incoming[id];
+          });
+        } else {
+          state.sessions = incoming;
+          Object.keys(state.sessions).forEach(id => {
+            state.sessions[id] = normalizeSession(state.sessions[id]);
+          });
+        }
 
         const savedId = localStorage.getItem(CURRENT_SESSION_KEY);
         if (savedId && state.sessions[savedId]) {
@@ -1532,12 +1596,16 @@
       if (state.currentSessionId && state.sessions[state.currentSessionId]) {
         state.sessions[state.currentSessionId].categories = state.categories;
         state.sessions[state.currentSessionId].lastUpdated = new Date().toISOString();
+        state.sessions[state.currentSessionId].updatedBy = clientId;
       }
       // Save current session ID locally (UI preference)
       localStorage.setItem(CURRENT_SESSION_KEY, state.currentSessionId);
-      // Write only the current session to Firebase (not all sessions)
+      // IMPORTANT:
+      // This is a plain .set() and is NOT concurrency-safe if two users edit at once.
+      // Keep it for "metadata-only" saves (categories/theme UI), but use updateSessionAtomic()
+      // for any list mutations (players/teams/answerLog) to avoid overwriting others.
       if (state.currentSessionId && state.sessions[state.currentSessionId]) {
-        sessionsRef.child(state.currentSessionId).set(state.sessions[state.currentSessionId])
+        setSessionNonAtomic(state.currentSessionId, state.sessions[state.currentSessionId])
           .catch(err => showFirebaseError('Save failed: ' + err.message));
       }
     }
@@ -1568,6 +1636,7 @@
         name: sessionName,
         created: new Date().toISOString(),
         lastUpdated: new Date().toISOString(),
+        updatedBy: clientId,
         players: {},
         teams: [],
         categories: getDefaultCategories(),
@@ -1586,12 +1655,14 @@
             state.sessions[sessionId].players[name] = { name, points: 0, answers: [] };
           }
         });
-        saveAllData();
+        // Creating a new session can safely use set (no concurrent writers yet for this id)
+        setSessionNonAtomic(sessionId, state.sessions[sessionId]).catch(err => showFirebaseError('Save failed: ' + err.message));
+        localStorage.setItem(CURRENT_SESSION_KEY, state.currentSessionId);
         if (nameInput) nameInput.value = '';
         renderAll();
       }).catch(() => {
-        // Fallback: save even if global players can't be fetched
-        saveAllData();
+        setSessionNonAtomic(sessionId, state.sessions[sessionId]).catch(err => showFirebaseError('Save failed: ' + err.message));
+        localStorage.setItem(CURRENT_SESSION_KEY, state.currentSessionId);
         if (nameInput) nameInput.value = '';
         renderAll();
       });
@@ -1816,15 +1887,26 @@
       const input = document.getElementById('playerInput');
       const player = input.value.trim();
       if (!player) { alert('Please enter a player name.'); return; }
-      
-      const session = getCurrentSession();
-      if (!session.players) session.players = {};
-      if (session.players[player]) { alert('Player already exists.'); return; }
-      
-      session.players[player] = { name: player, points: 0, answers: [] };
-      input.value = '';
-      saveAllData();
-      saveGlobalPlayers([player]);
+
+      const sessionId = state.currentSessionId;
+      if (!sessionId) return;
+
+      // Concurrency-safe: add player using a transaction so two clients don't overwrite each other
+      updateSessionAtomic(sessionId, (session) => {
+        if (!session.players) session.players = {};
+        if (session.players[player]) return;
+        session.players[player] = { name: player, points: 0, answers: [] };
+      }).then(() => {
+        input.value = '';
+        saveGlobalPlayers([player]);
+      });
+
+      // Optimistic UI
+      withWriteLock(sessionId, () => {
+        const session = getCurrentSession();
+        if (!session.players) session.players = {};
+        if (!session.players[player]) session.players[player] = { name: player, points: 0, answers: [] };
+      });
       renderPlayerPool();
       renderPlayerButtons();
       renderTeams();
@@ -1835,11 +1917,28 @@
     }
 
     function removeFromPlayerPool(player) {
-      const session = getCurrentSession();
-      delete session.players[player];
+      const sessionId = state.currentSessionId;
+      if (!sessionId) return;
+
+      updateSessionAtomic(sessionId, (session) => {
+        if (session.players) delete session.players[player];
+        // Also remove from all teams in this session to avoid dangling references
+        (session.teams || []).forEach(t => {
+          t.playerMembers = (t.playerMembers || []).filter(p => p !== player);
+        });
+      });
+
       // Also remove from the global player list so they don't reappear
       removeGlobalPlayer(player);
-      saveAllData();
+
+      // Optimistic UI
+      withWriteLock(sessionId, () => {
+        const session = getCurrentSession();
+        if (session?.players) delete session.players[player];
+        (session?.teams || []).forEach(t => {
+          t.playerMembers = (t.playerMembers || []).filter(p => p !== player);
+        });
+      });
       renderPlayerPool();
       renderPlayerButtons();
       renderTeams();
@@ -1847,13 +1946,32 @@
 
     function clearPlayerPool() {
       if (confirm('Clear all players?')) {
-        const session = getCurrentSession();
-        session.players = {};
-        saveAllData();
+        const sessionId = state.currentSessionId;
+        if (!sessionId) return;
+
+        updateSessionAtomic(sessionId, (session) => {
+          session.players = {};
+          (session.teams || []).forEach(t => { t.playerMembers = []; });
+          session.answerLog = [];
+          session.answers = [];
+        });
+
+        // Optimistic UI
+        withWriteLock(sessionId, () => {
+          const session = getCurrentSession();
+          session.players = {};
+          (session.teams || []).forEach(t => { t.playerMembers = []; });
+          session.answerLog = [];
+          session.answers = [];
+        });
+
         // Note: does NOT remove from global list
         renderPlayerPool();
         renderPlayerButtons();
         renderTeams();
+        renderAnswerLog();
+        renderStatistics();
+        renderSessionInfo();
       }
     }
 
@@ -1902,15 +2020,25 @@
       const reader = new FileReader();
       reader.onload = (e) => {
         const players = parsePlayersFromText(e.target.result);
-        const session = getCurrentSession();
-        if (!session.players) session.players = {};
-        players.forEach(player => {
-          if (!session.players[player]) {
-            session.players[player] = { name: player, points: 0, answers: [] };
-          }
+        const sessionId = state.currentSessionId;
+        if (!sessionId) return;
+
+        updateSessionAtomic(sessionId, (session) => {
+          if (!session.players) session.players = {};
+          players.forEach(player => {
+            if (!session.players[player]) session.players[player] = { name: player, points: 0, answers: [] };
+          });
+        }).then(() => saveGlobalPlayers(players));
+
+        // Optimistic UI
+        withWriteLock(sessionId, () => {
+          const session = getCurrentSession();
+          if (!session.players) session.players = {};
+          players.forEach(player => {
+            if (!session.players[player]) session.players[player] = { name: player, points: 0, answers: [] };
+          });
         });
-        saveAllData();
-        saveGlobalPlayers(players);
+
         renderPlayerPool();
         renderPlayerButtons();
         renderTeams();
@@ -1927,35 +2055,89 @@
       const input = document.getElementById('teamNameInput');
       const teamName = input.value.trim();
       if (!teamName) { alert('Please enter a team name.'); return; }
-      const session = getCurrentSession();
-      session.teams.push({ id: Date.now().toString(), name: teamName, playerMembers: [] });
+
+      const sessionId = state.currentSessionId;
+      if (!sessionId) return;
+
+      const team = { id: Date.now().toString(), name: teamName, playerMembers: [] };
+
+      updateSessionAtomic(sessionId, (session) => {
+        session.teams = toArray(session.teams);
+        session.teams.push(team);
+      });
+
+      // Optimistic UI
+      withWriteLock(sessionId, () => {
+        const session = getCurrentSession();
+        session.teams = toArray(session.teams);
+        session.teams.push(team);
+      });
+
       input.value = '';
-      saveAllData();
       renderTeams();
     }
 
     function removeTeam(teamId) {
-      const session = getCurrentSession();
-      session.teams = session.teams.filter(t => t.id !== teamId);
-      saveAllData();
+      const sessionId = state.currentSessionId;
+      if (!sessionId) return;
+
+      updateSessionAtomic(sessionId, (session) => {
+        session.teams = toArray(session.teams).filter(t => t.id !== teamId);
+      });
+
+      // Optimistic UI
+      withWriteLock(sessionId, () => {
+        const session = getCurrentSession();
+        session.teams = toArray(session.teams).filter(t => t.id !== teamId);
+      });
+
       renderTeams();
       renderPlayerButtons();
     }
 
     function updateTeamName(teamId, newName) {
-      const session = getCurrentSession();
-      const team = session.teams.find(t => t.id === teamId);
-      if (team) { team.name = newName; saveAllData(); }
+      const sessionId = state.currentSessionId;
+      if (!sessionId) return;
+
+      updateSessionAtomic(sessionId, (session) => {
+        session.teams = toArray(session.teams);
+        const team = session.teams.find(t => t.id === teamId);
+        if (team) team.name = newName;
+      });
+
+      // Optimistic UI
+      withWriteLock(sessionId, () => {
+        const session = getCurrentSession();
+        const team = (session.teams || []).find(t => t.id === teamId);
+        if (team) team.name = newName;
+      });
     }
 
     function togglePlayerInTeam(teamId, player) {
-      const session = getCurrentSession();
-      const team = session.teams.find(t => t.id === teamId);
-      if (!team) return;
-      const index = team.playerMembers.indexOf(player);
-      if (index > -1) team.playerMembers.splice(index, 1);
-      else team.playerMembers.push(player);
-      saveAllData();
+      const sessionId = state.currentSessionId;
+      if (!sessionId) return;
+
+      updateSessionAtomic(sessionId, (session) => {
+        session.teams = toArray(session.teams);
+        const team = session.teams.find(t => t.id === teamId);
+        if (!team) return;
+        team.playerMembers = toArray(team.playerMembers);
+        const index = team.playerMembers.indexOf(player);
+        if (index > -1) team.playerMembers.splice(index, 1);
+        else team.playerMembers.push(player);
+      });
+
+      // Optimistic UI
+      withWriteLock(sessionId, () => {
+        const session = getCurrentSession();
+        const team = (session.teams || []).find(t => t.id === teamId);
+        if (!team) return;
+        team.playerMembers = toArray(team.playerMembers);
+        const index = team.playerMembers.indexOf(player);
+        if (index > -1) team.playerMembers.splice(index, 1);
+        else team.playerMembers.push(player);
+      });
+
       renderTeams();
       renderPlayerButtons();
     }
@@ -1991,7 +2173,21 @@
     function saveCategories() {
       const input = document.getElementById('categoriesInput').value;
       state.categories = input.split(',').map(c => c.trim()).filter(c => c).sort((a, b) => a.localeCompare(b));
-      saveAllData();
+
+      const sessionId = state.currentSessionId;
+      if (!sessionId) return;
+
+      // Categories are a replace operation; use transaction to avoid clobbering others who may be editing too.
+      updateSessionAtomic(sessionId, (session) => {
+        session.categories = [...state.categories];
+      });
+
+      // Optimistic UI
+      withWriteLock(sessionId, () => {
+        const session = getCurrentSession();
+        session.categories = [...state.categories];
+      });
+
       renderCategories();
     }
 
@@ -2038,7 +2234,9 @@
     }
 
     function recordAnswer() {
-      const session = getCurrentSession();
+      const sessionId = state.currentSessionId;
+      if (!sessionId) return;
+
       if (!state.selectedPlayer) { alert('Please select a player.'); return; }
       if (!state.selectedPointType) { alert('Please select a point type.'); return; }
       if (!state.selectedCategory) { alert('Please select a category.'); return; }
@@ -2054,15 +2252,31 @@
         points: points,
         timestamp: new Date().toISOString()
       };
-      
-      if (!session.answerLog) session.answerLog = [];
-      session.answerLog.push(answer);
-      if (!session.players[state.selectedPlayer].answers) session.players[state.selectedPlayer].answers = [];
-      session.players[state.selectedPlayer].answers.push(answer);
-      session.players[state.selectedPlayer].points += points;
-      
-      saveAllData();
-      
+
+      // Concurrency-safe append + points updates
+      updateSessionAtomic(sessionId, (session) => {
+        if (!session.answerLog) session.answerLog = [];
+        session.answerLog = toArray(session.answerLog);
+        session.answerLog.push(answer);
+
+        if (!session.players) session.players = {};
+        if (!session.players[answer.player]) session.players[answer.player] = { name: answer.player, points: 0, answers: [] };
+        if (!session.players[answer.player].answers) session.players[answer.player].answers = [];
+        session.players[answer.player].answers = toArray(session.players[answer.player].answers);
+        session.players[answer.player].answers.push(answer);
+        session.players[answer.player].points = (session.players[answer.player].points || 0) + points;
+      });
+
+      // Optimistic UI
+      withWriteLock(sessionId, () => {
+        const session = getCurrentSession();
+        if (!session.answerLog) session.answerLog = [];
+        session.answerLog.push(answer);
+        if (!session.players[answer.player].answers) session.players[answer.player].answers = [];
+        session.players[answer.player].answers.push(answer);
+        session.players[answer.player].points += points;
+      });
+
       // Reset selections
       state.selectedPlayer = null;
       state.selectedPointType = null;
@@ -2072,25 +2286,63 @@
     }
 
     function deleteAnswer(answerId) {
-      const session = getCurrentSession();
-      const answer = session.answerLog.find(a => a.id === answerId);
-      if (!answer) return;
-      session.players[answer.player].points -= answer.points;
-      session.players[answer.player].answers = session.players[answer.player].answers.filter(a => a.id !== answerId);
-      session.answerLog = session.answerLog.filter(a => a.id !== answerId);
-      saveAllData();
+      const sessionId = state.currentSessionId;
+      if (!sessionId) return;
+
+      updateSessionAtomic(sessionId, (session) => {
+        session.answerLog = toArray(session.answerLog);
+        const answer = session.answerLog.find(a => a.id === answerId);
+        if (!answer) return;
+
+        // Remove from log
+        session.answerLog = session.answerLog.filter(a => a.id !== answerId);
+
+        // Remove from player + adjust points
+        if (session.players && session.players[answer.player]) {
+          const p = session.players[answer.player];
+          p.answers = toArray(p.answers).filter(a => a.id !== answerId);
+          p.points = (p.points || 0) - (answer.points || 0);
+        }
+      });
+
+      // Optimistic UI
+      withWriteLock(sessionId, () => {
+        const session = getCurrentSession();
+        const answer = (session.answerLog || []).find(a => a.id === answerId);
+        if (!answer) return;
+        session.players[answer.player].points -= answer.points;
+        session.players[answer.player].answers = (session.players[answer.player].answers || []).filter(a => a.id !== answerId);
+        session.answerLog = (session.answerLog || []).filter(a => a.id !== answerId);
+      });
+
       renderAll();
     }
 
     function clearAnswerLog() {
       if (confirm('Clear all answers? This cannot be undone.')) {
-        const session = getCurrentSession();
-        session.answerLog = [];
-        Object.keys(session.players).forEach(player => {
-          session.players[player].points = 0;
-          session.players[player].answers = [];
+        const sessionId = state.currentSessionId;
+        if (!sessionId) return;
+
+        updateSessionAtomic(sessionId, (session) => {
+          session.answerLog = [];
+          if (session.players) {
+            Object.keys(session.players).forEach(player => {
+              session.players[player].points = 0;
+              session.players[player].answers = [];
+            });
+          }
         });
-        saveAllData();
+
+        // Optimistic UI
+        withWriteLock(sessionId, () => {
+          const session = getCurrentSession();
+          session.answerLog = [];
+          Object.keys(session.players).forEach(player => {
+            session.players[player].points = 0;
+            session.players[player].answers = [];
+          });
+        });
+
         renderAll();
       }
     }
