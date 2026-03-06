@@ -8,425 +8,389 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <style>
     :root {
-      --spacing: 20px;
-      --h-spacing: 12px;
-      --primary-color: #667eea;
+      --sp: 20px;
+      --hsp: 12px;
+      --primary: #667eea;
       --primary-light: #7c8ff0;
       --primary-dark: #5568d3;
-      --secondary-color: #764ba2;
-      --success-color: #11998e;
-      --success-secondary: #38ef7d;
-      --danger-color: #dc3545;
-      --danger-light: #e74c5c;
-      --warning-color: #ffc107;
-      --bg-color: #ffffff;
-      --text-color: #1a1a2e;
-      --text-secondary: #606060;
-      --text-light: #999999;
-      --section-bg: #f5f7fb;
-      --card-bg: #ffffff;
-      --input-bg: #ffffff;
+      --secondary: #764ba2;
+      --success: #11998e;
+      --success2: #38ef7d;
+      --danger: #dc3545;
+      --danger2: #e74c5c;
+      --warning: #ffc107;
+      --bg: #fff;
+      --text: #1a1a2e;
+      --text2: #606060;
+      --text3: #999;
+      --sec-bg: #f5f7fb;
+      --card: #fff;
+      --input-bg: #fff;
       --input-border: #e1e4e8;
       --input-text: #1a1a2e;
-      --hover-bg: #f0f3f8;
-      --border-color: #a8acb1;
-      --shadow-xs: 0 1px 2px rgba(0,0,0,0.05);
-      --shadow-sm: 0 2px 4px rgba(0,0,0,0.08);
-      --shadow-md: 0 6px 12px rgba(0,0,0,0.1);
-      --shadow-lg: 0 12px 24px rgba(0,0,0,0.12);
-      --shadow-xl: 0 20px 40px rgba(0,0,0,0.15);
+      --hover: #f0f3f8;
+      --border: #a8acb1;
+      --shadow-xs: 0 1px 2px rgba(0,0,0,.05);
+      --shadow-sm: 0 2px 4px rgba(0,0,0,.08);
+      --shadow-md: 0 6px 12px rgba(0,0,0,.1);
+      --shadow-xl: 0 20px 40px rgba(0,0,0,.15);
     }
     .dark-mode {
-      --danger-color: #ff6b6b;
-      --warning-color: #ffd43b;
-      --bg-color: #0d1117;
-      --text-color: #e6e6e6;
-      --text-secondary: #b0b0b0;
-      --text-light: #808080;
-      --section-bg: #161b22;
-      --card-bg: #1c2128;
+      --danger: #ff6b6b;
+      --warning: #ffd43b;
+      --bg: #0d1117;
+      --text: #e6e6e6;
+      --text2: #b0b0b0;
+      --text3: #808080;
+      --sec-bg: #161b22;
+      --card: #1c2128;
       --input-bg: #0d1117;
       --input-border: #30363d;
       --input-text: #e6e6e6;
-      --hover-bg: #21262d;
-      --border-color: #3f444d;
-      --shadow-xs: 0 1px 2px rgba(0,0,0,0.3);
-      --shadow-sm: 0 2px 4px rgba(0,0,0,0.3);
-      --shadow-md: 0 6px 12px rgba(0,0,0,0.4);
-      --shadow-lg: 0 12px 24px rgba(0,0,0,0.5);
-      --shadow-xl: 0 20px 40px rgba(0,0,0,0.6);
+      --hover: #21262d;
+      --border: #3f444d;
+      --shadow-xs: 0 1px 2px rgba(0,0,0,.3);
+      --shadow-sm: 0 2px 4px rgba(0,0,0,.3);
+      --shadow-md: 0 6px 12px rgba(0,0,0,.4);
+      --shadow-xl: 0 20px 40px rgba(0,0,0,.6);
     }
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html { scroll-behavior: smooth; height: 100%; overflow: hidden; }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { height: 100%; overflow: hidden; }
 
     /* Scrollbars */
     ::-webkit-scrollbar { width: 8px; height: 8px; }
     ::-webkit-scrollbar-button { display: none; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--primary-color); border-radius: 10px; }
+    ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
     ::-webkit-scrollbar-thumb:hover { background: var(--primary-dark); }
-    * { scrollbar-width: thin; scrollbar-color: var(--primary-color) transparent; }
-
-    /* Reserve scrollbar gutter so hiding scrollbars doesn't shift layout */
-    .qb-content { scrollbar-gutter: stable; }
-    .sidebar-sections { scrollbar-gutter: stable; }
-
-    /* Hide scrollbars setting */
-    body.hide-scrollbars ::-webkit-scrollbar-thumb { background: transparent !important; }
+    * { scrollbar-width: thin; scrollbar-color: var(--primary) transparent; }
+    .qb-scroll, .sidebar-sections, .log-container { scrollbar-gutter: stable; }
+    body.hide-scrollbars ::-webkit-scrollbar-thumb,
     body.hide-scrollbars ::-webkit-scrollbar-track { background: transparent !important; }
     body.hide-scrollbars * { scrollbar-color: transparent transparent !important; }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      height: 100vh; overflow: hidden; color: var(--text-color); display: flex; flex-direction: column;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      height: 100vh; overflow: hidden;
+      color: var(--text); display: flex; flex-direction: column;
     }
 
-    /* ── Main container ── */
-    .qb-container {
-      width: 100%; flex: 1; display: flex; flex-direction: column;
-      background: var(--bg-color); overflow: hidden; position: relative;
-    }
+    /* ── Container ── */
+    .qb-container { width: 100%; flex: 1; display: flex; flex-direction: column; background: var(--bg); overflow: hidden; }
 
     /* ── Header ── */
     .qb-header {
-      background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-      color: white; padding: 36px 24px 52px; text-align: center;
-      display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 20px;
-      box-shadow: 0 4px 20px rgba(102,126,234,0.3); position: relative; z-index: 200; flex-shrink: 0;
-      transition: filter 0.3s ease;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: #fff; padding: 36px 24px 52px;
+      display: flex; justify-content: center; align-items: center;
+      box-shadow: 0 4px 20px rgba(102,126,234,.3);
+      position: relative; z-index: 200; flex-shrink: 0;
+      transition: filter .3s ease;
     }
     .qb-header h1 {
-      font-size: clamp(1.8em,5vw,2.8em); font-weight: 700; letter-spacing: -0.5px;
-      position: absolute; left: 50%; transform: translateX(-50%); margin: 0; white-space: nowrap;
+      font-size: clamp(1.8em,5vw,2.8em); font-weight: 700; letter-spacing: -.5px;
+      position: absolute; left: 50%; transform: translateX(-50%); white-space: nowrap;
     }
     .version-badge {
-      font-size: 0.38em; font-weight: 600; background: rgba(255,255,255,0.18);
-      border: 1px solid rgba(255,255,255,0.3); color: rgba(255,255,255,0.8);
+      font-size: .38em; font-weight: 600; background: rgba(255,255,255,.18);
+      border: 1px solid rgba(255,255,255,.3); color: rgba(255,255,255,.8);
       padding: 3px 8px; border-radius: 20px; vertical-align: middle; position: relative; top: -4px;
     }
     .header-session-name {
       position: absolute; left: 50%; transform: translateX(-50%); bottom: 14px;
-      font-size: 0.8em; font-weight: 600; color: rgba(255,255,255,0.75);
-      letter-spacing: 0.4px; white-space: nowrap; pointer-events: none;
+      font-size: .8em; font-weight: 600; color: rgba(255,255,255,.75); white-space: nowrap; pointer-events: none;
     }
-    .header-session-name::before { content: 'Session: '; opacity: 0.6; }
+    .header-session-name::before { content: 'Session: '; opacity: .6; }
     .header-controls {
-      display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; align-items: center;
       position: absolute; right: 20px; top: 50%; transform: translateY(-50%);
+      display: flex; gap: 16px; align-items: center;
     }
     .sidebar-open-btn {
       display: none; position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
-      background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3);
-      border-radius: 8px; padding: 8px 14px; font-size: 0.88em; font-weight: 700;
-      cursor: pointer; z-index: 10; font-family: inherit; white-space: nowrap;
+      background: rgba(255,255,255,.15); color: #fff; border: 1px solid rgba(255,255,255,.3);
+      border-radius: 8px; padding: 8px 14px; font-size: .88em; font-weight: 700;
+      cursor: pointer; font-family: inherit; white-space: nowrap;
     }
-    .sidebar-open-btn:hover { background: rgba(255,255,255,0.25); }
+    .sidebar-open-btn:hover { background: rgba(255,255,255,.25); }
+    .mobile-subrow { display: none; }
 
-    /* ── Body area (sidebar + content side by side) ── */
-    .qb-body {
-      flex: 1; display: flex; overflow: hidden; position: relative;
-    }
+    /* ── Body / Sidebar / Scroll ── */
+    .qb-body { flex: 1; display: flex; overflow: hidden; position: relative; }
 
-    /* ── Sidebar ── */
     .qb-sidebar {
-      width: 320px; flex-shrink: 0;
-      display: flex; flex-direction: column;
-      padding: var(--spacing) var(--h-spacing) var(--spacing) var(--h-spacing);
-      background: var(--bg-color);
-      border-right: 1px solid var(--border-color);
-      overflow: visible;
-      transition: width 0.3s ease, padding 0.3s ease;
-      position: relative; z-index: 100;
+      width: 320px; flex-shrink: 0; display: flex; flex-direction: column;
+      padding: var(--sp) var(--hsp);
+      background: var(--bg); border-right: 2px solid var(--border);
+      overflow: visible; position: relative; z-index: 100;
+      transition: width .3s ease, padding .3s ease;
     }
-    .qb-sidebar.collapsed {
-      width: 0; padding: 0; overflow: hidden; border-right: none;
-    }
+    .qb-sidebar.collapsed { width: 0; padding: 0; overflow: hidden; border-right: none; }
 
-    /* ── Scroll content area ── */
     .qb-scroll {
       flex: 1; overflow-y: auto; overflow-x: hidden;
-      padding: var(--spacing) var(--h-spacing);
-      scrollbar-gutter: stable;
-      transition: filter 0.3s ease;
+      padding: var(--sp) var(--hsp);
+      transition: filter .3s ease;
     }
-    .qb-scroll::-webkit-scrollbar { width: 8px; }
-    .qb-scroll::-webkit-scrollbar-button { display: none; }
-    .qb-scroll::-webkit-scrollbar-track { background: transparent; }
-    .qb-scroll::-webkit-scrollbar-thumb { background: var(--primary-color); border-radius: 10px; }
 
     /* ── Mobile sidebar overlay ── */
     @media (max-width: 900px) {
       .qb-sidebar {
-        position: fixed; top: 0; left: 0; right: 0; bottom: auto;
-        width: 100% !important; max-height: 70vh; overflow-y: auto;
-        padding: 12px 16px 16px !important;
-        border-right: none;
-        border-bottom: 2px solid var(--border-color);
-        box-shadow: 0 8px 32px rgba(0,0,0,0.22);
-        z-index: 6000;
-        transform: translateY(-110%);
-        visibility: hidden;
-        transition: transform 0.35s cubic-bezier(0.4,0,0.2,1), visibility 0.35s ease;
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        width: 100% !important; height: 100vh; max-height: 100vh;
+        overflow-y: auto; padding: 12px 16px 20px !important;
+        border-right: none; border-bottom: none;
+        background: rgba(255,255,255,0.18) !important;
+        -webkit-backdrop-filter: blur(28px) saturate(1.8);
+        backdrop-filter: blur(28px) saturate(1.8);
+        box-shadow: 0 8px 32px rgba(0,0,0,.22); z-index: 6000;
+        transform: translateY(-110%); visibility: hidden;
+        transition: transform .35s cubic-bezier(.4,0,.2,1), visibility .35s ease;
+        pointer-events: none;
+      }
+      .dark-mode .qb-sidebar {
+        background: rgba(13,17,23,0.6) !important;
       }
       .qb-sidebar.mobile-open {
-        transform: translateY(0) !important;
-        visibility: visible !important;
+        transform: translateY(0) !important; visibility: visible !important; pointer-events: auto !important;
       }
-      /* When menu is open, blur only the background content */
-      .qb-header.menu-blurred { filter: blur(3px); pointer-events: none; }
+      .qb-sidebar.mobile-open * { pointer-events: auto !important; }
       .qb-scroll.menu-blurred { filter: blur(3px); pointer-events: none; }
       body.menu-open { overflow: hidden; }
+      #sidebarOpenBtn { display: none !important; }
+      .mobile-subrow {
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 8px; width: 100%; margin-top: 4px;
+      }
+      .header-session-name, .header-controls { display: none !important; }
+      .sidebar-open-btn { display: none !important; }
     }
 
-    /* ── Section / UI components ── */
+    /* ── Sections ── */
     .qb-section {
-      margin-bottom: var(--spacing); padding: clamp(18px,5vw,24px);
-      background: var(--section-bg); border-radius: 12px; border: 2px solid var(--border-color);
-      transition: all 0.3s ease; overflow: visible;
+      margin-bottom: var(--sp); padding: clamp(18px,5vw,24px);
+      background: var(--sec-bg); border-radius: 12px; border: 2px solid var(--border);
+      transition: border-color .2s, box-shadow .2s; overflow: visible;
     }
     .qb-section:hover { border-color: var(--primary-light); box-shadow: var(--shadow-md); }
     .qb-section h2 {
-      color: var(--primary-color); margin-bottom: var(--spacing); font-size: clamp(1.3em,4vw,1.6em);
+      color: var(--primary); margin-bottom: var(--sp); font-size: clamp(1.3em,4vw,1.6em);
       cursor: pointer; display: flex; align-items: center; justify-content: space-between;
-      user-select: none; font-weight: 600; transition: color 0.2s;
+      user-select: none; font-weight: 600; transition: color .2s;
     }
     .qb-section h2:hover { color: var(--primary-dark); }
-    .toggle-icon { font-size: 0.8em; transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); display: inline-block; }
-    .toggle-icon.collapsed { transform: rotate(-90deg); }
-    .collapsible-content { max-height: 2000px; overflow: visible; transition: max-height 0.3s ease-out, overflow 0s 0s; }
-    .collapsible-content.collapsed { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out, overflow 0s 0.3s; }
 
-    .input-group { margin-bottom: var(--spacing); position: relative; }
-    .input-group label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-color); font-size: clamp(0.9em,2vw,1em); }
-    .input-group input, .input-group textarea, .input-group select {
-      width: 100%; padding: 12px 14px; border: 2px solid var(--input-border); border-radius: 8px;
-      font-size: 1em; transition: all 0.3s; background: var(--input-bg); color: var(--input-text); font-family: inherit;
+    .toggle-icon { font-size: .8em; transition: transform .3s cubic-bezier(.4,0,.2,1); display: inline-block; }
+    .toggle-icon.collapsed { transform: rotate(-90deg); }
+    .collapsible-content { max-height: 2000px; overflow: visible; transition: max-height .3s ease-out; }
+    .collapsible-content.collapsed { max-height: 0 !important; overflow: hidden; }
+
+    /* ── Inputs ── */
+    .input-group { margin-bottom: var(--sp); }
+    .input-group label { display: block; margin-bottom: 8px; font-weight: 600; font-size: clamp(.9em,2vw,1em); }
+    .input-group input,
+    .input-group textarea,
+    .input-group select {
+      width: 100%; padding: 12px 14px; border: 2px solid var(--input-border);
+      border-radius: 8px; font-size: 1em; font-family: inherit;
+      background: var(--input-bg); color: var(--input-text); transition: border-color .2s, box-shadow .2s;
     }
-    .input-group input::placeholder, .input-group textarea::placeholder { color: var(--text-light); }
-    .input-group input:focus, .input-group textarea:focus, .input-group select:focus {
-      border-color: var(--primary-color); outline: none;
-      box-shadow: 0 0 0 4px rgba(102,126,234,0.15); background: var(--input-bg);
+    .input-group input::placeholder,
+    .input-group textarea::placeholder { color: var(--text3); }
+    .input-group input:focus,
+    .input-group textarea:focus,
+    .input-group select:focus {
+      border-color: var(--primary); outline: none;
+      box-shadow: 0 0 0 4px rgba(102,126,234,.15);
     }
     input[type="file"] {
-      display: inline-block; padding: 10px 12px; border-radius: 8px; border: 2px solid var(--input-border);
-      background: var(--card-bg); color: var(--input-text); cursor: pointer; font-family: inherit; font-size: 0.95em; width: 100%;
+      width: 100%; padding: 10px 12px; border-radius: 8px; border: 2px solid var(--input-border);
+      background: var(--card); color: var(--input-text); cursor: pointer; font-family: inherit; font-size: .95em;
     }
     input[type="file"]::file-selector-button {
       margin-right: 10px; padding: 8px 12px; border-radius: 8px; border: none;
-      background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-      color: white; font-weight: 700; cursor: pointer;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: #fff; font-weight: 700; cursor: pointer;
     }
     #newSessionName {
-      padding: 12px 14px; border: 2px solid var(--input-border); border-radius: 8px;
-      background: var(--input-bg); color: var(--input-text); font-weight: 600; font-size: 1em; width: 100%;
+      width: 100%; padding: 12px 14px; border: 2px solid var(--input-border); border-radius: 8px;
+      background: var(--input-bg); color: var(--input-text); font-weight: 600; font-size: 1em; font-family: inherit;
     }
-    #newSessionName:focus { border-color: var(--primary-color); box-shadow: 0 0 0 4px rgba(102,126,234,0.12); outline: none; }
+    #newSessionName:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(102,126,234,.12); outline: none; }
 
-    .player-pool-item {
-      display: inline-flex; align-items: center; margin: 6px; padding: 10px 14px;
-      background: var(--card-bg); border-radius: 8px; font-size: 0.92em; color: var(--text-color);
-      border: 2px solid var(--border-color); box-shadow: var(--shadow-xs); transition: all 0.2s;
-    }
-    .player-pool-item:hover { border-color: var(--primary-color); }
-    .player-pool-item .remove {
-      cursor: pointer; margin-left: 10px; color: var(--danger-color); font-weight: bold;
-      padding: 4px 8px; border-radius: 4px; background: transparent; border: 1px solid transparent;
-      transition: all 0.2s; font-size: 1.1em;
-    }
-    .player-pool-item .remove:hover { background: var(--danger-color); color: white; }
-
+    /* ── Buttons ── */
     .button {
-      background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-      color: white; border: none; padding: clamp(10px,2vw,13px) clamp(18px,4vw,28px);
-      border-radius: 8px; font-size: clamp(0.88em,2vw,1em); cursor: pointer; transition: all 0.3s;
-      font-weight: 600; white-space: nowrap; position: relative; overflow: hidden;
-      box-shadow: 0 4px 12px rgba(102,126,234,0.3); font-family: inherit;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: #fff; border: none; padding: clamp(10px,2vw,13px) clamp(18px,4vw,28px);
+      border-radius: 8px; font-size: clamp(.88em,2vw,1em); font-family: inherit;
+      cursor: pointer; font-weight: 600; white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(102,126,234,.3); transition: transform .2s, box-shadow .2s;
     }
-    .button:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(102,126,234,0.4); }
+    .button:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(102,126,234,.4); }
     .button:active { transform: translateY(-1px); }
-    .button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-    .button-secondary { background: linear-gradient(135deg, var(--text-secondary) 0%, var(--text-light) 100%); box-shadow: 0 4px 12px rgba(96,96,96,0.2); }
-    .button-danger { background: linear-gradient(135deg, var(--danger-color) 0%, var(--danger-light) 100%); box-shadow: 0 4px 12px rgba(220,53,69,0.3); }
-    .button-success { background: linear-gradient(135deg, var(--success-color) 0%, var(--success-secondary) 100%); box-shadow: 0 4px 12px rgba(17,153,142,0.3); }
+    .button:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+    .button-secondary { background: linear-gradient(135deg, var(--text2), var(--text3)); box-shadow: 0 4px 12px rgba(96,96,96,.2); }
+    .button-danger { background: linear-gradient(135deg, var(--danger), var(--danger2)); box-shadow: 0 4px 12px rgba(220,53,69,.3); }
+    .button-success { background: linear-gradient(135deg, var(--success), var(--success2)); box-shadow: 0 4px 12px rgba(17,153,142,.3); }
 
     .button-point-type, .button-category, .button-player {
-      background: var(--card-bg); color: var(--primary-color); border: 2px solid var(--primary-color);
-      padding: clamp(10px,2vw,12px) clamp(14px,3vw,22px); border-radius: 8px; font-size: clamp(0.82em,1.8vw,1em);
-      cursor: pointer; transition: all 0.3s; font-weight: 600; box-shadow: 0 2px 8px rgba(102,126,234,0.1);
-      font-family: inherit;
+      background: var(--card); color: var(--primary); border: 2px solid var(--primary);
+      padding: clamp(10px,2vw,12px) clamp(14px,3vw,22px);
+      border-radius: 8px; font-size: clamp(.82em,1.8vw,1em); font-family: inherit;
+      cursor: pointer; font-weight: 600; transition: transform .2s, box-shadow .2s;
+      box-shadow: 0 2px 8px rgba(102,126,234,.1);
     }
-    .button-point-type:hover, .button-category:hover, .button-player:hover { box-shadow: 0 6px 16px rgba(102,126,234,0.3); transform: translateY(-2px); }
+    .button-point-type:hover, .button-category:hover, .button-player:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(102,126,234,.3); }
     .button-point-type.selected, .button-category.selected, .button-player.selected {
-      background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-      color: white; transform: scale(1.05); box-shadow: 0 6px 16px rgba(102,126,234,0.4); border-color: transparent;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: #fff; transform: scale(1.05); box-shadow: 0 6px 16px rgba(102,126,234,.4); border-color: transparent;
     }
-    .point-type-buttons, .category-buttons { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap: 12px; overflow: visible; padding: 4px; }
-    .player-buttons { display: flex; flex-wrap: wrap; gap: 10px; overflow: visible; padding: 4px; }
+    .point-type-buttons, .category-buttons { display: grid; grid-template-columns: repeat(auto-fit,minmax(160px,1fr)); gap: 12px; padding: 4px; }
+    .player-buttons { display: flex; flex-wrap: wrap; gap: 10px; padding: 4px; }
+    .button-group { display: flex; gap: 12px; flex-wrap: wrap; }
 
+    /* ── Player pool ── */
+    .player-pool-item {
+      display: inline-flex; align-items: center; margin: 6px; padding: 10px 14px;
+      background: var(--card); border-radius: 8px; font-size: .92em;
+      border: 2px solid var(--border); box-shadow: var(--shadow-xs); transition: border-color .2s;
+    }
+    .player-pool-item:hover { border-color: var(--primary); }
+    .player-pool-item .remove {
+      cursor: pointer; margin-left: 10px; color: var(--danger); font-weight: bold;
+      padding: 4px 8px; border-radius: 4px; border: 1px solid transparent; transition: all .2s; font-size: 1.1em;
+    }
+    .player-pool-item .remove:hover { background: var(--danger); color: #fff; }
+    #playerPoolDisplay { padding: 12px; min-height: 40px; background: var(--card); border: 2px solid var(--border); border-radius: 8px; }
+
+    /* ── Teams ── */
     .team-section {
-      margin-bottom: var(--spacing); padding: var(--spacing); background: var(--card-bg);
-      border-radius: 10px; border: 2px solid var(--border-color); box-shadow: var(--shadow-sm); transition: all 0.3s;
+      margin-bottom: var(--sp); padding: var(--sp); background: var(--card);
+      border-radius: 10px; border: 2px solid var(--border); box-shadow: var(--shadow-sm);
     }
     .team-section input[type="text"] {
       padding: 10px 12px; border: 2px solid var(--input-border); border-radius: 6px;
       width: 100%; background: var(--input-bg); color: var(--input-text); font-weight: 600; font-family: inherit;
     }
-    .team-section input[type="text"]:focus { border-color: var(--primary-color); outline: none; }
+    .team-section input[type="text"]:focus { border-color: var(--primary); outline: none; }
 
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px,1fr)); gap: var(--spacing); margin-top: var(--spacing); }
-    .stat-card {
-      background: var(--card-bg); padding: 18px; border-radius: 10px; border: 2px solid var(--border-color);
-      box-shadow: var(--shadow-sm); font-size: clamp(0.85em,2vw,1em); transition: all 0.3s; cursor: pointer;
+    /* ── Stats ── */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(300px,1fr)); gap: var(--sp); margin-top: var(--sp); }
+    .stat-card, .team-stat-card {
+      background: var(--card); padding: 18px; border-radius: 10px; border: 2px solid var(--border);
+      box-shadow: var(--shadow-sm); transition: border-color .2s, box-shadow .2s, transform .2s; cursor: pointer;
+      font-size: clamp(.85em,2vw,1em);
     }
-    .stat-card:hover { border-color: var(--primary-light); box-shadow: var(--shadow-md); transform: translateY(-2px); }
-    .stat-card h3 { display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; margin: 0; font-size: 1.1em; color: var(--text-color); }
-    .stat-details { max-height: 1000px; overflow: hidden; transition: max-height 0.3s ease-out, opacity 0.3s ease-out; opacity: 1; }
+    .stat-card:hover, .team-stat-card:hover { border-color: var(--primary-light); box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .team-stat-card { border-left: 5px solid var(--secondary); grid-column: 1/-1; }
+    .stat-card h3, .team-stat-card h3 { display: flex; align-items: center; justify-content: space-between; user-select: none; margin: 0; font-size: 1.1em; }
+    .stat-details { max-height: 1000px; overflow: hidden; transition: max-height .3s ease-out, opacity .3s ease-out; opacity: 1; }
     .stat-card.collapsed .stat-details, .team-stat-card.collapsed .stat-details { max-height: 0; opacity: 0; pointer-events: none; }
-    .overall-ranking {
-      grid-column: 1 / -1; background: var(--card-bg); padding: var(--spacing);
-      border-radius: 10px; border: 2px solid var(--border-color); box-shadow: var(--shadow-sm); margin-top: var(--spacing);
-    }
-    .team-stat-card {
-      background: var(--card-bg); padding: 18px; border-radius: 10px; border: 2px solid var(--border-color);
-      border-left: 5px solid var(--secondary-color); box-shadow: var(--shadow-sm);
-      grid-column: 1 / -1; transition: all 0.3s; cursor: pointer;
-    }
-    .team-stat-card:hover { border-color: var(--primary-light); box-shadow: var(--shadow-md); transform: translateY(-2px); }
-    .team-stat-card h3 { display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; margin: 0; font-size: 1.1em; color: var(--text-color); }
-    .player-score, .team-score { color: var(--primary-color); font-weight: 700; }
-
-    .stat-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-color); align-items: center; }
+    .player-score, .team-score { color: var(--primary); font-weight: 700; }
+    .stat-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); align-items: center; }
     .stat-row:last-child { border-bottom: none; }
-    .stat-label { font-weight: 600; color: var(--text-secondary); font-size: 0.95em; }
-    .stat-value { color: var(--primary-color); font-weight: 700; font-size: 1.1em; }
+    .stat-label { font-weight: 600; color: var(--text2); font-size: .95em; }
+    .stat-value { color: var(--primary); font-weight: 700; font-size: 1.1em; }
+    .overall-ranking { grid-column: 1/-1; background: var(--card); padding: var(--sp); border-radius: 10px; border: 2px solid var(--border); box-shadow: var(--shadow-sm); margin-top: var(--sp); }
 
+    /* ── Log ── */
     .log-entry {
-      padding: 12px; background: var(--hover-bg); margin: var(--spacing) 0; border-radius: 8px;
-      border-left: 4px solid var(--primary-color); display: flex; justify-content: space-between;
-      align-items: center; flex-wrap: wrap; gap: 8px; font-size: clamp(0.8em,2vw,0.95em);
-      box-shadow: var(--shadow-xs); transition: all 0.2s;
+      padding: 12px; background: var(--hover); margin: var(--sp) 0;
+      border-radius: 8px; border-left: 4px solid var(--primary);
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;
+      gap: 8px; font-size: clamp(.8em,2vw,.95em); box-shadow: var(--shadow-xs);
     }
-    .log-container {
-      max-height: 450px; overflow-y: auto; border: 2px solid var(--border-color);
-      border-radius: 8px; padding: 12px; background: var(--card-bg); scrollbar-gutter: stable;
-    }
-    .log-container::-webkit-scrollbar-button { display: none; }
+    .log-container { max-height: 450px; overflow-y: auto; border: 2px solid var(--border); border-radius: 8px; padding: 12px; background: var(--card); }
     .log-container-wrap { position: relative; margin-top: 15px; }
 
-    .button-group { display: flex; gap: 12px; flex-wrap: wrap; }
+    /* ── Toggle switch ── */
     .switch { position: relative; display: inline-block; width: 56px; height: 28px; flex-shrink: 0; }
     .switch input { opacity: 0; width: 0; height: 0; }
-    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: 0.4s; border-radius: 28px; }
-    .slider:before { position: absolute; content: ""; height: 22px; width: 22px; left: 3px; bottom: 3px; background-color: white; transition: 0.4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-    input:checked + .slider { background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); }
+    .slider { position: absolute; cursor: pointer; inset: 0; background: #ccc; transition: .4s; border-radius: 28px; }
+    .slider:before { position: absolute; content: ""; height: 22px; width: 22px; left: 3px; bottom: 3px; background: #fff; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,.2); }
+    input:checked + .slider { background: linear-gradient(135deg, var(--primary), var(--secondary)); }
     input:checked + .slider:before { transform: translateX(28px); }
 
-    .session-info {
-      background: var(--card-bg); padding: var(--spacing); border-radius: 10px;
-      border: 2px solid var(--border-color); margin-bottom: var(--spacing); font-size: clamp(0.85em,2vw,1em); box-shadow: var(--shadow-sm);
-    }
-    .session-info-row {
-      display: flex; justify-content: space-between; align-items: center;
-      margin: var(--spacing) 0; flex-wrap: wrap; gap: 8px;
-      padding-bottom: 10px; border-bottom: 1px solid var(--border-color);
-    }
+    /* ── Session info ── */
+    .session-info { background: var(--card); padding: var(--sp); border-radius: 10px; border: 2px solid var(--border); margin-bottom: var(--sp); font-size: clamp(.85em,2vw,1em); box-shadow: var(--shadow-sm); }
+    .session-info-row { display: flex; justify-content: space-between; align-items: center; margin: var(--sp) 0; flex-wrap: wrap; gap: 8px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
     .session-info-row:last-child { border-bottom: none; margin-bottom: 0; }
-    .session-info-row span:first-child { font-weight: 600; color: var(--text-secondary); }
-    .session-info-row strong { color: var(--primary-color); font-weight: 700; }
-    .session-controls { display: flex; gap: 12px; flex-wrap: wrap; margin-top: var(--spacing); }
+    .session-info-row span:first-child { font-weight: 600; color: var(--text2); }
+    .session-info-row strong { color: var(--primary); font-weight: 700; }
+    .session-controls { display: flex; gap: 12px; flex-wrap: wrap; margin-top: var(--sp); }
 
-    .qb-modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(4px); }
+    /* ── Modal ── */
+    .qb-modal { display: none; position: fixed; z-index: 9999; inset: 0; background: rgba(0,0,0,.6); backdrop-filter: blur(4px); }
     .qb-modal.open { display: block; }
-    .modal-content { background-color: var(--card-bg); margin: 50px auto; padding: 28px; border-radius: 12px; width: 90%; max-width: 550px; max-height: 80vh; overflow-y: auto; box-shadow: var(--shadow-xl); }
-    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid var(--border-color); }
-    .modal-header h2 { color: var(--primary-color); margin: 0; font-weight: 700; font-size: 1.5em; }
-    .close-modal { background: none; border: none; font-size: 28px; cursor: pointer; color: var(--text-secondary); padding: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 6px; }
-    .close-modal:hover { background: var(--section-bg); color: var(--primary-color); }
-    .sessions-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px,1fr)); gap: 16px; margin-top: 16px; }
-    .session-card { background: var(--section-bg); padding: 16px; border-radius: 10px; border: 1px solid var(--border-color); transition: all 0.3s; box-shadow: var(--shadow-sm); }
-    .session-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); border-color: var(--primary-color); }
-    .session-card-title { color: var(--primary-color); font-weight: 700; margin-bottom: 10px; font-size: clamp(1em,2vw,1.15em); }
-    .session-card-details { font-size: 0.82em; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.6; }
+    .modal-content { background: var(--card); margin: 50px auto; padding: 28px; border-radius: 12px; width: 90%; max-width: 550px; max-height: 80vh; overflow-y: auto; box-shadow: var(--shadow-xl); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid var(--border); }
+    .modal-header h2 { color: var(--primary); margin: 0; font-weight: 700; font-size: 1.5em; }
+    .close-modal { background: none; border: none; font-size: 28px; cursor: pointer; color: var(--text2); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 6px; }
+    .close-modal:hover { background: var(--sec-bg); color: var(--primary); }
+    .sessions-list { display: grid; grid-template-columns: repeat(auto-fill,minmax(240px,1fr)); gap: 16px; margin-top: 16px; }
+    .session-card { background: var(--sec-bg); padding: 16px; border-radius: 10px; border: 1px solid var(--border); transition: transform .2s, box-shadow .2s, border-color .2s; box-shadow: var(--shadow-sm); }
+    .session-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); border-color: var(--primary); }
+    .session-card-title { color: var(--primary); font-weight: 700; margin-bottom: 10px; font-size: clamp(1em,2vw,1.15em); }
+    .session-card-details { font-size: .82em; color: var(--text2); margin-bottom: 12px; line-height: 1.6; }
     .session-card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-    .session-card-actions button { flex: 1; min-width: 70px; font-size: 0.85em; padding: 8px 12px; }
+    .session-card-actions button { flex: 1; min-width: 70px; font-size: .85em; padding: 8px 12px; }
 
-    .export-options { margin-top: var(--spacing); padding: var(--spacing); background: var(--section-bg); border-radius: 8px; border: 2px solid var(--border-color); }
-    .export-options p { color: var(--text-color); }
-    .export-options label { display: flex; align-items: center; margin: var(--spacing) 0; cursor: pointer; color: var(--text-color); font-weight: 500; }
-    .export-options label:hover { color: var(--primary-color); }
-    .export-options input[type="checkbox"] { margin-right: 10px; width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary-color); }
-
-    #playerPoolDisplay { padding: 12px; min-height: 40px; background: var(--card-bg); border: 2px solid var(--border-color); border-radius: 8px; }
-
-    .auto-save-indicator { font-size: 0.78em; font-weight: 600; padding: 4px 10px; border-radius: 20px; background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.9); border: 1px solid rgba(255,255,255,0.3); animation: pulse 2s infinite; }
-    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.7; } }
+    /* ── Autosave indicator ── */
+    .auto-save-indicator { font-size: .78em; font-weight: 600; padding: 4px 10px; border-radius: 20px; background: rgba(255,255,255,.15); color: rgba(255,255,255,.9); border: 1px solid rgba(255,255,255,.3); animation: pulse 2s infinite; white-space: nowrap; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .7; } }
 
     /* ── Sidebar nav ── */
     .sidebar-nav {
       display: flex; align-items: center; gap: 8px; padding: 10px 12px;
-      background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-      border-radius: 10px; margin-bottom: var(--spacing); box-shadow: var(--shadow-sm);
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-radius: 10px; margin-bottom: var(--sp); box-shadow: var(--shadow-sm);
       position: relative; z-index: 50; flex-shrink: 0;
     }
     .sidebar-jump-wrapper { flex: 1; position: relative; }
     .sidebar-jump-btn {
-      width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.3);
-      background: rgba(255,255,255,0.15); color: white; font-weight: 600; font-size: 0.9em;
+      width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,.3);
+      background: rgba(255,255,255,.15); color: #fff; font-weight: 600; font-size: .9em;
       cursor: pointer; font-family: inherit; display: flex; justify-content: space-between; align-items: center; gap: 8px;
     }
-    .sidebar-jump-btn:hover { background: rgba(255,255,255,0.25); }
-    .sidebar-jump-arrow { font-size: 0.85em; opacity: 0.8; transition: transform 0.2s; }
+    .sidebar-jump-btn:hover { background: rgba(255,255,255,.25); }
+    .sidebar-jump-arrow { font-size: .85em; opacity: .8; transition: transform .2s; }
     .sidebar-jump-wrapper.open .sidebar-jump-arrow { transform: rotate(180deg); }
     .sidebar-jump-menu {
       display: none; position: absolute; top: calc(100% + 6px); left: 0; right: 0;
-      background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.2); z-index: 9999; overflow: hidden;
+      background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.2); z-index: 9999; overflow: hidden;
     }
     .sidebar-jump-wrapper.open .sidebar-jump-menu { display: block; }
     .sidebar-jump-menu button {
-      display: block; width: 100%; padding: 10px 14px; text-align: left; background: none;
-      border: none; border-bottom: 1px solid var(--border-color); color: var(--text-color);
-      font-size: 0.9em; font-weight: 500; cursor: pointer; font-family: inherit; transition: background 0.15s;
+      display: block; width: 100%; padding: 10px 14px; text-align: left;
+      background: none; border: none; border-bottom: 1px solid var(--border);
+      color: var(--text); font-size: .9em; font-weight: 500; cursor: pointer; font-family: inherit; transition: background .15s;
     }
     .sidebar-jump-menu button:last-child { border-bottom: none; }
-    .sidebar-jump-menu button:hover { background: var(--section-bg); }
-    .sidebar-jump-menu button.active-item { color: var(--primary-color); font-weight: 700; background: var(--section-bg); }
-
-    .sidebar-sections {
-      flex: 1; overflow-y: auto; overflow-x: visible;
-      scrollbar-width: thin; scrollbar-color: var(--primary-color) transparent;
-    }
-    .sidebar-sections::-webkit-scrollbar { width: 6px; }
-    .sidebar-sections::-webkit-scrollbar-button { display: none; }
-    .sidebar-sections::-webkit-scrollbar-track { background: transparent; }
-    .sidebar-sections::-webkit-scrollbar-thumb { background: var(--primary-color); border-radius: 10px; }
-
+    .sidebar-jump-menu button:hover { background: var(--sec-bg); }
+    .sidebar-jump-menu button.active-item { color: var(--primary); font-weight: 700; background: var(--sec-bg); }
     .sidebar-close-btn {
-      background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white;
-      padding: 8px 12px; border-radius: 6px; font-size: 0.85em; font-weight: 700;
+      background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3); color: #fff;
+      padding: 8px 12px; border-radius: 6px; font-size: .85em; font-weight: 700;
       cursor: pointer; white-space: nowrap; font-family: inherit; flex-shrink: 0;
     }
-    .sidebar-close-btn:hover { background: rgba(255,255,255,0.28); }
+    .sidebar-close-btn:hover { background: rgba(255,255,255,.28); }
 
+    .sidebar-sections { flex: 1; overflow-y: auto; overflow-x: visible; }
     .qb-sidebar .qb-section { display: none; }
     .qb-sidebar .qb-section.active-section { display: block; }
 
-    /* ── Mobile responsive ── */
+    /* ── Mobile header ── */
     @media (max-width: 768px) {
-      .qb-header { padding: 16px; flex-direction: column; align-items: center; gap: 8px; }
-      .qb-header h1 { position: static; transform: none; white-space: normal; text-align: center; width: 100%; font-size: clamp(1.3em,6vw,1.8em); }
-      .sidebar-open-btn { position: static; transform: none; width: auto; margin: 0 auto; }
-      .header-session-name { position: static; transform: none; white-space: normal; text-align: center; width: 100%; }
-      .header-controls { position: static; transform: none; width: 100%; justify-content: center; }
+      .qb-header { padding: 12px 16px 10px; flex-direction: column; align-items: center; gap: 0; }
+      .qb-header h1 { position: static; transform: none; white-space: normal; text-align: center; width: 100%; font-size: clamp(1.3em,6vw,1.8em); margin-bottom: 6px; }
       .qb-scroll { padding: 16px; }
-      .qb-section { padding: 16px; margin-bottom: var(--spacing); }
+      .qb-section { padding: 16px; }
       .point-type-buttons, .category-buttons { grid-template-columns: repeat(2,1fr); gap: 8px; }
-      .stats-grid { grid-template-columns: 1fr; gap: 12px; }
+      .stats-grid { grid-template-columns: 1fr; }
       .button-group { flex-direction: column; }
-      .button-group button { width: 100%; }
-      .button { width: 100%; }
+      .button-group button, .button { width: 100%; }
       .log-container { max-height: 350px; }
       .sessions-list { grid-template-columns: 1fr; }
       .modal-content { margin: 20px auto; width: 95%; padding: 20px; }
@@ -436,41 +400,46 @@
 <body>
   <div class="qb-container">
 
-    <!-- Header -->
     <div class="qb-header" id="qbHeader">
-      <button class="sidebar-open-btn" id="sidebarOpenBtn" title="Show sidebar">&#9654; Menu</button>
+      <button class="sidebar-open-btn" id="sidebarOpenBtn">&#9654; Menu</button>
       <h1>HSE Quiz Bowl Tracker <span class="version-badge" id="versionBadge">v29</span></h1>
       <div class="header-session-name" id="headerSessionName"></div>
       <div class="header-controls">
+        <button onclick="openHelpModal()" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:50%;width:30px;height:30px;font-size:1em;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;flex-shrink:0;" title="Help / Tutorial">?</button>
         <span id="autosaveStatus" class="auto-save-indicator">✓ Saved</span>
+      </div>
+      <div class="mobile-subrow" id="mobileSubrow">
+        <button id="sidebarOpenBtnMobile" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:6px 10px;font-size:.82em;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">&#9654; Menu</button>
+        <span id="headerSessionNameMobile" style="flex:1;text-align:center;font-size:.78em;font-weight:600;color:rgba(255,255,255,.75);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></span>
+        <button onclick="openHelpModal()" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:50%;width:26px;height:26px;font-size:.9em;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;flex-shrink:0;" title="Help">?</button>
+        <span id="autosaveStatusMobile" class="auto-save-indicator" style="flex-shrink:0;">✓ Saved</span>
       </div>
     </div>
 
-    <!-- Body: sidebar + scroll area sit side by side -->
     <div class="qb-body">
 
-      <!-- Sidebar (pulled OUT of qb-scroll so blur on qb-scroll doesn't affect it) -->
       <aside class="qb-sidebar" id="mainSidebar">
         <div class="sidebar-nav">
           <div class="sidebar-jump-wrapper" id="sidebarJumpWrapper">
-            <button class="sidebar-jump-btn" id="sidebarJumpBtn" onclick="toggleJumpDropdown()" type="button">
+            <button class="sidebar-jump-btn" onclick="toggleJumpDropdown()" type="button">
               <span id="sidebarJumpLabel">Session</span>
               <span class="sidebar-jump-arrow">▾</span>
             </button>
-            <div class="sidebar-jump-menu" id="sidebarJumpMenu">
+            <div class="sidebar-jump-menu">
               <button onclick="showSection('sec-session')">Session</button>
               <button onclick="showSection('sec-players')">Players</button>
               <button onclick="showSection('sec-teams')">Teams</button>
               <button onclick="showSection('sec-categories')">Categories</button>
               <button onclick="showSection('sec-export')">Export / Import</button>
               <button onclick="showSection('sec-visual')">Visual Settings</button>
-              <button onclick="showSection('sec-danger')">Danger Zone</button>
+              <button onclick="showSection('sec-danger')">Data Management</button>
             </div>
           </div>
-          <button class="sidebar-close-btn" onclick="toggleSidebar()" title="Hide sidebar">&#9664; Hide</button>
+          <button class="sidebar-close-btn" onclick="toggleSidebar()">&#9664; Hide</button>
         </div>
 
         <div class="sidebar-sections">
+
           <div class="qb-section" id="sec-session">
             <h2>Session <span class="toggle-icon">▼</span></h2>
             <div class="collapsible-content">
@@ -527,7 +496,7 @@
             <div class="collapsible-content">
               <div class="input-group">
                 <label>Categories (comma-separated):</label>
-                <textarea id="categoriesInput" placeholder="e.g., Science, History, Literature, Math..." rows="3"></textarea>
+                <textarea id="categoriesInput" placeholder="e.g., Science, History, Literature..." rows="3"></textarea>
               </div>
               <button class="button" onclick="saveCategories()">Save Categories</button>
             </div>
@@ -536,24 +505,26 @@
           <div class="qb-section" id="sec-export">
             <h2>Export Data <span class="toggle-icon">▼</span></h2>
             <div class="collapsible-content">
-              <div class="export-options">
-                <p style="margin-bottom:10px;"><strong>Select what to include:</strong></p>
-                <label><input type="checkbox" id="exportPlayers" checked> Players &amp; Scores</label>
-                <label><input type="checkbox" id="exportAnswerLog" checked> Answer Log</label>
-                <label><input type="checkbox" id="exportTeamStats" checked> Team Statistics</label>
+              <div style="margin-bottom:var(--sp);">
+                <p style="margin-bottom:10px;font-weight:600;">Select what to include:</p>
+                <div style="display:flex;flex-wrap:wrap;gap:10px;">
+                  <button class="button-category selected" id="exportPlayers" onclick="this.classList.toggle('selected')">Players &amp; Scores</button>
+                  <button class="button-category selected" id="exportAnswerLog" onclick="this.classList.toggle('selected')">Answer Log</button>
+                  <button class="button-category selected" id="exportTeamStats" onclick="this.classList.toggle('selected')">Team Statistics</button>
+                </div>
               </div>
-              <div class="button-group" style="margin-top:15px;">
+              <div class="button-group">
                 <button class="button button-success" onclick="exportToExcel()">Export to Excel</button>
                 <button class="button button-secondary" onclick="exportToJSON()">Export as JSON</button>
               </div>
-              <div style="margin-top:22px;padding-top:18px;border-top:1px solid var(--border-color);">
-                <p style="font-weight:600;margin-bottom:10px;color:var(--text-color);">Import Session</p>
-                <p style="font-size:0.85em;color:var(--text-secondary);margin-bottom:12px;">Load a previously exported JSON file.</p>
+              <div style="margin-top:22px;padding-top:18px;border-top:1px solid var(--border);">
+                <p style="font-weight:600;margin-bottom:6px;">Import Session</p>
+                <p style="font-size:.85em;color:var(--text2);margin-bottom:12px;">Load a previously exported JSON file.</p>
                 <div class="input-group">
                   <label>Select JSON file:</label>
                   <input type="file" id="importSessionFile" accept=".json" onchange="importFromJSON(event)" />
                 </div>
-                <div id="importStatus" style="font-size:0.85em;margin-top:8px;display:none;"></div>
+                <div id="importStatus" style="font-size:.85em;margin-top:8px;display:none;"></div>
               </div>
             </div>
           </div>
@@ -561,6 +532,9 @@
           <div class="qb-section" id="sec-visual">
             <h2>Visual Settings <span class="toggle-icon">▼</span></h2>
             <div class="collapsible-content">
+              <p style="font-size:.78em;color:var(--text2);margin-bottom:14px;padding:8px 10px;background:var(--hover);border-radius:6px;border:1px solid var(--border);">
+                <strong>&#128274; Local settings</strong> — saved to this device only, do not sync.
+              </p>
               <div class="input-group">
                 <label>Theme</label>
                 <div style="display:flex;align-items:center;gap:12px;">
@@ -584,30 +558,30 @@
                   <option value="#764ba2">Purple</option>
                 </select>
               </div>
-              <div class="input-group">
-                <label>Version Number</label>
+              <div class="input-group" style="padding-top:14px;border-top:1px solid var(--border);">
+                <label>Version Number <span style="font-size:.75em;font-weight:400;color:var(--text2);">(syncs for all users)</span></label>
                 <div style="display:flex;gap:8px;align-items:center;">
                   <input type="text" id="versionInput" placeholder="e.g. v30" style="flex:1;" />
                   <button class="button" onclick="saveVersion()" style="white-space:nowrap;padding:10px 16px;">Save</button>
                 </div>
-                <p style="font-size:0.8em;color:var(--text-secondary);margin-top:6px;">Updates badge for all users instantly.</p>
               </div>
             </div>
           </div>
 
-          <div class="qb-section" id="sec-danger" style="border:2px solid var(--danger-color);">
-            <h2 style="color:var(--danger-color);">Danger Zone <span class="toggle-icon">▼</span></h2>
+          <div class="qb-section" id="sec-danger" style="border:2px solid var(--danger);">
+            <h2 style="color:var(--danger);">Data Management <span class="toggle-icon">▼</span></h2>
             <div class="collapsible-content">
               <button class="button button-danger" onclick="resetAllData()">Delete All Data</button>
-              <p style="margin-top:10px;font-size:0.85em;color:var(--text-secondary);">This action cannot be undone. Export your data first!</p>
+              <p style="margin-top:10px;font-size:.85em;color:var(--text2);">This cannot be undone. Export first!</p>
             </div>
           </div>
-        </div><!-- /.sidebar-sections -->
+
+        </div>
       </aside>
 
-      <!-- Main scroll area (only this gets blurred on mobile menu open) -->
       <div class="qb-scroll" id="qbScroll">
-        <div class="qb-section" style="padding:28px;overflow:visible;">
+
+        <div class="qb-section" style="overflow:visible;">
           <h2>Record Answer <span class="toggle-icon">▼</span></h2>
           <div class="collapsible-content">
             <div class="input-group">
@@ -624,7 +598,7 @@
               </div>
             </div>
             <div class="input-group">
-              <label>Category:</label>
+              <label>Category: <span id="categoryOptionalHint" style="font-weight:400;font-size:.85em;color:var(--text2);display:none;">(optional for Neg)</span></label>
               <div id="categoryButtonsContainer" class="category-buttons"></div>
             </div>
             <button class="button button-success" onclick="recordAnswer()" style="width:100%;margin-top:10px;padding:16px;font-size:1.05em;">Record Answer</button>
@@ -647,12 +621,53 @@
             </div>
           </div>
         </div>
-      </div><!-- /.qb-scroll -->
 
-    </div><!-- /.qb-body -->
-  </div><!-- /.qb-container -->
+      </div>
+    </div>
+  </div>
 
-  <!-- Sessions Modal -->
+  <div id="helpModal" class="qb-modal">
+    <div class="modal-content" style="max-width:640px;">
+      <div class="modal-header">
+        <h2>&#10067; Help &amp; Tutorial</h2>
+        <button class="close-modal" onclick="closeHelpModal()">×</button>
+      </div>
+      <div style="line-height:1.7;color:var(--text);font-size:.95em;">
+
+        <h3 style="color:var(--primary);margin:0 0 6px;">Getting Started</h3>
+        <p style="margin-bottom:14px;">Open the sidebar menu and work through each section in order: <strong>Session → Players → Teams → Categories</strong>. Once set up, use the <strong>Record Answer</strong> panel to log answers in real time.</p>
+
+        <h3 style="color:var(--primary);margin:0 0 6px;">Sessions</h3>
+        <p style="margin-bottom:14px;">Each match is a <strong>Session</strong>. Create a new one with a name, or load a previous one. Sessions sync across all connected devices automatically via Firebase.</p>
+
+        <h3 style="color:var(--primary);margin:0 0 6px;">Players &amp; Teams</h3>
+        <p style="margin-bottom:14px;">Add players in the <strong>Players</strong> section — they sync globally across sessions. Then create teams in the <strong>Teams</strong> section and assign players to them. Only players assigned to a team will appear as selectable in the Record Answer panel.</p>
+
+        <h3 style="color:var(--primary);margin:0 0 6px;">Recording Answers</h3>
+        <p style="margin-bottom:8px;">Select a <strong>Player</strong>, then a <strong>Point Type</strong>, then a <strong>Category</strong>, then press <strong>Record Answer</strong>.</p>
+        <table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:.9em;">
+          <tr style="background:var(--sec-bg);"><th style="padding:6px 10px;text-align:left;border:1px solid var(--border);">Type</th><th style="padding:6px 10px;text-align:left;border:1px solid var(--border);">Points</th><th style="padding:6px 10px;text-align:left;border:1px solid var(--border);">Notes</th></tr>
+          <tr><td style="padding:6px 10px;border:1px solid var(--border);">Toss-up</td><td style="padding:6px 10px;border:1px solid var(--border);">+10</td><td style="padding:6px 10px;border:1px solid var(--border);">Standard correct answer</td></tr>
+          <tr style="background:var(--sec-bg);"><td style="padding:6px 10px;border:1px solid var(--border);">Bonus</td><td style="padding:6px 10px;border:1px solid var(--border);">+10</td><td style="padding:6px 10px;border:1px solid var(--border);">Follow-up bonus question</td></tr>
+          <tr><td style="padding:6px 10px;border:1px solid var(--border);">Power</td><td style="padding:6px 10px;border:1px solid var(--border);">+15</td><td style="padding:6px 10px;border:1px solid var(--border);">Early correct answer</td></tr>
+          <tr style="background:var(--sec-bg);"><td style="padding:6px 10px;border:1px solid var(--border);">Neg</td><td style="padding:6px 10px;border:1px solid var(--border);">−5</td><td style="padding:6px 10px;border:1px solid var(--border);">Incorrect interrupt — category optional</td></tr>
+        </table>
+
+        <h3 style="color:var(--primary);margin:0 0 6px;">Statistics &amp; Rankings</h3>
+        <p style="margin-bottom:14px;">The <strong>Statistics</strong> panel shows live team and player scores. Player rankings use tiebreakers: most <strong>Powers</strong> wins, then fewest <strong>Negs</strong>. Click any card to expand its details.</p>
+
+        <h3 style="color:var(--primary);margin:0 0 6px;">Export &amp; Import</h3>
+        <p style="margin-bottom:14px;">Export to <strong>CSV/Excel</strong> for spreadsheet use, or <strong>JSON</strong> to back up and later re-import a full session. Use the import option in the Export / Import section to reload a saved JSON file.</p>
+
+        <h3 style="color:var(--primary);margin:0 0 6px;">Visual Settings</h3>
+        <p style="margin-bottom:14px;">Toggle <strong>Dark Mode</strong>, change the <strong>Accent Color</strong>, or hide scrollbars. These are saved to your device only and do not sync to other users.</p>
+
+        <h3 style="color:var(--primary);margin:0 0 6px;">Data Management</h3>
+        <p style="margin-bottom:4px;">The <strong>Delete All Data</strong> button permanently removes all sessions and players from the database. It requires an admin password. <strong>Export your data first!</strong></p>
+      </div>
+    </div>
+  </div>
+
   <div id="sessionsModal" class="qb-modal">
     <div class="modal-content">
       <div class="modal-header">
@@ -663,8 +678,9 @@
     </div>
   </div>
 
+  <script src="local-settings.js" onerror="void 0"></script>
   <script>
-    // ============ FIREBASE ============
+    // ── Firebase ──
     const firebaseConfig = {
       apiKey: "AIzaSyCRkK3IpRXeQC9JH73iC0tC-mjq5nulaAo",
       authDomain: "hse-quiz-bowl.firebaseapp.com",
@@ -679,65 +695,71 @@
     const sessionsRef = db.ref('sessions');
     const globalPlayersRef = db.ref('globalPlayers');
     const versionRef = db.ref('appVersion');
-    let firebaseUnsubscribe = null;
-    let playersUnsubscribe = null;
 
-    // ============ VERSION SYNC ============
-    versionRef.on('value', (snap) => {
+    // ── Version sync ──
+    versionRef.on('value', snap => {
       const v = snap.val();
-      if (v) {
-        const badge = document.getElementById('versionBadge');
-        if (badge) badge.textContent = v;
-        const input = document.getElementById('versionInput');
-        if (input && document.activeElement !== input) input.value = v;
-      }
+      if (!v) return;
+      const badge = document.getElementById('versionBadge');
+      const input = document.getElementById('versionInput');
+      if (badge) badge.textContent = v;
+      if (input && document.activeElement !== input) input.value = v;
     });
     function saveVersion() {
-      const input = document.getElementById('versionInput');
-      const v = (input && input.value.trim()) || '';
+      const v = (document.getElementById('versionInput').value || '').trim();
       if (!v) { alert('Please enter a version number.'); return; }
-      versionRef.set(v).then(() => alert('Version updated to ' + v + ' for all users!')).catch(err => showFirebaseError(err.message));
+      versionRef.set(v).then(() => alert('Version updated to ' + v)).catch(e => showFirebaseError(e.message));
     }
 
-    // ============ HELPERS ============
+    // ── Helpers ──
     const clientId = (() => {
       try {
         const k = 'qb_clientId', e = localStorage.getItem(k);
         if (e) return e;
-        const f = (crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now().toString(36) + Math.random().toString(36).slice(2));
+        const f = crypto?.randomUUID?.() ?? (Date.now().toString(36) + Math.random().toString(36).slice(2));
         localStorage.setItem(k, f); return f;
       } catch { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
     })();
 
     const writeInFlight = new Set();
+
     function withWriteLock(id, fn) {
       writeInFlight.add(id);
       try { return fn(); } finally { setTimeout(() => writeInFlight.delete(id), 300); }
     }
+
     function updateSessionAtomic(id, mutator) {
       writeInFlight.add(id);
-      return sessionsRef.child(id).transaction((cur) => {
+      return sessionsRef.child(id).transaction(cur => {
         if (!cur) return cur;
-        const n = normalizeSession(cur); mutator(n);
-        n.lastUpdated = new Date().toISOString(); n.updatedBy = clientId; return n;
-      }, (err, committed) => {
+        const n = normalizeSession(cur);
+        mutator(n);
+        n.lastUpdated = new Date().toISOString();
+        n.updatedBy = clientId;
+        return n;
+      }, err => {
         setTimeout(() => writeInFlight.delete(id), 300);
         if (err) showFirebaseError('Save failed: ' + err.message);
       }, false);
     }
+
     function setSessionNonAtomic(id, value) {
       writeInFlight.add(id);
       return sessionsRef.child(id).set(value).finally(() => setTimeout(() => writeInFlight.delete(id), 300));
     }
+
     function toArray(val) {
       if (!val) return [];
       if (Array.isArray(val)) return val;
-      return Object.keys(val).sort((a, b) => Number(a) - Number(b)).map(k => val[k]);
+      return Object.keys(val).sort((a,b) => +a - +b).map(k => val[k]);
     }
+
     function normalizeSession(s) {
       if (!s) return s;
-      s.teams = toArray(s.teams); s.answerLog = toArray(s.answerLog);
-      s.answers = toArray(s.answers); s.categories = toArray(s.categories);
+      s.teams     = toArray(s.teams);
+      s.answerLog = toArray(s.answerLog);
+      s.answers   = toArray(s.answers);
+      s.categories = toArray(s.categories);
       if (s.players) Object.values(s.players).forEach(p => { p.answers = toArray(p.answers); });
       s.teams.forEach(t => { t.playerMembers = toArray(t.playerMembers); });
       return s;
@@ -745,85 +767,92 @@
 
     const CURRENT_SESSION_KEY = 'currentSession';
     const DEFAULT_CATEGORIES = ['Art','Current Events','Geography','History','Literature','Math','Misc','Mythology','Music','Pop Culture','Religion','Science','Soc. Stu.','Sports'];
-    function getDefaultCategories() { return [...DEFAULT_CATEGORIES]; }
 
-    const state = { sessions: {}, currentSessionId: null, selectedPlayer: null, selectedPointType: null, selectedCategory: null, categories: [] };
+    const state = {
+      sessions: {}, currentSessionId: null,
+      selectedPlayer: null, selectedPointType: null, selectedCategory: null,
+      categories: []
+    };
+
+    let firebaseUnsubscribe = null;
+    let playersUnsubscribe = null;
+
+    // ── Status indicators ──
+    function setIndicators(text, color, title) {
+      ['autosaveStatus','autosaveStatusMobile'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.textContent = text;
+        if (color) el.style.color = color; else el.style.removeProperty('color');
+        if (title) el.title = title; else el.removeAttribute('title');
+      });
+    }
+    const setLoadingState  = () => setIndicators('⟳ Connecting...', 'rgba(255,255,255,0.7)');
+    const updateAutoSave   = () => setIndicators('✓ Saved', null);
+    const showFirebaseError = msg => setIndicators('! Offline', '#ffcc00', msg);
+
+    function getCurrentSession() { return state.sessions[state.currentSessionId] || null; }
+
+    // ── Fade masks ──
+    function updateFadeMasks() {
+      const FADE = 28;
+      ['.qb-scroll','.sidebar-sections','.log-container'].forEach(sel => {
+        const el = document.querySelector(sel); if (!el) return;
+        const up = el.scrollTop > 2;
+        const dn = el.scrollHeight > el.scrollTop + el.clientHeight + 2;
+        let mask = 'none';
+        if (up && dn) mask = `linear-gradient(to bottom,transparent 0,black ${FADE}px,black calc(100% - ${FADE}px),transparent 100%)`;
+        else if (up)  mask = `linear-gradient(to bottom,transparent 0,black ${FADE}px,black 100%)`;
+        else if (dn)  mask = `linear-gradient(to bottom,black 0%,black calc(100% - ${FADE}px),transparent 100%)`;
+        el.style.webkitMaskImage = mask; el.style.maskImage = mask;
+      });
+    }
 
     function updateHeaderHeight() {
       const h = document.getElementById('qbHeader');
       if (h) document.documentElement.style.setProperty('--header-height', h.offsetHeight + 'px');
     }
 
-    function updateFadeMasks() {
-      const FADE = 28;
-      ['.qb-scroll', '.sidebar-sections', '.log-container'].forEach(sel => {
-        const el = document.querySelector(sel);
-        if (!el) return;
-        const canUp = el.scrollTop > 2;
-        const canDown = el.scrollHeight > el.scrollTop + el.clientHeight + 2;
-        let mask = 'none';
-        if (canUp && canDown) mask = `linear-gradient(to bottom, transparent 0px, black ${FADE}px, black calc(100% - ${FADE}px), transparent 100%)`;
-        else if (canUp) mask = `linear-gradient(to bottom, transparent 0px, black ${FADE}px, black 100%)`;
-        else if (canDown) mask = `linear-gradient(to bottom, black 0%, black calc(100% - ${FADE}px), transparent 100%)`;
-        el.style.webkitMaskImage = mask;
-        el.style.maskImage = mask;
-      });
-    }
-
-    function setLoadingState(loading) {
-      const el = document.getElementById('autosaveStatus');
-      if (el && loading) { el.textContent = '⟳ Connecting...'; el.style.color = 'rgba(255,255,255,0.7)'; }
-    }
-    function showFirebaseError(msg) {
-      const el = document.getElementById('autosaveStatus');
-      if (el) { el.textContent = '! Offline'; el.style.color = '#ffcc00'; el.title = msg; }
-    }
-    function updateAutoSaveIndicator() {
-      const el = document.getElementById('autosaveStatus');
-      if (el) { el.textContent = '✓ Saved'; el.style.removeProperty('color'); }
-    }
-    function getCurrentSession() { return state.sessions[state.currentSessionId] || null; }
-
-    // ============ GLOBAL PLAYERS ============
+    // ── Global players ──
     function setupGlobalPlayers() {
       if (playersUnsubscribe) playersUnsubscribe();
-      playersUnsubscribe = globalPlayersRef.on('value', (snap) => {
-        const data = snap.val() || {};
+      playersUnsubscribe = globalPlayersRef.on('value', snap => {
         if (!state.currentSessionId) return;
-        applyGlobalPlayersToSession(data);
+        applyGlobalPlayersToSession(snap.val() || {});
       });
     }
+
     function applyGlobalPlayersToSession(data) {
-      const session = getCurrentSession(); if (!session) return;
+      const s = getCurrentSession(); if (!s) return;
       let changed = false;
       Object.keys(data).forEach(name => {
-        if (!session.players[name]) { session.players[name] = { name, points: 0, answers: [] }; changed = true; }
+        if (!s.players[name]) { s.players[name] = {name, points:0, answers:[]}; changed = true; }
       });
       if (changed) {
-        sessionsRef.child(state.currentSessionId).set(state.sessions[state.currentSessionId]).catch(e => showFirebaseError(e.message));
+        sessionsRef.child(state.currentSessionId).set(s).catch(e => showFirebaseError(e.message));
         renderPlayerPool(); renderPlayerButtons(); renderTeams();
       }
     }
+
     function saveGlobalPlayers(names) {
       const updates = {};
-      names.forEach(name => { if (name) updates[name] = true; });
-      if (!Object.keys(updates).length) return;
-      globalPlayersRef.update(updates).catch(e => showFirebaseError(e.message));
+      names.forEach(n => { if (n) updates[n] = true; });
+      if (Object.keys(updates).length) globalPlayersRef.update(updates).catch(e => showFirebaseError(e.message));
     }
+
     function removeGlobalPlayer(name) {
       globalPlayersRef.child(name).remove().catch(e => showFirebaseError(e.message));
     }
 
-    // ============ DATA ============
+    // ── Data loading ──
     function loadAllData() {
-      setLoadingState(true);
+      setLoadingState();
       if (firebaseUnsubscribe) firebaseUnsubscribe();
-      firebaseUnsubscribe = sessionsRef.on('value', (snap) => {
+      firebaseUnsubscribe = sessionsRef.on('value', snap => {
         const incoming = snap.val() || {};
         if (state.currentSessionId && writeInFlight.has(state.currentSessionId)) {
           Object.keys(incoming).forEach(id => {
-            if (id === state.currentSessionId) return;
-            state.sessions[id] = normalizeSession(incoming[id]);
+            if (id !== state.currentSessionId) state.sessions[id] = normalizeSession(incoming[id]);
           });
         } else {
           state.sessions = incoming;
@@ -831,70 +860,68 @@
         }
         const savedId = localStorage.getItem(CURRENT_SESSION_KEY);
         if (savedId && state.sessions[savedId]) state.currentSessionId = savedId;
-        else if (Object.keys(state.sessions).length > 0) {
+        else if (Object.keys(state.sessions).length) {
           state.currentSessionId = Object.keys(state.sessions)[0];
           localStorage.setItem(CURRENT_SESSION_KEY, state.currentSessionId);
-        } else { setLoadingState(false); createNewSession(); return; }
+        } else { updateAutoSave(); createNewSession(); return; }
         loadSessionData();
         globalPlayersRef.once('value').then(s => applyGlobalPlayersToSession(s.val() || {}));
-        setLoadingState(false); renderAll();
+        updateAutoSave(); renderAll();
         const modal = document.getElementById('sessionsModal');
-        if (modal && modal.classList.contains('open')) renderSessionsList();
-      }, (err) => { setLoadingState(false); showFirebaseError('Connection failed: ' + err.message); });
+        if (modal?.classList.contains('open')) renderSessionsList();
+      }, err => { showFirebaseError('Connection failed: ' + err.message); });
     }
 
     function loadSessionData() {
-      if (!state.currentSessionId || !state.sessions[state.currentSessionId]) { createNewSession(); return; }
-      const session = state.sessions[state.currentSessionId];
-      if (!session.categories || !Array.isArray(session.categories) || !session.categories.length) session.categories = getDefaultCategories();
-      session.categories = session.categories.sort((a, b) => a.localeCompare(b));
-      state.categories = session.categories;
+      const s = getCurrentSession();
+      if (!s) { createNewSession(); return; }
+      if (!s.categories?.length) s.categories = [...DEFAULT_CATEGORIES];
+      s.categories.sort((a,b) => a.localeCompare(b));
+      state.categories = s.categories;
       const ta = document.getElementById('categoriesInput');
       if (ta) ta.value = state.categories.join(', ');
     }
 
     function saveAllData() {
-      if (state.currentSessionId && state.sessions[state.currentSessionId]) {
-        state.sessions[state.currentSessionId].categories = state.categories;
-        state.sessions[state.currentSessionId].lastUpdated = new Date().toISOString();
-        state.sessions[state.currentSessionId].updatedBy = clientId;
-      }
+      const s = getCurrentSession();
+      if (s) { s.categories = state.categories; s.lastUpdated = new Date().toISOString(); s.updatedBy = clientId; }
       localStorage.setItem(CURRENT_SESSION_KEY, state.currentSessionId);
-      if (state.currentSessionId && state.sessions[state.currentSessionId]) {
-        setSessionNonAtomic(state.currentSessionId, state.sessions[state.currentSessionId]).catch(e => showFirebaseError(e.message));
-      }
+      if (s) setSessionNonAtomic(state.currentSessionId, s).catch(e => showFirebaseError(e.message));
     }
 
-    // ============ SESSIONS ============
+    // ── Sessions ──
     function createNewSession() {
-      const sessionId = Date.now().toString();
+      const id = Date.now().toString();
       const nameInput = document.getElementById('newSessionName');
-      const sessionName = (nameInput && nameInput.value.trim()) || ('Session ' + new Date().toLocaleDateString());
-      state.sessions[sessionId] = { id: sessionId, name: sessionName, created: new Date().toISOString(), lastUpdated: new Date().toISOString(), updatedBy: clientId, players: {}, teams: [], categories: getDefaultCategories(), answers: [], answerLog: [] };
-      state.currentSessionId = sessionId;
+      const name = nameInput?.value.trim() || ('Session ' + new Date().toLocaleDateString());
+      const session = { id, name, created: new Date().toISOString(), lastUpdated: new Date().toISOString(), updatedBy: clientId, players:{}, teams:[], categories:[...DEFAULT_CATEGORIES], answers:[], answerLog:[] };
+      state.sessions[id] = session;
+      state.currentSessionId = id;
       loadSessionData();
       globalPlayersRef.once('value').then(snap => {
-        const data = snap.val() || {};
-        Object.keys(data).forEach(name => { if (!state.sessions[sessionId].players[name]) state.sessions[sessionId].players[name] = { name, points: 0, answers: [] }; });
-        setSessionNonAtomic(sessionId, state.sessions[sessionId]).catch(e => showFirebaseError(e.message));
-        localStorage.setItem(CURRENT_SESSION_KEY, state.currentSessionId);
+        Object.keys(snap.val() || {}).forEach(n => { if (!session.players[n]) session.players[n] = {name:n,points:0,answers:[]}; });
+        setSessionNonAtomic(id, session).catch(e => showFirebaseError(e.message));
+        localStorage.setItem(CURRENT_SESSION_KEY, id);
         if (nameInput) nameInput.value = '';
         renderAll();
       }).catch(() => {
-        setSessionNonAtomic(sessionId, state.sessions[sessionId]).catch(e => showFirebaseError(e.message));
-        localStorage.setItem(CURRENT_SESSION_KEY, state.currentSessionId);
+        setSessionNonAtomic(id, session).catch(e => showFirebaseError(e.message));
+        localStorage.setItem(CURRENT_SESSION_KEY, id);
         if (nameInput) nameInput.value = '';
         renderAll();
       });
     }
 
-    function openSessionsModal() { document.getElementById('sessionsModal').classList.add('open'); renderSessionsList(); }
+    function openSessionsModal()  { document.getElementById('sessionsModal').classList.add('open'); renderSessionsList(); }
     function closeSessionsModal() { document.getElementById('sessionsModal').classList.remove('open'); }
+    function openHelpModal()      { document.getElementById('helpModal').classList.add('open'); }
+    function closeHelpModal()     { document.getElementById('helpModal').classList.remove('open'); }
 
     function renderSessionsList() {
-      const list = document.getElementById('sessionsList'); if (!list) return;
-      if (!Object.keys(state.sessions).length) { list.innerHTML = '<p style="color:var(--text-secondary)">No sessions found.</p>'; return; }
-      list.innerHTML = Object.values(state.sessions).map(s => `
+      const list = document.getElementById('sessionsList');
+      const sessions = Object.values(state.sessions);
+      if (!sessions.length) { list.innerHTML = '<p style="color:var(--text2)">No sessions found.</p>'; return; }
+      list.innerHTML = sessions.map(s => `
         <div class="session-card">
           <div class="session-card-title">${s.name}</div>
           <div class="session-card-details">
@@ -915,189 +942,161 @@
     }
 
     function deleteSession(id) {
-      if (confirm('Delete session "' + state.sessions[id].name + '"?')) {
-        const wasActive = state.currentSessionId === id;
-        sessionsRef.child(id).remove().catch(e => showFirebaseError(e.message));
-        delete state.sessions[id];
-        if (wasActive) {
-          state.currentSessionId = Object.keys(state.sessions)[0] || null;
-          if (!state.currentSessionId) createNewSession();
-          else { localStorage.setItem(CURRENT_SESSION_KEY, state.currentSessionId); loadSessionData(); }
-        }
-        renderSessionsList(); renderAll();
+      if (!confirm('Delete session "' + state.sessions[id].name + '"?')) return;
+      sessionsRef.child(id).remove().catch(e => showFirebaseError(e.message));
+      delete state.sessions[id];
+      if (state.currentSessionId === id) {
+        state.currentSessionId = Object.keys(state.sessions)[0] || null;
+        if (!state.currentSessionId) createNewSession();
+        else { localStorage.setItem(CURRENT_SESSION_KEY, state.currentSessionId); loadSessionData(); }
       }
+      renderSessionsList(); renderAll();
     }
 
-    // ============ UI ============
+    // ── UI ──
     function setupSectionToggle() {
       document.querySelectorAll('.qb-section h2').forEach(h2 => {
         h2.addEventListener('click', function() {
-          const icon = this.querySelector('.toggle-icon');
-          const content = this.nextElementSibling;
-          if (icon) icon.classList.toggle('collapsed');
-          if (content) content.classList.toggle('collapsed');
+          this.querySelector('.toggle-icon')?.classList.toggle('collapsed');
+          this.nextElementSibling?.classList.toggle('collapsed');
         });
       });
     }
 
+    const SECTION_LABELS = {
+      'sec-session':'Session','sec-players':'Players','sec-teams':'Teams',
+      'sec-categories':'Categories','sec-export':'Export / Import',
+      'sec-visual':'Visual Settings','sec-danger':'Data Management'
+    };
+
     function showSection(id) {
-      document.querySelectorAll('.qb-sidebar .qb-section').forEach(sec => sec.classList.remove('active-section'));
+      document.querySelectorAll('.qb-sidebar .qb-section').forEach(s => s.classList.remove('active-section'));
       const el = document.getElementById(id);
       if (el) {
         el.classList.add('active-section');
-        const cont = el.querySelector('.collapsible-content');
-        const icon = el.querySelector('.toggle-icon');
-        if (cont) cont.classList.remove('collapsed');
-        if (icon) icon.classList.remove('collapsed');
+        el.querySelector('.collapsible-content')?.classList.remove('collapsed');
+        el.querySelector('.toggle-icon')?.classList.remove('collapsed');
       }
       localStorage.setItem('activeSidebarSection', id);
       updateJumpDropdown(id);
-      const wrapper = document.getElementById('sidebarJumpWrapper');
-      if (wrapper) wrapper.classList.remove('open');
+      document.getElementById('sidebarJumpWrapper')?.classList.remove('open');
     }
 
     function updateJumpDropdown(activeId) {
-      const labels = { 'sec-session': 'Session', 'sec-players': 'Players', 'sec-teams': 'Teams', 'sec-categories': 'Categories', 'sec-export': 'Export / Import', 'sec-visual': 'Visual Settings', 'sec-danger': 'Danger Zone' };
       const labelEl = document.getElementById('sidebarJumpLabel');
-      if (labelEl && labels[activeId]) labelEl.textContent = labels[activeId];
+      if (labelEl && SECTION_LABELS[activeId]) labelEl.textContent = SECTION_LABELS[activeId];
       document.querySelectorAll('.sidebar-jump-menu button').forEach(btn => {
-        const oc = btn.getAttribute('onclick') || '';
-        btn.classList.toggle('active-item', oc.includes(activeId));
+        btn.classList.toggle('active-item', (btn.getAttribute('onclick') || '').includes(activeId));
       });
     }
 
     function toggleJumpDropdown() {
-      const wrapper = document.getElementById('sidebarJumpWrapper');
-      if (wrapper) wrapper.classList.toggle('open');
+      document.getElementById('sidebarJumpWrapper')?.classList.toggle('open');
     }
 
-    function isMobile() { return window.innerWidth <= 900; }
+    const isMobile = () => window.innerWidth <= 900;
 
     function toggleSidebar() {
       const sidebar = document.getElementById('mainSidebar');
-      const header = document.getElementById('qbHeader');
-      const scroll = document.getElementById('qbScroll');
+      const scroll  = document.getElementById('qbScroll');
       if (!sidebar) return;
-
       if (isMobile()) {
-        const headerHeight = header ? header.offsetHeight : 0;
-        sidebar.style.top = headerHeight + 'px';
-        const isOpen = sidebar.classList.contains('mobile-open');
-        if (isOpen) {
-          sidebar.classList.remove('mobile-open');
-          if (header) header.classList.remove('menu-blurred');
-          if (scroll) scroll.classList.remove('menu-blurred');
-          document.body.classList.remove('menu-open');
-          updateOpenBtn(true);
-        } else {
-          sidebar.classList.add('mobile-open');
-          if (header) header.classList.add('menu-blurred');
-          if (scroll) scroll.classList.add('menu-blurred');
-          document.body.classList.add('menu-open');
-          updateOpenBtn(false);
-        }
+        const opening = !sidebar.classList.contains('mobile-open');
+        sidebar.classList.toggle('mobile-open', opening);
+        scroll?.classList.toggle('menu-blurred', opening);
+        document.body.classList.toggle('menu-open', opening);
+        updateMobileBtn(opening);
       } else {
-        sidebar.classList.toggle('collapsed');
-        const isCollapsed = sidebar.classList.contains('collapsed');
-        localStorage.setItem('sidebarCollapsed', isCollapsed ? 'true' : 'false');
-        updateOpenBtn(isCollapsed);
+        const collapsed = sidebar.classList.toggle('collapsed');
+        localStorage.setItem('sidebarCollapsed', collapsed);
+        updateDesktopBtn(collapsed);
       }
     }
 
-    function updateOpenBtn(isCollapsed) {
+    function updateDesktopBtn(collapsed) {
       const btn = document.getElementById('sidebarOpenBtn');
-      if (!btn) return;
-      btn.style.display = isCollapsed ? 'inline-flex' : 'none';
-      btn.style.alignItems = 'center';
-      btn.style.gap = '6px';
+      if (btn) { btn.style.display = collapsed ? 'inline-flex' : 'none'; btn.style.alignItems = 'center'; btn.style.gap = '6px'; }
+    }
+
+    function updateMobileBtn(open) {
+      const btn = document.getElementById('sidebarOpenBtnMobile');
+      if (btn) btn.innerHTML = open ? '&#9664; Hide' : '&#9654; Menu';
     }
 
     function applySidebarState() {
       const sidebar = document.getElementById('mainSidebar');
-      const header = document.getElementById('qbHeader');
-      const scroll = document.getElementById('qbScroll');
+      const scroll  = document.getElementById('qbScroll');
       if (!sidebar) return;
+      // Always clean up mobile state
+      sidebar.classList.remove('mobile-open');
+      scroll?.classList.remove('menu-blurred');
+      document.body.classList.remove('menu-open');
+      updateMobileBtn(false);
       if (isMobile()) {
         sidebar.classList.remove('collapsed');
-        sidebar.classList.remove('mobile-open');
-        if (header) header.classList.remove('menu-blurred');
-        if (scroll) scroll.classList.remove('menu-blurred');
-        document.body.classList.remove('menu-open');
-        const headerHeight = header ? header.offsetHeight : 0;
-        sidebar.style.top = headerHeight + 'px';
-        updateOpenBtn(true);
+        updateDesktopBtn(false);
       } else {
-        sidebar.style.top = '';
-        sidebar.classList.remove('mobile-open');
-        if (header) header.classList.remove('menu-blurred');
-        if (scroll) scroll.classList.remove('menu-blurred');
-        document.body.classList.remove('menu-open');
-        const saved = localStorage.getItem('sidebarCollapsed');
-        const isCollapsed = saved === 'true';
-        if (isCollapsed) sidebar.classList.add('collapsed');
-        else sidebar.classList.remove('collapsed');
-        updateOpenBtn(isCollapsed);
+        const collapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+        sidebar.classList.toggle('collapsed', collapsed);
+        updateDesktopBtn(collapsed);
       }
     }
 
-    // ============ VISUAL SETTINGS ============
+    // ── Visual settings ──
     function toggleDarkMode() {
-      document.body.classList.toggle('dark-mode');
-      const isDark = document.body.classList.contains('dark-mode');
-      localStorage.setItem('darkMode', String(isDark));
-      const dm = document.getElementById('darkModeToggle2');
-      if (dm) dm.checked = isDark;
+      const on = document.body.classList.toggle('dark-mode');
+      localStorage.setItem('darkMode', on);
+      const el = document.getElementById('darkModeToggle2');
+      if (el) el.checked = on;
     }
     function setAccentColor(color) {
-      document.documentElement.style.setProperty('--primary-color', color);
+      document.documentElement.style.setProperty('--primary', color);
       localStorage.setItem('accentColor', color);
     }
     function toggleScrollbars() {
-      document.body.classList.toggle('hide-scrollbars');
-      const isHidden = document.body.classList.contains('hide-scrollbars');
-      localStorage.setItem('hideScrollbars', String(isHidden));
-      const toggle = document.getElementById('hideScrollbarsToggle');
-      if (toggle) toggle.checked = isHidden;
+      const on = document.body.classList.toggle('hide-scrollbars');
+      localStorage.setItem('hideScrollbars', on);
+      const el = document.getElementById('hideScrollbarsToggle');
+      if (el) el.checked = on;
     }
     function restoreVisualSettings() {
-      if (localStorage.getItem('darkMode') === 'true') {
+      const ls = window.LOCAL_SETTINGS || {};
+      const get = (key, fallback) => ls[key] !== undefined ? ls[key] : (localStorage.getItem(key) ?? fallback);
+      if (get('darkMode', 'false') === 'true' || get('darkMode', false) === true) {
         document.body.classList.add('dark-mode');
-        const dm = document.getElementById('darkModeToggle2');
-        if (dm) dm.checked = true;
+        const el = document.getElementById('darkModeToggle2'); if (el) el.checked = true;
       }
-      if (localStorage.getItem('hideScrollbars') === 'true') {
+      if (get('hideScrollbars', 'false') === 'true' || get('hideScrollbars', false) === true) {
         document.body.classList.add('hide-scrollbars');
-        const hs = document.getElementById('hideScrollbarsToggle');
-        if (hs) hs.checked = true;
+        const el = document.getElementById('hideScrollbarsToggle'); if (el) el.checked = true;
       }
-      const ac = localStorage.getItem('accentColor');
+      const ac = get('accentColor', null);
       if (ac) {
-        document.documentElement.style.setProperty('--primary-color', ac);
-        const sel = document.getElementById('accentColorSelect');
-        if (sel) sel.value = ac;
+        document.documentElement.style.setProperty('--primary', ac);
+        const el = document.getElementById('accentColorSelect'); if (el) el.value = ac;
       }
     }
 
-    // ============ RENDER ============
+    // ── Render ──
     function renderAll() {
       renderSessionInfo(); renderPlayerPool(); renderPlayerButtons(); renderPointTypeButtons();
       renderTeams(); renderCategories(); renderAnswerLog(); renderStatistics();
-      const modal = document.getElementById('sessionsModal');
-      if (modal && modal.classList.contains('open')) renderSessionsList();
+      if (document.getElementById('sessionsModal')?.classList.contains('open')) renderSessionsList();
       setTimeout(updateFadeMasks, 50);
     }
 
     function renderSessionInfo() {
       const s = getCurrentSession(); if (!s) return;
-      const g = id => document.getElementById(id);
-      if (g('sessionName')) g('sessionName').textContent = s.name;
-      if (g('headerSessionName')) g('headerSessionName').textContent = s.name;
-      if (g('sessionCreated')) g('sessionCreated').textContent = new Date(s.created).toLocaleString();
-      if (g('sessionLastUpdated')) g('sessionLastUpdated').textContent = new Date(s.lastUpdated).toLocaleString();
-      if (g('sessionAnswerCount')) g('sessionAnswerCount').textContent = (s.answerLog || []).length;
+      const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+      set('sessionName', s.name);
+      set('headerSessionName', s.name);
+      set('headerSessionNameMobile', s.name);
+      set('sessionCreated', new Date(s.created).toLocaleString());
+      set('sessionLastUpdated', new Date(s.lastUpdated).toLocaleString());
+      set('sessionAnswerCount', (s.answerLog||[]).length);
     }
 
-    // ============ PLAYERS ============
+    // ── Players ──
     function addToPlayerPool() {
       const input = document.getElementById('playerInput');
       const player = input.value.trim();
@@ -1105,11 +1104,11 @@
       const id = state.currentSessionId; if (!id) return;
       updateSessionAtomic(id, s => {
         if (!s.players) s.players = {};
-        if (!s.players[player]) s.players[player] = { name: player, points: 0, answers: [] };
+        if (!s.players[player]) s.players[player] = {name:player, points:0, answers:[]};
       }).then(() => { input.value = ''; saveGlobalPlayers([player]); });
       withWriteLock(id, () => {
         const s = getCurrentSession(); if (!s.players) s.players = {};
-        if (!s.players[player]) s.players[player] = { name: player, points: 0, answers: [] };
+        if (!s.players[player]) s.players[player] = {name:player, points:0, answers:[]};
       });
       renderPlayerPool(); renderPlayerButtons(); renderTeams();
     }
@@ -1118,13 +1117,13 @@
       const id = state.currentSessionId; if (!id) return;
       updateSessionAtomic(id, s => {
         if (s.players) delete s.players[player];
-        (s.teams || []).forEach(t => { t.playerMembers = (t.playerMembers || []).filter(p => p !== player); });
+        (s.teams||[]).forEach(t => { t.playerMembers = (t.playerMembers||[]).filter(p => p !== player); });
       });
       removeGlobalPlayer(player);
       withWriteLock(id, () => {
-        const s = getCurrentSession();
-        if (s && s.players) delete s.players[player];
-        (s && s.teams || []).forEach(t => { t.playerMembers = (t.playerMembers || []).filter(p => p !== player); });
+        const s = getCurrentSession(); if (!s) return;
+        if (s.players) delete s.players[player];
+        (s.teams||[]).forEach(t => { t.playerMembers = (t.playerMembers||[]).filter(p => p !== player); });
       });
       renderPlayerPool(); renderPlayerButtons(); renderTeams();
     }
@@ -1132,385 +1131,381 @@
     function clearPlayerPool() {
       if (!confirm('Clear all players?')) return;
       const id = state.currentSessionId; if (!id) return;
-      updateSessionAtomic(id, s => { s.players = {}; (s.teams || []).forEach(t => { t.playerMembers = []; }); s.answerLog = []; s.answers = []; });
-      withWriteLock(id, () => { const s = getCurrentSession(); s.players = {}; (s.teams || []).forEach(t => { t.playerMembers = []; }); s.answerLog = []; s.answers = []; });
+      const reset = s => { s.players={}; (s.teams||[]).forEach(t=>{t.playerMembers=[];}); s.answerLog=[]; s.answers=[]; };
+      updateSessionAtomic(id, reset);
+      withWriteLock(id, () => { const s=getCurrentSession(); if (s) reset(s); });
       renderPlayerPool(); renderPlayerButtons(); renderTeams(); renderAnswerLog(); renderStatistics(); renderSessionInfo();
     }
 
     function renderPlayerPool() {
       const s = getCurrentSession(); const el = document.getElementById('playerPoolDisplay');
       if (!el || !s) return;
-      const players = Object.keys(s.players || {});
-      if (!players.length) { el.innerHTML = '<p style="color:var(--text-secondary)">No players added yet.</p>'; return; }
-      el.innerHTML = players.map(p => `<span class="player-pool-item">${p}<span class="remove" onclick="removeFromPlayerPool('${p}')">×</span></span>`).join('');
+      const players = Object.keys(s.players||{});
+      el.innerHTML = players.length
+        ? players.map(p => `<span class="player-pool-item">${p}<span class="remove" onclick="removeFromPlayerPool('${p}')">×</span></span>`).join('')
+        : '<p style="color:var(--text2)">No players added yet.</p>';
+    }
+
+    function getDisplayName(full, all) {
+      const parts = full.trim().split(/\s+/);
+      const first = parts[0];
+      const shared = all.some(n => n !== full && n.trim().split(/\s+/)[0] === first);
+      return (shared && parts.length > 1) ? first + ' ' + parts[parts.length-1][0] + '.' : first;
     }
 
     function renderPlayerButtons() {
       const s = getCurrentSession(); const el = document.getElementById('playerButtonsContainer');
       if (!el || !s) return;
-      const inTeams = new Set();
-      (s.teams || []).forEach(t => (t.playerMembers || []).forEach(p => inTeams.add(p)));
-      const players = Array.from(inTeams);
-      if (!players.length) { el.innerHTML = '<p style="color:var(--text-secondary)">No players in any team yet.</p>'; return; }
-      el.innerHTML = players.map(p => `<button class="button-player ${state.selectedPlayer === p ? 'selected' : ''}" onclick="selectPlayer('${p}')">${p}</button>`).join('');
+      const players = [...new Set((s.teams||[]).flatMap(t => t.playerMembers||[]))];
+      el.innerHTML = players.length
+        ? players.map(p => `<button class="button-player ${state.selectedPlayer===p?'selected':''}" onclick="selectPlayer('${p}')" title="${p}">${getDisplayName(p, players)}</button>`).join('')
+        : '<p style="color:var(--text2)">No players in any team yet.</p>';
     }
 
-    function selectPlayer(p) { state.selectedPlayer = state.selectedPlayer === p ? null : p; renderPlayerButtons(); }
+    function selectPlayer(p) { state.selectedPlayer = state.selectedPlayer===p ? null : p; renderPlayerButtons(); }
 
     function handlePlayerImport(event) {
       const file = event.target.files[0]; if (!file) return;
       const reader = new FileReader();
       reader.onload = e => {
-        const text = e.target.result;
-        const players = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n').flatMap(line => line.split(/[,;]+/)).map(p => p.trim()).filter(p => p);
+        const players = e.target.result.replace(/\r\n?/g,'\n').split('\n').flatMap(l => l.split(/[,;]+/)).map(p => p.trim()).filter(Boolean);
         const id = state.currentSessionId; if (!id) return;
         updateSessionAtomic(id, s => {
           if (!s.players) s.players = {};
-          players.forEach(p => { if (!s.players[p]) s.players[p] = { name: p, points: 0, answers: [] }; });
+          players.forEach(p => { if (!s.players[p]) s.players[p] = {name:p,points:0,answers:[]}; });
         }).then(() => saveGlobalPlayers(players));
         withWriteLock(id, () => {
           const s = getCurrentSession(); if (!s.players) s.players = {};
-          players.forEach(p => { if (!s.players[p]) s.players[p] = { name: p, points: 0, answers: [] }; });
+          players.forEach(p => { if (!s.players[p]) s.players[p] = {name:p,points:0,answers:[]}; });
         });
         renderPlayerPool(); renderPlayerButtons(); renderTeams();
       };
       reader.readAsText(file); event.target.value = '';
     }
 
-    // ============ TEAMS ============
+    // ── Teams ──
     function addTeam() {
       const input = document.getElementById('teamNameInput');
       const name = input.value.trim(); if (!name) { alert('Please enter a team name.'); return; }
       const id = state.currentSessionId; if (!id) return;
-      const team = { id: Date.now().toString(), name, playerMembers: [] };
-      updateSessionAtomic(id, s => { s.teams = toArray(s.teams); s.teams.push(team); });
-      withWriteLock(id, () => { const s = getCurrentSession(); s.teams = toArray(s.teams); s.teams.push(team); });
+      const team = {id: Date.now().toString(), name, playerMembers:[]};
+      updateSessionAtomic(id, s => { s.teams=toArray(s.teams); s.teams.push(team); });
+      withWriteLock(id, () => { const s=getCurrentSession(); s.teams=toArray(s.teams); s.teams.push(team); });
       input.value = ''; renderTeams();
     }
 
     function removeTeam(teamId) {
       const id = state.currentSessionId; if (!id) return;
-      updateSessionAtomic(id, s => { s.teams = toArray(s.teams).filter(t => t.id !== teamId); });
-      withWriteLock(id, () => { const s = getCurrentSession(); s.teams = toArray(s.teams).filter(t => t.id !== teamId); });
+      const filter = s => { s.teams = toArray(s.teams).filter(t => t.id !== teamId); };
+      updateSessionAtomic(id, filter);
+      withWriteLock(id, () => { const s=getCurrentSession(); if (s) filter(s); });
       renderTeams(); renderPlayerButtons();
     }
 
     function updateTeamName(teamId, newName) {
       const id = state.currentSessionId; if (!id) return;
-      updateSessionAtomic(id, s => { const t = toArray(s.teams).find(t => t.id === teamId); if (t) t.name = newName; });
-      withWriteLock(id, () => { const s = getCurrentSession(); const t = (s.teams || []).find(t => t.id === teamId); if (t) t.name = newName; });
+      const update = s => { const t=toArray(s.teams).find(t=>t.id===teamId); if (t) t.name=newName; };
+      updateSessionAtomic(id, update);
+      withWriteLock(id, () => { const s=getCurrentSession(); if (s) update(s); });
     }
 
     function togglePlayerInTeam(teamId, player) {
       const id = state.currentSessionId; if (!id) return;
-      updateSessionAtomic(id, s => {
-        const t = toArray(s.teams).find(t => t.id === teamId); if (!t) return;
+      const toggle = s => {
+        const t = toArray(s.teams).find(t=>t.id===teamId); if (!t) return;
         t.playerMembers = toArray(t.playerMembers);
         const i = t.playerMembers.indexOf(player);
-        if (i > -1) t.playerMembers.splice(i, 1); else t.playerMembers.push(player);
-      });
-      withWriteLock(id, () => {
-        const s = getCurrentSession(); const t = (s.teams || []).find(t => t.id === teamId); if (!t) return;
-        t.playerMembers = toArray(t.playerMembers);
-        const i = t.playerMembers.indexOf(player);
-        if (i > -1) t.playerMembers.splice(i, 1); else t.playerMembers.push(player);
-      });
+        if (i > -1) t.playerMembers.splice(i,1); else t.playerMembers.push(player);
+      };
+      updateSessionAtomic(id, toggle);
+      withWriteLock(id, () => { const s=getCurrentSession(); if (s) toggle(s); });
       renderTeams(); renderPlayerButtons();
     }
 
     function renderTeams() {
       const s = getCurrentSession(); const el = document.getElementById('teamsContainer');
       if (!el || !s) return;
-      const teams = s.teams || [];
-      if (!teams.length) { el.innerHTML = '<p style="color:var(--text-secondary)">No teams created yet.</p>'; return; }
-      el.innerHTML = teams.map(team => {
-        const players = Object.keys(s.players || {});
-        return `<div class="team-section">
+      const teams = s.teams||[];
+      if (!teams.length) { el.innerHTML = '<p style="color:var(--text2)">No teams created yet.</p>'; return; }
+      const players = Object.keys(s.players||{});
+      el.innerHTML = teams.map(team => `
+        <div class="team-section">
           <input type="text" value="${team.name}" onchange="updateTeamName('${team.id}',this.value)" />
           <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;">
-            ${players.length ? players.map(p => `<button class="button-category ${team.playerMembers.includes(p)?'selected':''}" onclick="togglePlayerInTeam('${team.id}','${p}')">${p}</button>`).join('') : '<p style="color:var(--text-secondary)">No players available.</p>'}
+            ${players.length ? players.map(p=>`<button class="button-category ${team.playerMembers.includes(p)?'selected':''}" onclick="togglePlayerInTeam('${team.id}','${p}')">${p}</button>`).join('') : '<p style="color:var(--text2)">No players available.</p>'}
           </div>
           <button class="button button-danger" onclick="removeTeam('${team.id}')" style="margin-top:10px;">Remove Team</button>
-        </div>`;
-      }).join('');
+        </div>`).join('');
     }
 
-    // ============ CATEGORIES ============
+    // ── Categories ──
     function saveCategories() {
-      const input = document.getElementById('categoriesInput').value;
-      state.categories = input.split(',').map(c => c.trim()).filter(c => c).sort((a, b) => a.localeCompare(b));
+      state.categories = document.getElementById('categoriesInput').value.split(',').map(c=>c.trim()).filter(Boolean).sort((a,b)=>a.localeCompare(b));
       const id = state.currentSessionId; if (!id) return;
-      updateSessionAtomic(id, s => { s.categories = [...state.categories]; });
-      withWriteLock(id, () => { const s = getCurrentSession(); s.categories = [...state.categories]; });
+      updateSessionAtomic(id, s => { s.categories=[...state.categories]; });
+      withWriteLock(id, () => { const s=getCurrentSession(); if (s) s.categories=[...state.categories]; });
       renderCategories();
     }
 
     function renderCategories() {
       const el = document.getElementById('categoryButtonsContainer'); if (!el) return;
-      if (!state.categories.length) { el.innerHTML = '<p style="color:var(--text-secondary);grid-column:1/-1">No categories added yet.</p>'; return; }
-      el.innerHTML = state.categories.map(c => `<button class="button-category ${state.selectedCategory===c?'selected':''}" data-category="${c}" onclick="selectCategory('${c}')">${c}</button>`).join('');
+      el.innerHTML = state.categories.length
+        ? state.categories.map(c=>`<button class="button-category ${state.selectedCategory===c?'selected':''}" data-category="${c}" onclick="selectCategory('${c}')">${c}</button>`).join('')
+        : '<p style="color:var(--text2);grid-column:1/-1">No categories added yet.</p>';
     }
 
     function selectCategory(c) {
-      state.selectedCategory = state.selectedCategory === c ? null : c;
-      document.querySelectorAll('#categoryButtonsContainer .button-category').forEach(btn => btn.classList.toggle('selected', btn.dataset.category === state.selectedCategory));
+      state.selectedCategory = state.selectedCategory===c ? null : c;
+      document.querySelectorAll('#categoryButtonsContainer .button-category').forEach(btn => btn.classList.toggle('selected', btn.dataset.category===state.selectedCategory));
     }
 
-    // ============ ANSWERS ============
-    function selectPointType(type) { state.selectedPointType = state.selectedPointType === type ? null : type; renderPointTypeButtons(); }
+    // ── Answers ──
+    function selectPointType(type) {
+      state.selectedPointType = state.selectedPointType===type ? null : type;
+      renderPointTypeButtons();
+      const hint = document.getElementById('categoryOptionalHint');
+      if (hint) hint.style.display = state.selectedPointType==='Neg' ? 'inline' : 'none';
+    }
 
     function renderPointTypeButtons() {
       document.querySelectorAll('.button-point-type').forEach(btn => {
-        btn.classList.remove('selected');
-        const labels = { 'Toss-up': 'Toss-up', 'Bonus': 'Bonus', 'Neg': 'Neg', 'Power': 'Power' };
-        if (state.selectedPointType && btn.textContent.includes(labels[state.selectedPointType])) btn.classList.add('selected');
+        const match = state.selectedPointType && btn.textContent.includes(state.selectedPointType);
+        btn.classList.toggle('selected', !!match);
       });
     }
 
     function recordAnswer() {
       const id = state.currentSessionId; if (!id) return;
-      if (!state.selectedPlayer) { alert('Please select a player.'); return; }
+      if (!state.selectedPlayer)    { alert('Please select a player.'); return; }
       if (!state.selectedPointType) { alert('Please select a point type.'); return; }
-      if (!state.selectedCategory) { alert('Please select a category.'); return; }
-      const pointMap = { 'Toss-up': 10, 'Bonus': 10, 'Neg': -5, 'Power': 15 };
+      if (!state.selectedCategory && state.selectedPointType !== 'Neg') { alert('Please select a category.'); return; }
+      const pointMap = {'Toss-up':10,'Bonus':10,'Neg':-5,'Power':15};
       const points = pointMap[state.selectedPointType];
-      const answer = { id: Date.now().toString(), player: state.selectedPlayer, pointType: state.selectedPointType, category: state.selectedCategory, points, timestamp: new Date().toISOString() };
-      updateSessionAtomic(id, s => {
-        if (!s.answerLog) s.answerLog = []; s.answerLog = toArray(s.answerLog); s.answerLog.push(answer);
+      const answer = {id:Date.now().toString(), player:state.selectedPlayer, pointType:state.selectedPointType, category:state.selectedCategory||'—', points, timestamp:new Date().toISOString()};
+      const applyAnswer = s => {
+        s.answerLog = toArray(s.answerLog); s.answerLog.push(answer);
         if (!s.players) s.players = {};
-        if (!s.players[answer.player]) s.players[answer.player] = { name: answer.player, points: 0, answers: [] };
-        s.players[answer.player].answers = toArray(s.players[answer.player].answers);
-        s.players[answer.player].answers.push(answer);
-        s.players[answer.player].points = (s.players[answer.player].points || 0) + points;
-      });
-      withWriteLock(id, () => {
-        const s = getCurrentSession();
-        if (!s.answerLog) s.answerLog = []; s.answerLog.push(answer);
-        if (!s.players[answer.player].answers) s.players[answer.player].answers = [];
-        s.players[answer.player].answers.push(answer);
-        s.players[answer.player].points += points;
-      });
-      state.selectedPlayer = null; state.selectedPointType = null; state.selectedCategory = null;
+        const p = s.players[answer.player] || (s.players[answer.player]={name:answer.player,points:0,answers:[]});
+        p.answers = toArray(p.answers); p.answers.push(answer);
+        p.points = (p.points||0) + points;
+      };
+      updateSessionAtomic(id, applyAnswer);
+      withWriteLock(id, () => { const s=getCurrentSession(); if (s) applyAnswer(s); });
+      state.selectedPlayer=null; state.selectedPointType=null; state.selectedCategory=null;
       renderAll();
     }
 
     function deleteAnswer(answerId) {
       const id = state.currentSessionId; if (!id) return;
-      updateSessionAtomic(id, s => {
+      const del = s => {
         s.answerLog = toArray(s.answerLog);
-        const a = s.answerLog.find(a => a.id === answerId); if (!a) return;
-        s.answerLog = s.answerLog.filter(a => a.id !== answerId);
-        if (s.players && s.players[a.player]) {
-          s.players[a.player].answers = toArray(s.players[a.player].answers).filter(x => x.id !== answerId);
-          s.players[a.player].points = (s.players[a.player].points || 0) - (a.points || 0);
+        const a = s.answerLog.find(x=>x.id===answerId); if (!a) return;
+        s.answerLog = s.answerLog.filter(x=>x.id!==answerId);
+        if (s.players?.[a.player]) {
+          s.players[a.player].answers = toArray(s.players[a.player].answers).filter(x=>x.id!==answerId);
+          s.players[a.player].points = (s.players[a.player].points||0) - (a.points||0);
         }
-      });
-      withWriteLock(id, () => {
-        const s = getCurrentSession();
-        const a = (s.answerLog || []).find(x => x.id === answerId); if (!a) return;
-        s.players[a.player].points -= a.points;
-        s.players[a.player].answers = (s.players[a.player].answers || []).filter(x => x.id !== answerId);
-        s.answerLog = (s.answerLog || []).filter(x => x.id !== answerId);
-      });
+      };
+      updateSessionAtomic(id, del);
+      withWriteLock(id, () => { const s=getCurrentSession(); if (s) del(s); });
       renderAll();
     }
 
     function clearAnswerLog() {
       if (!confirm('Clear all answers?')) return;
       const id = state.currentSessionId; if (!id) return;
-      updateSessionAtomic(id, s => {
-        s.answerLog = [];
-        if (s.players) Object.keys(s.players).forEach(p => { s.players[p].points = 0; s.players[p].answers = []; });
-      });
-      withWriteLock(id, () => {
-        const s = getCurrentSession(); s.answerLog = [];
-        Object.keys(s.players).forEach(p => { s.players[p].points = 0; s.players[p].answers = []; });
-      });
+      const clear = s => { s.answerLog=[]; Object.values(s.players||{}).forEach(p=>{p.points=0;p.answers=[];}); };
+      updateSessionAtomic(id, clear);
+      withWriteLock(id, () => { const s=getCurrentSession(); if (s) clear(s); });
       renderAll();
     }
 
     function renderAnswerLog() {
       const s = getCurrentSession(); const el = document.getElementById('answerLog');
       if (!el || !s) return;
-      const answers = s.answerLog || [];
-      if (!answers.length) { el.innerHTML = '<p style="color:var(--text-secondary)">No answers recorded yet.</p>'; return; }
-      el.innerHTML = [...answers].reverse().map((a, i) => `
-        <div class="log-entry">
-          <span><strong>${answers.length - i}. ${a.player}</strong> — ${a.pointType} (${a.points > 0 ? '+' : ''}${a.points} pts) — ${a.category}</span>
-          <button class="button button-danger" onclick="deleteAnswer('${a.id}')" style="padding:4px 8px;font-size:0.8em;">Delete</button>
-        </div>`).join('');
+      const answers = s.answerLog||[];
+      el.innerHTML = answers.length
+        ? [...answers].reverse().map((a,i) => `
+            <div class="log-entry">
+              <span><strong>${answers.length-i}. ${a.player}</strong> — ${a.pointType} (${a.points>0?'+':''}${a.points} pts) — ${a.category}</span>
+              <button class="button button-danger" onclick="deleteAnswer('${a.id}')" style="padding:4px 8px;font-size:.8em;">Delete</button>
+            </div>`).join('')
+        : '<p style="color:var(--text2)">No answers recorded yet.</p>';
       el.onscroll = updateFadeMasks;
       setTimeout(updateFadeMasks, 20);
     }
 
-    // ============ STATISTICS ============
+    // ── Statistics ──
     function calculatePlayerStats() {
-      const s = getCurrentSession();
-      return Object.values(s.players || {}).map(p => {
-        const answers = p.answers || [];
-        return { name: p.name, points: p.points, totalAnswers: answers.length, tossupsCorrect: answers.filter(a => a.pointType === 'Toss-up').length, bonusPoints: answers.filter(a => a.pointType === 'Bonus').length * 10, negs: answers.filter(a => a.pointType === 'Neg').length, powers: answers.filter(a => a.pointType === 'Power').length };
-      }).sort((a, b) => { if (b.points !== a.points) return b.points - a.points; if (b.powers !== a.powers) return b.powers - a.powers; return a.negs - b.negs; });
+      return Object.values(getCurrentSession()?.players||{}).map(p => {
+        const a = p.answers||[];
+        return {
+          name: p.name, points: p.points, totalAnswers: a.length,
+          tossupsCorrect: a.filter(x=>x.pointType==='Toss-up').length,
+          bonusPoints: a.filter(x=>x.pointType==='Bonus').length * 10,
+          negs: a.filter(x=>x.pointType==='Neg').length,
+          powers: a.filter(x=>x.pointType==='Power').length
+        };
+      }).sort((a,b) => b.points!==a.points ? b.points-a.points : b.powers!==a.powers ? b.powers-a.powers : a.negs-b.negs);
     }
 
     function calculateTeamStats() {
       const s = getCurrentSession();
-      return (s.teams || []).map(team => {
-        let totalPoints = 0, totalAnswers = 0;
-        team.playerMembers.forEach(name => { const p = s.players[name]; if (p) { totalPoints += p.points; totalAnswers += (p.answers || []).length; } });
-        return { name: team.name, totalPoints, totalAnswers, members: team.playerMembers, averagePerMember: team.playerMembers.length > 0 ? (totalPoints / team.playerMembers.length).toFixed(2) : 0 };
-      }).sort((a, b) => b.totalPoints - a.totalPoints);
+      return (s?.teams||[]).map(team => {
+        let pts=0, ans=0;
+        team.playerMembers.forEach(n => { const p=s.players[n]; if(p){pts+=p.points;ans+=(p.answers||[]).length;} });
+        return {name:team.name, totalPoints:pts, totalAnswers:ans, members:team.playerMembers, averagePerMember:team.playerMembers.length?(pts/team.playerMembers.length).toFixed(2):0};
+      }).sort((a,b) => b.totalPoints-a.totalPoints);
     }
 
     function buildRankingList(players) {
-      let html = ''; let rank = 1;
-      for (let i = 0; i < players.length; i++) {
-        const stat = players[i]; const prev = players[i - 1];
-        const tied = prev && prev.points === stat.points && prev.powers === stat.powers && prev.negs === stat.negs;
-        if (i > 0 && !tied) rank = i + 1;
-        const suffix = rank === 1 ? 'st' : rank === 2 ? 'nd' : rank === 3 ? 'rd' : 'th';
-        html += `<li style="padding:6px 0;border-bottom:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center;">
-          <span><strong style="color:var(--primary-color);min-width:42px;display:inline-block;">${rank}${suffix}</strong> ${stat.name}</span>
-          <span style="color:var(--text-secondary);font-size:0.92em;">${stat.points} pts${stat.powers > 0 ? ' · ' + stat.powers + 'pw' : ''}${stat.negs > 0 ? ' · ' + stat.negs + 'neg' : ''}</span>
+      let html='', rank=1;
+      players.forEach((s,i) => {
+        const prev = players[i-1];
+        const tied = prev && prev.points===s.points && prev.powers===s.powers && prev.negs===s.negs;
+        if (i>0 && !tied) rank=i+1;
+        const sfx = ['st','nd','rd'][rank-1]||'th';
+        html += `<li style="padding:6px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+          <span><strong style="color:var(--primary);min-width:42px;display:inline-block;">${rank}${sfx}</strong> ${s.name}</span>
+          <span style="color:var(--text2);font-size:.92em;">${s.points} pts${s.powers?' · '+s.powers+'pw':''}${s.negs?' · '+s.negs+'neg':''}</span>
         </li>`;
-      }
+      });
       return html;
     }
 
     function renderStatistics() {
       const el = document.getElementById('statisticsContainer'); if (!el) return;
-      const openCards = new Set();
-      el.querySelectorAll('.stat-card:not(.collapsed),.team-stat-card:not(.collapsed)').forEach(card => {
-        const n = card.querySelector('.player-name,.team-name'); if (n) openCards.add(n.textContent.trim());
+      const open = new Set();
+      el.querySelectorAll('.stat-card:not(.collapsed),.team-stat-card:not(.collapsed)').forEach(c => {
+        const n = c.querySelector('.player-name,.team-name'); if (n) open.add(n.textContent.trim());
       });
-      const playerStats = calculatePlayerStats(); const teamStats = calculateTeamStats();
-      const activePlayers = playerStats.filter(s => s.totalAnswers > 0);
+      const ps = calculatePlayerStats(), ts = calculateTeamStats();
+      const active = ps.filter(s=>s.totalAnswers>0);
       let html = '<div class="stats-grid">';
-      teamStats.forEach(t => {
-        html += `<div class="team-stat-card collapsed"><h3 onclick="toggleStatCard(event)"><span class="team-name">${t.name}</span><span class="team-score">${t.totalPoints} pts</span></h3><div class="stat-details"><div class="stat-row"><span class="stat-label">Total Points:</span><span class="stat-value">${t.totalPoints}</span></div><div class="stat-row"><span class="stat-label">Total Answers:</span><span class="stat-value">${t.totalAnswers}</span></div><div class="stat-row"><span class="stat-label">Avg per Member:</span><span class="stat-value">${t.averagePerMember}</span></div><div class="stat-row"><span class="stat-label">Members:</span><span>${t.members.join(', ') || 'None'}</span></div></div></div>`;
+      ts.forEach(t => {
+        html += `<div class="team-stat-card collapsed"><h3 onclick="toggleStatCard(event)"><span class="team-name">${t.name}</span><span class="team-score">${t.totalPoints} pts</span></h3><div class="stat-details"><div class="stat-row"><span class="stat-label">Total Points:</span><span class="stat-value">${t.totalPoints}</span></div><div class="stat-row"><span class="stat-label">Total Answers:</span><span class="stat-value">${t.totalAnswers}</span></div><div class="stat-row"><span class="stat-label">Avg per Member:</span><span class="stat-value">${t.averagePerMember}</span></div><div class="stat-row"><span class="stat-label">Members:</span><span>${t.members.join(', ')||'None'}</span></div></div></div>`;
       });
-      if (activePlayers.length > 0) {
-        activePlayers.forEach(s => {
+      if (active.length) {
+        active.forEach(s => {
           html += `<div class="stat-card collapsed"><h3 onclick="toggleStatCard(event)"><span class="player-name">${s.name}</span><span class="player-score">${s.points} pts</span></h3><div class="stat-details"><div class="stat-row"><span class="stat-label">Total Points:</span><span class="stat-value">${s.points}</span></div><div class="stat-row"><span class="stat-label">Answers:</span><span class="stat-value">${s.totalAnswers}</span></div><div class="stat-row"><span class="stat-label">Toss-ups:</span><span class="stat-value">${s.tossupsCorrect}</span></div><div class="stat-row"><span class="stat-label">Bonus Pts:</span><span class="stat-value">${s.bonusPoints}</span></div><div class="stat-row"><span class="stat-label">Negs:</span><span class="stat-value">${s.negs}</span></div><div class="stat-row"><span class="stat-label">Powers:</span><span class="stat-value">${s.powers}</span></div></div></div>`;
         });
-        html += `<div class="overall-ranking"><h3 style="margin-top:0;">Player Rankings</h3><ol style="list-style:none;margin:12px 0 0 0;padding:0;">${buildRankingList(activePlayers)}</ol></div>`;
-      } else { html += '<p style="color:var(--text-secondary)">No statistics available yet.</p>'; }
+        html += `<div class="overall-ranking"><h3 style="margin-top:0;">Player Rankings</h3><ol style="list-style:none;margin:12px 0 0;padding:0;">${buildRankingList(active)}</ol></div>`;
+      } else {
+        html += '<p style="color:var(--text2)">No statistics available yet.</p>';
+      }
       html += '</div>';
       el.innerHTML = html;
-      if (openCards.size > 0) {
-        el.querySelectorAll('.stat-card,.team-stat-card').forEach(card => {
-          const n = card.querySelector('.player-name,.team-name');
-          if (n && openCards.has(n.textContent.trim())) card.classList.remove('collapsed');
+      if (open.size) {
+        el.querySelectorAll('.stat-card,.team-stat-card').forEach(c => {
+          const n = c.querySelector('.player-name,.team-name');
+          if (n && open.has(n.textContent.trim())) c.classList.remove('collapsed');
         });
       }
     }
 
-    function toggleStatCard(event) {
-      const card = event.currentTarget.closest('.stat-card,.team-stat-card');
-      if (card) card.classList.toggle('collapsed');
-    }
+    function toggleStatCard(e) { e.currentTarget.closest('.stat-card,.team-stat-card')?.classList.toggle('collapsed'); }
 
-    // ============ EXPORT / IMPORT ============
+    // ── Export / Import ──
     function importFromJSON(event) {
       const file = event.target.files[0]; if (!file) return;
       const statusEl = document.getElementById('importStatus');
-      statusEl.style.display = 'block'; statusEl.style.color = 'var(--text-secondary)'; statusEl.textContent = 'Reading file...';
+      statusEl.style.display='block'; statusEl.style.color='var(--text2)'; statusEl.textContent='Reading file...';
       const reader = new FileReader();
       reader.onload = e => {
         try {
           const data = JSON.parse(e.target.result);
           if (!data.sessionName || (!data.players && !data.answerLog)) throw new Error('Not a valid export.');
-          const existingId = Object.keys(state.sessions).find(id => state.sessions[id].name === data.sessionName);
-          if (existingId && !confirm('Session "' + data.sessionName + '" exists. Overwrite?')) { statusEl.textContent = 'Cancelled.'; event.target.value = ''; return; }
-          const sessionId = existingId || Date.now().toString();
-          const imported = { id: sessionId, name: data.sessionName, created: data.created || new Date().toISOString(), lastUpdated: new Date().toISOString(), players: data.players || {}, teams: data.teams || [], categories: data.categories || [], answers: data.answers || [], answerLog: data.answerLog || [] };
+          const existingId = Object.keys(state.sessions).find(id => state.sessions[id].name===data.sessionName);
+          if (existingId && !confirm('Session "'+data.sessionName+'" exists. Overwrite?')) { statusEl.textContent='Cancelled.'; event.target.value=''; return; }
+          const sid = existingId || Date.now().toString();
+          const imported = {id:sid, name:data.sessionName, created:data.created||new Date().toISOString(), lastUpdated:new Date().toISOString(), players:data.players||{}, teams:data.teams||[], categories:data.categories||[], answers:data.answers||[], answerLog:data.answerLog||[]};
           Object.keys(imported.players).forEach(name => {
-            imported.players[name].answers = imported.answerLog.filter(a => a.player === name);
-            imported.players[name].points = imported.players[name].answers.reduce((sum, a) => sum + (a.points || 0), 0);
+            imported.players[name].answers = imported.answerLog.filter(a=>a.player===name);
+            imported.players[name].points  = imported.players[name].answers.reduce((s,a)=>s+(a.points||0),0);
           });
-          state.sessions[sessionId] = imported; state.currentSessionId = sessionId;
+          state.sessions[sid]=imported; state.currentSessionId=sid;
           loadSessionData(); saveAllData(); renderAll();
-          statusEl.style.color = 'var(--success-color)'; statusEl.textContent = 'Imported "' + imported.name + '" with ' + imported.answerLog.length + ' answers.';
-        } catch (err) { statusEl.style.color = 'var(--danger-color)'; statusEl.textContent = 'Import failed: ' + err.message; }
-        event.target.value = '';
+          statusEl.style.color='var(--success)'; statusEl.textContent='Imported "'+imported.name+'" with '+imported.answerLog.length+' answers.';
+        } catch(err) { statusEl.style.color='var(--danger)'; statusEl.textContent='Import failed: '+err.message; }
+        event.target.value='';
       };
-      reader.onerror = () => { statusEl.style.color = 'var(--danger-color)'; statusEl.textContent = 'Failed to read file.'; };
+      reader.onerror = () => { statusEl.style.color='var(--danger)'; statusEl.textContent='Failed to read file.'; };
       reader.readAsText(file);
     }
 
     function exportToExcel() {
       const s = getCurrentSession(); if (!s) return;
-      const ps = calculatePlayerStats(); const ts = calculateTeamStats(); let csv = [];
-      if (document.getElementById('exportPlayers').checked) {
-        csv.push('Player Statistics', 'Player Name,Total Points,Total Answers,Toss-ups,Bonuses,Negs,Powers');
-        ps.forEach(p => csv.push(p.name + ',' + p.points + ',' + p.totalAnswers + ',' + p.tossupsCorrect + ',' + (p.bonusPoints/10) + ',' + p.negs + ',' + p.powers));
+      const ps = calculatePlayerStats(), ts = calculateTeamStats(), csv = [];
+      if (document.getElementById('exportPlayers').classList.contains('selected')) {
+        csv.push('Player Statistics','Player Name,Total Points,Total Answers,Toss-ups,Bonuses,Negs,Powers');
+        ps.forEach(p => csv.push([p.name,p.points,p.totalAnswers,p.tossupsCorrect,p.bonusPoints/10,p.negs,p.powers].join(',')));
         csv.push('');
       }
-      if (document.getElementById('exportTeamStats').checked && ts.length) {
-        csv.push('Team Statistics', 'Team Name,Total Points,Total Answers,Members');
-        ts.forEach(t => csv.push(t.name + ',' + t.totalPoints + ',' + t.totalAnswers + ',"' + t.members.join(', ') + '"'));
+      if (document.getElementById('exportTeamStats').classList.contains('selected') && ts.length) {
+        csv.push('Team Statistics','Team Name,Total Points,Total Answers,Members');
+        ts.forEach(t => csv.push([t.name,t.totalPoints,t.totalAnswers,'"'+t.members.join(', ')+'"'].join(',')));
         csv.push('');
       }
-      if (document.getElementById('exportAnswerLog').checked) {
-        csv.push('Answer Log', 'Player,Point Type,Category,Points,Timestamp');
-        (s.answerLog || []).forEach(a => csv.push(a.player + ',' + a.pointType + ',' + a.category + ',' + a.points + ',' + new Date(a.timestamp).toLocaleString()));
+      if (document.getElementById('exportAnswerLog').classList.contains('selected')) {
+        csv.push('Answer Log','Player,Point Type,Category,Points,Timestamp');
+        (s.answerLog||[]).forEach(a => csv.push([a.player,a.pointType,a.category,a.points,new Date(a.timestamp).toLocaleString()].join(',')));
       }
-      downloadFile(csv.join('\n'), 'quiz-bowl-' + s.name + '-' + new Date().toISOString().split('T')[0] + '.csv', 'text/csv');
+      downloadFile(csv.join('\n'), 'quiz-bowl-'+s.name+'-'+new Date().toISOString().split('T')[0]+'.csv', 'text/csv');
     }
 
     function exportToJSON() {
       const s = getCurrentSession(); if (!s) return;
-      downloadFile(JSON.stringify({ sessionName: s.name, created: s.created, lastUpdated: s.lastUpdated, players: s.players, teams: s.teams, answerLog: s.answerLog, categories: state.categories }, null, 2), 'quiz-bowl-' + s.name + '-' + new Date().toISOString().split('T')[0] + '.json', 'application/json');
+      downloadFile(JSON.stringify({sessionName:s.name,created:s.created,lastUpdated:s.lastUpdated,players:s.players,teams:s.teams,answerLog:s.answerLog,categories:state.categories},null,2), 'quiz-bowl-'+s.name+'-'+new Date().toISOString().split('T')[0]+'.json', 'application/json');
     }
 
     function downloadFile(content, filename, mimeType) {
       const a = document.createElement('a');
-      a.setAttribute('href', 'data:' + mimeType + ';charset=utf-8,' + encodeURIComponent(content));
-      a.setAttribute('download', filename); a.style.display = 'none';
+      a.href = 'data:'+mimeType+';charset=utf-8,'+encodeURIComponent(content);
+      a.download = filename; a.style.display='none';
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
     }
 
-    // ============ RESET ============
+    // ── Reset ──
     function resetAllData() {
-      const entered = prompt('Enter the admin password to delete all data:');
-      if (entered === null) return;
-      if (entered !== 'Neg 5') { alert('Incorrect password.'); return; }
-      if (confirm('Delete ALL sessions and data? Cannot be undone!')) {
-        sessionsRef.remove().catch(e => showFirebaseError(e.message));
-        globalPlayersRef.remove().catch(e => showFirebaseError(e.message));
-        localStorage.setItem(CURRENT_SESSION_KEY, '');
-        state.sessions = {}; state.currentSessionId = null;
-        createNewSession(); renderAll();
-      }
+      if (prompt('Enter the admin password to delete all data:') !== 'Neg 5') { alert('Incorrect password.'); return; }
+      if (!confirm('Delete ALL sessions and data? Cannot be undone!')) return;
+      sessionsRef.remove().catch(e=>showFirebaseError(e.message));
+      globalPlayersRef.remove().catch(e=>showFirebaseError(e.message));
+      localStorage.setItem(CURRENT_SESSION_KEY,'');
+      state.sessions={}; state.currentSessionId=null;
+      createNewSession(); renderAll();
     }
 
-    // ============ INIT ============
+    // ── Init ──
     document.addEventListener('DOMContentLoaded', () => {
+      restoreVisualSettings();
       updateHeaderHeight();
+
       window.addEventListener('resize', () => { updateHeaderHeight(); applySidebarState(); updateFadeMasks(); });
 
-      const scrollEl = document.getElementById('qbScroll');
-      const sidebarEl = document.querySelector('.sidebar-sections');
-      if (scrollEl) scrollEl.addEventListener('scroll', updateFadeMasks);
-      if (sidebarEl) sidebarEl.addEventListener('scroll', updateFadeMasks);
-      updateFadeMasks();
+      document.getElementById('qbScroll')?.addEventListener('scroll', updateFadeMasks);
+      document.querySelector('.sidebar-sections')?.addEventListener('scroll', updateFadeMasks);
 
       loadAllData();
       setupGlobalPlayers();
-      setInterval(() => { saveAllData(); updateAutoSaveIndicator(); }, 5000);
+      setInterval(() => { saveAllData(); updateAutoSave(); }, 5000);
       setupSectionToggle();
       applySidebarState();
 
       const savedSection = localStorage.getItem('activeSidebarSection') || 'sec-session';
       showSection(savedSection);
-      updateJumpDropdown(savedSection);
-      restoreVisualSettings();
 
       document.getElementById('sidebarOpenBtn').onclick = toggleSidebar;
+      document.getElementById('sidebarOpenBtnMobile').onclick = toggleSidebar;
 
-      // Close jump dropdown when clicking outside
       document.addEventListener('click', e => {
-        const wrapper = document.getElementById('sidebarJumpWrapper');
-        if (wrapper && !wrapper.contains(e.target)) wrapper.classList.remove('open');
+        const w = document.getElementById('sidebarJumpWrapper');
+        if (w && !w.contains(e.target)) w.classList.remove('open');
+        // Close modals when clicking the backdrop
+        ['helpModal','sessionsModal'].forEach(id => {
+          const m = document.getElementById(id);
+          if (m && e.target === m) m.classList.remove('open');
+        });
       });
     });
   </script>
