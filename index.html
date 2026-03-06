@@ -147,7 +147,12 @@
     }
     .an-player-card:hover { border-color: var(--primary-light); box-shadow: var(--shadow-md); }
     .an-player-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-    .an-player-name { font-size: 1.1em; font-weight: 700; color: var(--text); }
+    .an-player-name {
+      font-size: 1.1em; font-weight: 700; color: var(--primary);
+      cursor: pointer; text-decoration: underline; text-underline-offset: 3px;
+      transition: color .15s;
+    }
+    .an-player-name:hover { color: var(--primary-dark); }
     .an-player-pts { font-size: 1.2em; font-weight: 700; color: var(--primary); }
     .an-player-meta { font-size: .82em; color: var(--text2); margin-bottom: 12px; }
 
@@ -379,6 +384,58 @@
     .session-card-details { font-size: .82em; color: var(--text2); margin-bottom: 12px; line-height: 1.6; }
     .session-card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
     .session-card-actions button { flex: 1; min-width: 70px; font-size: .85em; padding: 8px 12px; }
+
+    /* ── Player Detail Modal ── */
+    #playerDetailModal .modal-content { max-width: 620px; }
+    .pd-hero {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-radius: 10px; padding: 20px; color: #fff; margin-bottom: 20px;
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+    }
+    .pd-hero-name { font-size: 1.5em; font-weight: 700; }
+    .pd-hero-sub { font-size: .88em; opacity: .85; margin-top: 4px; }
+    .pd-hero-pts { font-size: 2.2em; font-weight: 700; }
+    .pd-section-title {
+      font-size: .78em; font-weight: 700; text-transform: uppercase; letter-spacing: .6px;
+      color: var(--text2); margin: 18px 0 10px;
+    }
+    .pd-stat-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .pd-chip {
+      padding: 6px 14px; border-radius: 20px; font-size: .85em; font-weight: 700;
+      background: var(--sec-bg); color: var(--text); border: 2px solid var(--border);
+    }
+    .pd-chip.power { background: rgba(102,126,234,.12); color: var(--primary); border-color: var(--primary); }
+    .pd-chip.neg   { background: rgba(220,53,69,.1); color: var(--danger); border-color: var(--danger); }
+    .pd-chip.tossup { background: rgba(17,153,142,.1); color: var(--success); border-color: var(--success); }
+    .pd-cat-table { width: 100%; border-collapse: collapse; font-size: .9em; }
+    .pd-cat-table th {
+      text-align: left; padding: 8px 10px; background: var(--sec-bg);
+      border-bottom: 2px solid var(--border); color: var(--text2); font-weight: 700; font-size: .82em; text-transform: uppercase; letter-spacing: .4px;
+    }
+    .pd-cat-table th.right, .pd-cat-table td.right { text-align: right; }
+    .pd-cat-table td { padding: 9px 10px; border-bottom: 1px solid var(--border); }
+    .pd-cat-table tr:last-child td { border-bottom: none; }
+    .pd-cat-table tr:hover td { background: var(--hover); }
+    .pd-rank-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 26px; height: 26px; border-radius: 50%; font-size: .78em; font-weight: 700;
+      background: var(--sec-bg); color: var(--text2); border: 1px solid var(--border);
+    }
+    .pd-rank-badge.gold   { background: #ffd700; color: #7a5800; border-color: #c8a600; }
+    .pd-rank-badge.silver { background: #c0c0c0; color: #5a5a5a; border-color: #a0a0a0; }
+    .pd-rank-badge.bronze { background: #cd7f32; color: #fff; border-color: #a06020; }
+    .pd-bar-mini { height: 6px; border-radius: 6px; background: linear-gradient(90deg, var(--primary), var(--secondary)); min-width: 4px; }
+    .pd-bar-mini.neg-bar { background: linear-gradient(90deg, var(--danger), var(--danger2)); }
+    .pd-recent-log { max-height: 220px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; }
+    .pd-log-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: .85em;
+    }
+    .pd-log-row:last-child { border-bottom: none; }
+    .pd-log-row:hover { background: var(--hover); }
+    .pd-pts-pos { color: var(--primary); font-weight: 700; }
+    .pd-pts-neg { color: var(--danger); font-weight: 700; }
+    .pd-no-data { color: var(--text2); font-style: italic; font-size: .9em; padding: 12px 0; }
 
     /* ── Autosave indicator ── */
     .auto-save-indicator { font-size: .78em; font-weight: 600; padding: 4px 10px; border-radius: 20px; background: rgba(255,255,255,.15); color: rgba(255,255,255,.9); border: 1px solid rgba(255,255,255,.3); animation: pulse 2s infinite; white-space: nowrap; }
@@ -713,6 +770,8 @@
           <tr><td style="padding:6px 10px;border:1px solid var(--border);">Power</td><td style="padding:6px 10px;border:1px solid var(--border);">+15</td><td style="padding:6px 10px;border:1px solid var(--border);">Early correct answer</td></tr>
           <tr style="background:var(--sec-bg);"><td style="padding:6px 10px;border:1px solid var(--border);">Neg</td><td style="padding:6px 10px;border:1px solid var(--border);">-5</td><td style="padding:6px 10px;border:1px solid var(--border);">Incorrect interrupt &#8212; category optional</td></tr>
         </table>
+        <h3 style="color:var(--primary);margin:0 0 6px;">Player Details</h3>
+        <p style="margin-bottom:14px;">Click any <strong>player name</strong> in the Analytics &rarr; Players tab to open a full detail view, including a ranked breakdown of every category they've answered.</p>
         <h3 style="color:var(--primary);margin:0 0 6px;">Analytics</h3>
         <p style="margin-bottom:14px;">Click <strong>Analytics</strong> in the header to view detailed player and category breakdowns, including bar charts, category performance, and full leaderboard.</p>
         <h3 style="color:var(--primary);margin:0 0 6px;">Statistics &amp; Rankings</h3>
@@ -735,6 +794,17 @@
         <button class="close-modal" onclick="closeSessionsModal()">&#215;</button>
       </div>
       <div id="sessionsList" class="sessions-list"></div>
+    </div>
+  </div>
+
+  <!-- Player Detail Modal -->
+  <div id="playerDetailModal" class="qb-modal">
+    <div class="modal-content" style="max-width:620px;">
+      <div class="modal-header">
+        <h2 id="pdModalTitle">Player Details</h2>
+        <button class="close-modal" onclick="closePlayerDetailModal()">&#215;</button>
+      </div>
+      <div id="pdModalBody"></div>
     </div>
   </div>
 
@@ -970,6 +1040,144 @@
       renderSessionsList(); renderAll();
     }
 
+    // ── Player Detail Modal ──
+    function openPlayerDetailModal(playerName) {
+      const s = getCurrentSession(); if (!s) return;
+      const player = s.players[playerName]; if (!player) return;
+      const answers = toArray(player.answers);
+
+      // Build category breakdown — all categories ranked by points
+      const catMap = {};
+      answers.forEach(a => {
+        const cat = a.category || '—';
+        if (!catMap[cat]) catMap[cat] = { pts: 0, correct: 0, neg: 0, tossup: 0, bonus: 0, power: 0 };
+        catMap[cat].pts += (a.points || 0);
+        if (a.pointType === 'Neg')      catMap[cat].neg++;
+        else if (a.pointType === 'Power')  { catMap[cat].power++; catMap[cat].correct++; }
+        else if (a.pointType === 'Toss-up'){ catMap[cat].tossup++; catMap[cat].correct++; }
+        else if (a.pointType === 'Bonus')  { catMap[cat].bonus++; catMap[cat].correct++; }
+      });
+      // Sort by points descending, then by correct count
+      const catArr = Object.entries(catMap)
+        .map(([name, d]) => ({ name, ...d, total: d.correct + d.neg }))
+        .sort((a, b) => b.pts !== a.pts ? b.pts - a.pts : b.correct - a.correct);
+
+      const maxPts = Math.max(...catArr.map(c => Math.abs(c.pts)), 1);
+      const maxCount = Math.max(...catArr.map(c => c.total), 1);
+
+      // Summary stats
+      const powers     = answers.filter(a => a.pointType === 'Power').length;
+      const tossups    = answers.filter(a => a.pointType === 'Toss-up').length;
+      const bonuses    = answers.filter(a => a.pointType === 'Bonus').length;
+      const negs       = answers.filter(a => a.pointType === 'Neg').length;
+      const correct    = powers + tossups + bonuses;
+      const total      = answers.length;
+      const acc        = total ? Math.round((correct / total) * 100) : 0;
+      const ppa        = total ? (player.points / total).toFixed(1) : '0.0';
+      const team       = (s.teams || []).find(t => (t.playerMembers || []).includes(playerName));
+
+      // Recent answers (last 20)
+      const recentAnswers = [...answers].reverse().slice(0, 20);
+
+      // Rank badge helper
+      function rankBadge(i) {
+        if (i === 0) return '<span class="pd-rank-badge gold">1</span>';
+        if (i === 1) return '<span class="pd-rank-badge silver">2</span>';
+        if (i === 2) return '<span class="pd-rank-badge bronze">3</span>';
+        return `<span class="pd-rank-badge">${i+1}</span>`;
+      }
+
+      // Build category table rows
+      let catRows = '';
+      if (catArr.length === 0) {
+        catRows = '<tr><td colspan="6" style="color:var(--text2);font-style:italic;padding:12px 10px;">No category data yet.</td></tr>';
+      } else {
+        catArr.forEach((c, i) => {
+          const barWidth = Math.max(2, (Math.abs(c.pts) / maxPts) * 100);
+          const isNeg = c.pts < 0;
+          catRows += `
+            <tr>
+              <td>${rankBadge(i)}</td>
+              <td style="font-weight:600;">${c.name}</td>
+              <td class="right" style="color:${isNeg ? 'var(--danger)' : 'var(--primary)'};font-weight:700;">${c.pts > 0 ? '+' : ''}${c.pts}</td>
+              <td class="right">${c.total}</td>
+              <td class="right" style="color:var(--success);font-weight:600;">${c.correct}</td>
+              <td class="right" style="color:var(--danger);font-weight:600;">${c.neg || '—'}</td>
+            </tr>
+            <tr>
+              <td colspan="6" style="padding:0 10px 10px;">
+                <div style="background:var(--sec-bg);border-radius:6px;height:6px;overflow:hidden;border:1px solid var(--border);">
+                  <div class="pd-bar-mini ${isNeg ? 'neg-bar' : ''}" style="width:${barWidth}%;"></div>
+                </div>
+              </td>
+            </tr>`;
+        });
+      }
+
+      // Recent log rows
+      let logRows = '';
+      if (recentAnswers.length === 0) {
+        logRows = '<div class="pd-log-row" style="color:var(--text2);font-style:italic;">No answers recorded yet.</div>';
+      } else {
+        recentAnswers.forEach(a => {
+          const timeStr = new Date(a.timestamp).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+          logRows += `
+            <div class="pd-log-row">
+              <span><strong>${a.pointType}</strong> &mdash; ${a.category || '—'}</span>
+              <span style="display:flex;align-items:center;gap:10px;">
+                <span class="${a.points < 0 ? 'pd-pts-neg' : 'pd-pts-pos'}">${a.points > 0 ? '+' : ''}${a.points}</span>
+                <span style="font-size:.78em;color:var(--text3);">${timeStr}</span>
+              </span>
+            </div>`;
+        });
+      }
+
+      document.getElementById('pdModalTitle').textContent = playerName;
+      document.getElementById('pdModalBody').innerHTML = `
+        <div class="pd-hero">
+          <div>
+            <div class="pd-hero-name">${playerName}</div>
+            <div class="pd-hero-sub">${team ? team.name : 'No team'} &bull; ${total} answers &bull; ${acc}% accuracy &bull; ${ppa} pts/answer</div>
+          </div>
+          <div class="pd-hero-pts">${player.points} pts</div>
+        </div>
+
+        <div class="pd-section-title">Answer Breakdown</div>
+        <div class="pd-stat-chips">
+          <span class="pd-chip power">&#9889; ${powers} Power${powers !== 1 ? 's' : ''}</span>
+          <span class="pd-chip tossup">&#10003; ${tossups} Toss-up${tossups !== 1 ? 's' : ''}</span>
+          <span class="pd-chip">&#43; ${bonuses} Bonus${bonuses !== 1 ? 'es' : ''}</span>
+          <span class="pd-chip neg">&#8722; ${negs} Neg${negs !== 1 ? 's' : ''}</span>
+        </div>
+
+        <div class="pd-section-title">Category Rankings &mdash; All ${catArr.length} Categor${catArr.length !== 1 ? 'ies' : 'y'}</div>
+        <div style="overflow-x:auto;border-radius:8px;border:1px solid var(--border);">
+          <table class="pd-cat-table">
+            <thead>
+              <tr>
+                <th style="width:42px;">#</th>
+                <th>Category</th>
+                <th class="right">Points</th>
+                <th class="right">Answers</th>
+                <th class="right" style="color:var(--success);">Correct</th>
+                <th class="right" style="color:var(--danger);">Negs</th>
+              </tr>
+            </thead>
+            <tbody>${catRows}</tbody>
+          </table>
+        </div>
+
+        <div class="pd-section-title">Recent Answers ${recentAnswers.length < total ? '(last 20)' : ''}</div>
+        <div class="pd-recent-log">${logRows}</div>
+      `;
+
+      document.getElementById('playerDetailModal').classList.add('open');
+    }
+
+    function closePlayerDetailModal() {
+      document.getElementById('playerDetailModal').classList.remove('open');
+    }
+
     // ── Analytics ──
     function toggleAnalytics() {
       analyticsOpen=!analyticsOpen;
@@ -1114,15 +1322,16 @@
         (s.players[p.name]?.answers||[]).forEach(a=>{
           if(a.category&&a.category!=='—') catMap[a.category]=(catMap[a.category]||0)+1;
         });
-        const topCats=Object.entries(catMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
+        const topCats=Object.entries(catMap).sort((a,b)=>b[1]-a[1]).slice(0,3);
         const maxCat=topCats[0]?.[1]||1;
         const acc=p.totalAnswers?Math.round(((p.totalAnswers-p.negs)/p.totalAnswers)*100):0;
         const team=(s.teams||[]).find(t=>t.playerMembers?.includes(p.name));
+        const escapedName=p.name.replace(/'/g,"\\'");
         return `
           <div class="an-player-card">
             <div class="an-player-header">
               <div>
-                <div class="an-player-name">${p.name}</div>
+                <div class="an-player-name" onclick="openPlayerDetailModal('${escapedName}')" title="Click for full details">${p.name} ↗</div>
                 <div class="an-player-meta">${team?team.name:'No team'} &bull; ${acc}% accuracy &bull; ${p.totalAnswers} answers</div>
               </div>
               <div class="an-player-pts">${p.points} pts</div>
@@ -1133,7 +1342,7 @@
             <div class="an-bar-row"><span class="an-bar-label">Negs</span><div class="an-bar-track"><div class="an-bar-fill neg" style="width:${p.totalAnswers?(p.negs/p.totalAnswers*100):0}%"></div></div><span class="an-bar-val">${p.negs}</span></div>
             ${topCats.length?`
             <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);">
-              <div style="font-size:.8em;font-weight:700;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px;">Top Categories</div>
+              <div style="font-size:.8em;font-weight:700;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px;">Top Categories <span style="font-weight:400;text-transform:none;opacity:.7;">— click name for all</span></div>
               ${topCats.map(([cat,cnt])=>`
                 <div class="an-bar-row"><span class="an-bar-label">${cat}</span><div class="an-bar-track"><div class="an-bar-fill" style="width:${(cnt/maxCat)*100}%"></div></div><span class="an-bar-val">${cnt}</span></div>`).join('')}
             </div>`:''}
@@ -1189,9 +1398,10 @@
           const tied=prev&&prev.points===p.points&&prev.powers===p.powers&&prev.negs===p.negs;
           if(i>0&&!tied) rank=i+1;
           const sfx=['st','nd','rd'][rank-1]||'th';
-          return `<div class="an-lb-row">
+          const escapedName=p.name.replace(/'/g,"\\'");
+          return `<div class="an-lb-row" style="cursor:pointer;" onclick="openPlayerDetailModal('${escapedName}')" title="Click for full details">
             <span class="an-lb-rank">${rank}${sfx}</span>
-            <span class="an-lb-name">${p.name}</span>
+            <span class="an-lb-name" style="color:var(--primary);text-decoration:underline;text-underline-offset:2px;">${p.name}</span>
             <span class="an-lb-pts">${p.points} pts</span>
             ${p.powers?`<span class="an-lb-chip power">${p.powers}pw</span>`:''}
             ${p.negs?`<span class="an-lb-chip neg">${p.negs}neg</span>`:''}
@@ -1664,7 +1874,7 @@
       document.addEventListener('click',e=>{
         const w=document.getElementById('sidebarJumpWrapper');
         if(w&&!w.contains(e.target)) w.classList.remove('open');
-        ['helpModal','sessionsModal'].forEach(id=>{const m=document.getElementById(id);if(m&&e.target===m) m.classList.remove('open');});
+        ['helpModal','sessionsModal','playerDetailModal'].forEach(id=>{const m=document.getElementById(id);if(m&&e.target===m) m.classList.remove('open');});
       });
     });
   </script>
