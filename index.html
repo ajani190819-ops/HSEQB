@@ -8,57 +8,32 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <style>
     :root {
-      --sp: 20px;
-      --hsp: 12px;
-      --primary: #667eea;
-      --primary-light: #7c8ff0;
-      --primary-dark: #5568d3;
+      --sp: 20px; --hsp: 12px;
+      --primary: #667eea; --primary-light: #7c8ff0; --primary-dark: #5568d3;
       --secondary: #764ba2;
-      --success: #11998e;
-      --success2: #38ef7d;
-      --danger: #dc3545;
-      --danger2: #e74c5c;
+      --success: #11998e; --success2: #38ef7d;
+      --danger: #dc3545; --danger2: #e74c5c;
       --warning: #ffc107;
-      --bg: #fff;
-      --text: #1a1a2e;
-      --text2: #606060;
-      --text3: #999;
-      --sec-bg: #f5f7fb;
-      --card: #fff;
-      --input-bg: #fff;
-      --input-border: #e1e4e8;
-      --input-text: #1a1a2e;
-      --hover: #f0f3f8;
-      --border: #a8acb1;
+      --bg: #fff; --text: #1a1a2e; --text2: #606060; --text3: #999;
+      --sec-bg: #f5f7fb; --card: #fff;
+      --input-bg: #fff; --input-border: #e1e4e8; --input-text: #1a1a2e;
+      --hover: #f0f3f8; --border: #a8acb1;
       --shadow-xs: 0 1px 2px rgba(0,0,0,.05);
       --shadow-sm: 0 2px 4px rgba(0,0,0,.08);
       --shadow-md: 0 6px 12px rgba(0,0,0,.1);
       --shadow-xl: 0 20px 40px rgba(0,0,0,.15);
     }
     .dark-mode {
-      --danger: #ff6b6b;
-      --warning: #ffd43b;
-      --bg: #0d1117;
-      --text: #e6e6e6;
-      --text2: #b0b0b0;
-      --text3: #808080;
-      --sec-bg: #161b22;
-      --card: #1c2128;
-      --input-bg: #0d1117;
-      --input-border: #30363d;
-      --input-text: #e6e6e6;
-      --hover: #21262d;
-      --border: #3f444d;
-      --shadow-xs: 0 1px 2px rgba(0,0,0,.3);
-      --shadow-sm: 0 2px 4px rgba(0,0,0,.3);
-      --shadow-md: 0 6px 12px rgba(0,0,0,.4);
-      --shadow-xl: 0 20px 40px rgba(0,0,0,.6);
+      --danger: #ff6b6b; --warning: #ffd43b;
+      --bg: #0d1117; --text: #e6e6e6; --text2: #b0b0b0; --text3: #808080;
+      --sec-bg: #161b22; --card: #1c2128;
+      --input-bg: #0d1117; --input-border: #30363d; --input-text: #e6e6e6;
+      --hover: #21262d; --border: #3f444d;
+      --shadow-xs: 0 1px 2px rgba(0,0,0,.3); --shadow-sm: 0 2px 4px rgba(0,0,0,.3);
+      --shadow-md: 0 6px 12px rgba(0,0,0,.4); --shadow-xl: 0 20px 40px rgba(0,0,0,.6);
     }
-
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     html { height: 100%; overflow: hidden; }
-
-    /* Scrollbars */
     ::-webkit-scrollbar { width: 8px; height: 8px; }
     ::-webkit-scrollbar-button { display: none; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -73,11 +48,8 @@
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: linear-gradient(135deg, #667eea, #764ba2);
-      height: 100vh; overflow: hidden;
-      color: var(--text); display: flex; flex-direction: column;
+      height: 100vh; overflow: hidden; color: var(--text); display: flex; flex-direction: column;
     }
-
-    /* ── Container ── */
     .qb-container { width: 100%; flex: 1; display: flex; flex-direction: column; background: var(--bg); overflow: hidden; }
 
     /* ── Header ── */
@@ -105,20 +77,26 @@
     .header-session-name::before { content: 'Session: '; opacity: .6; }
     .header-controls {
       position: absolute; right: 20px; top: 50%; transform: translateY(-50%);
-      display: flex; gap: 16px; align-items: center;
+      display: flex; gap: 10px; align-items: center;
     }
+    .header-btn {
+      background: rgba(255,255,255,.15); color: #fff; border: 1px solid rgba(255,255,255,.3);
+      border-radius: 8px; padding: 6px 12px; font-size: .85em; font-weight: 700;
+      cursor: pointer; font-family: inherit; white-space: nowrap; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 5px; transition: background .2s;
+    }
+    .header-btn:hover { background: rgba(255,255,255,.28); }
+    .header-btn.round { border-radius: 50%; width: 30px; height: 30px; padding: 0; justify-content: center; font-size: 1em; }
+    .header-btn.active { background: rgba(255,255,255,.35); box-shadow: 0 0 0 2px rgba(255,255,255,.5); }
     .sidebar-open-btn {
       display: none; position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
-      background: rgba(255,255,255,.15); color: #fff; border: 1px solid rgba(255,255,255,.3);
-      border-radius: 8px; padding: 8px 14px; font-size: .88em; font-weight: 700;
-      cursor: pointer; font-family: inherit; white-space: nowrap;
     }
-    .sidebar-open-btn:hover { background: rgba(255,255,255,.25); }
     .mobile-subrow { display: none; }
 
-    /* ── Body / Sidebar / Scroll ── */
+    /* ── Body ── */
     .qb-body { flex: 1; display: flex; overflow: hidden; position: relative; }
 
+    /* ── Sidebar ── */
     .qb-sidebar {
       width: 320px; flex-shrink: 0; display: flex; flex-direction: column;
       padding: var(--sp) var(--hsp);
@@ -127,12 +105,88 @@
       transition: width .3s ease, padding .3s ease;
     }
     .qb-sidebar.collapsed { width: 0; padding: 0; overflow: hidden; border-right: none; }
+    .qb-scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: var(--sp) var(--hsp); transition: filter .3s ease; }
 
-    .qb-scroll {
-      flex: 1; overflow-y: auto; overflow-x: hidden;
-      padding: var(--sp) var(--hsp);
-      transition: filter .3s ease;
+    /* ── Views ── */
+    #trackerView { display: flex; flex-direction: column; height: 100%; }
+    #analyticsView { display: none; flex-direction: column; height: 100%; }
+    #analyticsView.active { display: flex; }
+
+    /* ── Analytics ── */
+    .analytics-header {
+      padding: 16px var(--hsp); border-bottom: 2px solid var(--border);
+      background: var(--sec-bg); flex-shrink: 0;
     }
+    .analytics-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+    .analytics-tab {
+      background: var(--card); color: var(--primary); border: 2px solid var(--primary);
+      border-radius: 8px; padding: 8px 18px; font-size: .9em; font-weight: 600;
+      cursor: pointer; font-family: inherit; transition: all .2s;
+    }
+    .analytics-tab:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(102,126,234,.2); }
+    .analytics-tab.active {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: #fff; border-color: transparent;
+    }
+    .analytics-scroll { flex: 1; overflow-y: auto; padding: var(--sp) var(--hsp); scrollbar-gutter: stable; }
+    .analytics-panel { display: none; }
+    .analytics-panel.active { display: block; }
+
+    .an-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--sp); margin-bottom: var(--sp); }
+    .an-stat-box {
+      background: var(--card); border: 2px solid var(--border); border-radius: 10px;
+      padding: 16px; text-align: center; box-shadow: var(--shadow-sm);
+    }
+    .an-stat-box .an-val { font-size: 2em; font-weight: 700; color: var(--primary); }
+    .an-stat-box .an-lbl { font-size: .82em; color: var(--text2); margin-top: 4px; }
+
+    .an-player-card {
+      background: var(--card); border: 2px solid var(--border); border-radius: 10px;
+      padding: 18px; margin-bottom: var(--sp); box-shadow: var(--shadow-sm);
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .an-player-card:hover { border-color: var(--primary-light); box-shadow: var(--shadow-md); }
+    .an-player-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .an-player-name { font-size: 1.1em; font-weight: 700; color: var(--text); }
+    .an-player-pts { font-size: 1.2em; font-weight: 700; color: var(--primary); }
+    .an-player-meta { font-size: .82em; color: var(--text2); margin-bottom: 12px; }
+
+    .an-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: .85em; }
+    .an-bar-label { width: 110px; flex-shrink: 0; color: var(--text2); font-weight: 600; }
+    .an-bar-track { flex: 1; height: 10px; background: var(--sec-bg); border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
+    .an-bar-fill { height: 100%; border-radius: 10px; background: linear-gradient(90deg, var(--primary), var(--secondary)); transition: width .4s ease; }
+    .an-bar-fill.neg { background: linear-gradient(90deg, var(--danger), var(--danger2)); }
+    .an-bar-val { width: 36px; text-align: right; font-weight: 700; color: var(--text); flex-shrink: 0; }
+
+    .an-cat-card {
+      background: var(--card); border: 2px solid var(--border); border-radius: 10px;
+      padding: 16px; margin-bottom: var(--sp); box-shadow: var(--shadow-sm);
+    }
+    .an-cat-title { font-weight: 700; font-size: 1em; color: var(--primary); margin-bottom: 10px; }
+    .an-cat-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: .88em; align-items: center; }
+    .an-cat-row:last-child { border-bottom: none; }
+
+    .an-lb-row {
+      display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+      background: var(--card); border: 2px solid var(--border); border-radius: 10px;
+      margin-bottom: 10px; box-shadow: var(--shadow-xs); font-size: .92em;
+    }
+    .an-lb-rank { font-size: 1.2em; font-weight: 700; color: var(--primary); min-width: 42px; }
+    .an-lb-name { flex: 1; font-weight: 600; }
+    .an-lb-pts { font-weight: 700; color: var(--primary); margin-right: 8px; }
+    .an-lb-chip {
+      font-size: .75em; padding: 2px 8px; border-radius: 10px; font-weight: 700;
+      background: var(--sec-bg); color: var(--text2); border: 1px solid var(--border);
+    }
+    .an-lb-chip.power { background: rgba(102,126,234,.12); color: var(--primary); border-color: var(--primary); }
+    .an-lb-chip.neg   { background: rgba(220,53,69,.1); color: var(--danger); border-color: var(--danger); }
+
+    .an-team-card {
+      background: var(--card); border: 2px solid var(--border); border-left: 5px solid var(--secondary);
+      border-radius: 10px; padding: 16px; margin-bottom: var(--sp); box-shadow: var(--shadow-sm);
+    }
+    .an-team-name { font-weight: 700; font-size: 1.05em; margin-bottom: 8px; }
+    .an-team-pts { color: var(--primary); font-weight: 700; font-size: 1.3em; }
 
     /* ── Mobile sidebar overlay ── */
     @media (max-width: 900px) {
@@ -149,19 +203,17 @@
         transition: transform .35s cubic-bezier(.4,0,.2,1), visibility .35s ease;
         pointer-events: none;
       }
-      .dark-mode .qb-sidebar {
-        background: rgba(13,17,23,0.6) !important;
-      }
+      .dark-mode .qb-sidebar { background: rgba(13,17,23,0.6) !important; }
       .qb-sidebar.mobile-open {
         transform: translateY(0) !important; visibility: visible !important; pointer-events: auto !important;
       }
       .qb-sidebar.mobile-open * { pointer-events: auto !important; }
-      .qb-scroll.menu-blurred { filter: blur(3px); pointer-events: none; }
+      .qb-scroll.menu-blurred, .analytics-scroll.menu-blurred { filter: blur(3px); pointer-events: none; }
       body.menu-open { overflow: hidden; }
       #sidebarOpenBtn { display: none !important; }
       .mobile-subrow {
         display: flex; align-items: center; justify-content: space-between;
-        gap: 8px; width: 100%; margin-top: 4px;
+        gap: 6px; width: 100%; margin-top: 4px;
       }
       .header-session-name, .header-controls { display: none !important; }
       .sidebar-open-btn { display: none !important; }
@@ -180,7 +232,6 @@
       user-select: none; font-weight: 600; transition: color .2s;
     }
     .qb-section h2:hover { color: var(--primary-dark); }
-
     .toggle-icon { font-size: .8em; transition: transform .3s cubic-bezier(.4,0,.2,1); display: inline-block; }
     .toggle-icon.collapsed { transform: rotate(-90deg); }
     .collapsible-content { max-height: 2000px; overflow: visible; transition: max-height .3s ease-out; }
@@ -189,20 +240,14 @@
     /* ── Inputs ── */
     .input-group { margin-bottom: var(--sp); }
     .input-group label { display: block; margin-bottom: 8px; font-weight: 600; font-size: clamp(.9em,2vw,1em); }
-    .input-group input,
-    .input-group textarea,
-    .input-group select {
+    .input-group input, .input-group textarea, .input-group select {
       width: 100%; padding: 12px 14px; border: 2px solid var(--input-border);
       border-radius: 8px; font-size: 1em; font-family: inherit;
       background: var(--input-bg); color: var(--input-text); transition: border-color .2s, box-shadow .2s;
     }
-    .input-group input::placeholder,
-    .input-group textarea::placeholder { color: var(--text3); }
-    .input-group input:focus,
-    .input-group textarea:focus,
-    .input-group select:focus {
-      border-color: var(--primary); outline: none;
-      box-shadow: 0 0 0 4px rgba(102,126,234,.15);
+    .input-group input::placeholder, .input-group textarea::placeholder { color: var(--text3); }
+    .input-group input:focus, .input-group textarea:focus, .input-group select:focus {
+      border-color: var(--primary); outline: none; box-shadow: 0 0 0 4px rgba(102,126,234,.15);
     }
     input[type="file"] {
       width: 100%; padding: 10px 12px; border-radius: 8px; border: 2px solid var(--input-border);
@@ -233,7 +278,6 @@
     .button-secondary { background: linear-gradient(135deg, var(--text2), var(--text3)); box-shadow: 0 4px 12px rgba(96,96,96,.2); }
     .button-danger { background: linear-gradient(135deg, var(--danger), var(--danger2)); box-shadow: 0 4px 12px rgba(220,53,69,.3); }
     .button-success { background: linear-gradient(135deg, var(--success), var(--success2)); box-shadow: 0 4px 12px rgba(17,153,142,.3); }
-
     .button-point-type, .button-category, .button-player {
       background: var(--card); color: var(--primary); border: 2px solid var(--primary);
       padding: clamp(10px,2vw,12px) clamp(14px,3vw,22px);
@@ -376,7 +420,6 @@
       cursor: pointer; white-space: nowrap; font-family: inherit; flex-shrink: 0;
     }
     .sidebar-close-btn:hover { background: rgba(255,255,255,.28); }
-
     .sidebar-sections { flex: 1; overflow-y: auto; overflow-x: visible; }
     .qb-sidebar .qb-section { display: none; }
     .qb-sidebar .qb-section.active-section { display: block; }
@@ -385,7 +428,7 @@
     @media (max-width: 768px) {
       .qb-header { padding: 12px 16px 10px; flex-direction: column; align-items: center; gap: 0; }
       .qb-header h1 { position: static; transform: none; white-space: normal; text-align: center; width: 100%; font-size: clamp(1.3em,6vw,1.8em); margin-bottom: 6px; }
-      .qb-scroll { padding: 16px; }
+      .qb-scroll, .analytics-scroll { padding: 16px; }
       .qb-section { padding: 16px; }
       .point-type-buttons, .category-buttons { grid-template-columns: repeat(2,1fr); gap: 8px; }
       .stats-grid { grid-template-columns: 1fr; }
@@ -394,6 +437,7 @@
       .log-container { max-height: 350px; }
       .sessions-list { grid-template-columns: 1fr; }
       .modal-content { margin: 20px auto; width: 95%; padding: 20px; }
+      .an-grid { grid-template-columns: repeat(2,1fr); }
     }
   </style>
 </head>
@@ -401,17 +445,19 @@
   <div class="qb-container">
 
     <div class="qb-header" id="qbHeader">
-      <button class="sidebar-open-btn" id="sidebarOpenBtn">&#9654; Menu</button>
+      <button class="header-btn sidebar-open-btn" id="sidebarOpenBtn">&#9654; Menu</button>
       <h1>HSE Quiz Bowl Tracker <span class="version-badge" id="versionBadge">v29</span></h1>
       <div class="header-session-name" id="headerSessionName"></div>
       <div class="header-controls">
-        <button onclick="openHelpModal()" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:50%;width:30px;height:30px;font-size:1em;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;flex-shrink:0;" title="Help / Tutorial">?</button>
+        <button class="header-btn" id="analyticsBtn" onclick="toggleAnalytics()">Analytics</button>
+        <button class="header-btn round" onclick="openHelpModal()" title="Help / Tutorial">?</button>
         <span id="autosaveStatus" class="auto-save-indicator">✓ Saved</span>
       </div>
       <div class="mobile-subrow" id="mobileSubrow">
-        <button id="sidebarOpenBtnMobile" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:6px 10px;font-size:.82em;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">&#9654; Menu</button>
+        <button class="header-btn" id="sidebarOpenBtnMobile">&#9654; Menu</button>
         <span id="headerSessionNameMobile" style="flex:1;text-align:center;font-size:.78em;font-weight:600;color:rgba(255,255,255,.75);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></span>
-        <button onclick="openHelpModal()" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:50%;width:26px;height:26px;font-size:.9em;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;flex-shrink:0;" title="Help">?</button>
+        <button class="header-btn" id="analyticsBtnMobile" onclick="toggleAnalytics()">Stats</button>
+        <button class="header-btn round" onclick="openHelpModal()" title="Help">?</button>
         <span id="autosaveStatusMobile" class="auto-save-indicator" style="flex-shrink:0;">✓ Saved</span>
       </div>
     </div>
@@ -423,7 +469,7 @@
           <div class="sidebar-jump-wrapper" id="sidebarJumpWrapper">
             <button class="sidebar-jump-btn" onclick="toggleJumpDropdown()" type="button">
               <span id="sidebarJumpLabel">Session</span>
-              <span class="sidebar-jump-arrow">▾</span>
+              <span class="sidebar-jump-arrow">&#9662;</span>
             </button>
             <div class="sidebar-jump-menu">
               <button onclick="showSection('sec-session')">Session</button>
@@ -441,12 +487,12 @@
         <div class="sidebar-sections">
 
           <div class="qb-section" id="sec-session">
-            <h2>Session <span class="toggle-icon">▼</span></h2>
+            <h2>Session <span class="toggle-icon">&#9660;</span></h2>
             <div class="collapsible-content">
               <div class="session-info">
-                <div class="session-info-row"><span>Name:</span><strong id="sessionName">—</strong></div>
-                <div class="session-info-row"><span>Created:</span><strong id="sessionCreated">—</strong></div>
-                <div class="session-info-row"><span>Last Updated:</span><strong id="sessionLastUpdated">—</strong></div>
+                <div class="session-info-row"><span>Name:</span><strong id="sessionName">&#8212;</strong></div>
+                <div class="session-info-row"><span>Created:</span><strong id="sessionCreated">&#8212;</strong></div>
+                <div class="session-info-row"><span>Last Updated:</span><strong id="sessionLastUpdated">&#8212;</strong></div>
                 <div class="session-info-row"><span>Answers:</span><strong id="sessionAnswerCount">0</strong></div>
               </div>
               <div class="input-group">
@@ -461,7 +507,7 @@
           </div>
 
           <div class="qb-section" id="sec-players">
-            <h2>Players <span class="toggle-icon">▼</span></h2>
+            <h2>Players <span class="toggle-icon">&#9660;</span></h2>
             <div class="collapsible-content">
               <div class="input-group">
                 <label>Add Player:</label>
@@ -480,7 +526,7 @@
           </div>
 
           <div class="qb-section" id="sec-teams">
-            <h2>Teams <span class="toggle-icon">▼</span></h2>
+            <h2>Teams <span class="toggle-icon">&#9660;</span></h2>
             <div class="collapsible-content">
               <div class="input-group">
                 <label>Team Name:</label>
@@ -492,7 +538,7 @@
           </div>
 
           <div class="qb-section" id="sec-categories">
-            <h2>Categories <span class="toggle-icon">▼</span></h2>
+            <h2>Categories <span class="toggle-icon">&#9660;</span></h2>
             <div class="collapsible-content">
               <div class="input-group">
                 <label>Categories (comma-separated):</label>
@@ -503,7 +549,7 @@
           </div>
 
           <div class="qb-section" id="sec-export">
-            <h2>Export Data <span class="toggle-icon">▼</span></h2>
+            <h2>Export Data <span class="toggle-icon">&#9660;</span></h2>
             <div class="collapsible-content">
               <div style="margin-bottom:var(--sp);">
                 <p style="margin-bottom:10px;font-weight:600;">Select what to include:</p>
@@ -530,10 +576,10 @@
           </div>
 
           <div class="qb-section" id="sec-visual">
-            <h2>Visual Settings <span class="toggle-icon">▼</span></h2>
+            <h2>Visual Settings <span class="toggle-icon">&#9660;</span></h2>
             <div class="collapsible-content">
               <p style="font-size:.78em;color:var(--text2);margin-bottom:14px;padding:8px 10px;background:var(--hover);border-radius:6px;border:1px solid var(--border);">
-                <strong>&#128274; Local settings</strong> — saved to this device only, do not sync.
+                <strong>Local settings</strong> &#8212; saved to this device only, do not sync.
               </p>
               <div class="input-group">
                 <label>Theme</label>
@@ -569,7 +615,7 @@
           </div>
 
           <div class="qb-section" id="sec-danger" style="border:2px solid var(--danger);">
-            <h2 style="color:var(--danger);">Data Management <span class="toggle-icon">▼</span></h2>
+            <h2 style="color:var(--danger);">Data Management <span class="toggle-icon">&#9660;</span></h2>
             <div class="collapsible-content">
               <button class="button button-danger" onclick="resetAllData()">Delete All Data</button>
               <p style="margin-top:10px;font-size:.85em;color:var(--text2);">This cannot be undone. Export first!</p>
@@ -579,70 +625,85 @@
         </div>
       </aside>
 
-      <div class="qb-scroll" id="qbScroll">
-
-        <div class="qb-section" style="overflow:visible;">
-          <h2>Record Answer <span class="toggle-icon">▼</span></h2>
-          <div class="collapsible-content">
-            <div class="input-group">
-              <label>Select Player:</label>
-              <div id="playerButtonsContainer" class="player-buttons"></div>
+      <!-- Tracker view -->
+      <div id="trackerView" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+        <div class="qb-scroll" id="qbScroll">
+          <div class="qb-section" style="overflow:visible;">
+            <h2>Record Answer <span class="toggle-icon">&#9660;</span></h2>
+            <div class="collapsible-content">
+              <div class="input-group">
+                <label>Select Player:</label>
+                <div id="playerButtonsContainer" class="player-buttons"></div>
+              </div>
+              <div class="input-group">
+                <label>Point Type:</label>
+                <div class="point-type-buttons">
+                  <button class="button-point-type" onclick="selectPointType('Toss-up')">Toss-up (+10)</button>
+                  <button class="button-point-type" onclick="selectPointType('Bonus')">Bonus (+10)</button>
+                  <button class="button-point-type" onclick="selectPointType('Neg')">Neg (-5)</button>
+                  <button class="button-point-type" onclick="selectPointType('Power')">Power (+15)</button>
+                </div>
+              </div>
+              <div class="input-group">
+                <label>Category: <span id="categoryOptionalHint" style="font-weight:400;font-size:.85em;color:var(--text2);display:none;">(optional for Neg)</span></label>
+                <div id="categoryButtonsContainer" class="category-buttons"></div>
+              </div>
+              <button class="button button-success" onclick="recordAnswer()" style="width:100%;margin-top:10px;padding:16px;font-size:1.05em;">Record Answer</button>
             </div>
-            <div class="input-group">
-              <label>Point Type:</label>
-              <div class="point-type-buttons">
-                <button class="button-point-type" onclick="selectPointType('Toss-up')">Toss-up (+10)</button>
-                <button class="button-point-type" onclick="selectPointType('Bonus')">Bonus (+10)</button>
-                <button class="button-point-type" onclick="selectPointType('Neg')">Neg (-5)</button>
-                <button class="button-point-type" onclick="selectPointType('Power')">Power (+15)</button>
+          </div>
+          <div class="qb-section">
+            <h2>Statistics <span class="toggle-icon">&#9660;</span></h2>
+            <div class="collapsible-content">
+              <div id="statisticsContainer"></div>
+            </div>
+          </div>
+          <div class="qb-section">
+            <h2>Answer Log <span class="toggle-icon">&#9660;</span></h2>
+            <div class="collapsible-content">
+              <button class="button button-danger" onclick="clearAnswerLog()">Clear Log</button>
+              <div class="log-container-wrap">
+                <div id="answerLog" class="log-container"></div>
               </div>
             </div>
-            <div class="input-group">
-              <label>Category: <span id="categoryOptionalHint" style="font-weight:400;font-size:.85em;color:var(--text2);display:none;">(optional for Neg)</span></label>
-              <div id="categoryButtonsContainer" class="category-buttons"></div>
-            </div>
-            <button class="button button-success" onclick="recordAnswer()" style="width:100%;margin-top:10px;padding:16px;font-size:1.05em;">Record Answer</button>
           </div>
         </div>
-
-        <div class="qb-section">
-          <h2>Statistics <span class="toggle-icon">▼</span></h2>
-          <div class="collapsible-content">
-            <div id="statisticsContainer"></div>
-          </div>
-        </div>
-
-        <div class="qb-section">
-          <h2>Answer Log <span class="toggle-icon">▼</span></h2>
-          <div class="collapsible-content">
-            <button class="button button-danger" onclick="clearAnswerLog()">Clear Log</button>
-            <div class="log-container-wrap">
-              <div id="answerLog" class="log-container"></div>
-            </div>
-          </div>
-        </div>
-
       </div>
+
+      <!-- Analytics view -->
+      <div id="analyticsView" style="flex:1;display:none;flex-direction:column;overflow:hidden;">
+        <div style="padding:12px var(--hsp);border-bottom:2px solid var(--border);background:var(--sec-bg);flex-shrink:0;">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="analytics-tab active" onclick="switchAnalyticsTab('overview',this)">Overview</button>
+            <button class="analytics-tab" onclick="switchAnalyticsTab('players',this)">Players</button>
+            <button class="analytics-tab" onclick="switchAnalyticsTab('categories',this)">Categories</button>
+            <button class="analytics-tab" onclick="switchAnalyticsTab('leaderboard',this)">Leaderboard</button>
+          </div>
+        </div>
+        <div class="analytics-scroll" id="analyticsScroll">
+          <div id="an-overview" class="analytics-panel active"></div>
+          <div id="an-players" class="analytics-panel"></div>
+          <div id="an-categories" class="analytics-panel"></div>
+          <div id="an-leaderboard" class="analytics-panel"></div>
+        </div>
+      </div>
+
     </div>
   </div>
 
+  <!-- Help Modal -->
   <div id="helpModal" class="qb-modal">
     <div class="modal-content" style="max-width:640px;">
       <div class="modal-header">
-        <h2>&#10067; Help &amp; Tutorial</h2>
-        <button class="close-modal" onclick="closeHelpModal()">×</button>
+        <h2>Help &amp; Tutorial</h2>
+        <button class="close-modal" onclick="closeHelpModal()">&#215;</button>
       </div>
       <div style="line-height:1.7;color:var(--text);font-size:.95em;">
-
         <h3 style="color:var(--primary);margin:0 0 6px;">Getting Started</h3>
-        <p style="margin-bottom:14px;">Open the sidebar menu and work through each section in order: <strong>Session → Players → Teams → Categories</strong>. Once set up, use the <strong>Record Answer</strong> panel to log answers in real time.</p>
-
+        <p style="margin-bottom:14px;">Open the sidebar menu and work through each section in order: <strong>Session &rarr; Players &rarr; Teams &rarr; Categories</strong>. Once set up, use the <strong>Record Answer</strong> panel to log answers in real time.</p>
         <h3 style="color:var(--primary);margin:0 0 6px;">Sessions</h3>
-        <p style="margin-bottom:14px;">Each match is a <strong>Session</strong>. Create a new one with a name, or load a previous one. Sessions sync across all connected devices automatically via Firebase.</p>
-
+        <p style="margin-bottom:14px;">Each match is a <strong>Session</strong>. Create a new one with a name, or load a previous one. Sessions sync across all connected devices automatically.</p>
         <h3 style="color:var(--primary);margin:0 0 6px;">Players &amp; Teams</h3>
-        <p style="margin-bottom:14px;">Add players in the <strong>Players</strong> section — they sync globally across sessions. Then create teams in the <strong>Teams</strong> section and assign players to them. Only players assigned to a team will appear as selectable in the Record Answer panel.</p>
-
+        <p style="margin-bottom:14px;">Add players in the <strong>Players</strong> section. Then create teams in the <strong>Teams</strong> section and assign players to them. Only players assigned to a team appear as selectable in the Record Answer panel.</p>
         <h3 style="color:var(--primary);margin:0 0 6px;">Recording Answers</h3>
         <p style="margin-bottom:8px;">Select a <strong>Player</strong>, then a <strong>Point Type</strong>, then a <strong>Category</strong>, then press <strong>Record Answer</strong>.</p>
         <table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:.9em;">
@@ -650,29 +711,28 @@
           <tr><td style="padding:6px 10px;border:1px solid var(--border);">Toss-up</td><td style="padding:6px 10px;border:1px solid var(--border);">+10</td><td style="padding:6px 10px;border:1px solid var(--border);">Standard correct answer</td></tr>
           <tr style="background:var(--sec-bg);"><td style="padding:6px 10px;border:1px solid var(--border);">Bonus</td><td style="padding:6px 10px;border:1px solid var(--border);">+10</td><td style="padding:6px 10px;border:1px solid var(--border);">Follow-up bonus question</td></tr>
           <tr><td style="padding:6px 10px;border:1px solid var(--border);">Power</td><td style="padding:6px 10px;border:1px solid var(--border);">+15</td><td style="padding:6px 10px;border:1px solid var(--border);">Early correct answer</td></tr>
-          <tr style="background:var(--sec-bg);"><td style="padding:6px 10px;border:1px solid var(--border);">Neg</td><td style="padding:6px 10px;border:1px solid var(--border);">−5</td><td style="padding:6px 10px;border:1px solid var(--border);">Incorrect interrupt — category optional</td></tr>
+          <tr style="background:var(--sec-bg);"><td style="padding:6px 10px;border:1px solid var(--border);">Neg</td><td style="padding:6px 10px;border:1px solid var(--border);">-5</td><td style="padding:6px 10px;border:1px solid var(--border);">Incorrect interrupt &#8212; category optional</td></tr>
         </table>
-
+        <h3 style="color:var(--primary);margin:0 0 6px;">Analytics</h3>
+        <p style="margin-bottom:14px;">Click <strong>Analytics</strong> in the header to view detailed player and category breakdowns, including bar charts, category performance, and full leaderboard.</p>
         <h3 style="color:var(--primary);margin:0 0 6px;">Statistics &amp; Rankings</h3>
-        <p style="margin-bottom:14px;">The <strong>Statistics</strong> panel shows live team and player scores. Player rankings use tiebreakers: most <strong>Powers</strong> wins, then fewest <strong>Negs</strong>. Click any card to expand its details.</p>
-
+        <p style="margin-bottom:14px;">Player rankings use tiebreakers: most <strong>Powers</strong> wins, then fewest <strong>Negs</strong>.</p>
         <h3 style="color:var(--primary);margin:0 0 6px;">Export &amp; Import</h3>
-        <p style="margin-bottom:14px;">Export to <strong>CSV/Excel</strong> for spreadsheet use, or <strong>JSON</strong> to back up and later re-import a full session. Use the import option in the Export / Import section to reload a saved JSON file.</p>
-
+        <p style="margin-bottom:14px;">Export to <strong>CSV/Excel</strong> for spreadsheets, or <strong>JSON</strong> to back up and re-import a full session.</p>
         <h3 style="color:var(--primary);margin:0 0 6px;">Visual Settings</h3>
-        <p style="margin-bottom:14px;">Toggle <strong>Dark Mode</strong>, change the <strong>Accent Color</strong>, or hide scrollbars. These are saved to your device only and do not sync to other users.</p>
-
+        <p style="margin-bottom:14px;">Toggle <strong>Dark Mode</strong>, change <strong>Accent Color</strong>, or hide scrollbars. Saved to your device only.</p>
         <h3 style="color:var(--primary);margin:0 0 6px;">Data Management</h3>
-        <p style="margin-bottom:4px;">The <strong>Delete All Data</strong> button permanently removes all sessions and players from the database. It requires an admin password. <strong>Export your data first!</strong></p>
+        <p>The <strong>Delete All Data</strong> button permanently removes all sessions. It requires an admin password. <strong>Export your data first!</strong></p>
       </div>
     </div>
   </div>
 
+  <!-- Sessions Modal -->
   <div id="sessionsModal" class="qb-modal">
     <div class="modal-content">
       <div class="modal-header">
         <h2>Load Session</h2>
-        <button class="close-modal" onclick="closeSessionsModal()">×</button>
+        <button class="close-modal" onclick="closeSessionsModal()">&#215;</button>
       </div>
       <div id="sessionsList" class="sessions-list"></div>
     </div>
@@ -696,219 +756,176 @@
     const globalPlayersRef = db.ref('globalPlayers');
     const versionRef = db.ref('appVersion');
 
-    // ── Version sync ──
     versionRef.on('value', snap => {
-      const v = snap.val();
-      if (!v) return;
+      const v = snap.val(); if (!v) return;
       const badge = document.getElementById('versionBadge');
       const input = document.getElementById('versionInput');
       if (badge) badge.textContent = v;
       if (input && document.activeElement !== input) input.value = v;
     });
     function saveVersion() {
-      const v = (document.getElementById('versionInput').value || '').trim();
-      if (!v) { alert('Please enter a version number.'); return; }
+      const v = (document.getElementById('versionInput').value||'').trim();
+      if (!v) { alert('Enter a version number.'); return; }
       versionRef.set(v).then(() => alert('Version updated to ' + v)).catch(e => showFirebaseError(e.message));
     }
 
     // ── Helpers ──
     const clientId = (() => {
       try {
-        const k = 'qb_clientId', e = localStorage.getItem(k);
-        if (e) return e;
-        const f = crypto?.randomUUID?.() ?? (Date.now().toString(36) + Math.random().toString(36).slice(2));
-        localStorage.setItem(k, f); return f;
-      } catch { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+        const k='qb_clientId', e=localStorage.getItem(k); if (e) return e;
+        const f=crypto?.randomUUID?.()??Date.now().toString(36)+Math.random().toString(36).slice(2);
+        localStorage.setItem(k,f); return f;
+      } catch { return Date.now().toString(36)+Math.random().toString(36).slice(2); }
     })();
 
     const writeInFlight = new Set();
-
-    function withWriteLock(id, fn) {
+    function withWriteLock(id,fn) { writeInFlight.add(id); try{return fn();}finally{setTimeout(()=>writeInFlight.delete(id),300);} }
+    function updateSessionAtomic(id,mutator) {
       writeInFlight.add(id);
-      try { return fn(); } finally { setTimeout(() => writeInFlight.delete(id), 300); }
+      return sessionsRef.child(id).transaction(cur=>{
+        if(!cur) return cur;
+        const n=normalizeSession(cur); mutator(n);
+        n.lastUpdated=new Date().toISOString(); n.updatedBy=clientId; return n;
+      },err=>{setTimeout(()=>writeInFlight.delete(id),300); if(err) showFirebaseError('Save failed: '+err.message);},false);
     }
-
-    function updateSessionAtomic(id, mutator) {
+    function setSessionNonAtomic(id,value) {
       writeInFlight.add(id);
-      return sessionsRef.child(id).transaction(cur => {
-        if (!cur) return cur;
-        const n = normalizeSession(cur);
-        mutator(n);
-        n.lastUpdated = new Date().toISOString();
-        n.updatedBy = clientId;
-        return n;
-      }, err => {
-        setTimeout(() => writeInFlight.delete(id), 300);
-        if (err) showFirebaseError('Save failed: ' + err.message);
-      }, false);
+      return sessionsRef.child(id).set(value).finally(()=>setTimeout(()=>writeInFlight.delete(id),300));
     }
-
-    function setSessionNonAtomic(id, value) {
-      writeInFlight.add(id);
-      return sessionsRef.child(id).set(value).finally(() => setTimeout(() => writeInFlight.delete(id), 300));
-    }
-
     function toArray(val) {
-      if (!val) return [];
-      if (Array.isArray(val)) return val;
-      return Object.keys(val).sort((a,b) => +a - +b).map(k => val[k]);
+      if(!val) return []; if(Array.isArray(val)) return val;
+      return Object.keys(val).sort((a,b)=>+a-+b).map(k=>val[k]);
     }
-
     function normalizeSession(s) {
-      if (!s) return s;
-      s.teams     = toArray(s.teams);
-      s.answerLog = toArray(s.answerLog);
-      s.answers   = toArray(s.answers);
-      s.categories = toArray(s.categories);
-      if (s.players) Object.values(s.players).forEach(p => { p.answers = toArray(p.answers); });
-      s.teams.forEach(t => { t.playerMembers = toArray(t.playerMembers); });
+      if(!s) return s;
+      s.teams=toArray(s.teams); s.answerLog=toArray(s.answerLog);
+      s.answers=toArray(s.answers); s.categories=toArray(s.categories);
+      if(s.players) Object.values(s.players).forEach(p=>{p.answers=toArray(p.answers);});
+      s.teams.forEach(t=>{t.playerMembers=toArray(t.playerMembers);});
       return s;
     }
 
-    const CURRENT_SESSION_KEY = 'currentSession';
-    const DEFAULT_CATEGORIES = ['Art','Current Events','Geography','History','Literature','Math','Misc','Mythology','Music','Pop Culture','Religion','Science','Soc. Stu.','Sports'];
+    const CURRENT_SESSION_KEY='currentSession';
+    const DEFAULT_CATEGORIES=['Art','Current Events','Geography','History','Literature','Math','Misc','Mythology','Music','Pop Culture','Religion','Science','Soc. Stu.','Sports'];
+    const state={sessions:{},currentSessionId:null,selectedPlayer:null,selectedPointType:null,selectedCategory:null,categories:[]};
+    let firebaseUnsubscribe=null, playersUnsubscribe=null;
+    let analyticsOpen=false, currentAnalyticsTab='overview';
 
-    const state = {
-      sessions: {}, currentSessionId: null,
-      selectedPlayer: null, selectedPointType: null, selectedCategory: null,
-      categories: []
-    };
-
-    let firebaseUnsubscribe = null;
-    let playersUnsubscribe = null;
-
-    // ── Status indicators ──
-    function setIndicators(text, color, title) {
-      ['autosaveStatus','autosaveStatusMobile'].forEach(id => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        el.textContent = text;
-        if (color) el.style.color = color; else el.style.removeProperty('color');
-        if (title) el.title = title; else el.removeAttribute('title');
+    // ── Indicators ──
+    function setIndicators(text,color,title) {
+      ['autosaveStatus','autosaveStatusMobile'].forEach(id=>{
+        const el=document.getElementById(id); if(!el) return;
+        el.textContent=text;
+        if(color) el.style.color=color; else el.style.removeProperty('color');
+        if(title) el.title=title; else el.removeAttribute('title');
       });
     }
-    const setLoadingState  = () => setIndicators('⟳ Connecting...', 'rgba(255,255,255,0.7)');
-    const updateAutoSave   = () => setIndicators('✓ Saved', null);
-    const showFirebaseError = msg => setIndicators('! Offline', '#ffcc00', msg);
-
-    function getCurrentSession() { return state.sessions[state.currentSessionId] || null; }
+    const setLoadingState  = ()=>setIndicators('Connecting...','rgba(255,255,255,0.7)');
+    const updateAutoSave   = ()=>setIndicators('Saved',null);
+    const showFirebaseError = msg=>setIndicators('Offline','#ffcc00',msg);
+    const getCurrentSession = ()=>state.sessions[state.currentSessionId]||null;
 
     // ── Fade masks ──
     function updateFadeMasks() {
-      const FADE = 28;
-      ['.qb-scroll','.sidebar-sections','.log-container'].forEach(sel => {
-        const el = document.querySelector(sel); if (!el) return;
-        const up = el.scrollTop > 2;
-        const dn = el.scrollHeight > el.scrollTop + el.clientHeight + 2;
-        let mask = 'none';
-        if (up && dn) mask = `linear-gradient(to bottom,transparent 0,black ${FADE}px,black calc(100% - ${FADE}px),transparent 100%)`;
-        else if (up)  mask = `linear-gradient(to bottom,transparent 0,black ${FADE}px,black 100%)`;
-        else if (dn)  mask = `linear-gradient(to bottom,black 0%,black calc(100% - ${FADE}px),transparent 100%)`;
-        el.style.webkitMaskImage = mask; el.style.maskImage = mask;
+      const FADE=28;
+      ['.qb-scroll','.sidebar-sections','.log-container','.analytics-scroll'].forEach(sel=>{
+        const el=document.querySelector(sel); if(!el) return;
+        const up=el.scrollTop>2, dn=el.scrollHeight>el.scrollTop+el.clientHeight+2;
+        let mask='none';
+        if(up&&dn) mask=`linear-gradient(to bottom,transparent 0,black ${FADE}px,black calc(100% - ${FADE}px),transparent 100%)`;
+        else if(up) mask=`linear-gradient(to bottom,transparent 0,black ${FADE}px,black 100%)`;
+        else if(dn) mask=`linear-gradient(to bottom,black 0%,black calc(100% - ${FADE}px),transparent 100%)`;
+        el.style.webkitMaskImage=mask; el.style.maskImage=mask;
       });
     }
-
     function updateHeaderHeight() {
-      const h = document.getElementById('qbHeader');
-      if (h) document.documentElement.style.setProperty('--header-height', h.offsetHeight + 'px');
+      const h=document.getElementById('qbHeader');
+      if(h) document.documentElement.style.setProperty('--header-height',h.offsetHeight+'px');
     }
 
     // ── Global players ──
     function setupGlobalPlayers() {
-      if (playersUnsubscribe) playersUnsubscribe();
-      playersUnsubscribe = globalPlayersRef.on('value', snap => {
-        if (!state.currentSessionId) return;
-        applyGlobalPlayersToSession(snap.val() || {});
+      if(playersUnsubscribe) playersUnsubscribe();
+      playersUnsubscribe=globalPlayersRef.on('value',snap=>{
+        if(!state.currentSessionId) return;
+        applyGlobalPlayersToSession(snap.val()||{});
       });
     }
-
     function applyGlobalPlayersToSession(data) {
-      const s = getCurrentSession(); if (!s) return;
-      let changed = false;
-      Object.keys(data).forEach(name => {
-        if (!s.players[name]) { s.players[name] = {name, points:0, answers:[]}; changed = true; }
+      const s=getCurrentSession(); if(!s) return;
+      let changed=false;
+      Object.keys(data).forEach(name=>{
+        if(!s.players[name]){s.players[name]={name,points:0,answers:[]};changed=true;}
       });
-      if (changed) {
-        sessionsRef.child(state.currentSessionId).set(s).catch(e => showFirebaseError(e.message));
+      if(changed){
+        sessionsRef.child(state.currentSessionId).set(s).catch(e=>showFirebaseError(e.message));
         renderPlayerPool(); renderPlayerButtons(); renderTeams();
       }
     }
-
     function saveGlobalPlayers(names) {
-      const updates = {};
-      names.forEach(n => { if (n) updates[n] = true; });
-      if (Object.keys(updates).length) globalPlayersRef.update(updates).catch(e => showFirebaseError(e.message));
+      const updates={};
+      names.forEach(n=>{if(n) updates[n]=true;});
+      if(Object.keys(updates).length) globalPlayersRef.update(updates).catch(e=>showFirebaseError(e.message));
     }
-
-    function removeGlobalPlayer(name) {
-      globalPlayersRef.child(name).remove().catch(e => showFirebaseError(e.message));
-    }
+    function removeGlobalPlayer(name) { globalPlayersRef.child(name).remove().catch(e=>showFirebaseError(e.message)); }
 
     // ── Data loading ──
     function loadAllData() {
       setLoadingState();
-      if (firebaseUnsubscribe) firebaseUnsubscribe();
-      firebaseUnsubscribe = sessionsRef.on('value', snap => {
-        const incoming = snap.val() || {};
-        if (state.currentSessionId && writeInFlight.has(state.currentSessionId)) {
-          Object.keys(incoming).forEach(id => {
-            if (id !== state.currentSessionId) state.sessions[id] = normalizeSession(incoming[id]);
-          });
+      if(firebaseUnsubscribe) firebaseUnsubscribe();
+      firebaseUnsubscribe=sessionsRef.on('value',snap=>{
+        const incoming=snap.val()||{};
+        if(state.currentSessionId&&writeInFlight.has(state.currentSessionId)){
+          Object.keys(incoming).forEach(id=>{if(id!==state.currentSessionId) state.sessions[id]=normalizeSession(incoming[id]);});
         } else {
-          state.sessions = incoming;
-          Object.keys(state.sessions).forEach(id => { state.sessions[id] = normalizeSession(state.sessions[id]); });
+          state.sessions=incoming;
+          Object.keys(state.sessions).forEach(id=>{state.sessions[id]=normalizeSession(state.sessions[id]);});
         }
-        const savedId = localStorage.getItem(CURRENT_SESSION_KEY);
-        if (savedId && state.sessions[savedId]) state.currentSessionId = savedId;
-        else if (Object.keys(state.sessions).length) {
-          state.currentSessionId = Object.keys(state.sessions)[0];
-          localStorage.setItem(CURRENT_SESSION_KEY, state.currentSessionId);
+        const savedId=localStorage.getItem(CURRENT_SESSION_KEY);
+        if(savedId&&state.sessions[savedId]) state.currentSessionId=savedId;
+        else if(Object.keys(state.sessions).length){
+          state.currentSessionId=Object.keys(state.sessions)[0];
+          localStorage.setItem(CURRENT_SESSION_KEY,state.currentSessionId);
         } else { updateAutoSave(); createNewSession(); return; }
         loadSessionData();
-        globalPlayersRef.once('value').then(s => applyGlobalPlayersToSession(s.val() || {}));
+        globalPlayersRef.once('value').then(s=>applyGlobalPlayersToSession(s.val()||{}));
         updateAutoSave(); renderAll();
-        const modal = document.getElementById('sessionsModal');
-        if (modal?.classList.contains('open')) renderSessionsList();
-      }, err => { showFirebaseError('Connection failed: ' + err.message); });
+        if(document.getElementById('sessionsModal')?.classList.contains('open')) renderSessionsList();
+      },err=>showFirebaseError('Connection failed: '+err.message));
     }
 
     function loadSessionData() {
-      const s = getCurrentSession();
-      if (!s) { createNewSession(); return; }
-      if (!s.categories?.length) s.categories = [...DEFAULT_CATEGORIES];
-      s.categories.sort((a,b) => a.localeCompare(b));
-      state.categories = s.categories;
-      const ta = document.getElementById('categoriesInput');
-      if (ta) ta.value = state.categories.join(', ');
+      const s=getCurrentSession(); if(!s){createNewSession();return;}
+      if(!s.categories?.length) s.categories=[...DEFAULT_CATEGORIES];
+      s.categories.sort((a,b)=>a.localeCompare(b));
+      state.categories=s.categories;
+      const ta=document.getElementById('categoriesInput');
+      if(ta) ta.value=state.categories.join(', ');
     }
 
     function saveAllData() {
-      const s = getCurrentSession();
-      if (s) { s.categories = state.categories; s.lastUpdated = new Date().toISOString(); s.updatedBy = clientId; }
-      localStorage.setItem(CURRENT_SESSION_KEY, state.currentSessionId);
-      if (s) setSessionNonAtomic(state.currentSessionId, s).catch(e => showFirebaseError(e.message));
+      const s=getCurrentSession();
+      if(s){s.categories=state.categories;s.lastUpdated=new Date().toISOString();s.updatedBy=clientId;}
+      localStorage.setItem(CURRENT_SESSION_KEY,state.currentSessionId);
+      if(s) setSessionNonAtomic(state.currentSessionId,s).catch(e=>showFirebaseError(e.message));
     }
 
     // ── Sessions ──
     function createNewSession() {
-      const id = Date.now().toString();
-      const nameInput = document.getElementById('newSessionName');
-      const name = nameInput?.value.trim() || ('Session ' + new Date().toLocaleDateString());
-      const session = { id, name, created: new Date().toISOString(), lastUpdated: new Date().toISOString(), updatedBy: clientId, players:{}, teams:[], categories:[...DEFAULT_CATEGORIES], answers:[], answerLog:[] };
-      state.sessions[id] = session;
-      state.currentSessionId = id;
-      loadSessionData();
-      globalPlayersRef.once('value').then(snap => {
-        Object.keys(snap.val() || {}).forEach(n => { if (!session.players[n]) session.players[n] = {name:n,points:0,answers:[]}; });
-        setSessionNonAtomic(id, session).catch(e => showFirebaseError(e.message));
-        localStorage.setItem(CURRENT_SESSION_KEY, id);
-        if (nameInput) nameInput.value = '';
-        renderAll();
-      }).catch(() => {
-        setSessionNonAtomic(id, session).catch(e => showFirebaseError(e.message));
-        localStorage.setItem(CURRENT_SESSION_KEY, id);
-        if (nameInput) nameInput.value = '';
-        renderAll();
+      const id=Date.now().toString();
+      const nameInput=document.getElementById('newSessionName');
+      const name=nameInput?.value.trim()||('Session '+new Date().toLocaleDateString());
+      const session={id,name,created:new Date().toISOString(),lastUpdated:new Date().toISOString(),updatedBy:clientId,players:{},teams:[],categories:[...DEFAULT_CATEGORIES],answers:[],answerLog:[]};
+      state.sessions[id]=session; state.currentSessionId=id; loadSessionData();
+      globalPlayersRef.once('value').then(snap=>{
+        Object.keys(snap.val()||{}).forEach(n=>{if(!session.players[n]) session.players[n]={name:n,points:0,answers:[]};});
+        setSessionNonAtomic(id,session).catch(e=>showFirebaseError(e.message));
+        localStorage.setItem(CURRENT_SESSION_KEY,id);
+        if(nameInput) nameInput.value=''; renderAll();
+      }).catch(()=>{
+        setSessionNonAtomic(id,session).catch(e=>showFirebaseError(e.message));
+        localStorage.setItem(CURRENT_SESSION_KEY,id);
+        if(nameInput) nameInput.value=''; renderAll();
       });
     }
 
@@ -918,10 +935,10 @@
     function closeHelpModal()     { document.getElementById('helpModal').classList.remove('open'); }
 
     function renderSessionsList() {
-      const list = document.getElementById('sessionsList');
-      const sessions = Object.values(state.sessions);
-      if (!sessions.length) { list.innerHTML = '<p style="color:var(--text2)">No sessions found.</p>'; return; }
-      list.innerHTML = sessions.map(s => `
+      const list=document.getElementById('sessionsList');
+      const sessions=Object.values(state.sessions);
+      if(!sessions.length){list.innerHTML='<p style="color:var(--text2)">No sessions found.</p>';return;}
+      list.innerHTML=sessions.map(s=>`
         <div class="session-card">
           <div class="session-card-title">${s.name}</div>
           <div class="session-card-details">
@@ -936,303 +953,496 @@
     }
 
     function loadSession(id) {
-      state.currentSessionId = id; loadSessionData();
-      globalPlayersRef.once('value').then(s => applyGlobalPlayersToSession(s.val() || {}));
+      state.currentSessionId=id; loadSessionData();
+      globalPlayersRef.once('value').then(s=>applyGlobalPlayersToSession(s.val()||{}));
       saveAllData(); renderAll(); closeSessionsModal();
     }
 
     function deleteSession(id) {
-      if (!confirm('Delete session "' + state.sessions[id].name + '"?')) return;
-      sessionsRef.child(id).remove().catch(e => showFirebaseError(e.message));
+      if(!confirm('Delete session "'+state.sessions[id].name+'"?')) return;
+      sessionsRef.child(id).remove().catch(e=>showFirebaseError(e.message));
       delete state.sessions[id];
-      if (state.currentSessionId === id) {
-        state.currentSessionId = Object.keys(state.sessions)[0] || null;
-        if (!state.currentSessionId) createNewSession();
-        else { localStorage.setItem(CURRENT_SESSION_KEY, state.currentSessionId); loadSessionData(); }
+      if(state.currentSessionId===id){
+        state.currentSessionId=Object.keys(state.sessions)[0]||null;
+        if(!state.currentSessionId) createNewSession();
+        else{localStorage.setItem(CURRENT_SESSION_KEY,state.currentSessionId);loadSessionData();}
       }
       renderSessionsList(); renderAll();
     }
 
+    // ── Analytics ──
+    function toggleAnalytics() {
+      analyticsOpen=!analyticsOpen;
+      const tv=document.getElementById('trackerView');
+      const av=document.getElementById('analyticsView');
+      const btn=document.getElementById('analyticsBtn');
+      const btnM=document.getElementById('analyticsBtnMobile');
+      if(analyticsOpen){
+        tv.style.display='none'; av.style.display='flex';
+        if(btn){btn.classList.add('active');btn.textContent='Tracker';}
+        if(btnM){btnM.classList.add('active');btnM.textContent='Tracker';}
+        renderAnalytics();
+      } else {
+        tv.style.display='flex'; av.style.display='none';
+        if(btn){btn.classList.remove('active');btn.textContent='Analytics';}
+        if(btnM){btnM.classList.remove('active');btnM.textContent='Stats';}
+      }
+      setTimeout(updateFadeMasks,50);
+    }
+
+    function switchAnalyticsTab(tab, el) {
+      currentAnalyticsTab=tab;
+      document.querySelectorAll('.analytics-tab').forEach(b=>b.classList.remove('active'));
+      el.classList.add('active');
+      document.querySelectorAll('.analytics-panel').forEach(p=>p.classList.remove('active'));
+      document.getElementById('an-'+tab)?.classList.add('active');
+      renderAnalytics();
+    }
+
+    function renderAnalytics() {
+      const s=getCurrentSession(); if(!s) return;
+      const ps=calculatePlayerStats(), ts=calculateTeamStats();
+      const tab=currentAnalyticsTab;
+
+      if(tab==='overview') renderAnalyticsOverview(s,ps,ts);
+      else if(tab==='players') renderAnalyticsPlayers(s,ps);
+      else if(tab==='categories') renderAnalyticsCategories(s);
+      else if(tab==='leaderboard') renderAnalyticsLeaderboard(ps,ts);
+    }
+
+    function renderAnalyticsOverview(s,ps,ts) {
+      const el=document.getElementById('an-overview'); if(!el) return;
+      const allAnswers=s.answerLog||[];
+      const totalPts=ps.reduce((sum,p)=>sum+p.points,0);
+      const totalAns=allAnswers.length;
+      const totalNegs=allAnswers.filter(a=>a.pointType==='Neg').length;
+      const totalPowers=allAnswers.filter(a=>a.pointType==='Power').length;
+      const totalTossups=allAnswers.filter(a=>a.pointType==='Toss-up').length;
+      const totalBonuses=allAnswers.filter(a=>a.pointType==='Bonus').length;
+      const correctAns=totalAns-totalNegs;
+      const accuracy=totalAns>0?((correctAns/totalAns)*100).toFixed(1):'0.0';
+      const ppa=totalAns>0?(totalPts/totalAns).toFixed(1):'0.0';
+      const activePlayers=ps.filter(p=>p.totalAnswers>0);
+
+      // Category data
+      const catMap={};
+      allAnswers.forEach(a=>{
+        const cat=a.category||'—'; if(cat==='—') return;
+        if(!catMap[cat]) catMap[cat]={pts:0,count:0,negs:0};
+        catMap[cat].pts+=(a.points||0); catMap[cat].count++;
+        if(a.pointType==='Neg') catMap[cat].negs++;
+      });
+      const catArr=Object.keys(catMap).map(c=>({name:c,pts:catMap[c].pts,count:catMap[c].count,negs:catMap[c].negs}));
+      catArr.sort((a,b)=>b.pts-a.pts);
+      const strengths=catArr.slice(0,5);
+      const weaknesses=catArr.slice().reverse().slice(0,5);
+      const recentAnswers=[...allAnswers].reverse().slice(0,8);
+
+      let html='<div class="an-grid" style="margin-bottom:var(--sp);">';
+      [['Total Players',activePlayers.length],['Total Answers',totalAns],['Total Points',totalPts],['Team Accuracy',accuracy+'%'],['Total Powers',totalPowers],['Total Negs',totalNegs]].forEach(b=>{
+        html+='<div class="an-stat-box"><div class="an-val">'+b[1]+'</div><div class="an-lbl">'+b[0]+'</div></div>';
+      });
+      html+='</div>';
+
+      // HSE Team Overview
+      html+='<div style="background:var(--card);border:2px solid var(--border);border-radius:10px;padding:18px;margin-bottom:var(--sp);box-shadow:var(--shadow-sm);">';
+      html+='<h3 style="margin:0 0 12px;font-size:1.1em;color:var(--primary);">HSE Team Overview</h3>';
+      [['Powers',totalPowers],['Toss-ups',totalTossups],['Bonuses',totalBonuses],['Negs',totalNegs],['Points Per Answer',ppa],['Accuracy',accuracy+'%']].forEach(r=>{
+        html+='<div class="stat-row"><span class="stat-label">'+r[0]+'</span><span class="stat-value">'+r[1]+'</span></div>';
+      });
+      html+='</div>';
+
+      // Category Strengths
+      if(strengths.length){
+        html+='<div style="background:var(--card);border:2px solid var(--border);border-radius:10px;padding:18px;margin-bottom:var(--sp);box-shadow:var(--shadow-sm);">';
+        html+='<h3 style="margin:0 0 12px;font-size:1.1em;color:var(--success);">Category Strengths</h3>';
+        strengths.forEach(c=>{
+          html+='<div class="stat-row"><span class="stat-label">'+c.name+'</span><span class="stat-value" style="color:var(--success)">'+c.pts+' pts</span></div>';
+        });
+        html+='</div>';
+      }
+
+      // Category Weaknesses
+      if(weaknesses.length){
+        html+='<div style="background:var(--card);border:2px solid var(--border);border-radius:10px;padding:18px;margin-bottom:var(--sp);box-shadow:var(--shadow-sm);">';
+        html+='<h3 style="margin:0 0 12px;font-size:1.1em;color:var(--danger);">Category Weaknesses</h3>';
+        weaknesses.forEach(c=>{
+          html+='<div class="stat-row"><span class="stat-label">'+c.name+'</span><span class="stat-value" style="color:var(--danger)">'+c.pts+' pts</span></div>';
+        });
+        html+='</div>';
+      }
+
+      // Top Performers
+      if(activePlayers.length){
+        html+='<div style="background:var(--card);border:2px solid var(--border);border-radius:10px;padding:18px;margin-bottom:var(--sp);box-shadow:var(--shadow-sm);">';
+        html+='<h3 style="margin:0 0 12px;font-size:1.1em;color:var(--primary);">Top Performers</h3>';
+        activePlayers.slice(0,5).forEach(function(p,i){
+          var pw=p.powers, ng=p.negs;
+          html+='<div class="stat-row">';
+          html+='<span class="stat-label"><strong style="color:var(--primary);min-width:28px;display:inline-block;">#'+(i+1)+'</strong> '+p.name+'</span>';
+          html+='<span style="display:flex;gap:8px;align-items:center;">';
+          html+='<span class="stat-value">'+p.points+' pts</span>';
+          if(pw>0) html+='<span style="font-size:.75em;background:var(--success);color:white;padding:2px 8px;border-radius:10px;font-weight:700;">'+pw+' pw</span>';
+          if(ng>0) html+='<span style="font-size:.75em;background:var(--danger);color:white;padding:2px 8px;border-radius:10px;font-weight:700;">'+ng+' neg</span>';
+          html+='</span></div>';
+        });
+        html+='</div>';
+      }
+
+      // Recent Activity
+      if(recentAnswers.length){
+        html+='<div style="background:var(--card);border:2px solid var(--border);border-radius:10px;padding:18px;margin-bottom:var(--sp);box-shadow:var(--shadow-sm);">';
+        html+='<h3 style="margin:0 0 12px;font-size:1.1em;color:var(--primary);">Recent Activity</h3>';
+        recentAnswers.forEach(function(a){
+          html+='<div class="stat-row"><span class="stat-label">'+a.player+' &mdash; '+a.pointType+' &mdash; '+(a.category||'—')+'</span><span class="stat-value" style="color:'+(a.points<0?'var(--danger)':'var(--primary)')+';">'+(a.points>0?'+':'')+a.points+'</span></div>';
+        });
+        html+='</div>';
+      }
+
+      if(!totalAns) html+='<p style="color:var(--text2)">No answers recorded yet. Start tracking to see your team overview!</p>';
+
+      el.innerHTML=html;
+    }
+
+    function renderAnalyticsPlayers(s,ps) {
+      const el=document.getElementById('an-players'); if(!el) return;
+      const active=ps.filter(p=>p.totalAnswers>0);
+      if(!active.length){el.innerHTML='<p style="color:var(--text2)">No player data yet.</p>';return;}
+      const maxPts=Math.max(...active.map(p=>p.points),1);
+      el.innerHTML=active.map(p=>{
+        const catMap={};
+        (s.players[p.name]?.answers||[]).forEach(a=>{
+          if(a.category&&a.category!=='—') catMap[a.category]=(catMap[a.category]||0)+1;
+        });
+        const topCats=Object.entries(catMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
+        const maxCat=topCats[0]?.[1]||1;
+        const acc=p.totalAnswers?Math.round(((p.totalAnswers-p.negs)/p.totalAnswers)*100):0;
+        const team=(s.teams||[]).find(t=>t.playerMembers?.includes(p.name));
+        return `
+          <div class="an-player-card">
+            <div class="an-player-header">
+              <div>
+                <div class="an-player-name">${p.name}</div>
+                <div class="an-player-meta">${team?team.name:'No team'} &bull; ${acc}% accuracy &bull; ${p.totalAnswers} answers</div>
+              </div>
+              <div class="an-player-pts">${p.points} pts</div>
+            </div>
+            <div class="an-bar-row"><span class="an-bar-label">Points</span><div class="an-bar-track"><div class="an-bar-fill" style="width:${Math.max(0,(p.points/maxPts)*100)}%"></div></div><span class="an-bar-val">${p.points}</span></div>
+            <div class="an-bar-row"><span class="an-bar-label">Toss-ups</span><div class="an-bar-track"><div class="an-bar-fill" style="width:${p.totalAnswers?(p.tossupsCorrect/p.totalAnswers*100):0}%"></div></div><span class="an-bar-val">${p.tossupsCorrect}</span></div>
+            <div class="an-bar-row"><span class="an-bar-label">Powers</span><div class="an-bar-track"><div class="an-bar-fill" style="width:${p.totalAnswers?(p.powers/p.totalAnswers*100):0}%"></div></div><span class="an-bar-val">${p.powers}</span></div>
+            <div class="an-bar-row"><span class="an-bar-label">Negs</span><div class="an-bar-track"><div class="an-bar-fill neg" style="width:${p.totalAnswers?(p.negs/p.totalAnswers*100):0}%"></div></div><span class="an-bar-val">${p.negs}</span></div>
+            ${topCats.length?`
+            <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);">
+              <div style="font-size:.8em;font-weight:700;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px;">Top Categories</div>
+              ${topCats.map(([cat,cnt])=>`
+                <div class="an-bar-row"><span class="an-bar-label">${cat}</span><div class="an-bar-track"><div class="an-bar-fill" style="width:${(cnt/maxCat)*100}%"></div></div><span class="an-bar-val">${cnt}</span></div>`).join('')}
+            </div>`:''}
+          </div>`;
+      }).join('');
+    }
+
+    function renderAnalyticsCategories(s) {
+      const el=document.getElementById('an-categories'); if(!el) return;
+      const catData={};
+      (s.answerLog||[]).forEach(a=>{
+        if(!a.category||a.category==='—') return;
+        if(!catData[a.category]) catData[a.category]={total:0,points:0,players:{}};
+        catData[a.category].total++;
+        catData[a.category].points+=a.points||0;
+        if(!catData[a.category].players[a.player]) catData[a.category].players[a.player]={correct:0,neg:0};
+        if(a.points<0) catData[a.category].players[a.player].neg++;
+        else catData[a.category].players[a.player].correct++;
+      });
+      const sorted=Object.entries(catData).sort((a,b)=>b[1].total-a[1].total);
+      if(!sorted.length){el.innerHTML='<p style="color:var(--text2)">No category data yet.</p>';return;}
+      el.innerHTML=sorted.map(([cat,data])=>`
+        <div class="an-cat-card">
+          <div class="an-cat-title">${cat} <span style="font-weight:400;color:var(--text2);font-size:.88em;">${data.total} answers &bull; ${data.points} pts</span></div>
+          ${Object.entries(data.players).sort((a,b)=>(b[1].correct+b[1].neg)-(a[1].correct+a[1].neg)).map(([player,d])=>`
+            <div class="an-cat-row">
+              <span style="font-weight:600;">${player}</span>
+              <span style="display:flex;gap:8px;font-size:.82em;">
+                ${d.correct?`<span style="color:var(--success);font-weight:700;">+${d.correct}</span>`:''}
+                ${d.neg?`<span style="color:var(--danger);font-weight:700;">-${d.neg}</span>`:''}
+              </span>
+            </div>`).join('')}
+        </div>`).join('');
+    }
+
+    function renderAnalyticsLeaderboard(ps,ts) {
+      const el=document.getElementById('an-leaderboard'); if(!el) return;
+      const active=ps.filter(p=>p.totalAnswers>0);
+      let html='';
+      if(ts.length){
+        html+=`<h3 style="font-size:1em;font-weight:700;color:var(--text2);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px;">Teams</h3>`;
+        html+=ts.map((t,i)=>{
+          const sfx=['st','nd','rd'][i]||'th';
+          return `<div class="an-lb-row"><span class="an-lb-rank">${i+1}${sfx}</span><span class="an-lb-name">${t.name}</span><span class="an-lb-pts">${t.totalPoints} pts</span><span class="an-lb-chip">${t.totalAnswers} ans</span></div>`;
+        }).join('');
+        html+=`<div style="margin-bottom:var(--sp);"></div>`;
+      }
+      if(active.length){
+        html+=`<h3 style="font-size:1em;font-weight:700;color:var(--text2);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px;">Players</h3>`;
+        let rank=1;
+        html+=active.map((p,i)=>{
+          const prev=active[i-1];
+          const tied=prev&&prev.points===p.points&&prev.powers===p.powers&&prev.negs===p.negs;
+          if(i>0&&!tied) rank=i+1;
+          const sfx=['st','nd','rd'][rank-1]||'th';
+          return `<div class="an-lb-row">
+            <span class="an-lb-rank">${rank}${sfx}</span>
+            <span class="an-lb-name">${p.name}</span>
+            <span class="an-lb-pts">${p.points} pts</span>
+            ${p.powers?`<span class="an-lb-chip power">${p.powers}pw</span>`:''}
+            ${p.negs?`<span class="an-lb-chip neg">${p.negs}neg</span>`:''}
+            <span class="an-lb-chip">${p.totalAnswers} ans</span>
+          </div>`;
+        }).join('');
+      } else {
+        html+='<p style="color:var(--text2)">No player data yet.</p>';
+      }
+      el.innerHTML=html;
+    }
+
     // ── UI ──
     function setupSectionToggle() {
-      document.querySelectorAll('.qb-section h2').forEach(h2 => {
-        h2.addEventListener('click', function() {
+      document.querySelectorAll('.qb-section h2').forEach(h2=>{
+        h2.addEventListener('click',function(){
           this.querySelector('.toggle-icon')?.classList.toggle('collapsed');
           this.nextElementSibling?.classList.toggle('collapsed');
         });
       });
     }
 
-    const SECTION_LABELS = {
-      'sec-session':'Session','sec-players':'Players','sec-teams':'Teams',
-      'sec-categories':'Categories','sec-export':'Export / Import',
-      'sec-visual':'Visual Settings','sec-danger':'Data Management'
-    };
+    const SECTION_LABELS={'sec-session':'Session','sec-players':'Players','sec-teams':'Teams','sec-categories':'Categories','sec-export':'Export / Import','sec-visual':'Visual Settings','sec-danger':'Data Management'};
 
     function showSection(id) {
-      document.querySelectorAll('.qb-sidebar .qb-section').forEach(s => s.classList.remove('active-section'));
-      const el = document.getElementById(id);
-      if (el) {
+      document.querySelectorAll('.qb-sidebar .qb-section').forEach(s=>s.classList.remove('active-section'));
+      const el=document.getElementById(id);
+      if(el){
         el.classList.add('active-section');
         el.querySelector('.collapsible-content')?.classList.remove('collapsed');
         el.querySelector('.toggle-icon')?.classList.remove('collapsed');
       }
-      localStorage.setItem('activeSidebarSection', id);
+      localStorage.setItem('activeSidebarSection',id);
       updateJumpDropdown(id);
       document.getElementById('sidebarJumpWrapper')?.classList.remove('open');
     }
 
     function updateJumpDropdown(activeId) {
-      const labelEl = document.getElementById('sidebarJumpLabel');
-      if (labelEl && SECTION_LABELS[activeId]) labelEl.textContent = SECTION_LABELS[activeId];
-      document.querySelectorAll('.sidebar-jump-menu button').forEach(btn => {
-        btn.classList.toggle('active-item', (btn.getAttribute('onclick') || '').includes(activeId));
+      const labelEl=document.getElementById('sidebarJumpLabel');
+      if(labelEl&&SECTION_LABELS[activeId]) labelEl.textContent=SECTION_LABELS[activeId];
+      document.querySelectorAll('.sidebar-jump-menu button').forEach(btn=>{
+        btn.classList.toggle('active-item',(btn.getAttribute('onclick')||'').includes(activeId));
       });
     }
 
-    function toggleJumpDropdown() {
-      document.getElementById('sidebarJumpWrapper')?.classList.toggle('open');
-    }
+    function toggleJumpDropdown() { document.getElementById('sidebarJumpWrapper')?.classList.toggle('open'); }
 
-    const isMobile = () => window.innerWidth <= 900;
+    const isMobile=()=>window.innerWidth<=900;
 
     function toggleSidebar() {
-      const sidebar = document.getElementById('mainSidebar');
-      const scroll  = document.getElementById('qbScroll');
-      if (!sidebar) return;
-      if (isMobile()) {
-        const opening = !sidebar.classList.contains('mobile-open');
-        sidebar.classList.toggle('mobile-open', opening);
-        scroll?.classList.toggle('menu-blurred', opening);
-        document.body.classList.toggle('menu-open', opening);
+      const sidebar=document.getElementById('mainSidebar');
+      const scroll=document.getElementById('qbScroll');
+      const ascroll=document.getElementById('analyticsScroll');
+      if(!sidebar) return;
+      if(isMobile()){
+        const opening=!sidebar.classList.contains('mobile-open');
+        sidebar.classList.toggle('mobile-open',opening);
+        scroll?.classList.toggle('menu-blurred',opening);
+        ascroll?.classList.toggle('menu-blurred',opening);
+        document.body.classList.toggle('menu-open',opening);
         updateMobileBtn(opening);
       } else {
-        const collapsed = sidebar.classList.toggle('collapsed');
-        localStorage.setItem('sidebarCollapsed', collapsed);
+        const collapsed=sidebar.classList.toggle('collapsed');
+        localStorage.setItem('sidebarCollapsed',collapsed);
         updateDesktopBtn(collapsed);
       }
     }
 
     function updateDesktopBtn(collapsed) {
-      const btn = document.getElementById('sidebarOpenBtn');
-      if (btn) { btn.style.display = collapsed ? 'inline-flex' : 'none'; btn.style.alignItems = 'center'; btn.style.gap = '6px'; }
+      const btn=document.getElementById('sidebarOpenBtn');
+      if(btn){btn.style.display=collapsed?'inline-flex':'none'; btn.style.alignItems='center'; btn.style.gap='6px';}
     }
-
     function updateMobileBtn(open) {
-      const btn = document.getElementById('sidebarOpenBtnMobile');
-      if (btn) btn.innerHTML = open ? '&#9664; Hide' : '&#9654; Menu';
+      const btn=document.getElementById('sidebarOpenBtnMobile');
+      if(btn) btn.innerHTML=open?'&#9664; Hide':'&#9654; Menu';
     }
 
     function applySidebarState() {
-      const sidebar = document.getElementById('mainSidebar');
-      const scroll  = document.getElementById('qbScroll');
-      if (!sidebar) return;
-      // Always clean up mobile state
+      const sidebar=document.getElementById('mainSidebar');
+      const scroll=document.getElementById('qbScroll');
+      const ascroll=document.getElementById('analyticsScroll');
+      if(!sidebar) return;
       sidebar.classList.remove('mobile-open');
       scroll?.classList.remove('menu-blurred');
+      ascroll?.classList.remove('menu-blurred');
       document.body.classList.remove('menu-open');
       updateMobileBtn(false);
-      if (isMobile()) {
-        sidebar.classList.remove('collapsed');
-        updateDesktopBtn(false);
-      } else {
-        const collapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-        sidebar.classList.toggle('collapsed', collapsed);
-        updateDesktopBtn(collapsed);
-      }
+      if(isMobile()){sidebar.classList.remove('collapsed');updateDesktopBtn(false);}
+      else{const c=localStorage.getItem('sidebarCollapsed')==='true';sidebar.classList.toggle('collapsed',c);updateDesktopBtn(c);}
     }
 
     // ── Visual settings ──
     function toggleDarkMode() {
-      const on = document.body.classList.toggle('dark-mode');
-      localStorage.setItem('darkMode', on);
-      const el = document.getElementById('darkModeToggle2');
-      if (el) el.checked = on;
+      const on=document.body.classList.toggle('dark-mode');
+      localStorage.setItem('darkMode',on);
+      const el=document.getElementById('darkModeToggle2'); if(el) el.checked=on;
     }
     function setAccentColor(color) {
-      document.documentElement.style.setProperty('--primary', color);
-      localStorage.setItem('accentColor', color);
+      document.documentElement.style.setProperty('--primary',color);
+      localStorage.setItem('accentColor',color);
     }
     function toggleScrollbars() {
-      const on = document.body.classList.toggle('hide-scrollbars');
-      localStorage.setItem('hideScrollbars', on);
-      const el = document.getElementById('hideScrollbarsToggle');
-      if (el) el.checked = on;
+      const on=document.body.classList.toggle('hide-scrollbars');
+      localStorage.setItem('hideScrollbars',on);
+      const el=document.getElementById('hideScrollbarsToggle'); if(el) el.checked=on;
     }
     function restoreVisualSettings() {
-      const ls = window.LOCAL_SETTINGS || {};
-      const get = (key, fallback) => ls[key] !== undefined ? ls[key] : (localStorage.getItem(key) ?? fallback);
-      if (get('darkMode', 'false') === 'true' || get('darkMode', false) === true) {
+      const ls=window.LOCAL_SETTINGS||{};
+      const get=(key,fb)=>ls[key]!==undefined?ls[key]:(localStorage.getItem(key)??fb);
+      if(get('darkMode','false')==='true'||get('darkMode',false)===true){
         document.body.classList.add('dark-mode');
-        const el = document.getElementById('darkModeToggle2'); if (el) el.checked = true;
+        const el=document.getElementById('darkModeToggle2'); if(el) el.checked=true;
       }
-      if (get('hideScrollbars', 'false') === 'true' || get('hideScrollbars', false) === true) {
+      if(get('hideScrollbars','false')==='true'||get('hideScrollbars',false)===true){
         document.body.classList.add('hide-scrollbars');
-        const el = document.getElementById('hideScrollbarsToggle'); if (el) el.checked = true;
+        const el=document.getElementById('hideScrollbarsToggle'); if(el) el.checked=true;
       }
-      const ac = get('accentColor', null);
-      if (ac) {
-        document.documentElement.style.setProperty('--primary', ac);
-        const el = document.getElementById('accentColorSelect'); if (el) el.value = ac;
-      }
+      const ac=get('accentColor',null);
+      if(ac){document.documentElement.style.setProperty('--primary',ac);const el=document.getElementById('accentColorSelect');if(el) el.value=ac;}
     }
 
     // ── Render ──
     function renderAll() {
       renderSessionInfo(); renderPlayerPool(); renderPlayerButtons(); renderPointTypeButtons();
       renderTeams(); renderCategories(); renderAnswerLog(); renderStatistics();
-      if (document.getElementById('sessionsModal')?.classList.contains('open')) renderSessionsList();
-      setTimeout(updateFadeMasks, 50);
+      if(analyticsOpen) renderAnalytics();
+      if(document.getElementById('sessionsModal')?.classList.contains('open')) renderSessionsList();
+      setTimeout(updateFadeMasks,50);
     }
 
     function renderSessionInfo() {
-      const s = getCurrentSession(); if (!s) return;
-      const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-      set('sessionName', s.name);
-      set('headerSessionName', s.name);
-      set('headerSessionNameMobile', s.name);
-      set('sessionCreated', new Date(s.created).toLocaleString());
-      set('sessionLastUpdated', new Date(s.lastUpdated).toLocaleString());
-      set('sessionAnswerCount', (s.answerLog||[]).length);
+      const s=getCurrentSession(); if(!s) return;
+      const set=(id,val)=>{const el=document.getElementById(id);if(el) el.textContent=val;};
+      set('sessionName',s.name); set('headerSessionName',s.name); set('headerSessionNameMobile',s.name);
+      set('sessionCreated',new Date(s.created).toLocaleString());
+      set('sessionLastUpdated',new Date(s.lastUpdated).toLocaleString());
+      set('sessionAnswerCount',(s.answerLog||[]).length);
     }
 
     // ── Players ──
     function addToPlayerPool() {
-      const input = document.getElementById('playerInput');
-      const player = input.value.trim();
-      if (!player) { alert('Please enter a player name.'); return; }
-      const id = state.currentSessionId; if (!id) return;
-      updateSessionAtomic(id, s => {
-        if (!s.players) s.players = {};
-        if (!s.players[player]) s.players[player] = {name:player, points:0, answers:[]};
-      }).then(() => { input.value = ''; saveGlobalPlayers([player]); });
-      withWriteLock(id, () => {
-        const s = getCurrentSession(); if (!s.players) s.players = {};
-        if (!s.players[player]) s.players[player] = {name:player, points:0, answers:[]};
-      });
+      const input=document.getElementById('playerInput');
+      const player=input.value.trim();
+      if(!player){alert('Please enter a player name.');return;}
+      const id=state.currentSessionId; if(!id) return;
+      updateSessionAtomic(id,s=>{if(!s.players) s.players={};if(!s.players[player]) s.players[player]={name:player,points:0,answers:[]};}).then(()=>{input.value='';saveGlobalPlayers([player]);});
+      withWriteLock(id,()=>{const s=getCurrentSession();if(!s.players) s.players={};if(!s.players[player]) s.players[player]={name:player,points:0,answers:[]};});
       renderPlayerPool(); renderPlayerButtons(); renderTeams();
     }
 
     function removeFromPlayerPool(player) {
-      const id = state.currentSessionId; if (!id) return;
-      updateSessionAtomic(id, s => {
-        if (s.players) delete s.players[player];
-        (s.teams||[]).forEach(t => { t.playerMembers = (t.playerMembers||[]).filter(p => p !== player); });
-      });
+      const id=state.currentSessionId; if(!id) return;
+      updateSessionAtomic(id,s=>{if(s.players) delete s.players[player];(s.teams||[]).forEach(t=>{t.playerMembers=(t.playerMembers||[]).filter(p=>p!==player);});});
       removeGlobalPlayer(player);
-      withWriteLock(id, () => {
-        const s = getCurrentSession(); if (!s) return;
-        if (s.players) delete s.players[player];
-        (s.teams||[]).forEach(t => { t.playerMembers = (t.playerMembers||[]).filter(p => p !== player); });
-      });
+      withWriteLock(id,()=>{const s=getCurrentSession();if(!s) return;if(s.players) delete s.players[player];(s.teams||[]).forEach(t=>{t.playerMembers=(t.playerMembers||[]).filter(p=>p!==player);});});
       renderPlayerPool(); renderPlayerButtons(); renderTeams();
     }
 
     function clearPlayerPool() {
-      if (!confirm('Clear all players?')) return;
-      const id = state.currentSessionId; if (!id) return;
-      const reset = s => { s.players={}; (s.teams||[]).forEach(t=>{t.playerMembers=[];}); s.answerLog=[]; s.answers=[]; };
-      updateSessionAtomic(id, reset);
-      withWriteLock(id, () => { const s=getCurrentSession(); if (s) reset(s); });
+      if(!confirm('Clear all players?')) return;
+      const id=state.currentSessionId; if(!id) return;
+      const reset=s=>{s.players={};(s.teams||[]).forEach(t=>{t.playerMembers=[];});s.answerLog=[];s.answers=[];};
+      updateSessionAtomic(id,reset);
+      withWriteLock(id,()=>{const s=getCurrentSession();if(s) reset(s);});
       renderPlayerPool(); renderPlayerButtons(); renderTeams(); renderAnswerLog(); renderStatistics(); renderSessionInfo();
     }
 
     function renderPlayerPool() {
-      const s = getCurrentSession(); const el = document.getElementById('playerPoolDisplay');
-      if (!el || !s) return;
-      const players = Object.keys(s.players||{});
-      el.innerHTML = players.length
-        ? players.map(p => `<span class="player-pool-item">${p}<span class="remove" onclick="removeFromPlayerPool('${p}')">×</span></span>`).join('')
-        : '<p style="color:var(--text2)">No players added yet.</p>';
+      const s=getCurrentSession(); const el=document.getElementById('playerPoolDisplay');
+      if(!el||!s) return;
+      const players=Object.keys(s.players||{});
+      el.innerHTML=players.length
+        ?players.map(p=>`<span class="player-pool-item">${p}<span class="remove" onclick="removeFromPlayerPool('${p}')">&#215;</span></span>`).join('')
+        :'<p style="color:var(--text2)">No players added yet.</p>';
     }
 
-    function getDisplayName(full, all) {
-      const parts = full.trim().split(/\s+/);
-      const first = parts[0];
-      const shared = all.some(n => n !== full && n.trim().split(/\s+/)[0] === first);
-      return (shared && parts.length > 1) ? first + ' ' + parts[parts.length-1][0] + '.' : first;
+    function getDisplayName(full,all) {
+      const parts=full.trim().split(/\s+/), first=parts[0];
+      const shared=all.some(n=>n!==full&&n.trim().split(/\s+/)[0]===first);
+      return (shared&&parts.length>1)?first+' '+parts[parts.length-1][0]+'.':first;
     }
 
     function renderPlayerButtons() {
-      const s = getCurrentSession(); const el = document.getElementById('playerButtonsContainer');
-      if (!el || !s) return;
-      const players = [...new Set((s.teams||[]).flatMap(t => t.playerMembers||[]))];
-      el.innerHTML = players.length
-        ? players.map(p => `<button class="button-player ${state.selectedPlayer===p?'selected':''}" onclick="selectPlayer('${p}')" title="${p}">${getDisplayName(p, players)}</button>`).join('')
-        : '<p style="color:var(--text2)">No players in any team yet.</p>';
+      const s=getCurrentSession(); const el=document.getElementById('playerButtonsContainer');
+      if(!el||!s) return;
+      const players=[...new Set((s.teams||[]).flatMap(t=>t.playerMembers||[]))];
+      el.innerHTML=players.length
+        ?players.map(p=>`<button class="button-player ${state.selectedPlayer===p?'selected':''}" onclick="selectPlayer('${p}')" title="${p}">${getDisplayName(p,players)}</button>`).join('')
+        :'<p style="color:var(--text2)">No players in any team yet.</p>';
     }
 
-    function selectPlayer(p) { state.selectedPlayer = state.selectedPlayer===p ? null : p; renderPlayerButtons(); }
+    function selectPlayer(p){state.selectedPlayer=state.selectedPlayer===p?null:p;renderPlayerButtons();}
 
     function handlePlayerImport(event) {
-      const file = event.target.files[0]; if (!file) return;
-      const reader = new FileReader();
-      reader.onload = e => {
-        const players = e.target.result.replace(/\r\n?/g,'\n').split('\n').flatMap(l => l.split(/[,;]+/)).map(p => p.trim()).filter(Boolean);
-        const id = state.currentSessionId; if (!id) return;
-        updateSessionAtomic(id, s => {
-          if (!s.players) s.players = {};
-          players.forEach(p => { if (!s.players[p]) s.players[p] = {name:p,points:0,answers:[]}; });
-        }).then(() => saveGlobalPlayers(players));
-        withWriteLock(id, () => {
-          const s = getCurrentSession(); if (!s.players) s.players = {};
-          players.forEach(p => { if (!s.players[p]) s.players[p] = {name:p,points:0,answers:[]}; });
-        });
+      const file=event.target.files[0]; if(!file) return;
+      const reader=new FileReader();
+      reader.onload=e=>{
+        const players=e.target.result.replace(/\r\n?/g,'\n').split('\n').flatMap(l=>l.split(/[,;]+/)).map(p=>p.trim()).filter(Boolean);
+        const id=state.currentSessionId; if(!id) return;
+        updateSessionAtomic(id,s=>{if(!s.players) s.players={};players.forEach(p=>{if(!s.players[p]) s.players[p]={name:p,points:0,answers:[]};});}).then(()=>saveGlobalPlayers(players));
+        withWriteLock(id,()=>{const s=getCurrentSession();if(!s.players) s.players={};players.forEach(p=>{if(!s.players[p]) s.players[p]={name:p,points:0,answers:[]};});});
         renderPlayerPool(); renderPlayerButtons(); renderTeams();
       };
-      reader.readAsText(file); event.target.value = '';
+      reader.readAsText(file); event.target.value='';
     }
 
     // ── Teams ──
     function addTeam() {
-      const input = document.getElementById('teamNameInput');
-      const name = input.value.trim(); if (!name) { alert('Please enter a team name.'); return; }
-      const id = state.currentSessionId; if (!id) return;
-      const team = {id: Date.now().toString(), name, playerMembers:[]};
-      updateSessionAtomic(id, s => { s.teams=toArray(s.teams); s.teams.push(team); });
-      withWriteLock(id, () => { const s=getCurrentSession(); s.teams=toArray(s.teams); s.teams.push(team); });
-      input.value = ''; renderTeams();
+      const input=document.getElementById('teamNameInput');
+      const name=input.value.trim(); if(!name){alert('Please enter a team name.');return;}
+      const id=state.currentSessionId; if(!id) return;
+      const team={id:Date.now().toString(),name,playerMembers:[]};
+      updateSessionAtomic(id,s=>{s.teams=toArray(s.teams);s.teams.push(team);});
+      withWriteLock(id,()=>{const s=getCurrentSession();s.teams=toArray(s.teams);s.teams.push(team);});
+      input.value=''; renderTeams();
     }
 
     function removeTeam(teamId) {
-      const id = state.currentSessionId; if (!id) return;
-      const filter = s => { s.teams = toArray(s.teams).filter(t => t.id !== teamId); };
-      updateSessionAtomic(id, filter);
-      withWriteLock(id, () => { const s=getCurrentSession(); if (s) filter(s); });
+      const id=state.currentSessionId; if(!id) return;
+      const filter=s=>{s.teams=toArray(s.teams).filter(t=>t.id!==teamId);};
+      updateSessionAtomic(id,filter);
+      withWriteLock(id,()=>{const s=getCurrentSession();if(s) filter(s);});
       renderTeams(); renderPlayerButtons();
     }
 
-    function updateTeamName(teamId, newName) {
-      const id = state.currentSessionId; if (!id) return;
-      const update = s => { const t=toArray(s.teams).find(t=>t.id===teamId); if (t) t.name=newName; };
-      updateSessionAtomic(id, update);
-      withWriteLock(id, () => { const s=getCurrentSession(); if (s) update(s); });
+    function updateTeamName(teamId,newName) {
+      const id=state.currentSessionId; if(!id) return;
+      const update=s=>{const t=toArray(s.teams).find(t=>t.id===teamId);if(t) t.name=newName;};
+      updateSessionAtomic(id,update);
+      withWriteLock(id,()=>{const s=getCurrentSession();if(s) update(s);});
     }
 
-    function togglePlayerInTeam(teamId, player) {
-      const id = state.currentSessionId; if (!id) return;
-      const toggle = s => {
-        const t = toArray(s.teams).find(t=>t.id===teamId); if (!t) return;
-        t.playerMembers = toArray(t.playerMembers);
-        const i = t.playerMembers.indexOf(player);
-        if (i > -1) t.playerMembers.splice(i,1); else t.playerMembers.push(player);
-      };
-      updateSessionAtomic(id, toggle);
-      withWriteLock(id, () => { const s=getCurrentSession(); if (s) toggle(s); });
+    function togglePlayerInTeam(teamId,player) {
+      const id=state.currentSessionId; if(!id) return;
+      const toggle=s=>{const t=toArray(s.teams).find(t=>t.id===teamId);if(!t) return;t.playerMembers=toArray(t.playerMembers);const i=t.playerMembers.indexOf(player);if(i>-1) t.playerMembers.splice(i,1);else t.playerMembers.push(player);};
+      updateSessionAtomic(id,toggle);
+      withWriteLock(id,()=>{const s=getCurrentSession();if(s) toggle(s);});
       renderTeams(); renderPlayerButtons();
     }
 
     function renderTeams() {
-      const s = getCurrentSession(); const el = document.getElementById('teamsContainer');
-      if (!el || !s) return;
-      const teams = s.teams||[];
-      if (!teams.length) { el.innerHTML = '<p style="color:var(--text2)">No teams created yet.</p>'; return; }
-      const players = Object.keys(s.players||{});
-      el.innerHTML = teams.map(team => `
+      const s=getCurrentSession(); const el=document.getElementById('teamsContainer');
+      if(!el||!s) return;
+      const teams=s.teams||[];
+      if(!teams.length){el.innerHTML='<p style="color:var(--text2)">No teams created yet.</p>';return;}
+      const players=Object.keys(s.players||{});
+      el.innerHTML=teams.map(team=>`
         <div class="team-section">
           <input type="text" value="${team.name}" onchange="updateTeamName('${team.id}',this.value)" />
           <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;">
-            ${players.length ? players.map(p=>`<button class="button-category ${team.playerMembers.includes(p)?'selected':''}" onclick="togglePlayerInTeam('${team.id}','${p}')">${p}</button>`).join('') : '<p style="color:var(--text2)">No players available.</p>'}
+            ${players.length?players.map(p=>`<button class="button-category ${team.playerMembers.includes(p)?'selected':''}" onclick="togglePlayerInTeam('${team.id}','${p}')">${p}</button>`).join(''):'<p style="color:var(--text2)">No players available.</p>'}
           </div>
           <button class="button button-danger" onclick="removeTeam('${team.id}')" style="margin-top:10px;">Remove Team</button>
         </div>`).join('');
@@ -1240,235 +1450,193 @@
 
     // ── Categories ──
     function saveCategories() {
-      state.categories = document.getElementById('categoriesInput').value.split(',').map(c=>c.trim()).filter(Boolean).sort((a,b)=>a.localeCompare(b));
-      const id = state.currentSessionId; if (!id) return;
-      updateSessionAtomic(id, s => { s.categories=[...state.categories]; });
-      withWriteLock(id, () => { const s=getCurrentSession(); if (s) s.categories=[...state.categories]; });
+      state.categories=document.getElementById('categoriesInput').value.split(',').map(c=>c.trim()).filter(Boolean).sort((a,b)=>a.localeCompare(b));
+      const id=state.currentSessionId; if(!id) return;
+      updateSessionAtomic(id,s=>{s.categories=[...state.categories];});
+      withWriteLock(id,()=>{const s=getCurrentSession();if(s) s.categories=[...state.categories];});
       renderCategories();
     }
 
     function renderCategories() {
-      const el = document.getElementById('categoryButtonsContainer'); if (!el) return;
-      el.innerHTML = state.categories.length
-        ? state.categories.map(c=>`<button class="button-category ${state.selectedCategory===c?'selected':''}" data-category="${c}" onclick="selectCategory('${c}')">${c}</button>`).join('')
-        : '<p style="color:var(--text2);grid-column:1/-1">No categories added yet.</p>';
+      const el=document.getElementById('categoryButtonsContainer'); if(!el) return;
+      el.innerHTML=state.categories.length
+        ?state.categories.map(c=>`<button class="button-category ${state.selectedCategory===c?'selected':''}" data-category="${c}" onclick="selectCategory('${c}')">${c}</button>`).join('')
+        :'<p style="color:var(--text2);grid-column:1/-1">No categories added yet.</p>';
     }
 
     function selectCategory(c) {
-      state.selectedCategory = state.selectedCategory===c ? null : c;
-      document.querySelectorAll('#categoryButtonsContainer .button-category').forEach(btn => btn.classList.toggle('selected', btn.dataset.category===state.selectedCategory));
+      state.selectedCategory=state.selectedCategory===c?null:c;
+      document.querySelectorAll('#categoryButtonsContainer .button-category').forEach(btn=>btn.classList.toggle('selected',btn.dataset.category===state.selectedCategory));
     }
 
     // ── Answers ──
     function selectPointType(type) {
-      state.selectedPointType = state.selectedPointType===type ? null : type;
+      state.selectedPointType=state.selectedPointType===type?null:type;
       renderPointTypeButtons();
-      const hint = document.getElementById('categoryOptionalHint');
-      if (hint) hint.style.display = state.selectedPointType==='Neg' ? 'inline' : 'none';
+      const hint=document.getElementById('categoryOptionalHint');
+      if(hint) hint.style.display=state.selectedPointType==='Neg'?'inline':'none';
     }
 
     function renderPointTypeButtons() {
-      document.querySelectorAll('.button-point-type').forEach(btn => {
-        const match = state.selectedPointType && btn.textContent.includes(state.selectedPointType);
-        btn.classList.toggle('selected', !!match);
+      document.querySelectorAll('.button-point-type').forEach(btn=>{
+        btn.classList.toggle('selected',!!state.selectedPointType&&btn.textContent.includes(state.selectedPointType));
       });
     }
 
     function recordAnswer() {
-      const id = state.currentSessionId; if (!id) return;
-      if (!state.selectedPlayer)    { alert('Please select a player.'); return; }
-      if (!state.selectedPointType) { alert('Please select a point type.'); return; }
-      if (!state.selectedCategory && state.selectedPointType !== 'Neg') { alert('Please select a category.'); return; }
-      const pointMap = {'Toss-up':10,'Bonus':10,'Neg':-5,'Power':15};
-      const points = pointMap[state.selectedPointType];
-      const answer = {id:Date.now().toString(), player:state.selectedPlayer, pointType:state.selectedPointType, category:state.selectedCategory||'—', points, timestamp:new Date().toISOString()};
-      const applyAnswer = s => {
-        s.answerLog = toArray(s.answerLog); s.answerLog.push(answer);
-        if (!s.players) s.players = {};
-        const p = s.players[answer.player] || (s.players[answer.player]={name:answer.player,points:0,answers:[]});
-        p.answers = toArray(p.answers); p.answers.push(answer);
-        p.points = (p.points||0) + points;
+      const id=state.currentSessionId; if(!id) return;
+      if(!state.selectedPlayer)    {alert('Please select a player.');return;}
+      if(!state.selectedPointType) {alert('Please select a point type.');return;}
+      if(!state.selectedCategory&&state.selectedPointType!=='Neg') {alert('Please select a category.');return;}
+      const pointMap={'Toss-up':10,'Bonus':10,'Neg':-5,'Power':15};
+      const points=pointMap[state.selectedPointType];
+      const answer={id:Date.now().toString(),player:state.selectedPlayer,pointType:state.selectedPointType,category:state.selectedCategory||'—',points,timestamp:new Date().toISOString()};
+      const applyAnswer=s=>{
+        s.answerLog=toArray(s.answerLog); s.answerLog.push(answer);
+        if(!s.players) s.players={};
+        const p=s.players[answer.player]||(s.players[answer.player]={name:answer.player,points:0,answers:[]});
+        p.answers=toArray(p.answers); p.answers.push(answer); p.points=(p.points||0)+points;
       };
-      updateSessionAtomic(id, applyAnswer);
-      withWriteLock(id, () => { const s=getCurrentSession(); if (s) applyAnswer(s); });
+      updateSessionAtomic(id,applyAnswer);
+      withWriteLock(id,()=>{const s=getCurrentSession();if(s) applyAnswer(s);});
       state.selectedPlayer=null; state.selectedPointType=null; state.selectedCategory=null;
       renderAll();
     }
 
     function deleteAnswer(answerId) {
-      const id = state.currentSessionId; if (!id) return;
-      const del = s => {
-        s.answerLog = toArray(s.answerLog);
-        const a = s.answerLog.find(x=>x.id===answerId); if (!a) return;
-        s.answerLog = s.answerLog.filter(x=>x.id!==answerId);
-        if (s.players?.[a.player]) {
-          s.players[a.player].answers = toArray(s.players[a.player].answers).filter(x=>x.id!==answerId);
-          s.players[a.player].points = (s.players[a.player].points||0) - (a.points||0);
-        }
+      const id=state.currentSessionId; if(!id) return;
+      const del=s=>{
+        s.answerLog=toArray(s.answerLog);
+        const a=s.answerLog.find(x=>x.id===answerId); if(!a) return;
+        s.answerLog=s.answerLog.filter(x=>x.id!==answerId);
+        if(s.players?.[a.player]){s.players[a.player].answers=toArray(s.players[a.player].answers).filter(x=>x.id!==answerId);s.players[a.player].points=(s.players[a.player].points||0)-(a.points||0);}
       };
-      updateSessionAtomic(id, del);
-      withWriteLock(id, () => { const s=getCurrentSession(); if (s) del(s); });
+      updateSessionAtomic(id,del);
+      withWriteLock(id,()=>{const s=getCurrentSession();if(s) del(s);});
       renderAll();
     }
 
     function clearAnswerLog() {
-      if (!confirm('Clear all answers?')) return;
-      const id = state.currentSessionId; if (!id) return;
-      const clear = s => { s.answerLog=[]; Object.values(s.players||{}).forEach(p=>{p.points=0;p.answers=[];}); };
-      updateSessionAtomic(id, clear);
-      withWriteLock(id, () => { const s=getCurrentSession(); if (s) clear(s); });
+      if(!confirm('Clear all answers?')) return;
+      const id=state.currentSessionId; if(!id) return;
+      const clear=s=>{s.answerLog=[];Object.values(s.players||{}).forEach(p=>{p.points=0;p.answers=[];});};
+      updateSessionAtomic(id,clear);
+      withWriteLock(id,()=>{const s=getCurrentSession();if(s) clear(s);});
       renderAll();
     }
 
     function renderAnswerLog() {
-      const s = getCurrentSession(); const el = document.getElementById('answerLog');
-      if (!el || !s) return;
-      const answers = s.answerLog||[];
-      el.innerHTML = answers.length
-        ? [...answers].reverse().map((a,i) => `
+      const s=getCurrentSession(); const el=document.getElementById('answerLog');
+      if(!el||!s) return;
+      const answers=s.answerLog||[];
+      el.innerHTML=answers.length
+        ?[...answers].reverse().map((a,i)=>`
             <div class="log-entry">
-              <span><strong>${answers.length-i}. ${a.player}</strong> — ${a.pointType} (${a.points>0?'+':''}${a.points} pts) — ${a.category}</span>
+              <span><strong>${answers.length-i}. ${a.player}</strong> &mdash; ${a.pointType} (${a.points>0?'+':''}${a.points} pts) &mdash; ${a.category}</span>
               <button class="button button-danger" onclick="deleteAnswer('${a.id}')" style="padding:4px 8px;font-size:.8em;">Delete</button>
             </div>`).join('')
-        : '<p style="color:var(--text2)">No answers recorded yet.</p>';
-      el.onscroll = updateFadeMasks;
-      setTimeout(updateFadeMasks, 20);
+        :'<p style="color:var(--text2)">No answers recorded yet.</p>';
+      el.onscroll=updateFadeMasks;
+      setTimeout(updateFadeMasks,20);
     }
 
     // ── Statistics ──
     function calculatePlayerStats() {
-      return Object.values(getCurrentSession()?.players||{}).map(p => {
-        const a = p.answers||[];
-        return {
-          name: p.name, points: p.points, totalAnswers: a.length,
-          tossupsCorrect: a.filter(x=>x.pointType==='Toss-up').length,
-          bonusPoints: a.filter(x=>x.pointType==='Bonus').length * 10,
-          negs: a.filter(x=>x.pointType==='Neg').length,
-          powers: a.filter(x=>x.pointType==='Power').length
-        };
-      }).sort((a,b) => b.points!==a.points ? b.points-a.points : b.powers!==a.powers ? b.powers-a.powers : a.negs-b.negs);
+      return Object.values(getCurrentSession()?.players||{}).map(p=>{
+        const a=p.answers||[];
+        return {name:p.name,points:p.points,totalAnswers:a.length,tossupsCorrect:a.filter(x=>x.pointType==='Toss-up').length,bonusPoints:a.filter(x=>x.pointType==='Bonus').length*10,negs:a.filter(x=>x.pointType==='Neg').length,powers:a.filter(x=>x.pointType==='Power').length};
+      }).sort((a,b)=>b.points!==a.points?b.points-a.points:b.powers!==a.powers?b.powers-a.powers:a.negs-b.negs);
     }
 
     function calculateTeamStats() {
-      const s = getCurrentSession();
-      return (s?.teams||[]).map(team => {
-        let pts=0, ans=0;
-        team.playerMembers.forEach(n => { const p=s.players[n]; if(p){pts+=p.points;ans+=(p.answers||[]).length;} });
-        return {name:team.name, totalPoints:pts, totalAnswers:ans, members:team.playerMembers, averagePerMember:team.playerMembers.length?(pts/team.playerMembers.length).toFixed(2):0};
-      }).sort((a,b) => b.totalPoints-a.totalPoints);
+      const s=getCurrentSession();
+      return (s?.teams||[]).map(team=>{
+        let pts=0,ans=0;
+        team.playerMembers.forEach(n=>{const p=s.players[n];if(p){pts+=p.points;ans+=(p.answers||[]).length;}});
+        return {name:team.name,totalPoints:pts,totalAnswers:ans,members:team.playerMembers,averagePerMember:team.playerMembers.length?(pts/team.playerMembers.length).toFixed(2):0};
+      }).sort((a,b)=>b.totalPoints-a.totalPoints);
     }
 
     function buildRankingList(players) {
-      let html='', rank=1;
-      players.forEach((s,i) => {
-        const prev = players[i-1];
-        const tied = prev && prev.points===s.points && prev.powers===s.powers && prev.negs===s.negs;
-        if (i>0 && !tied) rank=i+1;
-        const sfx = ['st','nd','rd'][rank-1]||'th';
-        html += `<li style="padding:6px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
-          <span><strong style="color:var(--primary);min-width:42px;display:inline-block;">${rank}${sfx}</strong> ${s.name}</span>
-          <span style="color:var(--text2);font-size:.92em;">${s.points} pts${s.powers?' · '+s.powers+'pw':''}${s.negs?' · '+s.negs+'neg':''}</span>
-        </li>`;
+      let html='',rank=1;
+      players.forEach((s,i)=>{
+        const prev=players[i-1];
+        const tied=prev&&prev.points===s.points&&prev.powers===s.powers&&prev.negs===s.negs;
+        if(i>0&&!tied) rank=i+1;
+        const sfx=['st','nd','rd'][rank-1]||'th';
+        html+=`<li style="padding:6px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;"><span><strong style="color:var(--primary);min-width:42px;display:inline-block;">${rank}${sfx}</strong> ${s.name}</span><span style="color:var(--text2);font-size:.92em;">${s.points} pts${s.powers?' &middot; '+s.powers+'pw':''}${s.negs?' &middot; '+s.negs+'neg':''}</span></li>`;
       });
       return html;
     }
 
     function renderStatistics() {
-      const el = document.getElementById('statisticsContainer'); if (!el) return;
-      const open = new Set();
-      el.querySelectorAll('.stat-card:not(.collapsed),.team-stat-card:not(.collapsed)').forEach(c => {
-        const n = c.querySelector('.player-name,.team-name'); if (n) open.add(n.textContent.trim());
-      });
-      const ps = calculatePlayerStats(), ts = calculateTeamStats();
-      const active = ps.filter(s=>s.totalAnswers>0);
-      let html = '<div class="stats-grid">';
-      ts.forEach(t => {
-        html += `<div class="team-stat-card collapsed"><h3 onclick="toggleStatCard(event)"><span class="team-name">${t.name}</span><span class="team-score">${t.totalPoints} pts</span></h3><div class="stat-details"><div class="stat-row"><span class="stat-label">Total Points:</span><span class="stat-value">${t.totalPoints}</span></div><div class="stat-row"><span class="stat-label">Total Answers:</span><span class="stat-value">${t.totalAnswers}</span></div><div class="stat-row"><span class="stat-label">Avg per Member:</span><span class="stat-value">${t.averagePerMember}</span></div><div class="stat-row"><span class="stat-label">Members:</span><span>${t.members.join(', ')||'None'}</span></div></div></div>`;
-      });
-      if (active.length) {
-        active.forEach(s => {
-          html += `<div class="stat-card collapsed"><h3 onclick="toggleStatCard(event)"><span class="player-name">${s.name}</span><span class="player-score">${s.points} pts</span></h3><div class="stat-details"><div class="stat-row"><span class="stat-label">Total Points:</span><span class="stat-value">${s.points}</span></div><div class="stat-row"><span class="stat-label">Answers:</span><span class="stat-value">${s.totalAnswers}</span></div><div class="stat-row"><span class="stat-label">Toss-ups:</span><span class="stat-value">${s.tossupsCorrect}</span></div><div class="stat-row"><span class="stat-label">Bonus Pts:</span><span class="stat-value">${s.bonusPoints}</span></div><div class="stat-row"><span class="stat-label">Negs:</span><span class="stat-value">${s.negs}</span></div><div class="stat-row"><span class="stat-label">Powers:</span><span class="stat-value">${s.powers}</span></div></div></div>`;
-        });
-        html += `<div class="overall-ranking"><h3 style="margin-top:0;">Player Rankings</h3><ol style="list-style:none;margin:12px 0 0;padding:0;">${buildRankingList(active)}</ol></div>`;
-      } else {
-        html += '<p style="color:var(--text2)">No statistics available yet.</p>';
-      }
-      html += '</div>';
-      el.innerHTML = html;
-      if (open.size) {
-        el.querySelectorAll('.stat-card,.team-stat-card').forEach(c => {
-          const n = c.querySelector('.player-name,.team-name');
-          if (n && open.has(n.textContent.trim())) c.classList.remove('collapsed');
-        });
-      }
+      const el=document.getElementById('statisticsContainer'); if(!el) return;
+      const open=new Set();
+      el.querySelectorAll('.stat-card:not(.collapsed),.team-stat-card:not(.collapsed)').forEach(c=>{const n=c.querySelector('.player-name,.team-name');if(n) open.add(n.textContent.trim());});
+      const ps=calculatePlayerStats(),ts=calculateTeamStats(),active=ps.filter(s=>s.totalAnswers>0);
+      let html='<div class="stats-grid">';
+      ts.forEach(t=>{html+=`<div class="team-stat-card collapsed"><h3 onclick="toggleStatCard(event)"><span class="team-name">${t.name}</span><span class="team-score">${t.totalPoints} pts</span></h3><div class="stat-details"><div class="stat-row"><span class="stat-label">Total Points:</span><span class="stat-value">${t.totalPoints}</span></div><div class="stat-row"><span class="stat-label">Total Answers:</span><span class="stat-value">${t.totalAnswers}</span></div><div class="stat-row"><span class="stat-label">Avg per Member:</span><span class="stat-value">${t.averagePerMember}</span></div><div class="stat-row"><span class="stat-label">Members:</span><span>${t.members.join(', ')||'None'}</span></div></div></div>`;});
+      if(active.length){
+        active.forEach(s=>{html+=`<div class="stat-card collapsed"><h3 onclick="toggleStatCard(event)"><span class="player-name">${s.name}</span><span class="player-score">${s.points} pts</span></h3><div class="stat-details"><div class="stat-row"><span class="stat-label">Total Points:</span><span class="stat-value">${s.points}</span></div><div class="stat-row"><span class="stat-label">Answers:</span><span class="stat-value">${s.totalAnswers}</span></div><div class="stat-row"><span class="stat-label">Toss-ups:</span><span class="stat-value">${s.tossupsCorrect}</span></div><div class="stat-row"><span class="stat-label">Bonus Pts:</span><span class="stat-value">${s.bonusPoints}</span></div><div class="stat-row"><span class="stat-label">Negs:</span><span class="stat-value">${s.negs}</span></div><div class="stat-row"><span class="stat-label">Powers:</span><span class="stat-value">${s.powers}</span></div></div></div>`;});
+        html+=`<div class="overall-ranking"><h3 style="margin-top:0;">Player Rankings</h3><ol style="list-style:none;margin:12px 0 0;padding:0;">${buildRankingList(active)}</ol></div>`;
+      } else {html+='<p style="color:var(--text2)">No statistics available yet.</p>';}
+      html+='</div>';
+      el.innerHTML=html;
+      if(open.size){el.querySelectorAll('.stat-card,.team-stat-card').forEach(c=>{const n=c.querySelector('.player-name,.team-name');if(n&&open.has(n.textContent.trim())) c.classList.remove('collapsed');});}
     }
 
-    function toggleStatCard(e) { e.currentTarget.closest('.stat-card,.team-stat-card')?.classList.toggle('collapsed'); }
+    function toggleStatCard(e){e.currentTarget.closest('.stat-card,.team-stat-card')?.classList.toggle('collapsed');}
 
     // ── Export / Import ──
     function importFromJSON(event) {
-      const file = event.target.files[0]; if (!file) return;
-      const statusEl = document.getElementById('importStatus');
+      const file=event.target.files[0]; if(!file) return;
+      const statusEl=document.getElementById('importStatus');
       statusEl.style.display='block'; statusEl.style.color='var(--text2)'; statusEl.textContent='Reading file...';
-      const reader = new FileReader();
-      reader.onload = e => {
+      const reader=new FileReader();
+      reader.onload=e=>{
         try {
-          const data = JSON.parse(e.target.result);
-          if (!data.sessionName || (!data.players && !data.answerLog)) throw new Error('Not a valid export.');
-          const existingId = Object.keys(state.sessions).find(id => state.sessions[id].name===data.sessionName);
-          if (existingId && !confirm('Session "'+data.sessionName+'" exists. Overwrite?')) { statusEl.textContent='Cancelled.'; event.target.value=''; return; }
-          const sid = existingId || Date.now().toString();
-          const imported = {id:sid, name:data.sessionName, created:data.created||new Date().toISOString(), lastUpdated:new Date().toISOString(), players:data.players||{}, teams:data.teams||[], categories:data.categories||[], answers:data.answers||[], answerLog:data.answerLog||[]};
-          Object.keys(imported.players).forEach(name => {
-            imported.players[name].answers = imported.answerLog.filter(a=>a.player===name);
-            imported.players[name].points  = imported.players[name].answers.reduce((s,a)=>s+(a.points||0),0);
-          });
+          const data=JSON.parse(e.target.result);
+          if(!data.sessionName||(!data.players&&!data.answerLog)) throw new Error('Not a valid export.');
+          const existingId=Object.keys(state.sessions).find(id=>state.sessions[id].name===data.sessionName);
+          if(existingId&&!confirm('Session "'+data.sessionName+'" exists. Overwrite?')){statusEl.textContent='Cancelled.';event.target.value='';return;}
+          const sid=existingId||Date.now().toString();
+          const imported={id:sid,name:data.sessionName,created:data.created||new Date().toISOString(),lastUpdated:new Date().toISOString(),players:data.players||{},teams:data.teams||[],categories:data.categories||[],answers:data.answers||[],answerLog:data.answerLog||[]};
+          Object.keys(imported.players).forEach(name=>{imported.players[name].answers=imported.answerLog.filter(a=>a.player===name);imported.players[name].points=imported.players[name].answers.reduce((s,a)=>s+(a.points||0),0);});
           state.sessions[sid]=imported; state.currentSessionId=sid;
           loadSessionData(); saveAllData(); renderAll();
           statusEl.style.color='var(--success)'; statusEl.textContent='Imported "'+imported.name+'" with '+imported.answerLog.length+' answers.';
-        } catch(err) { statusEl.style.color='var(--danger)'; statusEl.textContent='Import failed: '+err.message; }
+        } catch(err){statusEl.style.color='var(--danger)';statusEl.textContent='Import failed: '+err.message;}
         event.target.value='';
       };
-      reader.onerror = () => { statusEl.style.color='var(--danger)'; statusEl.textContent='Failed to read file.'; };
+      reader.onerror=()=>{statusEl.style.color='var(--danger)';statusEl.textContent='Failed to read file.';};
       reader.readAsText(file);
     }
 
     function exportToExcel() {
-      const s = getCurrentSession(); if (!s) return;
-      const ps = calculatePlayerStats(), ts = calculateTeamStats(), csv = [];
-      if (document.getElementById('exportPlayers').classList.contains('selected')) {
-        csv.push('Player Statistics','Player Name,Total Points,Total Answers,Toss-ups,Bonuses,Negs,Powers');
-        ps.forEach(p => csv.push([p.name,p.points,p.totalAnswers,p.tossupsCorrect,p.bonusPoints/10,p.negs,p.powers].join(',')));
-        csv.push('');
-      }
-      if (document.getElementById('exportTeamStats').classList.contains('selected') && ts.length) {
-        csv.push('Team Statistics','Team Name,Total Points,Total Answers,Members');
-        ts.forEach(t => csv.push([t.name,t.totalPoints,t.totalAnswers,'"'+t.members.join(', ')+'"'].join(',')));
-        csv.push('');
-      }
-      if (document.getElementById('exportAnswerLog').classList.contains('selected')) {
-        csv.push('Answer Log','Player,Point Type,Category,Points,Timestamp');
-        (s.answerLog||[]).forEach(a => csv.push([a.player,a.pointType,a.category,a.points,new Date(a.timestamp).toLocaleString()].join(',')));
-      }
-      downloadFile(csv.join('\n'), 'quiz-bowl-'+s.name+'-'+new Date().toISOString().split('T')[0]+'.csv', 'text/csv');
+      const s=getCurrentSession(); if(!s) return;
+      const ps=calculatePlayerStats(),ts=calculateTeamStats(),csv=[];
+      if(document.getElementById('exportPlayers').classList.contains('selected')){csv.push('Player Statistics','Player Name,Total Points,Total Answers,Toss-ups,Bonuses,Negs,Powers');ps.forEach(p=>csv.push([p.name,p.points,p.totalAnswers,p.tossupsCorrect,p.bonusPoints/10,p.negs,p.powers].join(',')));csv.push('');}
+      if(document.getElementById('exportTeamStats').classList.contains('selected')&&ts.length){csv.push('Team Statistics','Team Name,Total Points,Total Answers,Members');ts.forEach(t=>csv.push([t.name,t.totalPoints,t.totalAnswers,'"'+t.members.join(', ')+'"'].join(',')));csv.push('');}
+      if(document.getElementById('exportAnswerLog').classList.contains('selected')){csv.push('Answer Log','Player,Point Type,Category,Points,Timestamp');(s.answerLog||[]).forEach(a=>csv.push([a.player,a.pointType,a.category,a.points,new Date(a.timestamp).toLocaleString()].join(',')));}
+      downloadFile(csv.join('\n'),'quiz-bowl-'+s.name+'-'+new Date().toISOString().split('T')[0]+'.csv','text/csv');
     }
 
     function exportToJSON() {
-      const s = getCurrentSession(); if (!s) return;
-      downloadFile(JSON.stringify({sessionName:s.name,created:s.created,lastUpdated:s.lastUpdated,players:s.players,teams:s.teams,answerLog:s.answerLog,categories:state.categories},null,2), 'quiz-bowl-'+s.name+'-'+new Date().toISOString().split('T')[0]+'.json', 'application/json');
+      const s=getCurrentSession(); if(!s) return;
+      downloadFile(JSON.stringify({sessionName:s.name,created:s.created,lastUpdated:s.lastUpdated,players:s.players,teams:s.teams,answerLog:s.answerLog,categories:state.categories},null,2),'quiz-bowl-'+s.name+'-'+new Date().toISOString().split('T')[0]+'.json','application/json');
     }
 
-    function downloadFile(content, filename, mimeType) {
-      const a = document.createElement('a');
-      a.href = 'data:'+mimeType+';charset=utf-8,'+encodeURIComponent(content);
-      a.download = filename; a.style.display='none';
+    function downloadFile(content,filename,mimeType) {
+      const a=document.createElement('a');
+      a.href='data:'+mimeType+';charset=utf-8,'+encodeURIComponent(content);
+      a.download=filename; a.style.display='none';
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
     }
 
     // ── Reset ──
     function resetAllData() {
-      if (prompt('Enter the admin password to delete all data:') !== 'Neg 5') { alert('Incorrect password.'); return; }
-      if (!confirm('Delete ALL sessions and data? Cannot be undone!')) return;
+      if(prompt('Enter the admin password:')!=='Neg 5'){alert('Incorrect password.');return;}
+      if(!confirm('Delete ALL sessions and data? Cannot be undone!')) return;
       sessionsRef.remove().catch(e=>showFirebaseError(e.message));
       globalPlayersRef.remove().catch(e=>showFirebaseError(e.message));
       localStorage.setItem(CURRENT_SESSION_KEY,'');
@@ -1477,35 +1645,26 @@
     }
 
     // ── Init ──
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded',()=>{
       restoreVisualSettings();
       updateHeaderHeight();
-
-      window.addEventListener('resize', () => { updateHeaderHeight(); applySidebarState(); updateFadeMasks(); });
-
-      document.getElementById('qbScroll')?.addEventListener('scroll', updateFadeMasks);
-      document.querySelector('.sidebar-sections')?.addEventListener('scroll', updateFadeMasks);
-
+      window.addEventListener('resize',()=>{updateHeaderHeight();applySidebarState();updateFadeMasks();});
+      document.getElementById('qbScroll')?.addEventListener('scroll',updateFadeMasks);
+      document.getElementById('analyticsScroll')?.addEventListener('scroll',updateFadeMasks);
+      document.querySelector('.sidebar-sections')?.addEventListener('scroll',updateFadeMasks);
       loadAllData();
       setupGlobalPlayers();
-      setInterval(() => { saveAllData(); updateAutoSave(); }, 5000);
+      setInterval(()=>{saveAllData();updateAutoSave();},5000);
       setupSectionToggle();
       applySidebarState();
-
-      const savedSection = localStorage.getItem('activeSidebarSection') || 'sec-session';
+      const savedSection=localStorage.getItem('activeSidebarSection')||'sec-session';
       showSection(savedSection);
-
-      document.getElementById('sidebarOpenBtn').onclick = toggleSidebar;
-      document.getElementById('sidebarOpenBtnMobile').onclick = toggleSidebar;
-
-      document.addEventListener('click', e => {
-        const w = document.getElementById('sidebarJumpWrapper');
-        if (w && !w.contains(e.target)) w.classList.remove('open');
-        // Close modals when clicking the backdrop
-        ['helpModal','sessionsModal'].forEach(id => {
-          const m = document.getElementById(id);
-          if (m && e.target === m) m.classList.remove('open');
-        });
+      document.getElementById('sidebarOpenBtn').onclick=toggleSidebar;
+      document.getElementById('sidebarOpenBtnMobile').onclick=toggleSidebar;
+      document.addEventListener('click',e=>{
+        const w=document.getElementById('sidebarJumpWrapper');
+        if(w&&!w.contains(e.target)) w.classList.remove('open');
+        ['helpModal','sessionsModal'].forEach(id=>{const m=document.getElementById(id);if(m&&e.target===m) m.classList.remove('open');});
       });
     });
   </script>
