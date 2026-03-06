@@ -87,25 +87,25 @@
       height: 100vh;
       overflow: hidden;
       color: var(--text-color);
+      display: flex;
+      flex-direction: column;
     }
     
     .container {
       width: 100%;
-      height: 100vh;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
       background: var(--bg-color);
-      border-radius: 0;
-      box-shadow: none;
-      overflow-y: auto;
-      overflow-x: hidden;
+      overflow: hidden;
       transition: all 0.3s ease;
-      scrollbar-width: none;
     }
     .container::-webkit-scrollbar { display: none; }
     
     .header {
       background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
       color: white;
-      padding: 36px 34px 52px 24px;
+      padding: 36px 24px 52px;
       text-align: center;
       display: flex;
       justify-content: center;
@@ -113,10 +113,9 @@
       flex-wrap: wrap;
       gap: 20px;
       box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
-      position: sticky;
-      top: 0;
+      position: relative;
       z-index: 200;
-      overflow-x: hidden;
+      flex-shrink: 0;
     }
     
 
@@ -177,26 +176,37 @@
     
     .content {
       padding: clamp(20px, 6vw, 32px);
-      overflow: visible;
+      overflow-y: auto;
+      overflow-x: hidden;
+      flex: 1;
+      scrollbar-width: thin;
+      scrollbar-color: var(--primary-color) transparent;
     }
+    .content::-webkit-scrollbar { width: 8px; }
+    .content::-webkit-scrollbar-button { display: none; }
+    .content::-webkit-scrollbar-track { background: transparent; }
+    .content::-webkit-scrollbar-thumb { background: var(--primary-color); border-radius: 10px; }
+    .content::-webkit-scrollbar-thumb:hover { background: var(--primary-dark); }
 
     .layout {
-      display: grid;
-      grid-template-columns: 320px 1fr;
-      gap: 20px;
-      align-items: start;
+      display: block;
+      margin-left: 340px;
+      transition: margin-left 0.3s ease;
     }
 
     .sidebar {
-      position: sticky;
-      top: 0;
-      align-self: start;
-      max-height: 100vh;
-      overflow-y: auto;
-      overflow-x: visible;
-      padding-right: 6px;
-      scrollbar-width: thin;
-      scrollbar-color: var(--primary-color) transparent;
+      position: fixed;
+      top: var(--header-height, 130px);
+      left: 0;
+      bottom: 0;
+      width: 320px;
+      overflow: visible;
+      display: flex;
+      flex-direction: column;
+      padding: 20px 6px 20px 20px;
+      z-index: 100;
+      background: var(--bg-color);
+      transition: transform 0.3s ease, visibility 0.3s ease;
     }
     .sidebar::-webkit-scrollbar { width: 6px; }
     .sidebar::-webkit-scrollbar-track { background: transparent; }
@@ -211,21 +221,20 @@
       grid-template-columns: 1fr;
     }
 
-    .layout.collapsed .sidebar {
-      overflow: hidden !important;
+    .layout.collapsed .layout.collapsed .sidebar {
       transform: translateX(-100%);
       visibility: hidden;
-      width: 0 !important;
-      display: none !important;
-      padding: 0 !important;
     }
 
 
     @media (max-width: 900px) {
-      .layout { grid-template-columns: 1fr; }
-      .sidebar { position: relative; max-height: none; order: 2; }
-      .main { order: 1; }
-
+      .layout {
+        margin-left: 0 !important;
+      }
+      .sidebar {
+        transform: translateX(-100%);
+        visibility: hidden;
+      }
     }
     
     .section {
@@ -819,7 +828,7 @@
     .status-badge.inactive { background: var(--warning-color); color: #333; box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3); }
 
     @media (max-width: 768px) {
-      body { padding: 8px; }
+      /* body padding removed on mobile — causes horizontal overflow */
       /* Mobile header: stack everything vertically, no absolute positioning */
       .header {
         padding: 16px;
@@ -886,7 +895,6 @@
       .modal-content { margin: 20px auto; width: 95%; padding: 20px; }
       .theme-controls { padding: 6px 12px; }
     }
-
 
     /* ===== One-section-at-a-time sidebar ===== */
     .sidebar .section { display: none; }
@@ -957,6 +965,18 @@
       background: var(--section-bg);
     }
 
+    .sidebar-sections {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: visible;
+      scrollbar-width: thin;
+      scrollbar-color: var(--primary-color) transparent;
+    }
+    .sidebar-sections::-webkit-scrollbar { width: 6px; }
+    .sidebar-sections::-webkit-scrollbar-track { background: transparent; }
+    .sidebar-sections::-webkit-scrollbar-thumb { background: var(--primary-color); border-radius: 10px; }
+    .sidebar-sections::-webkit-scrollbar-thumb:hover { background: var(--primary-dark); }
+
     /* ===== Sidebar Nav Bar ===== */
     .sidebar-nav {
       display: flex;
@@ -967,9 +987,9 @@
       border-radius: 10px;
       margin-bottom: 16px;
       box-shadow: var(--shadow-sm);
-      position: sticky;
-      top: 0;
-      z-index: 10;
+      position: relative;
+      z-index: 50;
+      flex-shrink: 0;
     }
 
 
@@ -1029,7 +1049,7 @@
     <div class="header">
       <!-- Sidebar open button - shown when sidebar collapsed -->
       <button class="sidebar-open-btn" onclick="toggleSidebar()" title="Show sidebar">&#9654; Menu</button>
-      <h1>HSE Quiz Bowl Tracker <span class="version-badge" id="versionBadge">V1</span></h1>
+      <h1>HSE Quiz Bowl Tracker <span class="version-badge" id="versionBadge">v29</span></h1>
 
       <!-- Session name chip shown below title -->
       <div class="header-session-name" id="headerSessionName"></div>
@@ -1067,6 +1087,7 @@
             <button class="sidebar-close-btn" onclick="toggleSidebar()" title="Hide sidebar">&#9664; Hide</button>
           </div>
 
+          <div class="sidebar-sections">
           <!-- Session Management -->
           <div class="section" id="sec-session">
             <h2>Session <span class="toggle-icon">▼</span></h2>
@@ -1210,6 +1231,8 @@
               <p style="margin-top: 10px; font-size: 0.85em; color: var(--text-secondary);">This action cannot be undone. Export your data first!</p>
             </div>
           </div>
+
+          </div><!-- /.sidebar-sections -->
         </aside>
 
         <!-- ===== MAIN ===== -->
@@ -1422,7 +1445,24 @@
 
     // ============ INIT ============
     document.addEventListener('DOMContentLoaded', () => {
+      function updateHeaderHeight() {
+        const h = document.querySelector('.header');
+        if (h) document.documentElement.style.setProperty('--header-height', h.offsetHeight + 'px');
+      }
+      updateHeaderHeight();
+      window.addEventListener('resize', () => {
+        updateHeaderHeight();
+        applySidebarState();
+      });
+
       loadAllData(); // Firebase listener calls renderAll() once data loads
+      // Fade masks on scroll
+      ['content', 'sidebar-sections'].forEach(cls => {
+        const el = document.querySelector('.' + cls);
+        if (el) el.addEventListener('scroll', updateFadeMasks);
+      });
+      updateFadeMasks();
+
       setupGlobalPlayers(); // Sync global player pool across sessions
       setupAutoSave();
       setupSectionToggle();
@@ -1446,6 +1486,31 @@
         document.documentElement.style.setProperty('--primary-color', ac);
       }
     });
+
+
+    function updateFadeMasks() {
+      [
+        { sel: '.content', fadeSize: 24 },
+        { sel: '.sidebar-sections', fadeSize: 20 }
+      ].forEach(({ sel, fadeSize }) => {
+        const el = document.querySelector(sel);
+        if (!el) return;
+        const canScrollUp = el.scrollTop > 2;
+        const canScrollDown = el.scrollHeight > el.scrollTop + el.clientHeight + 2;
+        let mask;
+        if (canScrollUp && canScrollDown) {
+          mask = `linear-gradient(to bottom, transparent 0px, black ${fadeSize}px, black calc(100% - ${fadeSize}px), transparent 100%)`;
+        } else if (canScrollUp) {
+          mask = `linear-gradient(to bottom, transparent 0px, black ${fadeSize}px, black 100%)`;
+        } else if (canScrollDown) {
+          mask = `linear-gradient(to bottom, black 0px, black calc(100% - ${fadeSize}px), transparent 100%)`;
+        } else {
+          mask = 'none';
+        }
+        el.style.webkitMaskImage = mask;
+        el.style.maskImage = mask;
+      });
+    }
 
     // ============ GLOBAL PLAYER POOL ============
     // Global players live at /globalPlayers in Firebase.
@@ -1550,6 +1615,11 @@
         });
         setLoadingState(false);
         renderAll();
+        // If the sessions modal is open, refresh it so remote changes appear immediately
+        const modal = document.getElementById('sessionsModal');
+        if (modal && modal.style.display === 'block') {
+          renderSessionsList();
+        }
       }, (error) => {
         console.error('Firebase read error:', error);
         setLoadingState(false);
@@ -1828,9 +1898,10 @@
     function applySidebarState() {
       const layout = document.getElementById('appLayout');
       if (!layout) return;
-      // Default to collapsed if no preference has ever been saved
+      const isMobile = window.innerWidth <= 900;
       const saved = localStorage.getItem('sidebarCollapsed');
-      const isCollapsed = saved === null ? true : saved === 'true';
+      // On mobile always collapse; on desktop default to expanded
+      const isCollapsed = isMobile ? true : (saved === null ? false : saved === 'true');
       if (isCollapsed) layout.classList.add('collapsed');
       else layout.classList.remove('collapsed');
       updateOpenBtn(isCollapsed);
@@ -1843,9 +1914,6 @@
       const dm2 = document.getElementById('darkModeToggle2');
       if (dm2) dm2.checked = isDark;
     }
-
-
-
 
     function setAccentColor(color) {
       document.documentElement.style.setProperty('--primary-color', color);
@@ -1862,6 +1930,9 @@
       renderCategories();
       renderAnswerLog();
       renderStatistics();
+      // Keep sessions modal in sync if it's currently open
+      const modal = document.getElementById('sessionsModal');
+      if (modal && modal.style.display === 'block') renderSessionsList();
     }
 
     function renderSessionInfo() {
