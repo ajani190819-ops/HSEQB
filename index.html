@@ -192,6 +192,12 @@
     }
     .an-team-name { font-weight: 700; font-size: 1.05em; margin-bottom: 8px; }
     .an-team-pts { color: var(--primary); font-weight: 700; font-size: 1.3em; }
+    /* Remove outline specifically from the analytics/tracker button */
+#analyticsBtn:focus,
+#analyticsBtnMobile:focus {
+  outline: none;
+  box-shadow: none;
+}
 
     /* ── Mobile sidebar overlay ── */
     @media (max-width: 900px) {
