@@ -753,24 +753,20 @@ input:checked + .slider:before { transform: translateX(28px); }
             </div>
           </div>
           <button class="button button-success" onclick="recordAnswer()" style="width:100%;margin-top:10px;padding:16px;font-size:1.05em;">Record Answer</button>
-
-          <!-- Substitution panel -->
-          <div style="margin-top:10px;">
-            <button onclick="toggleSubPanel()" id="subPanelToggle" class="button button-secondary" style="width:100%;padding:10px;">Make Substitution</button>
-            <div id="subPanel" style="display:none;margin-top:10px;padding:14px;background:var(--sec-bg);border:2px solid var(--border);border-radius:8px;">
-              <div style="font-weight:700;font-size:.9em;margin-bottom:10px;color:var(--text);">Substitution</div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
-                <div>
-                  <label style="font-size:.82em;font-weight:700;color:var(--text2);display:block;margin-bottom:5px;">Subbing Out:</label>
-                  <div id="subOutContainer" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
-                </div>
-                <div>
-                  <label style="font-size:.82em;font-weight:700;color:var(--text2);display:block;margin-bottom:5px;">Subbing In:</label>
-                  <div id="subInContainer" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
-                </div>
+          <button class="button button-secondary" onclick="toggleSubPanel()" style="width:100%;margin-top:8px;padding:10px;">Make Substitution</button>
+          <div id="subPanel" style="display:none;margin-top:10px;padding:14px;background:var(--sec-bg);border:2px solid var(--border);border-radius:8px;">
+            <div style="font-weight:700;font-size:.9em;margin-bottom:10px;color:var(--text);">Substitution</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+              <div>
+                <div style="font-size:.82em;font-weight:700;color:var(--text2);margin-bottom:5px;">Subbing Out:</div>
+                <div id="subOutContainer" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
               </div>
-              <button onclick="recordSubstitution()" class="button button-secondary" style="width:100%;padding:10px;">Confirm Substitution</button>
+              <div>
+                <div style="font-size:.82em;font-weight:700;color:var(--text2);margin-bottom:5px;">Subbing In:</div>
+                <div id="subInContainer" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+              </div>
             </div>
+            <button onclick="confirmSubstitution()" class="button button-secondary" style="width:100%;padding:10px;">Confirm Substitution</button>
           </div>
         </div>
       </div>
@@ -1520,9 +1516,9 @@ input:checked + .slider:before { transform: translateX(28px); }
     function buildUniversalPlayerStats() {
       const playerMap = {};
       validSessions().forEach(session => {
-        const perPlayerTHeard = calcPerPlayerTHeard(session);
+        const sessionTHeard = session.tHeard || 0;
         Object.values(session.players || {}).forEach(p => {
-          const answers = toArray(p.answers).filter(a => a.type !== 'sub');
+          const answers = toArray(p.answers);
           if (!answers.length) return;
           if (!playerMap[p.name]) playerMap[p.name] = {
             name: p.name, points: 0, totalAnswers: 0,
@@ -1536,7 +1532,7 @@ input:checked + .slider:before { transform: translateX(28px); }
           u.bonusPoints += answers.filter(a => a.pointType === 'Bonus').length * 10;
           u.negs += answers.filter(a => a.pointType === 'Neg').length;
           u.powers += answers.filter(a => a.pointType === 'Power').length;
-          u.tHeard += (perPlayerTHeard[p.name] || 0);
+          u.tHeard += sessionTHeard;
           u.sessions++;
           answers.forEach(a => {
             if (a.category && a.category !== '—') u.catMap[a.category] = (u.catMap[a.category] || 0) + 1;
@@ -1690,25 +1686,22 @@ input:checked + .slider:before { transform: translateX(28px); }
       const allTeamCards = [];
       sessions.forEach(session => {
         const dateStr = new Date(session.created).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
-        const perPlayerTHeard = calcPerPlayerTHeard(session);
         const teams = toArray(session.teams).filter(t => toArray(t.playerMembers).length > 0);
         teams.forEach(team => {
           const members = toArray(team.playerMembers);
           let pts = 0, answers = 0, powers = 0, negs = 0, tossups = 0, bonuses = 0;
-          let teamTHeard = 0;
           members.forEach(name => {
             const p = (session.players || {})[name];
             if (!p) return;
-            const a = toArray(p.answers).filter(x => x.type !== 'sub');
+            const a = toArray(p.answers);
             pts     += (p.points || 0);
             answers += a.length;
             powers  += a.filter(x => x.pointType === 'Power').length;
             negs    += a.filter(x => x.pointType === 'Neg').length;
             tossups += a.filter(x => x.pointType === 'Toss-up').length;
             bonuses += a.filter(x => x.pointType === 'Bonus').length;
-            teamTHeard = Math.max(teamTHeard, perPlayerTHeard[name] || 0);
           });
-          const eff = calcTeamEfficiency({ tossups, bonuses, powers, negs, answers }, teamTHeard);
+          const eff = calcTeamEfficiency({ tossups, bonuses, powers, negs, answers }, session.tHeard || 0);
           allTeamCards.push({
             teamName: team.name,
             members,
@@ -1987,7 +1980,6 @@ input:checked + .slider:before { transform: translateX(28px); }
       renderTeams(); renderCategories(); renderAnswerLog(); renderStatistics(); renderTHeard();
       if(analyticsOpen) renderAnalytics();
       if(document.getElementById('sessionsModal')?.classList.contains('open')) renderSessionsList();
-      if(document.getElementById('subPanel')?.style.display !== 'none') renderSubPanel();
       setTimeout(updateFadeMasks,50);
     }
 
@@ -2168,165 +2160,96 @@ input:checked + .slider:before { transform: translateX(28px); }
       if (analyticsOpen) renderAnalytics();
     }
 
-    // ── Substitutions ──
-    var subSelectedOut = null, subSelectedIn = null;
+    // ── Substitution state ──
+    var subOut = null, subIn = null;
 
     function toggleSubPanel() {
       const panel = document.getElementById('subPanel');
       if (!panel) return;
       const opening = panel.style.display === 'none';
       panel.style.display = opening ? 'block' : 'none';
-      if (opening) renderSubPanel();
+      if (opening) populateSubPanel();
     }
 
-    function renderSubPanel() {
+    function populateSubPanel() {
       const s = getCurrentSession(); if (!s) return;
-      // Active players = all players currently on a team
-      const activePlayers = [...new Set((s.teams || []).flatMap(t => toArray(t.playerMembers)))];
-      // All players in pool (for subbing in)
-      const allPlayers = Object.keys(s.players || {});
-      // Bench = players in pool but not on any team right now
-      const benchPlayers = allPlayers.filter(p => !activePlayers.includes(p));
-      // Sub-in candidates = bench players + any player not yet added to pool
-      const subInCandidates = [...new Set([...benchPlayers, ...allPlayers])].filter(p => !activePlayers.includes(p));
-
-      subSelectedOut = null; subSelectedIn = null;
-
+      subOut = null; subIn = null;
+      // Active = currently on a team
+      const active = [...new Set((s.teams||[]).flatMap(t=>toArray(t.playerMembers)))];
+      // All known players
+      const all = Object.keys(s.players||{});
+      // Bench = in player pool but not on a team
+      const bench = all.filter(p=>!active.includes(p));
       const outEl = document.getElementById('subOutContainer');
       const inEl  = document.getElementById('subInContainer');
-      if (!outEl || !inEl) return;
-
-      outEl.innerHTML = activePlayers.length
-        ? activePlayers.map(p => `<button class="button-category" onclick="selectSubOut('${p.replace(/'/g,"\\'")}',this)">${p}</button>`).join('')
+      if(!outEl||!inEl) return;
+      outEl.innerHTML = active.length
+        ? active.map(p=>`<button class="button-category" onclick="pickSubOut(this,'${p.replace(/\/g,'\\').replace(/'/g,"\'")}')">${p}</button>`).join('')
         : '<span style="font-size:.82em;color:var(--text2);">No active players</span>';
-
-      inEl.innerHTML = subInCandidates.length
-        ? subInCandidates.map(p => `<button class="button-category" onclick="selectSubIn('${p.replace(/'/g,"\\'")}',this)">${p}</button>`).join('')
+      inEl.innerHTML = bench.length
+        ? bench.map(p=>`<button class="button-category" onclick="pickSubIn(this,'${p.replace(/\/g,'\\').replace(/'/g,"\'")}')">${p}</button>`).join('')
         : '<span style="font-size:.82em;color:var(--text2);">No bench players</span>';
     }
 
-    function selectSubOut(name, btn) {
-      subSelectedOut = name;
-      document.querySelectorAll('#subOutContainer .button-category').forEach(b => b.classList.remove('selected'));
+    function pickSubOut(btn, name) {
+      subOut = name;
+      document.querySelectorAll('#subOutContainer .button-category').forEach(b=>b.classList.remove('selected'));
       btn.classList.add('selected');
     }
 
-    function selectSubIn(name, btn) {
-      subSelectedIn = name;
-      document.querySelectorAll('#subInContainer .button-category').forEach(b => b.classList.remove('selected'));
+    function pickSubIn(btn, name) {
+      subIn = name;
+      document.querySelectorAll('#subInContainer .button-category').forEach(b=>b.classList.remove('selected'));
       btn.classList.add('selected');
     }
 
-    function recordSubstitution() {
-      if (!subSelectedOut) { alert('Select a player to sub out.'); return; }
-      if (!subSelectedIn)  { alert('Select a player to sub in.');  return; }
-      if (subSelectedOut === subSelectedIn) { alert('Cannot sub a player in for themselves.'); return; }
+    function confirmSubstitution() {
+      if (!subOut) { alert('Select a player to sub out.'); return; }
+      if (!subIn)  { alert('Select a player to sub in.'); return; }
       const id = state.currentSessionId; if (!id) return;
-
-      const sub = {
-        id: Date.now().toString(),
-        type: 'sub',
-        playerOut: subSelectedOut,
-        playerIn: subSelectedIn,
-        timestamp: new Date().toISOString(),
-      };
-
+      const entry = { id: Date.now().toString(), type: 'sub', playerOut: subOut, playerIn: subIn, timestamp: new Date().toISOString() };
       const apply = s => {
         s.answerLog = toArray(s.answerLog);
-        sub.tHeardAtSub = s.tHeard || 0;
-        s.answerLog.push({...sub});
-        // Update team membership: swap playerOut for playerIn on their team
+        entry.tHeardAtSub = s.tHeard || 0;
+        s.answerLog.push({...entry});
+        // Swap playerOut for playerIn on their team
         toArray(s.teams).forEach(t => {
-          const members = toArray(t.playerMembers);
-          const idx = members.indexOf(subSelectedOut);
-          if (idx > -1) {
-            members.splice(idx, 1, subSelectedIn);
-            t.playerMembers = members;
-          }
+          const m = toArray(t.playerMembers);
+          const i = m.indexOf(subOut);
+          if (i > -1) { m[i] = subIn; t.playerMembers = m; }
         });
-        // Ensure subbed-in player exists in players map
+        // Ensure subIn exists in players map
         if (!s.players) s.players = {};
-        if (!s.players[subSelectedIn]) s.players[subSelectedIn] = { name: subSelectedIn, points: 0, answers: [] };
+        if (!s.players[subIn]) s.players[subIn] = { name: subIn, points: 0, answers: [] };
       };
-
       updateSessionAtomic(id, apply);
       withWriteLock(id, () => { const s = getCurrentSession(); if (s) apply(s); });
-
-      // Close panel and re-render
       document.getElementById('subPanel').style.display = 'none';
-      subSelectedOut = null; subSelectedIn = null;
+      subOut = null; subIn = null;
       renderAll();
     }
 
-    function deleteSubstitution(subId) {
+    function undoSubstitution(entryId) {
       const id = state.currentSessionId; if (!id) return;
-      const del = s => {
+      const apply = s => {
         s.answerLog = toArray(s.answerLog);
-        const idx = s.answerLog.findIndex(x => x.id === subId);
+        const idx = s.answerLog.findIndex(e => e.id === entryId);
         if (idx === -1) return;
         const sub = s.answerLog[idx];
-        // Reverse the team swap
+        // Reverse the team swap: put playerOut back, remove playerIn
         toArray(s.teams).forEach(t => {
-          const members = toArray(t.playerMembers);
-          const i = members.indexOf(sub.playerIn);
-          if (i > -1) { members.splice(i, 1, sub.playerOut); t.playerMembers = members; }
+          const m = toArray(t.playerMembers);
+          const i = m.indexOf(sub.playerIn);
+          if (i > -1) { m[i] = sub.playerOut; t.playerMembers = m; }
         });
         s.answerLog.splice(idx, 1);
       };
-      updateSessionAtomic(id, del);
-      withWriteLock(id, () => { const s = getCurrentSession(); if (s) del(s); });
+      updateSessionAtomic(id, apply);
+      withWriteLock(id, () => { const s = getCurrentSession(); if (s) apply(s); });
       renderAll();
     }
 
-    // Calculate per-player tHeard by walking the answer log chronologically.
-    // A player accumulates tHeard only during windows when they're "active" on a team.
-    // Active = present in initial team rosters, and updated by each sub event.
-    function calcPerPlayerTHeard(session) {
-      const log = toArray(session.answerLog);
-      // Build initial active set from team membership at session start
-      // (We can't easily reconstruct "initial" state after subs, so we walk
-      //  backwards through subs to find original state)
-      const allSubs = log.filter(e => e.type === 'sub');
-      const currentMembers = new Set([...(session.teams || []).flatMap(t => toArray(t.playerMembers))]);
-
-      // Reconstruct original roster by reversing subs
-      const originalActive = new Set(currentMembers);
-      [...allSubs].reverse().forEach(sub => {
-        if (originalActive.has(sub.playerIn))  originalActive.delete(sub.playerIn);
-        originalActive.add(sub.playerOut);
-      });
-
-      // Now walk forward through the log tallying tHeard per player
-      const playerTHeard = {};
-      const activeNow = new Set(originalActive);
-      let sessionTHeard = 0;
-
-      log.forEach(entry => {
-        if (entry.type === 'sub') {
-          // Update active set
-          activeNow.delete(entry.playerOut);
-          activeNow.add(entry.playerIn);
-        } else {
-          // It's an answer — check if it increments tHeard
-          const isBuzzIn = ['Toss-up', 'Power', 'Neg'].includes(entry.pointType);
-          if (isBuzzIn) {
-            const entryIdx = log.indexOf(entry);
-            const prev = entryIdx > 0 ? log[entryIdx - 1] : null;
-            const prevWasNeg = prev && prev.pointType === 'Neg' && prev.type !== 'sub';
-            const isFollowup = prevWasNeg && (entry.pointType === 'Toss-up' || entry.pointType === 'Power');
-            if (!isFollowup) {
-              sessionTHeard++;
-              // Credit this question to everyone currently active
-              activeNow.forEach(p => {
-                playerTHeard[p] = (playerTHeard[p] || 0) + 1;
-              });
-            }
-          }
-        }
-      });
-
-      return playerTHeard;
-    }
+    function recordAnswer() {
       const id=state.currentSessionId; if(!id) return;
       if(!state.selectedPlayer)    {alert('Please select a player.');return;}
       if(!state.selectedPointType) {alert('Please select a point type.');return;}
@@ -2396,20 +2319,22 @@ input:checked + .slider:before { transform: translateX(28px); }
     function renderAnswerLog() {
       const s=getCurrentSession(); const el=document.getElementById('answerLog');
       if(!el||!s) return;
-      const answers=toArray(s.answerLog);
-      if (!answers.length) { el.innerHTML='<p style="color:var(--text2)">No answers recorded yet.</p>'; el.onscroll=updateFadeMasks; return; }
-      let answerNum = answers.filter(a => a.type !== 'sub').length;
-      el.innerHTML=[...answers].reverse().map(a => {
-        if (a.type === 'sub') {
-          return `<div class="log-entry" style="background:rgba(102,126,234,.07);border-left:3px solid var(--primary);font-style:italic;">
-            <span style="color:var(--primary);font-weight:600;">Sub: ${a.playerOut} &rarr; ${a.playerIn}</span>
-            <button class="button button-danger" onclick="deleteSubstitution('${a.id}')" style="padding:4px 8px;font-size:.8em;">Undo</button>
+      const log=toArray(s.answerLog);
+      if(!log.length){el.innerHTML='<p style="color:var(--text2)">No answers recorded yet.</p>';el.onscroll=updateFadeMasks;return;}
+      // Number only answer entries (not sub events)
+      const answers=log.filter(e=>e.type!=='sub');
+      const reversed=[...log].reverse();
+      let ansNum=answers.length;
+      el.innerHTML=reversed.map(e=>{
+        if(e.type==='sub'){
+          return `<div class="log-entry" style="background:rgba(102,126,234,.07);border-left:3px solid var(--primary);">
+            <span style="color:var(--primary);font-weight:600;">Sub: ${e.playerOut} &rarr; ${e.playerIn}</span>
+            <button class="button button-danger" onclick="undoSubstitution('${e.id}')" style="padding:4px 8px;font-size:.8em;">Undo</button>
           </div>`;
         }
-        const num = answerNum--;
         return `<div class="log-entry">
-          <span><strong>${num}. ${a.player}</strong> &mdash; ${a.pointType} (${a.points>0?'+':''}${a.points} pts) &mdash; ${a.category}</span>
-          <button class="button button-danger" onclick="deleteAnswer('${a.id}')" style="padding:4px 8px;font-size:.8em;">Delete</button>
+          <span><strong>${ansNum--}. ${e.player}</strong> &mdash; ${e.pointType} (${e.points>0?'+':''}${e.points} pts) &mdash; ${e.category}</span>
+          <button class="button button-danger" onclick="deleteAnswer('${e.id}')" style="padding:4px 8px;font-size:.8em;">Delete</button>
         </div>`;
       }).join('');
       el.onscroll=updateFadeMasks;
