@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -9,29 +8,30 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <style>
     :root {
-      --sp: 20px; --hsp: 12px;
-      --primary: #667eea; --primary-light: #7c8ff0; --primary-dark: #5568d3;
+      --sp: 18px; --hsp: 14px;
+      --primary: #667eea; --primary-light: #8fa3f5; --primary-dark: #5568d3;
       --secondary: #764ba2;
       --success: #11998e; --success2: #38ef7d;
       --danger: #dc3545; --danger2: #e74c5c;
-      --warning: #ffc107;
-      --bg: #fff; --text: #1a1a2e; --text2: #606060; --text3: #999;
-      --sec-bg: #f5f7fb; --card: #fff;
-      --input-bg: #fff; --input-border: #e1e4e8; --input-text: #1a1a2e;
-      --hover: #f0f3f8; --border: #a8acb1;
-      --shadow-xs: 0 1px 2px rgba(0,0,0,.05);
-      --shadow-sm: 0 2px 4px rgba(0,0,0,.08);
-      --shadow-md: 0 6px 12px rgba(0,0,0,.1);
-      --shadow-xl: 0 20px 40px rgba(0,0,0,.15);
+      --warning: #f39c12;
+      --bg: #f4f6fb; --text: #1a1a2e; --text2: #5a6178; --text3: #9ba3b8;
+      --sec-bg: #eef1f8; --card: #ffffff;
+      --input-bg: #fff; --input-border: #dde1ea; --input-text: #1a1a2e;
+      --hover: #edf0f8; --border: #dde1ea;
+      --shadow-xs: 0 1px 3px rgba(60,70,100,.07);
+      --shadow-sm: 0 2px 8px rgba(60,70,100,.1);
+      --shadow-md: 0 6px 18px rgba(60,70,100,.14);
+      --shadow-xl: 0 20px 48px rgba(60,70,100,.18);
+      --radius: 12px; --radius-sm: 8px;
     }
     .dark-mode {
       --danger: #ff6b6b; --warning: #ffd43b;
-      --bg: #0d1117; --text: #e6e6e6; --text2: #b0b0b0; --text3: #808080;
+      --bg: #0d1117; --text: #e6eaf4; --text2: #9ba3c0; --text3: #606880;
       --sec-bg: #161b22; --card: #1c2128;
-      --input-bg: #0d1117; --input-border: #30363d; --input-text: #e6e6e6;
-      --hover: #21262d; --border: #3f444d;
-      --shadow-xs: 0 1px 2px rgba(0,0,0,.3); --shadow-sm: 0 2px 4px rgba(0,0,0,.3);
-      --shadow-md: 0 6px 12px rgba(0,0,0,.4); --shadow-xl: 0 20px 40px rgba(0,0,0,.6);
+      --input-bg: #0d1117; --input-border: #2d3340; --input-text: #e6eaf4;
+      --hover: #1e2530; --border: #2d3340;
+      --shadow-xs: 0 1px 3px rgba(0,0,0,.3); --shadow-sm: 0 2px 8px rgba(0,0,0,.35);
+      --shadow-md: 0 6px 18px rgba(0,0,0,.45); --shadow-xl: 0 20px 48px rgba(0,0,0,.65);
     }
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     html { height: 100%; overflow: hidden; }
@@ -46,773 +46,776 @@
     body.hide-scrollbars ::-webkit-scrollbar-track { background: transparent !important; }
     body.hide-scrollbars * { scrollbar-color: transparent transparent !important; }
 
-```
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  height: 100vh; overflow: hidden; color: var(--text); display: flex; flex-direction: column;
-}
-.qb-container { width: 100%; flex: 1; display: flex; flex-direction: column; background: var(--bg); overflow: hidden; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      height: 100vh; overflow: hidden; color: var(--text); display: flex; flex-direction: column;
+    }
+    .qb-container { width: 100%; flex: 1; display: flex; flex-direction: column; background: var(--bg); overflow: hidden; }
 
-/* ── Header ── */
-.qb-header {
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
-  color: #fff; padding: 36px 24px 52px;
-  display: flex; justify-content: center; align-items: center;
-  box-shadow: 0 4px 20px rgba(102,126,234,.3);
-  position: relative; z-index: 200; flex-shrink: 0;
-  transition: filter .3s ease;
-}
-.qb-header h1 {
-  font-size: clamp(1.8em,5vw,2.8em); font-weight: 700; letter-spacing: -.5px;
-  position: absolute; left: 50%; transform: translateX(-50%); white-space: nowrap;
-}
-.version-badge {
-  font-size: .38em; font-weight: 600; background: rgba(255,255,255,.18);
-  border: 1px solid rgba(255,255,255,.3); color: rgba(255,255,255,.8);
-  padding: 3px 8px; border-radius: 20px; vertical-align: middle; position: relative; top: -4px;
-}
-.header-session-name {
-  position: absolute; left: 50%; transform: translateX(-50%); bottom: 14px;
-  font-size: .8em; font-weight: 600; color: rgba(255,255,255,.75); white-space: nowrap; pointer-events: none;
-}
-.header-session-name::before { content: 'Session: '; opacity: .6; }
-.header-controls {
-  position: absolute; right: 20px; top: 50%; transform: translateY(-50%);
-  display: flex; gap: 10px; align-items: center;
-}
-.header-btn {
-  background: rgba(255,255,255,.15); color: #fff; border: 1px solid rgba(255,255,255,.3);
-  border-radius: 8px; padding: 6px 12px; font-size: .85em; font-weight: 700;
-  cursor: pointer; font-family: inherit; white-space: nowrap; text-decoration: none;
-  display: inline-flex; align-items: center; gap: 5px; transition: background .2s;
-}
-.header-btn:hover { background: rgba(255,255,255,.28); }
-.header-btn.round { border-radius: 50%; width: 30px; height: 30px; padding: 0; justify-content: center; font-size: 1em; }
-.header-btn.active { background: rgba(255,255,255,.35); box-shadow: 0 0 0 2px rgba(255,255,255,.5); }
-.sidebar-open-btn {
-  display: none; position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
-}
-.mobile-subrow { display: none; }
+    /* ── Header ── */
+    .qb-header {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      color: #fff; padding: 14px 24px;
+      display: flex; justify-content: center; align-items: center;
+      box-shadow: 0 2px 16px rgba(102,126,234,.28);
+      position: relative; z-index: 200; flex-shrink: 0;
+      transition: filter .3s ease; min-height: 62px;
+    }
+    .qb-header-center {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      pointer-events: none;
+    }
+    .qb-header h1 {
+      font-size: clamp(1.3em,3.5vw,1.85em); font-weight: 700; letter-spacing: -.3px;
+      white-space: nowrap; margin: 0; pointer-events: none;
+    }
+    .version-badge {
+      font-size: .42em; font-weight: 600; background: rgba(255,255,255,.18);
+      border: 1px solid rgba(255,255,255,.3); color: rgba(255,255,255,.85);
+      padding: 2px 7px; border-radius: 20px; vertical-align: middle; position: relative; top: -2px;
+    }
+    .header-session-name {
+      font-size: .72em; font-weight: 500; color: rgba(255,255,255,.6);
+      white-space: nowrap; pointer-events: none; line-height: 1;
+    }
+    .header-session-name::before { content: 'Session: '; opacity: .7; }
+    .header-controls {
+      position: absolute; right: 20px; top: 50%; transform: translateY(-50%);
+      display: flex; gap: 8px; align-items: center;
+    }
+    .header-btn {
+      background: rgba(255,255,255,.14); color: #fff; border: 1px solid rgba(255,255,255,.28);
+      border-radius: var(--radius-sm); padding: 6px 12px; font-size: .82em; font-weight: 600;
+      cursor: pointer; font-family: inherit; white-space: nowrap; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 5px; transition: background .2s;
+    }
+    .header-btn:hover { background: rgba(255,255,255,.26); }
+    .header-btn.round { border-radius: 50%; width: 30px; height: 30px; padding: 0; justify-content: center; font-size: 1em; }
+    .header-btn.active { background: rgba(255,255,255,.32); box-shadow: 0 0 0 2px rgba(255,255,255,.45); }
+    .sidebar-open-btn {
+      display: none; position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+    }
+    .mobile-subrow { display: none; }
 
-/* ── Body ── */
-.qb-body { flex: 1; display: flex; overflow: hidden; position: relative; }
+    /* ── Body ── */
+    .qb-body { flex: 1; display: flex; overflow: hidden; position: relative; }
 
-/* ── Sidebar ── */
-.qb-sidebar {
-  width: 320px; flex-shrink: 0; display: flex; flex-direction: column;
-  padding: var(--sp) var(--hsp);
-  background: var(--bg); border-right: 2px solid var(--border);
-  overflow: visible; position: relative; z-index: 100;
-  transition: width .3s ease, padding .3s ease;
-}
-.qb-sidebar.collapsed { width: 0; padding: 0; overflow: hidden; border-right: none; }
-.qb-scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: var(--sp) var(--hsp); transition: filter .3s ease; }
+    /* ── Sidebar ── */
+    .qb-sidebar {
+      width: 300px; flex-shrink: 0; display: flex; flex-direction: column;
+      padding: var(--sp) var(--hsp);
+      background: var(--card); border-right: 1px solid var(--border);
+      overflow: visible; position: relative; z-index: 100;
+      transition: width .3s ease, padding .3s ease;
+    }
+    .qb-sidebar.collapsed { width: 0; padding: 0; overflow: hidden; border-right: none; }
+    .qb-scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: var(--sp) var(--hsp); transition: filter .3s ease; background: var(--bg); }
 
-/* ── Views ── */
-#trackerView { display: flex; flex-direction: column; height: 100%; }
-#analyticsView { display: none; flex-direction: column; height: 100%; }
-#analyticsView.active { display: flex; }
+    /* ── Views ── */
+    #trackerView { display: flex; flex-direction: column; height: 100%; }
+    #analyticsView { display: none; flex-direction: column; height: 100%; }
+    #analyticsView.active { display: flex; }
 
-/* ── Analytics ── */
-.analytics-header {
-  padding: 16px var(--hsp); border-bottom: 2px solid var(--border);
-  background: var(--sec-bg); flex-shrink: 0;
-}
-.analytics-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
-.analytics-tab {
-  background: var(--card); color: var(--primary); border: 2px solid var(--primary);
-  border-radius: 8px; padding: 8px 18px; font-size: .9em; font-weight: 600;
-  cursor: pointer; font-family: inherit; transition: all .2s;
-}
-.analytics-tab:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(102,126,234,.2); }
-.analytics-tab.active {
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-  color: #fff; border-color: transparent;
-}
-.analytics-scroll { flex: 1; overflow-y: auto; padding: var(--sp) var(--hsp); scrollbar-gutter: stable; }
-.analytics-panel { display: none; }
-.analytics-panel.active { display: block; }
+    /* ── Analytics ── */
+    .analytics-header {
+      padding: 12px var(--hsp); border-bottom: 1px solid var(--border);
+      background: var(--card); flex-shrink: 0;
+    }
+    .analytics-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+    .analytics-tab {
+      background: var(--sec-bg); color: var(--text2); border: 1px solid var(--border);
+      border-radius: 20px; padding: 6px 16px; font-size: .82em; font-weight: 600;
+      cursor: pointer; font-family: inherit; transition: all .18s;
+    }
+    .analytics-tab:hover { background: var(--hover); color: var(--primary); border-color: var(--primary-light); }
+    .analytics-tab.active {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: #fff; border-color: transparent; box-shadow: 0 2px 8px rgba(102,126,234,.3);
+    }
+    .analytics-scroll { flex: 1; overflow-y: auto; padding: var(--sp) var(--hsp); scrollbar-gutter: stable; background: var(--bg); }
+    .analytics-panel { display: none; }
+    .analytics-panel.active { display: block; }
 
-.an-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--sp); margin-bottom: var(--sp); }
-.an-stat-box {
-  background: var(--card); border: 2px solid var(--border); border-radius: 10px;
-  padding: 16px; text-align: center; box-shadow: var(--shadow-sm);
-}
-.an-stat-box .an-val { font-size: 2em; font-weight: 700; color: var(--primary); }
-.an-stat-box .an-lbl { font-size: .82em; color: var(--text2); margin-top: 4px; }
+    .an-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--sp); margin-bottom: var(--sp); }
+    .an-stat-box {
+      background: var(--card); border: 2px solid var(--border); border-radius: 10px;
+      padding: 16px; text-align: center; box-shadow: var(--shadow-sm);
+    }
+    .an-stat-box .an-val { font-size: 2em; font-weight: 700; color: var(--primary); }
+    .an-stat-box .an-lbl { font-size: .82em; color: var(--text2); margin-top: 4px; }
 
-.an-player-card {
-  background: var(--card); border: 2px solid var(--border); border-radius: 10px;
-  padding: 18px; margin-bottom: var(--sp); box-shadow: var(--shadow-sm);
-  transition: border-color .2s, box-shadow .2s;
-}
-.an-player-card:hover { border-color: var(--primary-light); box-shadow: var(--shadow-md); }
-.an-player-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-.an-player-name {
-  font-size: 1.1em; font-weight: 700; color: var(--primary);
-  cursor: pointer; text-decoration: underline; text-underline-offset: 3px;
-  transition: color .15s;
-}
-.an-player-name:hover { color: var(--primary-dark); }
-.an-player-pts { font-size: 1.2em; font-weight: 700; color: var(--primary); }
-.an-player-meta { font-size: .82em; color: var(--text2); margin-bottom: 12px; }
+    .an-player-card {
+      background: var(--card); border: 2px solid var(--border); border-radius: 10px;
+      padding: 18px; margin-bottom: var(--sp); box-shadow: var(--shadow-sm);
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .an-player-card:hover { border-color: var(--primary-light); box-shadow: var(--shadow-md); }
+    .an-player-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .an-player-name {
+      font-size: 1.1em; font-weight: 700; color: var(--primary);
+      cursor: pointer; text-decoration: underline; text-underline-offset: 3px;
+      transition: color .15s;
+    }
+    .an-player-name:hover { color: var(--primary-dark); }
+    .an-player-pts { font-size: 1.2em; font-weight: 700; color: var(--primary); }
+    .an-player-meta { font-size: .82em; color: var(--text2); margin-bottom: 12px; }
 
-.an-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: .85em; }
-.an-bar-label { width: 110px; flex-shrink: 0; color: var(--text2); font-weight: 600; }
-.an-bar-track { flex: 1; height: 10px; background: var(--sec-bg); border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
-.an-bar-fill { height: 100%; border-radius: 10px; background: linear-gradient(90deg, var(--primary), var(--secondary)); transition: width .4s ease; }
-.an-bar-fill.neg { background: linear-gradient(90deg, var(--danger), var(--danger2)); }
-.an-bar-val { width: 36px; text-align: right; font-weight: 700; color: var(--text); flex-shrink: 0; }
+    .an-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: .85em; }
+    .an-bar-label { width: 110px; flex-shrink: 0; color: var(--text2); font-weight: 600; }
+    .an-bar-track { flex: 1; height: 10px; background: var(--sec-bg); border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
+    .an-bar-fill { height: 100%; border-radius: 10px; background: linear-gradient(90deg, var(--primary), var(--secondary)); transition: width .4s ease; }
+    .an-bar-fill.neg { background: linear-gradient(90deg, var(--danger), var(--danger2)); }
+    .an-bar-val { width: 36px; text-align: right; font-weight: 700; color: var(--text); flex-shrink: 0; }
 
-.an-cat-card {
-  background: var(--card); border: 2px solid var(--border); border-radius: 10px;
-  padding: 16px; margin-bottom: var(--sp); box-shadow: var(--shadow-sm);
-}
-.an-cat-title { font-weight: 700; font-size: 1em; color: var(--primary); margin-bottom: 10px; }
-.an-cat-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: .88em; align-items: center; }
-.an-cat-row:last-child { border-bottom: none; }
+    .an-cat-card {
+      background: var(--card); border: 2px solid var(--border); border-radius: 10px;
+      padding: 16px; margin-bottom: var(--sp); box-shadow: var(--shadow-sm);
+    }
+    .an-cat-title { font-weight: 700; font-size: 1em; color: var(--primary); margin-bottom: 10px; }
+    .an-cat-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: .88em; align-items: center; }
+    .an-cat-row:last-child { border-bottom: none; }
 
-.an-lb-row {
-  display: flex; align-items: center; gap: 12px; padding: 12px 14px;
-  background: var(--card); border: 2px solid var(--border); border-radius: 10px;
-  margin-bottom: 10px; box-shadow: var(--shadow-xs); font-size: .92em;
-}
-.an-lb-rank { font-size: 1.2em; font-weight: 700; color: var(--primary); min-width: 42px; }
-.an-lb-name { flex: 1; font-weight: 600; }
-.an-lb-pts { font-weight: 700; color: var(--primary); margin-right: 8px; }
-.an-lb-chip {
-  font-size: .75em; padding: 2px 8px; border-radius: 10px; font-weight: 700;
-  background: var(--sec-bg); color: var(--text2); border: 1px solid var(--border);
-}
-.an-lb-chip.power { background: rgba(102,126,234,.12); color: var(--primary); border-color: var(--primary); }
-.an-lb-chip.neg   { background: rgba(220,53,69,.1); color: var(--danger); border-color: var(--danger); }
+    .an-lb-row {
+      display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+      background: var(--card); border: 2px solid var(--border); border-radius: 10px;
+      margin-bottom: 10px; box-shadow: var(--shadow-xs); font-size: .92em;
+    }
+    .an-lb-rank { font-size: 1.2em; font-weight: 700; color: var(--primary); min-width: 42px; }
+    .an-lb-name { flex: 1; font-weight: 600; }
+    .an-lb-pts { font-weight: 700; color: var(--primary); margin-right: 8px; }
+    .an-lb-chip {
+      font-size: .75em; padding: 2px 8px; border-radius: 10px; font-weight: 700;
+      background: var(--sec-bg); color: var(--text2); border: 1px solid var(--border);
+    }
+    .an-lb-chip.power { background: rgba(102,126,234,.12); color: var(--primary); border-color: var(--primary); }
+    .an-lb-chip.neg   { background: rgba(220,53,69,.1); color: var(--danger); border-color: var(--danger); }
 
-.an-team-card {
-  background: var(--card); border: 2px solid var(--border); border-left: 5px solid var(--secondary);
-  border-radius: 10px; padding: 16px; margin-bottom: var(--sp); box-shadow: var(--shadow-sm);
-}
-.an-team-name { font-weight: 700; font-size: 1.05em; margin-bottom: 8px; }
-.an-team-pts { color: var(--primary); font-weight: 700; font-size: 1.3em; }
+    .an-team-card {
+      background: var(--card); border: 2px solid var(--border); border-left: 5px solid var(--secondary);
+      border-radius: 10px; padding: 16px; margin-bottom: var(--sp); box-shadow: var(--shadow-sm);
+    }
+    .an-team-name { font-weight: 700; font-size: 1.05em; margin-bottom: 8px; }
+    .an-team-pts { color: var(--primary); font-weight: 700; font-size: 1.3em; }
 
-/* ── Analytics/Tracker button — remove focus outline but preserve hover effect ── */
-#analyticsBtn,
-#analyticsBtnMobile {
-  -webkit-tap-highlight-color: transparent !important;
-}
-#analyticsBtn:focus:not(:hover),
-#analyticsBtnMobile:focus:not(:hover),
-#analyticsBtn:focus-visible,
-#analyticsBtnMobile:focus-visible {
-  outline: none !important;
-  box-shadow: none !important;
-}
-#analyticsBtn:active,
-#analyticsBtnMobile:active {
-  outline: none !important;
-}
+    /* ── Analytics/Tracker button — remove focus outline but preserve hover effect ── */
+    #analyticsBtn,
+    #analyticsBtnMobile {
+      -webkit-tap-highlight-color: transparent !important;
+    }
+    #analyticsBtn:focus:not(:hover),
+    #analyticsBtnMobile:focus:not(:hover),
+    #analyticsBtn:focus-visible,
+    #analyticsBtnMobile:focus-visible {
+      outline: none !important;
+      box-shadow: none !important;
+    }
+    #analyticsBtn:active,
+    #analyticsBtnMobile:active {
+      outline: none !important;
+    }
 
-/* ── Mobile sidebar overlay ── */
-@media (max-width: 900px) {
-  .qb-sidebar {
-    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    width: 100% !important; height: 100vh; max-height: 100vh;
-    overflow-y: auto; padding: 12px 16px 20px !important;
-    border-right: none; border-bottom: none;
-    background: rgba(255,255,255,0.18) !important;
-    -webkit-backdrop-filter: blur(28px) saturate(1.8);
-    backdrop-filter: blur(28px) saturate(1.8);
-    box-shadow: 0 8px 32px rgba(0,0,0,.22); z-index: 6000;
-    transform: translateY(-110%); visibility: hidden;
-    transition: transform .35s cubic-bezier(.4,0,.2,1), visibility .35s ease;
-    pointer-events: none;
-  }
-  .dark-mode .qb-sidebar { background: rgba(13,17,23,0.6) !important; }
-  .qb-sidebar.mobile-open {
-    transform: translateY(0) !important; visibility: visible !important; pointer-events: auto !important;
-  }
-  .qb-sidebar.mobile-open * { pointer-events: auto !important; }
-  .qb-scroll.menu-blurred, .analytics-scroll.menu-blurred { filter: blur(3px); pointer-events: none; }
-  body.menu-open { overflow: hidden; }
-  #sidebarOpenBtn { display: none !important; }
-  .mobile-subrow {
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 6px; width: 100%; margin-top: 4px;
-  }
-  .header-session-name, .header-controls { display: none !important; }
-  .sidebar-open-btn { display: none !important; }
-}
+    /* ── Mobile sidebar overlay ── */
+    @media (max-width: 900px) {
+      .qb-sidebar {
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        width: 100% !important; height: 100vh; max-height: 100vh;
+        overflow-y: auto; padding: 12px 16px 20px !important;
+        border-right: none; border-bottom: none;
+        background: rgba(255,255,255,0.18) !important;
+        -webkit-backdrop-filter: blur(28px) saturate(1.8);
+        backdrop-filter: blur(28px) saturate(1.8);
+        box-shadow: 0 8px 32px rgba(0,0,0,.22); z-index: 6000;
+        transform: translateY(-110%); visibility: hidden;
+        transition: transform .35s cubic-bezier(.4,0,.2,1), visibility .35s ease;
+        pointer-events: none;
+      }
+      .dark-mode .qb-sidebar { background: rgba(13,17,23,0.6) !important; }
+      .qb-sidebar.mobile-open {
+        transform: translateY(0) !important; visibility: visible !important; pointer-events: auto !important;
+      }
+      .qb-sidebar.mobile-open * { pointer-events: auto !important; }
+      .qb-scroll.menu-blurred, .analytics-scroll.menu-blurred { filter: blur(3px); pointer-events: none; }
+      body.menu-open { overflow: hidden; }
+      #sidebarOpenBtn { display: none !important; }
+      .mobile-subrow {
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 6px; width: 100%; margin-top: 4px;
+      }
+      .header-session-name, .header-controls { display: none !important; }
+      .sidebar-open-btn { display: none !important; }
+    }
 
-/* ── Sections ── */
-.qb-section {
-  margin-bottom: var(--sp); padding: clamp(18px,5vw,24px);
-  background: var(--sec-bg); border-radius: 12px; border: 2px solid var(--border);
-  transition: border-color .2s, box-shadow .2s; overflow: visible;
-}
-.qb-section:hover { border-color: var(--primary-light); box-shadow: var(--shadow-md); }
-.qb-section h2 {
-  color: var(--primary); margin-bottom: var(--sp); font-size: clamp(1.3em,4vw,1.6em);
-  cursor: pointer; display: flex; align-items: center; justify-content: space-between;
-  user-select: none; font-weight: 600; transition: color .2s;
-}
-.qb-section h2:hover { color: var(--primary-dark); }
-.toggle-icon { font-size: .8em; transition: transform .3s cubic-bezier(.4,0,.2,1); display: inline-block; }
-.toggle-icon.collapsed { transform: rotate(-90deg); }
-.collapsible-content { max-height: 2000px; overflow: visible; transition: max-height .3s ease-out; }
-.collapsible-content.collapsed { max-height: 0 !important; overflow: hidden; }
+    /* ── Sections ── */
+    .qb-section {
+      margin-bottom: 14px; padding: clamp(16px,4vw,20px);
+      background: var(--card); border-radius: var(--radius); border: 1px solid var(--border);
+      transition: border-color .2s, box-shadow .2s; overflow: visible;
+      box-shadow: var(--shadow-xs);
+    }
+    .qb-section:hover { border-color: var(--primary-light); box-shadow: var(--shadow-sm); }
+    .qb-section h2 {
+      color: var(--text); margin-bottom: var(--sp); font-size: clamp(1.05em,3vw,1.25em);
+      cursor: pointer; display: flex; align-items: center; justify-content: space-between;
+      user-select: none; font-weight: 700; transition: color .2s;
+    }
+    .qb-section h2:hover { color: var(--primary); }
+    .toggle-icon { font-size: .75em; transition: transform .3s cubic-bezier(.4,0,.2,1); display: inline-block; color: var(--text3); }
+    .toggle-icon.collapsed { transform: rotate(-90deg); }
+    .collapsible-content { max-height: 2000px; overflow: visible; transition: max-height .3s ease-out; }
+    .collapsible-content.collapsed { max-height: 0 !important; overflow: hidden; }
 
-/* ── Inputs ── */
-.input-group { margin-bottom: var(--sp); }
-.input-group label { display: block; margin-bottom: 8px; font-weight: 600; font-size: clamp(.9em,2vw,1em); }
-.input-group input, .input-group textarea, .input-group select {
-  width: 100%; padding: 12px 14px; border: 2px solid var(--input-border);
-  border-radius: 8px; font-size: 1em; font-family: inherit;
-  background: var(--input-bg); color: var(--input-text); transition: border-color .2s, box-shadow .2s;
-}
-.input-group input::placeholder, .input-group textarea::placeholder { color: var(--text3); }
-.input-group input:focus, .input-group textarea:focus, .input-group select:focus {
-  border-color: var(--primary); outline: none; box-shadow: 0 0 0 4px rgba(102,126,234,.15);
-}
-input[type="file"] {
-  width: 100%; padding: 10px 12px; border-radius: 8px; border: 2px solid var(--input-border);
-  background: var(--card); color: var(--input-text); cursor: pointer; font-family: inherit; font-size: .95em;
-}
-input[type="file"]::file-selector-button {
-  margin-right: 10px; padding: 8px 12px; border-radius: 8px; border: none;
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
-  color: #fff; font-weight: 700; cursor: pointer;
-}
-#newSessionName {
-  width: 100%; padding: 12px 14px; border: 2px solid var(--input-border); border-radius: 8px;
-  background: var(--input-bg); color: var(--input-text); font-weight: 600; font-size: 1em; font-family: inherit;
-}
-#newSessionName:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(102,126,234,.12); outline: none; }
+    /* ── Inputs ── */
+    .input-group { margin-bottom: var(--sp); }
+    .input-group label { display: block; margin-bottom: 6px; font-weight: 600; font-size: clamp(.85em,2vw,.95em); color: var(--text2); }
+    .input-group input, .input-group textarea, .input-group select {
+      width: 100%; padding: 10px 13px; border: 1.5px solid var(--input-border);
+      border-radius: var(--radius-sm); font-size: .95em; font-family: inherit;
+      background: var(--input-bg); color: var(--input-text); transition: border-color .2s, box-shadow .2s;
+    }
+    .input-group input::placeholder, .input-group textarea::placeholder { color: var(--text3); }
+    .input-group input:focus, .input-group textarea:focus, .input-group select:focus {
+      border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(102,126,234,.12);
+    }
+    input[type="file"] {
+      width: 100%; padding: 9px 12px; border-radius: var(--radius-sm); border: 1.5px solid var(--input-border);
+      background: var(--card); color: var(--input-text); cursor: pointer; font-family: inherit; font-size: .9em;
+    }
+    input[type="file"]::file-selector-button {
+      margin-right: 10px; padding: 6px 12px; border-radius: 6px; border: none;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: #fff; font-weight: 700; cursor: pointer; font-size: .9em;
+    }
+    #newSessionName {
+      width: 100%; padding: 10px 13px; border: 1.5px solid var(--input-border); border-radius: var(--radius-sm);
+      background: var(--input-bg); color: var(--input-text); font-weight: 600; font-size: .95em; font-family: inherit;
+    }
+    #newSessionName:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(102,126,234,.1); outline: none; }
 
-/* ── Buttons ── */
-.button {
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
-  color: #fff; border: none; padding: clamp(10px,2vw,13px) clamp(18px,4vw,28px);
-  border-radius: 8px; font-size: clamp(.88em,2vw,1em); font-family: inherit;
-  cursor: pointer; font-weight: 600; white-space: nowrap;
-  box-shadow: 0 4px 12px rgba(102,126,234,.3); transition: transform .2s, box-shadow .2s;
-}
-.button:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(102,126,234,.4); }
-.button:active { transform: translateY(-1px); }
-.button:disabled { opacity: .6; cursor: not-allowed; transform: none; }
-.button-secondary { background: linear-gradient(135deg, var(--text2), var(--text3)); box-shadow: 0 4px 12px rgba(96,96,96,.2); }
-.button-danger { background: linear-gradient(135deg, var(--danger), var(--danger2)); box-shadow: 0 4px 12px rgba(220,53,69,.3); }
-.button-success { background: linear-gradient(135deg, var(--success), var(--success2)); box-shadow: 0 4px 12px rgba(17,153,142,.3); }
-.button-point-type, .button-category, .button-player {
-  background: var(--card); color: var(--primary); border: 2px solid var(--primary);
-  padding: clamp(10px,2vw,12px) clamp(14px,3vw,22px);
-  border-radius: 8px; font-size: clamp(.82em,1.8vw,1em); font-family: inherit;
-  cursor: pointer; font-weight: 600; transition: transform .2s, box-shadow .2s;
-  box-shadow: 0 2px 8px rgba(102,126,234,.1);
-}
-.button-point-type:hover, .button-category:hover, .button-player:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(102,126,234,.3); }
-.button-point-type.selected, .button-category.selected, .button-player.selected {
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-  color: #fff; transform: scale(1.05); box-shadow: 0 6px 16px rgba(102,126,234,.4); border-color: transparent;
-}
-.point-type-buttons, .category-buttons { display: grid; grid-template-columns: repeat(auto-fit,minmax(160px,1fr)); gap: 12px; padding: 4px; }
-.player-buttons { display: flex; flex-wrap: wrap; gap: 10px; padding: 4px; }
-.button-group { display: flex; gap: 12px; flex-wrap: wrap; }
+    /* ── Buttons ── */
+    .button {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: #fff; border: none; padding: clamp(9px,2vw,12px) clamp(16px,3vw,24px);
+      border-radius: var(--radius-sm); font-size: clamp(.85em,2vw,.95em); font-family: inherit;
+      cursor: pointer; font-weight: 600; white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(102,126,234,.25); transition: transform .15s, box-shadow .15s, opacity .15s;
+    }
+    .button:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(102,126,234,.35); }
+    .button:active { transform: translateY(0); opacity: .92; }
+    .button:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+    .button-secondary { background: linear-gradient(135deg, #6c757d, #5a6268); box-shadow: 0 2px 8px rgba(108,117,125,.2); }
+    .button-danger { background: linear-gradient(135deg, var(--danger), var(--danger2)); box-shadow: 0 2px 8px rgba(220,53,69,.25); }
+    .button-success { background: linear-gradient(135deg, var(--success), var(--success2)); box-shadow: 0 2px 8px rgba(17,153,142,.25); }
+    .button-point-type, .button-category, .button-player {
+      background: var(--card); color: var(--text2); border: 1.5px solid var(--border);
+      padding: clamp(9px,2vw,12px) clamp(12px,2.5vw,18px);
+      border-radius: var(--radius-sm); font-size: clamp(.82em,1.8vw,.95em); font-family: inherit;
+      cursor: pointer; font-weight: 600; transition: all .15s;
+      box-shadow: var(--shadow-xs);
+    }
+    .button-point-type:hover, .button-category:hover, .button-player:hover {
+      border-color: var(--primary); color: var(--primary); background: rgba(102,126,234,.05);
+      box-shadow: var(--shadow-sm);
+    }
+    .button-point-type.selected, .button-category.selected, .button-player.selected {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: #fff; border-color: transparent; box-shadow: 0 4px 12px rgba(102,126,234,.35);
+    }
+    .point-type-buttons, .category-buttons { display: grid; grid-template-columns: repeat(auto-fit,minmax(140px,1fr)); gap: 8px; padding: 2px; }
+    .player-buttons { display: flex; flex-wrap: wrap; gap: 8px; padding: 2px; }
+    .button-group { display: flex; gap: 10px; flex-wrap: wrap; }
 
-/* ── Player pool ── */
-.player-pool-item {
-  display: inline-flex; align-items: center; margin: 6px; padding: 10px 14px;
-  background: var(--card); border-radius: 8px; font-size: .92em;
-  border: 2px solid var(--border); box-shadow: var(--shadow-xs); transition: border-color .2s;
-}
-.player-pool-item:hover { border-color: var(--primary); }
-.player-pool-item .remove {
-  cursor: pointer; margin-left: 10px; color: var(--danger); font-weight: bold;
-  padding: 4px 8px; border-radius: 4px; border: 1px solid transparent; transition: all .2s; font-size: 1.1em;
-}
-.player-pool-item .remove:hover { background: var(--danger); color: #fff; }
-#playerPoolDisplay { padding: 12px; min-height: 40px; background: var(--card); border: 2px solid var(--border); border-radius: 8px; }
+    /* ── Player pool ── */
+    .player-pool-item {
+      display: inline-flex; align-items: center; margin: 4px; padding: 7px 12px;
+      background: var(--sec-bg); border-radius: 20px; font-size: .88em;
+      border: 1px solid var(--border); box-shadow: var(--shadow-xs); transition: border-color .15s;
+    }
+    .player-pool-item:hover { border-color: var(--primary); }
+    .player-pool-item .remove {
+      cursor: pointer; margin-left: 8px; color: var(--text3); font-weight: bold;
+      padding: 2px 6px; border-radius: 4px; border: 1px solid transparent; transition: all .15s; font-size: 1em;
+    }
+    .player-pool-item .remove:hover { background: var(--danger); color: #fff; border-color: var(--danger); }
+    #playerPoolDisplay { padding: 10px; min-height: 40px; background: var(--sec-bg); border: 1.5px solid var(--border); border-radius: var(--radius-sm); }
 
-/* ── Teams ── */
-.team-section {
-  margin-bottom: var(--sp); padding: var(--sp); background: var(--card);
-  border-radius: 10px; border: 2px solid var(--border); box-shadow: var(--shadow-sm);
-}
-.team-section input[type="text"] {
-  padding: 10px 12px; border: 2px solid var(--input-border); border-radius: 6px;
-  width: 100%; background: var(--input-bg); color: var(--input-text); font-weight: 600; font-family: inherit;
-}
-.team-section input[type="text"]:focus { border-color: var(--primary); outline: none; }
+    /* ── Teams ── */
+    .team-section {
+      margin-bottom: 12px; padding: 14px 16px; background: var(--sec-bg);
+      border-radius: var(--radius-sm); border: 1px solid var(--border); box-shadow: var(--shadow-xs);
+    }
+    .team-section input[type="text"] {
+      padding: 9px 12px; border: 1.5px solid var(--input-border); border-radius: 6px;
+      width: 100%; background: var(--input-bg); color: var(--input-text); font-weight: 600; font-family: inherit;
+    }
+    .team-section input[type="text"]:focus { border-color: var(--primary); outline: none; }
 
-/* ── Stats ── */
-.stats-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(300px,1fr)); gap: var(--sp); margin-top: var(--sp); }
-.stat-card, .team-stat-card {
-  background: var(--card); padding: 18px; border-radius: 10px; border: 2px solid var(--border);
-  box-shadow: var(--shadow-sm); transition: border-color .2s, box-shadow .2s, transform .2s; cursor: pointer;
-  font-size: clamp(.85em,2vw,1em);
-}
-.stat-card:hover, .team-stat-card:hover { border-color: var(--primary-light); box-shadow: var(--shadow-md); transform: translateY(-2px); }
-.team-stat-card { border-left: 5px solid var(--secondary); grid-column: 1/-1; }
-.stat-card h3, .team-stat-card h3 { display: flex; align-items: center; justify-content: space-between; user-select: none; margin: 0; font-size: 1.1em; }
-.stat-details { max-height: 1000px; overflow: hidden; transition: max-height .3s ease-out, opacity .3s ease-out; opacity: 1; }
-.stat-card.collapsed .stat-details, .team-stat-card.collapsed .stat-details { max-height: 0; opacity: 0; pointer-events: none; }
-.player-score, .team-score { color: var(--primary); font-weight: 700; }
-.stat-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); align-items: center; }
-.stat-row:last-child { border-bottom: none; }
-.stat-label { font-weight: 600; color: var(--text2); font-size: .95em; }
-.stat-value { color: var(--primary); font-weight: 700; font-size: 1.1em; }
-.overall-ranking { grid-column: 1/-1; background: var(--card); padding: var(--sp); border-radius: 10px; border: 2px solid var(--border); box-shadow: var(--shadow-sm); margin-top: var(--sp); }
+    /* ── Stats ── */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(280px,1fr)); gap: 12px; margin-top: 12px; }
+    .stat-card, .team-stat-card {
+      background: var(--card); padding: 16px; border-radius: var(--radius-sm); border: 1px solid var(--border);
+      box-shadow: var(--shadow-xs); transition: border-color .15s, box-shadow .15s, transform .15s; cursor: pointer;
+      font-size: clamp(.85em,2vw,1em);
+    }
+    .stat-card:hover, .team-stat-card:hover { border-color: var(--primary-light); box-shadow: var(--shadow-sm); transform: translateY(-1px); }
+    .team-stat-card { border-left: 4px solid var(--secondary); grid-column: 1/-1; }
+    .stat-card h3, .team-stat-card h3 { display: flex; align-items: center; justify-content: space-between; user-select: none; margin: 0; font-size: 1em; font-weight: 700; }
+    .stat-details { max-height: 1000px; overflow: hidden; transition: max-height .3s ease-out, opacity .3s ease-out; opacity: 1; }
+    .stat-card.collapsed .stat-details, .team-stat-card.collapsed .stat-details { max-height: 0; opacity: 0; pointer-events: none; }
+    .player-score, .team-score { color: var(--primary); font-weight: 700; }
+    .stat-row { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--border); align-items: center; }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-label { font-weight: 500; color: var(--text2); font-size: .9em; }
+    .stat-value { color: var(--primary); font-weight: 700; font-size: 1em; }
+    .overall-ranking { grid-column: 1/-1; background: var(--card); padding: 16px; border-radius: var(--radius-sm); border: 1px solid var(--border); box-shadow: var(--shadow-xs); margin-top: 12px; }
 
-/* ── Log ── */
-.log-entry {
-  padding: 12px; background: var(--hover); margin: var(--sp) 0;
-  border-radius: 8px; border-left: 4px solid var(--primary);
-  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;
-  gap: 8px; font-size: clamp(.8em,2vw,.95em); box-shadow: var(--shadow-xs);
-}
-.log-container { max-height: 450px; overflow-y: auto; border: 2px solid var(--border); border-radius: 8px; padding: 12px; background: var(--card); }
-.log-container-wrap { position: relative; margin-top: 15px; }
+    /* ── Log ── */
+    .log-entry {
+      padding: 10px 12px; background: var(--sec-bg); margin: 8px 0;
+      border-radius: var(--radius-sm); border-left: 3px solid var(--primary);
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;
+      gap: 8px; font-size: clamp(.8em,2vw,.9em); box-shadow: var(--shadow-xs);
+    }
+    .log-container { max-height: 420px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px; background: var(--card); }
+    .log-container-wrap { position: relative; margin-top: 12px; }
 
-/* ── Toggle switch ── */
-.switch { position: relative; display: inline-block; width: 56px; height: 28px; flex-shrink: 0; }
-.switch input { opacity: 0; width: 0; height: 0; }
-.slider { position: absolute; cursor: pointer; inset: 0; background: #ccc; transition: .4s; border-radius: 28px; }
-.slider:before { position: absolute; content: ""; height: 22px; width: 22px; left: 3px; bottom: 3px; background: #fff; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,.2); }
-input:checked + .slider { background: linear-gradient(135deg, var(--primary), var(--secondary)); }
-input:checked + .slider:before { transform: translateX(28px); }
+    /* ── Toggle switch ── */
+    .switch { position: relative; display: inline-block; width: 52px; height: 26px; flex-shrink: 0; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; inset: 0; background: var(--border); transition: .3s; border-radius: 26px; }
+    .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background: #fff; transition: .3s; border-radius: 50%; box-shadow: 0 1px 4px rgba(0,0,0,.2); }
+    input:checked + .slider { background: linear-gradient(135deg, var(--primary), var(--secondary)); }
+    input:checked + .slider:before { transform: translateX(26px); }
 
-/* ── Session info ── */
-.session-info { background: var(--card); padding: var(--sp); border-radius: 10px; border: 2px solid var(--border); margin-bottom: var(--sp); font-size: clamp(.85em,2vw,1em); box-shadow: var(--shadow-sm); }
-.session-info-row { display: flex; justify-content: space-between; align-items: center; margin: var(--sp) 0; flex-wrap: wrap; gap: 8px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
-.session-info-row:last-child { border-bottom: none; margin-bottom: 0; }
-.session-info-row span:first-child { font-weight: 600; color: var(--text2); }
-.session-info-row strong { color: var(--primary); font-weight: 700; }
-.session-controls { display: flex; gap: 12px; flex-wrap: wrap; margin-top: var(--sp); }
+    /* ── Session info ── */
+    .session-info { background: var(--sec-bg); padding: 14px 16px; border-radius: var(--radius-sm); border: 1px solid var(--border); margin-bottom: var(--sp); font-size: clamp(.82em,2vw,.95em); }
+    .session-info-row { display: flex; justify-content: space-between; align-items: center; margin: 10px 0; flex-wrap: wrap; gap: 6px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+    .session-info-row:last-child { border-bottom: none; margin-bottom: 0; }
+    .session-info-row span:first-child { font-weight: 500; color: var(--text2); font-size: .9em; }
+    .session-info-row strong { color: var(--primary); font-weight: 700; }
+    .session-controls { display: flex; gap: 10px; flex-wrap: wrap; margin-top: var(--sp); }
 
-/* ── Modal ── */
-.qb-modal { display: none; position: fixed; z-index: 9999; inset: 0; background: rgba(0,0,0,.6); backdrop-filter: blur(4px); }
-.qb-modal.open { display: block; }
-.modal-content { background: var(--card); margin: 50px auto; padding: 28px; border-radius: 12px; width: 90%; max-width: 550px; max-height: 80vh; overflow-y: auto; box-shadow: var(--shadow-xl); }
-.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid var(--border); }
-.modal-header h2 { color: var(--primary); margin: 0; font-weight: 700; font-size: 1.5em; }
-.close-modal { background: none; border: none; font-size: 28px; cursor: pointer; color: var(--text2); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 6px; }
-.close-modal:hover { background: var(--sec-bg); color: var(--primary); }
-.sessions-list { display: grid; grid-template-columns: repeat(auto-fill,minmax(240px,1fr)); gap: 16px; margin-top: 16px; }
-.session-card { background: var(--sec-bg); padding: 16px; border-radius: 10px; border: 1px solid var(--border); transition: transform .2s, box-shadow .2s, border-color .2s; box-shadow: var(--shadow-sm); }
-.session-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); border-color: var(--primary); }
-.session-card-title { color: var(--primary); font-weight: 700; margin-bottom: 10px; font-size: clamp(1em,2vw,1.15em); }
-.session-card-details { font-size: .82em; color: var(--text2); margin-bottom: 12px; line-height: 1.6; }
-.session-card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-.session-card-actions button { flex: 1; min-width: 70px; font-size: .85em; padding: 8px 12px; }
+    /* ── Modal ── */
+    .qb-modal { display: none; position: fixed; z-index: 9999; inset: 0; background: rgba(15,20,40,.55); backdrop-filter: blur(6px); }
+    .qb-modal.open { display: block; }
+    .modal-content { background: var(--card); margin: 50px auto; padding: 24px 28px; border-radius: var(--radius); width: 90%; max-width: 550px; max-height: 80vh; overflow-y: auto; box-shadow: var(--shadow-xl); border: 1px solid var(--border); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
+    .modal-header h2 { color: var(--text); margin: 0; font-weight: 700; font-size: 1.3em; }
+    .close-modal { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text3); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 6px; transition: background .15s, color .15s; }
+    .close-modal:hover { background: var(--sec-bg); color: var(--primary); }
+    .sessions-list { display: grid; grid-template-columns: repeat(auto-fill,minmax(220px,1fr)); gap: 12px; margin-top: 14px; }
+    .session-card { background: var(--sec-bg); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border); transition: transform .15s, box-shadow .15s, border-color .15s; box-shadow: var(--shadow-xs); }
+    .session-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: var(--primary); }
+    .session-card-title { color: var(--primary); font-weight: 700; margin-bottom: 8px; font-size: clamp(.95em,2vw,1.05em); }
+    .session-card-details { font-size: .8em; color: var(--text2); margin-bottom: 10px; line-height: 1.5; }
+    .session-card-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .session-card-actions button { flex: 1; min-width: 60px; font-size: .82em; padding: 7px 10px; }
 
-/* ── Player Detail Modal ── */
-#playerDetailModal .modal-content { max-width: 620px; }
-.pd-hero {
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
-  border-radius: 10px; padding: 20px; color: #fff; margin-bottom: 20px;
-  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
-}
-.pd-hero-name { font-size: 1.5em; font-weight: 700; }
-.pd-hero-sub { font-size: .88em; opacity: .85; margin-top: 4px; }
-.pd-hero-pts { font-size: 2.2em; font-weight: 700; }
-.pd-section-title {
-  font-size: .78em; font-weight: 700;
-  color: var(--text2); margin: 18px 0 10px;
-}
-.pd-stat-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
-.pd-chip {
-  padding: 6px 14px; border-radius: 20px; font-size: .85em; font-weight: 700;
-  background: var(--sec-bg); color: var(--text); border: 2px solid var(--border);
-}
-.pd-chip.power { background: rgba(102,126,234,.12); color: var(--primary); border-color: var(--primary); }
-.pd-chip.neg   { background: rgba(220,53,69,.1); color: var(--danger); border-color: var(--danger); }
-.pd-chip.tossup { background: rgba(17,153,142,.1); color: var(--success); border-color: var(--success); }
-.pd-cat-table { width: 100%; border-collapse: collapse; font-size: .9em; }
-.pd-cat-table th {
-  text-align: left; padding: 8px 10px; background: var(--sec-bg);
-  border-bottom: 2px solid var(--border); color: var(--text2); font-weight: 700; font-size: .82em;
-}
-.pd-cat-table th.right, .pd-cat-table td.right { text-align: right; }
-.pd-cat-table td { padding: 9px 10px; border-bottom: 1px solid var(--border); }
-.pd-cat-table tr:last-child td { border-bottom: none; }
-.pd-cat-table tr:hover td { background: var(--hover); }
-.pd-rank-badge {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 26px; height: 26px; border-radius: 50%; font-size: .78em; font-weight: 700;
-  background: var(--sec-bg); color: var(--text2); border: 1px solid var(--border);
-}
-.pd-rank-badge.gold   { background: #ffd700; color: #7a5800; border-color: #c8a600; }
-.pd-rank-badge.silver { background: #c0c0c0; color: #5a5a5a; border-color: #a0a0a0; }
-.pd-rank-badge.bronze { background: #cd7f32; color: #fff; border-color: #a06020; }
-.pd-bar-mini { height: 6px; border-radius: 6px; background: linear-gradient(90deg, var(--primary), var(--secondary)); min-width: 4px; }
-.pd-bar-mini.neg-bar { background: linear-gradient(90deg, var(--danger), var(--danger2)); }
-.pd-recent-log { max-height: 220px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; }
-.pd-log-row {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: .85em;
-}
-.pd-log-row:last-child { border-bottom: none; }
-.pd-log-row:hover { background: var(--hover); }
-.pd-pts-pos { color: var(--primary); font-weight: 700; }
-.pd-pts-neg { color: var(--danger); font-weight: 700; }
-.pd-no-data { color: var(--text2); font-style: italic; font-size: .9em; padding: 12px 0; }
+    /* ── Skill / Analytics panel polish ── */
+    .skill-panel-header { display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;user-select:none;transition:background .15s; }
+    .skill-panel-header:hover { background:var(--hover); }
+    .sort-pill {
+      font-size:.75em;font-weight:600;padding:5px 12px;border-radius:20px;cursor:pointer;
+      border:1px solid var(--border);background:var(--card);color:var(--text2);
+      transition:all .15s;white-space:nowrap;
+    }
+    .sort-pill:hover { border-color:var(--primary);color:var(--primary); }
+    .sort-pill.active { border-color:transparent;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;box-shadow:0 2px 6px rgba(102,126,234,.3); }
+    .player-card-wrap {
+      background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);
+      margin-bottom:6px;overflow:hidden;box-shadow:var(--shadow-xs);
+      transition:border-color .15s,box-shadow .15s;
+    }
+    .player-card-wrap:hover { border-color:var(--primary-light);box-shadow:var(--shadow-sm); }
+    .player-card-header {
+      display:flex;align-items:center;gap:12px;padding:11px 15px;
+      cursor:pointer;user-select:none;
+    }
+    .player-card-rank { font-size:.9em;font-weight:800;color:var(--primary);min-width:30px;text-align:center; }
+    .player-card-body { padding:13px 15px;border-top:1px solid var(--border);background:var(--sec-bg); }
+    .metric-grid { display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px; }
+    .metric-tile { background:var(--card);border:1px solid var(--border);border-radius:7px;padding:9px 11px; }
+    .metric-tile.span2 { grid-column:span 2; }
+    .metric-lbl { font-size:.67em;font-weight:700;color:var(--text3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px; }
+    .metric-val { font-size:1.05em;font-weight:700; }
 
-/* ── Autosave indicator ── */
-.auto-save-indicator { font-size: .78em; font-weight: 600; padding: 4px 10px; border-radius: 20px; background: rgba(255,255,255,.15); color: rgba(255,255,255,.9); border: 1px solid rgba(255,255,255,.3); animation: pulse 2s infinite; white-space: nowrap; }
-@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .7; } }
+    /* ── Player Detail Modal ── */
+    #playerDetailModal .modal-content { max-width: 620px; }
+    .pd-hero {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-radius: var(--radius-sm); padding: 18px 20px; color: #fff; margin-bottom: 18px;
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+    }
+    .pd-hero-name { font-size: 1.4em; font-weight: 700; }
+    .pd-hero-sub { font-size: .85em; opacity: .8; margin-top: 3px; }
+    .pd-hero-pts { font-size: 2em; font-weight: 700; }
+    .pd-section-title { font-size: .75em; font-weight: 700; color: var(--text3); margin: 16px 0 8px; text-transform: uppercase; letter-spacing: .5px; }
+    .pd-stat-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 14px; }
+    .pd-chip {
+      padding: 5px 13px; border-radius: 20px; font-size: .82em; font-weight: 600;
+      background: var(--sec-bg); color: var(--text2); border: 1px solid var(--border);
+    }
+    .pd-chip.power { background: rgba(102,126,234,.1); color: var(--primary); border-color: rgba(102,126,234,.35); }
+    .pd-chip.neg   { background: rgba(220,53,69,.08); color: var(--danger); border-color: rgba(220,53,69,.3); }
+    .pd-chip.tossup { background: rgba(17,153,142,.08); color: var(--success); border-color: rgba(17,153,142,.3); }
+    .pd-cat-table { width: 100%; border-collapse: collapse; font-size: .88em; }
+    .pd-cat-table th { text-align: left; padding: 7px 10px; background: var(--sec-bg); border-bottom: 1px solid var(--border); color: var(--text3); font-weight: 700; font-size: .78em; text-transform: uppercase; letter-spacing: .4px; }
+    .pd-cat-table th.right, .pd-cat-table td.right { text-align: right; }
+    .pd-cat-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); }
+    .pd-cat-table tr:last-child td { border-bottom: none; }
+    .pd-cat-table tr:hover td { background: var(--hover); }
+    .pd-rank-badge { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; font-size: .76em; font-weight: 700; background: var(--sec-bg); color: var(--text3); border: 1px solid var(--border); }
+    .pd-rank-badge.gold   { background: #ffd700; color: #7a5800; border-color: #c8a600; }
+    .pd-rank-badge.silver { background: #c0c0c0; color: #5a5a5a; border-color: #a0a0a0; }
+    .pd-rank-badge.bronze { background: #cd7f32; color: #fff; border-color: #a06020; }
+    .pd-bar-mini { height: 5px; border-radius: 5px; background: linear-gradient(90deg, var(--primary), var(--secondary)); min-width: 4px; }
+    .pd-bar-mini.neg-bar { background: linear-gradient(90deg, var(--danger), var(--danger2)); }
+    .pd-recent-log { max-height: 200px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+    .pd-log-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 12px; border-bottom: 1px solid var(--border); font-size: .83em; }
+    .pd-log-row:last-child { border-bottom: none; }
+    .pd-log-row:hover { background: var(--hover); }
+    .pd-pts-pos { color: var(--primary); font-weight: 700; }
+    .pd-pts-neg { color: var(--danger); font-weight: 700; }
+    .pd-no-data { color: var(--text2); font-style: italic; font-size: .88em; padding: 10px 0; }
 
-/* ── Sidebar nav ── */
-.sidebar-nav {
-  display: flex; align-items: center; gap: 8px; padding: 10px 12px;
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
-  border-radius: 10px; margin-bottom: var(--sp); box-shadow: var(--shadow-sm);
-  position: relative; z-index: 50; flex-shrink: 0;
-}
-.sidebar-jump-wrapper { flex: 1; position: relative; }
-.sidebar-jump-btn {
-  width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,.3);
-  background: rgba(255,255,255,.15); color: #fff; font-weight: 600; font-size: .9em;
-  cursor: pointer; font-family: inherit; display: flex; justify-content: space-between; align-items: center; gap: 8px;
-}
-.sidebar-jump-btn:hover { background: rgba(255,255,255,.25); }
-.sidebar-jump-arrow { font-size: .85em; opacity: .8; transition: transform .2s; }
-.sidebar-jump-wrapper.open .sidebar-jump-arrow { transform: rotate(180deg); }
-.sidebar-jump-menu {
-  display: none; position: absolute; top: calc(100% + 6px); left: 0; right: 0;
-  background: var(--card); border: 1px solid var(--border); border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(0,0,0,.2); z-index: 9999; overflow: hidden;
-}
-.sidebar-jump-wrapper.open .sidebar-jump-menu { display: block; }
-.sidebar-jump-menu button {
-  display: block; width: 100%; padding: 10px 14px; text-align: left;
-  background: none; border: none; border-bottom: 1px solid var(--border);
-  color: var(--text); font-size: .9em; font-weight: 500; cursor: pointer; font-family: inherit; transition: background .15s;
-}
-.sidebar-jump-menu button:last-child { border-bottom: none; }
-.sidebar-jump-menu button:hover { background: var(--sec-bg); }
-.sidebar-jump-menu button.active-item { color: var(--primary); font-weight: 700; background: var(--sec-bg); }
-.sidebar-close-btn {
-  background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3); color: #fff;
-  padding: 8px 12px; border-radius: 6px; font-size: .85em; font-weight: 700;
-  cursor: pointer; white-space: nowrap; font-family: inherit; flex-shrink: 0;
-}
-.sidebar-close-btn:hover { background: rgba(255,255,255,.28); }
-.sidebar-sections { flex: 1; overflow-y: auto; overflow-x: visible; }
-.qb-sidebar .qb-section { display: none; }
-.qb-sidebar .qb-section.active-section { display: block; }
+    /* ── Autosave indicator ── */
+    .auto-save-indicator { font-size: .73em; font-weight: 600; padding: 3px 9px; border-radius: 20px; background: rgba(255,255,255,.14); color: rgba(255,255,255,.88); border: 1px solid rgba(255,255,255,.25); animation: pulse 2.5s infinite; white-space: nowrap; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .65; } }
 
-/* ── Mobile header ── */
-@media (max-width: 768px) {
-  .qb-header { padding: 12px 16px 10px; flex-direction: column; align-items: center; gap: 0; }
-  .qb-header h1 { position: static; transform: none; white-space: normal; text-align: center; width: 100%; font-size: clamp(1.3em,6vw,1.8em); margin-bottom: 6px; }
-  .qb-scroll, .analytics-scroll { padding: 16px; }
-  .qb-section { padding: 16px; }
-  .point-type-buttons, .category-buttons { grid-template-columns: repeat(2,1fr); gap: 8px; }
-  .stats-grid { grid-template-columns: 1fr; }
-  .button-group { flex-direction: column; }
-  .button-group button, .button { width: 100%; }
-  .log-container { max-height: 350px; }
-  .sessions-list { grid-template-columns: 1fr; }
-  .modal-content { margin: 20px auto; width: 95%; padding: 20px; }
-  .an-grid { grid-template-columns: repeat(2,1fr); }
-}
-```
+    /* ── Sidebar nav ── */
+    .sidebar-nav {
+      display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-radius: var(--radius-sm); margin-bottom: 12px; box-shadow: var(--shadow-sm);
+      position: relative; z-index: 50; flex-shrink: 0;
+    }
+    .sidebar-jump-wrapper { flex: 1; position: relative; }
+    .sidebar-jump-btn {
+      width: 100%; padding: 7px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,.25);
+      background: rgba(255,255,255,.13); color: #fff; font-weight: 600; font-size: .84em;
+      cursor: pointer; font-family: inherit; display: flex; justify-content: space-between; align-items: center; gap: 8px;
+    }
+    .sidebar-jump-btn:hover { background: rgba(255,255,255,.22); }
+    .sidebar-jump-arrow { font-size: .8em; opacity: .8; transition: transform .2s; }
+    .sidebar-jump-wrapper.open .sidebar-jump-arrow { transform: rotate(180deg); }
+    .sidebar-jump-menu {
+      display: none; position: absolute; top: calc(100% + 5px); left: 0; right: 0;
+      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm);
+      box-shadow: 0 8px 24px rgba(0,0,0,.15); z-index: 9999; overflow: hidden;
+    }
+    .sidebar-jump-wrapper.open .sidebar-jump-menu { display: block; }
+    .sidebar-jump-menu button {
+      display: block; width: 100%; padding: 9px 14px; text-align: left;
+      background: none; border: none; border-bottom: 1px solid var(--border);
+      color: var(--text); font-size: .86em; font-weight: 500; cursor: pointer; font-family: inherit; transition: background .12s;
+    }
+    .sidebar-jump-menu button:last-child { border-bottom: none; }
+    .sidebar-jump-menu button:hover { background: var(--hover); }
+    .sidebar-jump-menu button.active-item { color: var(--primary); font-weight: 700; background: var(--sec-bg); }
+    .sidebar-close-btn {
+      background: rgba(255,255,255,.13); border: 1px solid rgba(255,255,255,.25); color: #fff;
+      padding: 7px 10px; border-radius: 6px; font-size: .82em; font-weight: 600;
+      cursor: pointer; white-space: nowrap; font-family: inherit; flex-shrink: 0;
+    }
+    .sidebar-close-btn:hover { background: rgba(255,255,255,.24); }
+    .sidebar-sections { flex: 1; overflow-y: auto; overflow-x: visible; }
+    .qb-sidebar .qb-section { display: none; }
+    .qb-sidebar .qb-section.active-section { display: block; }
 
+    /* ── Mobile header ── */
+    @media (max-width: 768px) {
+      .qb-header { padding: 12px 16px 10px; flex-direction: column; align-items: center; gap: 0; }
+      .qb-header h1 { position: static; transform: none; white-space: normal; text-align: center; width: 100%; font-size: clamp(1.3em,6vw,1.8em); margin-bottom: 6px; }
+      .qb-scroll, .analytics-scroll { padding: 16px; }
+      .qb-section { padding: 16px; }
+      .point-type-buttons, .category-buttons { grid-template-columns: repeat(2,1fr); gap: 8px; }
+      .stats-grid { grid-template-columns: 1fr; }
+      .button-group { flex-direction: column; }
+      .button-group button, .button { width: 100%; }
+      .log-container { max-height: 350px; }
+      .sessions-list { grid-template-columns: 1fr; }
+      .modal-content { margin: 20px auto; width: 95%; padding: 20px; }
+      .an-grid { grid-template-columns: repeat(2,1fr); }
+    }
   </style>
 </head>
 <body>
   <div class="qb-container">
 
-```
-<div class="qb-header" id="qbHeader">
-  <button class="header-btn sidebar-open-btn" id="sidebarOpenBtn">&#9654; Menu</button>
-  <h1>HSE Quiz Bowl Tracker <span class="version-badge" id="versionBadge">v29</span></h1>
-  <div class="header-session-name" id="headerSessionName"></div>
-  <div class="header-controls">
-    <button class="header-btn" id="analyticsBtn" onclick="toggleAnalytics()" style="display:none;"></button>
-    <!-- Tracker / Analytics toggle switch -->
-    <div style="display:flex;align-items:center;gap:8px;user-select:none;" title="Switch between Tracker and Analytics">
-      <span id="toggleLabelTracker" style="font-size:.82em;font-weight:700;color:rgba(255,255,255,.95);">Tracker</span>
-      <div onclick="toggleAnalytics()" id="viewToggleSwitch" style="width:46px;height:24px;background:rgba(255,255,255,.25);border-radius:12px;border:2px solid rgba(255,255,255,.4);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;">
-        <div id="viewToggleKnob" style="width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:1px;left:2px;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,.3);"></div>
+    <div class="qb-header" id="qbHeader">
+      <button class="header-btn sidebar-open-btn" id="sidebarOpenBtn">&#9654; Menu</button>
+      <div class="qb-header-center">
+        <h1>HSE Quiz Bowl Tracker <span class="version-badge" id="versionBadge">v29</span></h1>
+        <div class="header-session-name" id="headerSessionName"></div>
       </div>
-      <span id="toggleLabelAnalytics" style="font-size:.82em;font-weight:700;color:rgba(255,255,255,.55);">Stats</span>
-    </div>
-    <button class="header-btn round" onclick="openHelpModal()" title="Help / Tutorial">?</button>
-    <span id="autosaveStatus" class="auto-save-indicator">✓ Saved</span>
-  </div>
-  <div class="mobile-subrow" id="mobileSubrow">
-    <button class="header-btn" id="sidebarOpenBtnMobile">&#9654; Menu</button>
-    <span id="headerSessionNameMobile" style="flex:1;text-align:center;font-size:.78em;font-weight:600;color:rgba(255,255,255,.75);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></span>
-    <button class="header-btn" id="analyticsBtnMobile" onclick="toggleAnalytics()" style="display:none;"></button>
-    <div onclick="toggleAnalytics()" id="viewToggleSwitchMobile" style="display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;" title="Switch view">
-      <span id="toggleLabelMobile" style="font-size:.75em;font-weight:700;color:rgba(255,255,255,.9);">Tracker</span>
-      <div style="width:38px;height:20px;background:rgba(255,255,255,.25);border-radius:10px;border:2px solid rgba(255,255,255,.4);position:relative;flex-shrink:0;">
-        <div id="viewToggleKnobMobile" style="width:14px;height:14px;background:#fff;border-radius:50%;position:absolute;top:1px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3);"></div>
-      </div>
-    </div>
-    <button class="header-btn round" onclick="openHelpModal()" title="Help">?</button>
-    <span id="autosaveStatusMobile" class="auto-save-indicator" style="flex-shrink:0;">✓ Saved</span>
-  </div>
-</div>
-
-<div class="qb-body">
-
-  <aside class="qb-sidebar" id="mainSidebar">
-    <div class="sidebar-nav">
-      <div class="sidebar-jump-wrapper" id="sidebarJumpWrapper">
-        <button class="sidebar-jump-btn" onclick="toggleJumpDropdown()" type="button">
-          <span id="sidebarJumpLabel">Session</span>
-          <span class="sidebar-jump-arrow">&#9662;</span>
-        </button>
-        <div class="sidebar-jump-menu">
-          <button onclick="showSection('sec-session')">Session</button>
-          <button onclick="showSection('sec-players')">Players</button>
-          <button onclick="showSection('sec-teams')">Teams</button>
-          <button onclick="showSection('sec-categories')">Categories</button>
-          <button onclick="showSection('sec-export')">Export / Import</button>
-          <button onclick="showSection('sec-visual')">Visual Settings</button>
-          <button onclick="showSection('sec-danger')">Data Management</button>
+      <div class="header-controls">
+        <button class="header-btn" id="analyticsBtn" onclick="toggleAnalytics()" style="display:none;"></button>
+        <!-- Tracker / Analytics toggle switch -->
+        <div style="display:flex;align-items:center;gap:8px;user-select:none;" title="Switch between Tracker and Analytics">
+          <span id="toggleLabelTracker" style="font-size:.82em;font-weight:700;color:rgba(255,255,255,.95);">Tracker</span>
+          <div onclick="toggleAnalytics()" id="viewToggleSwitch" style="width:46px;height:24px;background:rgba(255,255,255,.25);border-radius:12px;border:2px solid rgba(255,255,255,.4);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;">
+            <div id="viewToggleKnob" style="width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:1px;left:2px;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,.3);"></div>
+          </div>
+          <span id="toggleLabelAnalytics" style="font-size:.82em;font-weight:700;color:rgba(255,255,255,.55);">Stats</span>
         </div>
+        <button class="header-btn round" onclick="openHelpModal()" title="Help / Tutorial">?</button>
+        <span id="autosaveStatus" class="auto-save-indicator">✓ Saved</span>
       </div>
-      <button class="sidebar-close-btn" onclick="toggleSidebar()">&#9664; Hide</button>
+      <div class="mobile-subrow" id="mobileSubrow">
+        <button class="header-btn" id="sidebarOpenBtnMobile">&#9654; Menu</button>
+        <span id="headerSessionNameMobile" style="flex:1;text-align:center;font-size:.78em;font-weight:600;color:rgba(255,255,255,.75);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></span>
+        <button class="header-btn" id="analyticsBtnMobile" onclick="toggleAnalytics()" style="display:none;"></button>
+        <div onclick="toggleAnalytics()" id="viewToggleSwitchMobile" style="display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;" title="Switch view">
+          <span id="toggleLabelMobile" style="font-size:.75em;font-weight:700;color:rgba(255,255,255,.9);">Tracker</span>
+          <div style="width:38px;height:20px;background:rgba(255,255,255,.25);border-radius:10px;border:2px solid rgba(255,255,255,.4);position:relative;flex-shrink:0;">
+            <div id="viewToggleKnobMobile" style="width:14px;height:14px;background:#fff;border-radius:50%;position:absolute;top:1px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3);"></div>
+          </div>
+        </div>
+        <button class="header-btn round" onclick="openHelpModal()" title="Help">?</button>
+        <span id="autosaveStatusMobile" class="auto-save-indicator" style="flex-shrink:0;">✓ Saved</span>
+      </div>
     </div>
 
-    <div class="sidebar-sections">
+    <div class="qb-body">
 
-      <div class="qb-section" id="sec-session">
-        <h2>Session <span class="toggle-icon">&#9660;</span></h2>
-        <div class="collapsible-content">
-          <div class="session-info">
-            <div class="session-info-row"><span>Name:</span><strong id="sessionName">&#8212;</strong></div>
-            <div class="session-info-row"><span>Created:</span><strong id="sessionCreated">&#8212;</strong></div>
-            <div class="session-info-row"><span>Last Updated:</span><strong id="sessionLastUpdated">&#8212;</strong></div>
-            <div class="session-info-row"><span>Answers:</span><strong id="sessionAnswerCount">0</strong></div>
+      <aside class="qb-sidebar" id="mainSidebar">
+        <div class="sidebar-nav">
+          <div class="sidebar-jump-wrapper" id="sidebarJumpWrapper">
+            <button class="sidebar-jump-btn" onclick="toggleJumpDropdown()" type="button">
+              <span id="sidebarJumpLabel">Session</span>
+              <span class="sidebar-jump-arrow">&#9662;</span>
+            </button>
+            <div class="sidebar-jump-menu">
+              <button onclick="showSection('sec-session')">Session</button>
+              <button onclick="showSection('sec-players')">Players</button>
+              <button onclick="showSection('sec-teams')">Teams</button>
+              <button onclick="showSection('sec-categories')">Categories</button>
+              <button onclick="showSection('sec-export')">Export / Import</button>
+              <button onclick="showSection('sec-visual')">Visual Settings</button>
+              <button onclick="showSection('sec-danger')">Data Management</button>
+            </div>
           </div>
-          <div class="input-group">
-            <label>New Session Name:</label>
-            <input type="text" id="newSessionName" placeholder="Session name..." />
-          </div>
-          <div class="session-controls">
-            <button class="button button-success" onclick="createNewSession()">+ New Session</button>
-            <button class="button" onclick="openSessionsModal()">Load</button>
-          </div>
+          <button class="sidebar-close-btn" onclick="toggleSidebar()">&#9664; Hide</button>
         </div>
-      </div>
 
-      <div class="qb-section" id="sec-players">
-        <h2>Players <span class="toggle-icon">&#9660;</span></h2>
-        <div class="collapsible-content">
-          <div class="input-group">
-            <label>Add Player:</label>
-            <input type="text" id="playerInput" placeholder="Player name..." onkeydown="if(event.key==='Enter') addToPlayerPool()" />
-          </div>
-          <div class="button-group" style="margin-bottom:14px;">
-            <button class="button" onclick="addToPlayerPool()">Add Player</button>
-            <button class="button button-danger" onclick="clearPlayerPool()">Clear All</button>
-          </div>
-          <div class="input-group">
-            <label>Import from File (CSV/TXT):</label>
-            <input type="file" accept=".csv,.txt" onchange="handlePlayerImport(event)" />
-          </div>
-          <div id="playerPoolDisplay"></div>
-        </div>
-      </div>
+        <div class="sidebar-sections">
 
-      <div class="qb-section" id="sec-teams">
-        <h2>Teams <span class="toggle-icon">&#9660;</span></h2>
-        <div class="collapsible-content">
-          <div class="input-group">
-            <label>Team Name:</label>
-            <input type="text" id="teamNameInput" placeholder="Team name..." />
-          </div>
-          <button class="button" onclick="addTeam()">Add Team</button>
-          <div id="teamsContainer" style="margin-top:20px;"></div>
-        </div>
-      </div>
-
-      <div class="qb-section" id="sec-categories">
-        <h2>Categories <span class="toggle-icon">&#9660;</span></h2>
-        <div class="collapsible-content">
-          <div class="input-group">
-            <label>Categories (comma-separated):</label>
-            <textarea id="categoriesInput" placeholder="e.g., Science, History, Literature..." rows="3"></textarea>
-          </div>
-          <button class="button" onclick="saveCategories()">Save Categories</button>
-        </div>
-      </div>
-
-      <div class="qb-section" id="sec-export">
-        <h2>Export Data <span class="toggle-icon">&#9660;</span></h2>
-        <div class="collapsible-content">
-          <div style="margin-bottom:var(--sp);">
-            <p style="margin-bottom:10px;font-weight:600;">Select what to include:</p>
-            <div style="display:flex;flex-wrap:wrap;gap:10px;">
-              <button class="button-category selected" id="exportPlayers" onclick="this.classList.toggle('selected')">Players &amp; Scores</button>
-              <button class="button-category selected" id="exportAnswerLog" onclick="this.classList.toggle('selected')">Answer Log</button>
-              <button class="button-category selected" id="exportTeamStats" onclick="this.classList.toggle('selected')">Team Statistics</button>
-            </div>
-          </div>
-          <div class="button-group">
-            <button class="button button-success" onclick="exportToExcel()">Export to Excel</button>
-            <button class="button button-secondary" onclick="exportToJSON()">Export as JSON</button>
-          </div>
-          <div style="margin-top:22px;padding-top:18px;border-top:1px solid var(--border);">
-            <p style="font-weight:600;margin-bottom:6px;">Import Session</p>
-            <p style="font-size:.85em;color:var(--text2);margin-bottom:12px;">Load a previously exported JSON file.</p>
-            <div class="input-group">
-              <label>Select JSON file:</label>
-              <input type="file" id="importSessionFile" accept=".json" onchange="importFromJSON(event)" />
-            </div>
-            <div id="importStatus" style="font-size:.85em;margin-top:8px;display:none;"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="qb-section" id="sec-visual">
-        <h2>Visual Settings <span class="toggle-icon">&#9660;</span></h2>
-        <div class="collapsible-content">
-          <p style="font-size:.78em;color:var(--text2);margin-bottom:14px;padding:8px 10px;background:var(--hover);border-radius:6px;border:1px solid var(--border);">
-            <strong>Local settings</strong> &#8212; saved to this device only, do not sync.
-          </p>
-          <div class="input-group">
-            <label>Theme</label>
-            <div style="display:flex;align-items:center;gap:12px;">
-              <label class="switch"><input type="checkbox" id="darkModeToggle2" onchange="toggleDarkMode()"><span class="slider"></span></label>
-              <span>Dark Mode</span>
-            </div>
-          </div>
-          <div class="input-group">
-            <label>Scrollbars</label>
-            <div style="display:flex;align-items:center;gap:12px;">
-              <label class="switch"><input type="checkbox" id="hideScrollbarsToggle" onchange="toggleScrollbars()"><span class="slider"></span></label>
-              <span>Hide Scrollbars</span>
-            </div>
-          </div>
-          <div class="input-group">
-            <label>Accent Color</label>
-            <select id="accentColorSelect" onchange="setAccentColor(this.value)">
-              <option value="#667eea">Indigo</option>
-              <option value="#11998e">Teal</option>
-              <option value="#dc3545">Red</option>
-              <option value="#764ba2">Purple</option>
-            </select>
-          </div>
-          <div class="input-group" style="padding-top:14px;border-top:1px solid var(--border);">
-            <label>Version Number <span style="font-size:.75em;font-weight:400;color:var(--text2);">(syncs for all users)</span></label>
-            <div style="display:flex;gap:8px;align-items:center;">
-              <input type="text" id="versionInput" placeholder="e.g. v30" style="flex:1;" />
-              <button class="button" onclick="saveVersion()" style="white-space:nowrap;padding:10px 16px;">Save</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="qb-section" id="sec-danger" style="border:2px solid var(--danger);">
-        <h2 style="color:var(--danger);">Data Management <span class="toggle-icon">&#9660;</span></h2>
-        <div class="collapsible-content">
-          <button class="button button-danger" onclick="resetAllData()">Delete All Data</button>
-          <p style="margin-top:10px;font-size:.85em;color:var(--text2);">This cannot be undone. Export first!</p>
-        </div>
-      </div>
-
-    </div>
-  </aside>
-
-  <!-- Tracker view -->
-  <div id="trackerView" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
-    <div class="qb-scroll" id="qbScroll">
-      <div class="qb-section" style="overflow:visible;">
-        <h2>Record Answer <span class="toggle-icon">&#9660;</span></h2>
-        <div class="collapsible-content">
-          <div class="input-group">
-            <label>Select Player:</label>
-            <div id="playerButtonsContainer" class="player-buttons"></div>
-          </div>
-          <div class="input-group">
-            <label>Point Type:</label>
-            <div class="point-type-buttons">
-              <button class="button-point-type" onclick="selectPointType('Toss-up')">Toss-up (+10)</button>
-              <button class="button-point-type" onclick="selectPointType('Bonus')">Bonus (+10)</button>
-              <button class="button-point-type" onclick="selectPointType('Neg')">Neg (-5)</button>
-              <button class="button-point-type" onclick="selectPointType('Power')">Power (+15)</button>
-            </div>
-          </div>
-          <div class="input-group">
-            <label>Category: <span id="categoryOptionalHint" style="font-weight:400;font-size:.85em;color:var(--text2);display:none;">(optional for Neg)</span></label>
-            <div id="categoryButtonsContainer" class="category-buttons"></div>
-          </div>
-          <!-- t_heard counter -->
-          <div style="display:flex;align-items:center;gap:12px;margin-top:14px;padding:12px 14px;background:var(--sec-bg);border:2px solid var(--border);border-radius:8px;">
-            <div style="flex:1;">
-              <div style="font-weight:700;font-size:.9em;color:var(--text2);margin-bottom:2px;">Toss-Ups Heard <span style="font-weight:400;font-size:.85em;">(auto-tracks on TU / Power / Neg)</span></div>
-              <div style="font-size:1.6em;font-weight:700;color:var(--primary);" id="tHeardDisplay">0</div>
-            </div>
-            <div style="display:flex;gap:6px;align-items:center;">
-              <button onclick="adjustTHeard(-1)" style="width:34px;height:34px;border-radius:8px;border:2px solid var(--danger);background:var(--card);color:var(--danger);font-size:1.2em;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;">−</button>
-              <button onclick="adjustTHeard(1)"  style="width:34px;height:34px;border-radius:8px;border:2px solid var(--success);background:var(--card);color:var(--success);font-size:1.2em;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;">+</button>
-            </div>
-          </div>
-          <button class="button button-success" onclick="recordAnswer()" style="width:100%;margin-top:10px;padding:16px;font-size:1.05em;">Record Answer</button>
-          <button class="button button-secondary" onclick="toggleSubPanel()" style="width:100%;margin-top:8px;padding:10px;">Make Substitution</button>
-          <div id="subPanel" style="display:none;margin-top:10px;padding:14px;background:var(--sec-bg);border:2px solid var(--border);border-radius:8px;">
-            <div style="font-weight:700;font-size:.9em;margin-bottom:10px;color:var(--text);">Substitution</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
-              <div>
-                <div style="font-size:.82em;font-weight:700;color:var(--text2);margin-bottom:5px;">Subbing Out:</div>
-                <div id="subOutContainer" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+          <div class="qb-section" id="sec-session">
+            <h2>Session <span class="toggle-icon">&#9660;</span></h2>
+            <div class="collapsible-content">
+              <div class="session-info">
+                <div class="session-info-row"><span>Name:</span><strong id="sessionName">&#8212;</strong></div>
+                <div class="session-info-row"><span>Created:</span><strong id="sessionCreated">&#8212;</strong></div>
+                <div class="session-info-row"><span>Last Updated:</span><strong id="sessionLastUpdated">&#8212;</strong></div>
+                <div class="session-info-row"><span>Answers:</span><strong id="sessionAnswerCount">0</strong></div>
               </div>
-              <div>
-                <div style="font-size:.82em;font-weight:700;color:var(--text2);margin-bottom:5px;">Subbing In:</div>
-                <div id="subInContainer" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+              <div class="input-group">
+                <label>New Session Name:</label>
+                <input type="text" id="newSessionName" placeholder="Session name..." />
+              </div>
+              <div class="session-controls">
+                <button class="button button-success" onclick="createNewSession()">+ New Session</button>
+                <button class="button" onclick="openSessionsModal()">Load</button>
               </div>
             </div>
-            <button onclick="confirmSubstitution()" class="button button-secondary" style="width:100%;padding:10px;">Confirm Substitution</button>
+          </div>
+
+          <div class="qb-section" id="sec-players">
+            <h2>Players <span class="toggle-icon">&#9660;</span></h2>
+            <div class="collapsible-content">
+              <div class="input-group">
+                <label>Add Player:</label>
+                <input type="text" id="playerInput" placeholder="Player name..." onkeydown="if(event.key==='Enter') addToPlayerPool()" />
+              </div>
+              <div class="button-group" style="margin-bottom:14px;">
+                <button class="button" onclick="addToPlayerPool()">Add Player</button>
+                <button class="button button-danger" onclick="clearPlayerPool()">Clear All</button>
+              </div>
+              <div class="input-group">
+                <label>Import from File (CSV/TXT):</label>
+                <input type="file" accept=".csv,.txt" onchange="handlePlayerImport(event)" />
+              </div>
+              <div id="playerPoolDisplay"></div>
+            </div>
+          </div>
+
+          <div class="qb-section" id="sec-teams">
+            <h2>Teams <span class="toggle-icon">&#9660;</span></h2>
+            <div class="collapsible-content">
+              <div class="input-group">
+                <label>Team Name:</label>
+                <input type="text" id="teamNameInput" placeholder="Team name..." />
+              </div>
+              <button class="button" onclick="addTeam()">Add Team</button>
+              <div id="teamsContainer" style="margin-top:20px;"></div>
+            </div>
+          </div>
+
+          <div class="qb-section" id="sec-categories">
+            <h2>Categories <span class="toggle-icon">&#9660;</span></h2>
+            <div class="collapsible-content">
+              <div class="input-group">
+                <label>Categories (comma-separated):</label>
+                <textarea id="categoriesInput" placeholder="e.g., Science, History, Literature..." rows="3"></textarea>
+              </div>
+              <button class="button" onclick="saveCategories()">Save Categories</button>
+            </div>
+          </div>
+
+          <div class="qb-section" id="sec-export">
+            <h2>Export Data <span class="toggle-icon">&#9660;</span></h2>
+            <div class="collapsible-content">
+              <div style="margin-bottom:var(--sp);">
+                <p style="margin-bottom:10px;font-weight:600;">Select what to include:</p>
+                <div style="display:flex;flex-wrap:wrap;gap:10px;">
+                  <button class="button-category selected" id="exportPlayers" onclick="this.classList.toggle('selected')">Players &amp; Scores</button>
+                  <button class="button-category selected" id="exportAnswerLog" onclick="this.classList.toggle('selected')">Answer Log</button>
+                  <button class="button-category selected" id="exportTeamStats" onclick="this.classList.toggle('selected')">Team Statistics</button>
+                </div>
+              </div>
+              <div class="button-group">
+                <button class="button button-success" onclick="exportToExcel()">Export to Excel</button>
+                <button class="button button-secondary" onclick="exportToJSON()">Export as JSON</button>
+              </div>
+              <div style="margin-top:22px;padding-top:18px;border-top:1px solid var(--border);">
+                <p style="font-weight:600;margin-bottom:6px;">Import Session</p>
+                <p style="font-size:.85em;color:var(--text2);margin-bottom:12px;">Load a previously exported JSON file.</p>
+                <div class="input-group">
+                  <label>Select JSON file:</label>
+                  <input type="file" id="importSessionFile" accept=".json" onchange="importFromJSON(event)" />
+                </div>
+                <div id="importStatus" style="font-size:.85em;margin-top:8px;display:none;"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="qb-section" id="sec-visual">
+            <h2>Visual Settings <span class="toggle-icon">&#9660;</span></h2>
+            <div class="collapsible-content">
+              <p style="font-size:.78em;color:var(--text2);margin-bottom:14px;padding:8px 10px;background:var(--hover);border-radius:6px;border:1px solid var(--border);">
+                <strong>Local settings</strong> &#8212; saved to this device only, do not sync.
+              </p>
+              <div class="input-group">
+                <label>Theme</label>
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <label class="switch"><input type="checkbox" id="darkModeToggle2" onchange="toggleDarkMode()"><span class="slider"></span></label>
+                  <span>Dark Mode</span>
+                </div>
+              </div>
+              <div class="input-group">
+                <label>Scrollbars</label>
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <label class="switch"><input type="checkbox" id="hideScrollbarsToggle" onchange="toggleScrollbars()"><span class="slider"></span></label>
+                  <span>Hide Scrollbars</span>
+                </div>
+              </div>
+              <div class="input-group">
+                <label>Accent Color</label>
+                <select id="accentColorSelect" onchange="setAccentColor(this.value)">
+                  <option value="#667eea">Indigo</option>
+                  <option value="#11998e">Teal</option>
+                  <option value="#dc3545">Red</option>
+                  <option value="#764ba2">Purple</option>
+                </select>
+              </div>
+              <div class="input-group" style="padding-top:14px;border-top:1px solid var(--border);">
+                <label>Version Number <span style="font-size:.75em;font-weight:400;color:var(--text2);">(syncs for all users)</span></label>
+                <div style="display:flex;gap:8px;align-items:center;">
+                  <input type="text" id="versionInput" placeholder="e.g. v30" style="flex:1;" />
+                  <button class="button" onclick="saveVersion()" style="white-space:nowrap;padding:10px 16px;">Save</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="qb-section" id="sec-danger" style="border:2px solid var(--danger);">
+            <h2 style="color:var(--danger);">Data Management <span class="toggle-icon">&#9660;</span></h2>
+            <div class="collapsible-content">
+              <button class="button button-danger" onclick="resetAllData()">Delete All Data</button>
+              <p style="margin-top:10px;font-size:.85em;color:var(--text2);">This cannot be undone. Export first!</p>
+            </div>
+          </div>
+
+        </div>
+      </aside>
+
+      <!-- Tracker view -->
+      <div id="trackerView" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+        <div class="qb-scroll" id="qbScroll">
+          <div class="qb-section" style="overflow:visible;">
+            <h2>Record Answer <span class="toggle-icon">&#9660;</span></h2>
+            <div class="collapsible-content">
+              <div class="input-group">
+                <label>Select Player:</label>
+                <div id="playerButtonsContainer" class="player-buttons"></div>
+              </div>
+              <div class="input-group">
+                <label>Point Type:</label>
+                <div class="point-type-buttons">
+                  <button class="button-point-type" onclick="selectPointType('Toss-up')">Toss-up (+10)</button>
+                  <button class="button-point-type" onclick="selectPointType('Bonus')">Bonus (+10)</button>
+                  <button class="button-point-type" onclick="selectPointType('Neg')">Neg (-5)</button>
+                  <button class="button-point-type" onclick="selectPointType('Power')">Power (+15)</button>
+                </div>
+              </div>
+              <div class="input-group">
+                <label>Category: <span id="categoryOptionalHint" style="font-weight:400;font-size:.85em;color:var(--text2);display:none;">(optional for Neg)</span></label>
+                <div id="categoryButtonsContainer" class="category-buttons"></div>
+              </div>
+              <!-- t_heard counter -->
+              <div style="display:flex;align-items:center;gap:12px;margin-top:14px;padding:12px 14px;background:var(--sec-bg);border:2px solid var(--border);border-radius:8px;">
+                <div style="flex:1;">
+                  <div style="font-weight:700;font-size:.9em;color:var(--text2);margin-bottom:2px;">Toss-Ups Heard <span style="font-weight:400;font-size:.85em;">(auto-tracks on TU / Power / Neg)</span></div>
+                  <div style="font-size:1.6em;font-weight:700;color:var(--primary);" id="tHeardDisplay">0</div>
+                </div>
+                <div style="display:flex;gap:6px;align-items:center;">
+                  <button onclick="adjustTHeard(-1)" style="width:34px;height:34px;border-radius:8px;border:2px solid var(--danger);background:var(--card);color:var(--danger);font-size:1.2em;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;">−</button>
+                  <button onclick="adjustTHeard(1)"  style="width:34px;height:34px;border-radius:8px;border:2px solid var(--success);background:var(--card);color:var(--success);font-size:1.2em;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;">+</button>
+                </div>
+              </div>
+              <button class="button button-success" onclick="recordAnswer()" style="width:100%;margin-top:10px;padding:16px;font-size:1.05em;">Record Answer</button>
+            </div>
+          </div>
+          <div class="qb-section">
+            <h2>Statistics <span class="toggle-icon">&#9660;</span></h2>
+            <div class="collapsible-content">
+              <div id="statisticsContainer"></div>
+            </div>
+          </div>
+          <div class="qb-section">
+            <h2>Answer Log <span class="toggle-icon">&#9660;</span></h2>
+            <div class="collapsible-content">
+              <button class="button button-danger" onclick="clearAnswerLog()">Clear Log</button>
+              <div class="log-container-wrap">
+                <div id="answerLog" class="log-container"></div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-      <div class="qb-section">
-        <h2>Statistics <span class="toggle-icon">&#9660;</span></h2>
-        <div class="collapsible-content">
-          <div id="statisticsContainer"></div>
-        </div>
-      </div>
-      <div class="qb-section">
-        <h2>Answer Log <span class="toggle-icon">&#9660;</span></h2>
-        <div class="collapsible-content">
-          <button class="button button-danger" onclick="clearAnswerLog()">Clear Log</button>
-          <div class="log-container-wrap">
-            <div id="answerLog" class="log-container"></div>
+
+      <!-- Analytics view -->
+      <div id="analyticsView" style="flex:1;display:none;flex-direction:column;overflow:hidden;">
+        <div style="padding:10px var(--hsp);border-bottom:1px solid var(--border);background:var(--card);flex-shrink:0;">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button class="analytics-tab active" onclick="switchAnalyticsTab('overview',this)">Overview</button>
+            <button class="analytics-tab" onclick="switchAnalyticsTab('players',this)">Players</button>
+            <button class="analytics-tab" onclick="switchAnalyticsTab('categories',this)">Categories</button>
+            <button class="analytics-tab" onclick="switchAnalyticsTab('teams',this)">Team Compositions</button>
           </div>
         </div>
+        <div class="analytics-scroll" id="analyticsScroll">
+          <div id="an-overview" class="analytics-panel active"></div>
+          <div id="an-players" class="analytics-panel"></div>
+          <div id="an-categories" class="analytics-panel"></div>
+          <div id="an-teams" class="analytics-panel"></div>
+        </div>
       </div>
-    </div>
-  </div>
 
-  <!-- Analytics view -->
-  <div id="analyticsView" style="flex:1;display:none;flex-direction:column;overflow:hidden;">
-    <div style="padding:12px var(--hsp);border-bottom:2px solid var(--border);background:var(--sec-bg);flex-shrink:0;">
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="analytics-tab active" onclick="switchAnalyticsTab('overview',this)">Overview</button>
-        <button class="analytics-tab" onclick="switchAnalyticsTab('players',this)">Players</button>
-        <button class="analytics-tab" onclick="switchAnalyticsTab('categories',this)">Categories</button>
-        <button class="analytics-tab" onclick="switchAnalyticsTab('teams',this)">Team Compositions</button>
-      </div>
     </div>
-    <div class="analytics-scroll" id="analyticsScroll">
-      <div id="an-overview" class="analytics-panel active"></div>
-      <div id="an-players" class="analytics-panel"></div>
-      <div id="an-categories" class="analytics-panel"></div>
-      <div id="an-teams" class="analytics-panel"></div>
-    </div>
-  </div>
-
-</div>
-```
-
   </div>
 
   <!-- Help Modal -->
-
   <div id="helpModal" class="qb-modal">
     <div class="modal-content" style="max-width:640px;">
       <div class="modal-header">
@@ -821,58 +824,81 @@ input:checked + .slider:before { transform: translateX(28px); }
       </div>
       <div style="line-height:1.7;color:var(--text);font-size:.95em;">
 
-```
-    <h3 style="color:var(--primary);margin:0 0 6px;">Getting Started</h3>
-    <p style="margin-bottom:14px;">Open the sidebar and work through each section in order: <strong>Session &rarr; Players &rarr; Teams &rarr; Categories</strong>. Once configured, use the <strong>Record Answer</strong> panel to log answers in real time. All data syncs automatically across connected devices via Firebase.</p>
+        <h3 style="color:var(--primary);margin:0 0 6px;">Getting Started</h3>
+        <p style="margin-bottom:14px;">Open the sidebar and work through each section in order: <strong>Session &rarr; Players &rarr; Teams &rarr; Categories</strong>. Once configured, use the <strong>Record Answer</strong> panel to log answers in real time. All data syncs automatically across all connected devices via Firebase.</p>
 
-    <h3 style="color:var(--primary);margin:0 0 6px;">Sessions</h3>
-    <p style="margin-bottom:14px;">Each match is a <strong>Session</strong>. Create a new one with a descriptive name, or use <strong>Load Session</strong> to switch to a previous match. From the Load Session screen you can also mark sessions as excluded from analytics — excluded sessions are dimmed and ignored in all Stats calculations.</p>
+        <h3 style="color:var(--primary);margin:0 0 6px;">Sessions</h3>
+        <p style="margin-bottom:14px;">Each match is a <strong>Session</strong>. Create one with a descriptive name before recording answers. Use <strong>Load Session</strong> to switch to a previous match. Sessions can be marked as excluded from analytics — excluded sessions are dimmed and ignored in all Stats calculations.</p>
 
-    <h3 style="color:var(--primary);margin:0 0 6px;">Players &amp; Teams</h3>
-    <p style="margin-bottom:14px;">Add players in the <strong>Players</strong> section, then create teams in <strong>Teams</strong> and assign players to them. Only players assigned to a team are selectable when recording answers. Players added to the global player pool are available across all sessions.</p>
+        <h3 style="color:var(--primary);margin:0 0 6px;">Players &amp; Teams</h3>
+        <p style="margin-bottom:14px;">Add players in the <strong>Players</strong> section, then create teams in <strong>Teams</strong> and assign players to them. Only players assigned to a team are selectable when recording answers. Players are stored in a global pool and are available across all sessions.</p>
 
-    <h3 style="color:var(--primary);margin:0 0 6px;">Recording Answers</h3>
-    <p style="margin-bottom:8px;">Select a <strong>Player</strong>, then a <strong>Point Type</strong>, then a <strong>Category</strong> (optional for Neg), then press <strong>Record Answer</strong>. Use the answer log to delete mistakes.</p>
-    <table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:.9em;">
-      <tr style="background:var(--sec-bg);"><th style="padding:6px 10px;text-align:left;border:1px solid var(--border);">Type</th><th style="padding:6px 10px;text-align:left;border:1px solid var(--border);">Points</th><th style="padding:6px 10px;text-align:left;border:1px solid var(--border);">Notes</th></tr>
-      <tr><td style="padding:6px 10px;border:1px solid var(--border);">Toss-up</td><td style="padding:6px 10px;border:1px solid var(--border);">+10</td><td style="padding:6px 10px;border:1px solid var(--border);">Standard correct answer on a toss-up</td></tr>
-      <tr style="background:var(--sec-bg);"><td style="padding:6px 10px;border:1px solid var(--border);">Bonus</td><td style="padding:6px 10px;border:1px solid var(--border);">+10</td><td style="padding:6px 10px;border:1px solid var(--border);">Follow-up bonus question after a toss-up</td></tr>
-      <tr><td style="padding:6px 10px;border:1px solid var(--border);">Power</td><td style="padding:6px 10px;border:1px solid var(--border);">+15</td><td style="padding:6px 10px;border:1px solid var(--border);">Correct answer before the power mark</td></tr>
-      <tr style="background:var(--sec-bg);"><td style="padding:6px 10px;border:1px solid var(--border);">Neg</td><td style="padding:6px 10px;border:1px solid var(--border);">-5</td><td style="padding:6px 10px;border:1px solid var(--border);">Incorrect interrupt &mdash; category is optional</td></tr>
-    </table>
+        <h3 style="color:var(--primary);margin:0 0 6px;">Recording Answers</h3>
+        <p style="margin-bottom:8px;">Select a <strong>Player</strong>, then a <strong>Point Type</strong>, then a <strong>Category</strong> (optional for Neg), then press <strong>Record Answer</strong>. Use the answer log to delete mistakes.</p>
+        <table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:.9em;">
+          <tr style="background:var(--sec-bg);"><th style="padding:6px 10px;text-align:left;border:1px solid var(--border);">Type</th><th style="padding:6px 10px;text-align:left;border:1px solid var(--border);">Points</th><th style="padding:6px 10px;text-align:left;border:1px solid var(--border);">Notes</th></tr>
+          <tr><td style="padding:6px 10px;border:1px solid var(--border);">Power</td><td style="padding:6px 10px;border:1px solid var(--border);">+15</td><td style="padding:6px 10px;border:1px solid var(--border);">Correct answer before the power mark</td></tr>
+          <tr style="background:var(--sec-bg);"><td style="padding:6px 10px;border:1px solid var(--border);">Toss-up</td><td style="padding:6px 10px;border:1px solid var(--border);">+10</td><td style="padding:6px 10px;border:1px solid var(--border);">Standard correct answer on a toss-up</td></tr>
+          <tr><td style="padding:6px 10px;border:1px solid var(--border);">Bonus</td><td style="padding:6px 10px;border:1px solid var(--border);">+10</td><td style="padding:6px 10px;border:1px solid var(--border);">Follow-up bonus after a toss-up win</td></tr>
+          <tr style="background:var(--sec-bg);"><td style="padding:6px 10px;border:1px solid var(--border);">Neg</td><td style="padding:6px 10px;border:1px solid var(--border);">&minus;5</td><td style="padding:6px 10px;border:1px solid var(--border);">Incorrect interrupt &mdash; category is optional</td></tr>
+        </table>
 
-    <h3 style="color:var(--primary);margin:0 0 6px;">Questions Heard Counter</h3>
-    <p style="margin-bottom:14px;">The <strong>Questions Heard</strong> counter in the Record Answer panel tracks how many toss-up questions have been read. It increments automatically on every Toss-up, Power, or Neg answer (counting a Neg followed immediately by a Toss-up/Power as one question). Use the +/- buttons to correct it manually. This value powers the efficiency metrics in Stats.</p>
+        <h3 style="color:var(--primary);margin:0 0 6px;">Toss-Ups Heard Counter</h3>
+        <p style="margin-bottom:14px;">The <strong>Toss-Ups Heard</strong> counter tracks how many toss-up questions have been read to the team. It increments automatically on every Power, Toss-up, or Neg (a Neg immediately followed by a correct answer counts as one question). Use the +/&minus; buttons to correct it manually. This value is required for all per-player efficiency metrics.</p>
 
-    <h3 style="color:var(--primary);margin:0 0 6px;">Stats (Analytics)</h3>
-    <p style="margin-bottom:6px;">Toggle to the <strong>Stats</strong> view using the switch in the header. Stats are aggregated across all valid (non-excluded) sessions and organized into four tabs:</p>
-    <ul style="margin:0 0 14px;padding-left:20px;">
-      <li><strong>Overview</strong> &mdash; session totals, category strengths &amp; weaknesses, top performers</li>
-      <li><strong>Players</strong> &mdash; ranked list of all players; click any row to expand their full breakdown including efficiency metrics</li>
-      <li><strong>Categories</strong> &mdash; answer counts and point totals by subject area</li>
-      <li><strong>Team Compositions</strong> &mdash; per-team stats for every session, titled by member names; click to expand efficiency data</li>
-    </ul>
+        <h3 style="color:var(--primary);margin:0 0 6px;">Stats (Analytics)</h3>
+        <p style="margin-bottom:6px;">Toggle to the <strong>Stats</strong> view using the switch in the header. Stats are aggregated across all non-excluded sessions and organized into four tabs:</p>
+        <ul style="margin:0 0 14px;padding-left:20px;">
+          <li><strong>Overview</strong> &mdash; session totals, category strengths &amp; weaknesses, top performers</li>
+          <li><strong>Players</strong> &mdash; ranked leaderboard with sortable columns; expand any player for full metrics, or click their name to open the detail modal</li>
+          <li><strong>Categories</strong> &mdash; answer counts and point totals by subject area</li>
+          <li><strong>Team Compositions</strong> &mdash; per-team stats for every session; click to expand</li>
+        </ul>
 
-    <h3 style="color:var(--primary);margin:0 0 6px;">Player Efficiency Metrics</h3>
-    <p style="margin-bottom:14px;">Expand any player in the Players tab to see four metrics: <strong>Potential Points</strong> (total points if all toss-up wins earned bonuses), <strong>Production Rate</strong> (potential points per question heard), <strong>Buzz Volume</strong> (% of questions the player buzzed on), and <strong>Aggression</strong> (powers-to-negs ratio — 100% means powers with zero negs).</p>
+        <h3 style="color:var(--primary);margin:0 0 6px;">Player Metrics</h3>
+        <p style="margin-bottom:6px;">Expand any player in the Players tab to see their individual metrics. All metrics require toss-ups heard data to calculate.</p>
+        <ul style="margin:0 0 14px;padding-left:20px;">
+          <li><strong>Potential Points</strong> &mdash; total points if every toss-up win had earned a full bonus (15P + 40T &minus; 5N)</li>
+          <li><strong>Production Rate</strong> &mdash; potential points per toss-up heard; the primary measure of per-opportunity impact</li>
+          <li><strong>Buzz Volume</strong> &mdash; percentage of toss-ups the player buzzed on (optional — can be disabled in Skill Score Settings)</li>
+          <li><strong>Aggression</strong> &mdash; powers-vs-negs balance: <code>100 &times; (3P &minus; N) / (3P + N)</code>. +100% means all powers and no negs; negative means negs outweigh powers</li>
+          <li><strong>Skill Score</strong> &mdash; composite 0&ndash;100 score where 50 = exactly team average. See below.</li>
+        </ul>
 
-    <h3 style="color:var(--primary);margin:0 0 6px;">Rankings &amp; Tiebreakers</h3>
-    <p style="margin-bottom:14px;">Players are ranked by total points. Ties are broken first by most <strong>Powers</strong>, then by fewest <strong>Negs</strong>.</p>
+        <h3 style="color:var(--primary);margin:0 0 6px;">Skill Score</h3>
+        <p style="margin-bottom:8px;">Skill Score compares each player to the team average across weighted metrics. A score of 50 means exactly average; 100 means twice the team average across all metrics.</p>
+        <p style="margin-bottom:6px;">Formula: each metric is normalized as <em>player value / team average</em>, then combined as a weighted sum and scaled so 1.0 (= average) maps to 50.</p>
+        <p style="margin-bottom:6px;">Default weights are mathematically derived from realistic IHSA match data:</p>
+        <ul style="margin:0 0 8px;padding-left:20px;">
+          <li><strong>Buzz on:</strong> Production Rate 50% · Buzz Volume 33% · Aggression 17%</li>
+          <li><strong>Buzz off:</strong> Production Rate 75% · Aggression 25%</li>
+        </ul>
+        <p style="margin-bottom:14px;">Players with fewer buzz answers than the low-data threshold are flagged and excluded from group averages by default. You can manually include or exclude flagged players in the <strong>Low-Data Players</strong> panel. Inclusion overrides sync globally across all devices and persist across sessions.</p>
 
-    <h3 style="color:var(--primary);margin:0 0 6px;">Export &amp; Import</h3>
-    <p style="margin-bottom:14px;">Export to <strong>CSV</strong> for use in spreadsheets, or <strong>JSON</strong> to back up and re-import a full session. Both options are in the Data section of the sidebar.</p>
+        <h3 style="color:var(--primary);margin:0 0 6px;">Leaderboard Sorting</h3>
+        <p style="margin-bottom:14px;">Use the sort pills above the player list to rank by <strong>Points</strong>, <strong>Skill Score</strong>, <strong>Production Rate</strong>, <strong>Aggression</strong>, <strong>Powers</strong>, or <strong>Negs</strong> (fewest first). <strong>Buzz Volume</strong> is also available as a sort option when buzz is enabled. Ties in Points are broken by most Powers, then fewest Negs.</p>
 
-    <h3 style="color:var(--primary);margin:0 0 6px;">Visual Settings</h3>
-    <p>Toggle <strong>Dark Mode</strong>, change the <strong>Accent Color</strong>, or hide scrollbars in the Visual Settings section. These preferences are saved to your device only and do not sync.</p>
+        <h3 style="color:var(--primary);margin:0 0 6px;">Export &amp; Import</h3>
+        <p style="margin-bottom:14px;">Export to <strong>CSV</strong> for spreadsheets or <strong>JSON</strong> to back up and re-import a full session. Both options are in the Data section of the sidebar.</p>
 
-  </div>
-</div>
-```
+        <h3 style="color:var(--primary);margin:0 0 6px;">What Syncs Globally</h3>
+        <p style="margin-bottom:6px;">The following are stored in Firebase and sync instantly across all connected devices:</p>
+        <ul style="margin:0 0 8px;padding-left:20px;">
+          <li>All session data (answers, scores, toss-ups heard)</li>
+          <li>The global player pool</li>
+          <li>Skill Score settings (threshold, weights, buzz on/off, auto weights toggle)</li>
+          <li>Low-data player inclusion/exclusion overrides</li>
+        </ul>
+        <p style="margin-bottom:14px;">The following are stored <strong>on your device only</strong> and do not sync: Dark Mode, accent color, scrollbar visibility, and sidebar state.</p>
 
+        <h3 style="color:var(--primary);margin:0 0 6px;">Visual Settings</h3>
+        <p>Toggle <strong>Dark Mode</strong>, change the <strong>Accent Color</strong>, or hide scrollbars in the Visual Settings section of the sidebar.</p>
+
+      </div>
+    </div>
   </div>
 
   <!-- Sessions Modal -->
-
   <div id="sessionsModal" class="qb-modal">
     <div class="modal-content">
       <div class="modal-header">
@@ -884,7 +910,6 @@ input:checked + .slider:before { transform: translateX(28px); }
   </div>
 
   <!-- Player Detail Modal -->
-
   <div id="playerDetailModal" class="qb-modal">
     <div class="modal-content" style="max-width:620px;">
       <div class="modal-header">
@@ -896,10 +921,9 @@ input:checked + .slider:before { transform: translateX(28px); }
   </div>
 
   <script src="local-settings.js" onerror="void 0"></script>
-
   <script>
     // ── Firebase (initialized after DOM ready to ensure SDK scripts have loaded) ──
-    var db, sessionsRef, globalPlayersRef, versionRef;
+    var db, sessionsRef, globalPlayersRef, versionRef, globalSettingsRef;
     function initFirebase() {
       if (typeof firebase === 'undefined') { setTimeout(initFirebase, 50); return; }
       const firebaseConfig = {
@@ -916,6 +940,7 @@ input:checked + .slider:before { transform: translateX(28px); }
       sessionsRef = db.ref('sessions');
       globalPlayersRef = db.ref('globalPlayers');
       versionRef = db.ref('appVersion');
+      globalSettingsRef = db.ref('globalSettings');
       startApp();
     }
 
@@ -927,6 +952,24 @@ input:checked + .slider:before { transform: translateX(28px); }
         const input = document.getElementById('versionInput');
         if (badge) badge.textContent = v;
         if (input && document.activeElement !== input) input.value = v;
+      });
+      // ── Global settings sync ──
+      globalSettingsRef.on('value', snap => {
+        const s = snap.val(); if (!s) return;
+        let changed = false;
+        if (typeof s.skillThresholdPct === 'number' && s.skillThresholdPct !== skillThresholdPct) { skillThresholdPct = s.skillThresholdPct; changed = true; }
+        if (typeof s.skillWeightProd   === 'number' && s.skillWeightProd   !== skillWeightProd)   { skillWeightProd   = s.skillWeightProd;   changed = true; }
+        if (typeof s.skillWeightBuzz   === 'number' && s.skillWeightBuzz   !== skillWeightBuzz)   { skillWeightBuzz   = s.skillWeightBuzz;   changed = true; }
+        if (typeof s.skillWeightAggr   === 'number' && s.skillWeightAggr   !== skillWeightAggr)   { skillWeightAggr   = s.skillWeightAggr;   changed = true; }
+        if (typeof s.skillWeightsAuto  === 'boolean'&& s.skillWeightsAuto  !== skillWeightsAuto)  { skillWeightsAuto  = s.skillWeightsAuto;  changed = true; }
+        if (typeof s.skillBuzzEnabled  === 'boolean'&& s.skillBuzzEnabled  !== skillBuzzEnabled)  { skillBuzzEnabled  = s.skillBuzzEnabled;  changed = true; }
+        if (Array.isArray(s.manuallyIncluded)) {
+          const incoming = new Set(s.manuallyIncluded);
+          const current  = manuallyIncluded;
+          const same = incoming.size === current.size && [...incoming].every(n => current.has(n));
+          if (!same) { manuallyIncluded = incoming; changed = true; }
+        }
+        if (changed && analyticsOpen && currentAnalyticsTab === 'players') renderAnalyticsPlayersUniversal();
       });
       restoreVisualSettings();
       updateHeaderHeight();
@@ -949,6 +992,18 @@ input:checked + .slider:before { transform: translateX(28px); }
         ['helpModal','sessionsModal','playerDetailModal'].forEach(id=>{const m=document.getElementById(id);if(m&&e.target===m) m.classList.remove('open');});
       });
     }
+    function saveGlobalSettings() {
+      if (!globalSettingsRef) return;
+      globalSettingsRef.set({ skillThresholdPct, skillWeightProd, skillWeightBuzz, skillWeightAggr, skillWeightsAuto, skillBuzzEnabled, manuallyIncluded: [...manuallyIncluded] })
+        .catch(e => showFirebaseError('Settings save failed: ' + e.message));
+    }
+
+    function saveManualInclusions() {
+      if (!globalSettingsRef) return;
+      globalSettingsRef.child('manuallyIncluded').set([...manuallyIncluded])
+        .catch(e => showFirebaseError('Inclusion save failed: ' + e.message));
+    }
+
     function saveVersion() {
       const v = (document.getElementById('versionInput').value||'').trim();
       if (!v) { alert('Enter a version number.'); return; }
@@ -997,8 +1052,18 @@ input:checked + .slider:before { transform: translateX(28px); }
     const state={sessions:{},currentSessionId:null,selectedPlayer:null,selectedPointType:null,selectedCategory:null,categories:[]};
     let firebaseUnsubscribe=null, playersUnsubscribe=null;
     var analyticsOpen=false, currentAnalyticsTab='overview';
+    var playerSortKey = 'points';       // default sort: points
+    var lowDataPanelCollapsed = false;   // low-data panel fold state
+    var skillSettingsCollapsed = true;   // skill settings panel fold state
+    var skillThresholdPct = 40;          // % of median buzz count for low-data threshold (default 40%)
+    var skillWeightProd = 3;             // rank weight for production rate
+    var skillWeightBuzz = 2;             // rank weight for buzz volume
+    var skillWeightAggr = 1;             // rank weight for aggression
+    var skillWeightsAuto = true;         // when true, weights are locked to defaults (3/2/1)
+    var skillBuzzEnabled = true;         // when false, buzz volume excluded from skill score
     var expandedPlayerCards = new Set(); // tracks which player cards are open
     var expandedTeamCards = new Set();   // tracks which team composition session cards are open
+    var manuallyIncluded = new Set();    // low-data players manually forced into skill score averages
 
     // ── Indicators ──
     function setIndicators(text,color,title) {
@@ -1192,6 +1257,37 @@ input:checked + .slider:before { transform: translateX(28px); }
       const answers = [];
       const sessionNames = [];
       let playerTHeard = 0;
+      // ── Pre-compute group averages for skill score ──
+      const _allPlayers = buildUniversalPlayerStats();
+      const _allBuzzCounts = _allPlayers.map(p => p.powers + p.tossupsCorrect + p.negs).sort((a,b) => a - b);
+      const _medBuzz = _allBuzzCounts.length > 0 ? _allBuzzCounts[Math.floor(_allBuzzCounts.length / 2)] : 0;
+      const _MIN_BUZZ = Math.max(3, Math.floor(_medBuzz * (skillThresholdPct / 100)));
+      const _qualified  = _allPlayers.filter(p => {
+        const buzzes = p.powers + p.tossupsCorrect + p.negs;
+        return (buzzes >= _MIN_BUZZ && (p.tHeard || 0) > 0) || manuallyIncluded.has(p.name);
+      });
+      function _pm(p) {
+        const tH = p.tHeard || 0;
+        const uPts = 15 * p.powers + 40 * p.tossupsCorrect - 5 * p.negs;
+        const prodRate   = tH > 0 ? uPts / tH : 0;
+        const buzzVol    = tH > 0 ? (100 * (p.powers + p.tossupsCorrect + p.negs)) / tH : 0;
+        const _agD = 3 * p.powers + p.negs;
+        const aggression = _agD > 0 ? (100 * (3 * p.powers - p.negs)) / _agD : 0;
+        return { prodRate, buzzVol, aggression };
+      }
+      let _avgProd = 0, _avgBuzz = 0, _avgAggr = 0;
+      if (_qualified.length > 0) {
+        _qualified.forEach(p => { const m = _pm(p); _avgProd += m.prodRate; _avgBuzz += m.buzzVol; _avgAggr += m.aggression; });
+        _avgProd /= _qualified.length; _avgBuzz /= _qualified.length; _avgAggr /= _qualified.length;
+      }
+      // When auto: 3/2/1 (buzz on) or 3/1 (buzz off) — 3/1 derived from realistic IHSA match math (75/25)
+      const _mWProd = skillWeightsAuto ? 3 : skillWeightProd;
+      const _mWBuzz = skillBuzzEnabled ? (skillWeightsAuto ? 2 : skillWeightBuzz) : 0;
+      const _mWAggr = skillWeightsAuto ? 1 : skillWeightAggr;
+      const _rawWSum = _mWProd + _mWBuzz + _mWAggr;
+      const _wProd = _mWProd / _rawWSum;
+      const _wBuzz = _mWBuzz / _rawWSum;
+      const _wAggr = _mWAggr / _rawWSum;
       validSessions().forEach(sess => {
         const p = (sess.players || {})[playerName];
         if (!p) return;
@@ -1239,30 +1335,44 @@ input:checked + .slider:before { transform: translateX(28px); }
       // ── Player efficiency equations ──
       // u_points = 15p + 10t + 30t − 5n  (15p + 40t - 5n)
       const uPoints = 15 * powers + 10 * tossups + 30 * tossups - 5 * negs;
-      // u_rate = u_points / t_heard
+      // u_rate = u_points / t_heard  (potential points / toss-ups heard)
       const uRate = playerTHeard > 0 ? uPoints / playerTHeard : null;
-      // v_buzzed = 100 * (p + t + n) / t_heard
+      // v_buzzed = 100 * (p + t + n) / t_heard  (buzzes / toss-ups heard)
       const vBuzzed = playerTHeard > 0 ? (100 * (powers + tossups + negs)) / playerTHeard : null;
-      // e_aggression = 100 * p / n — if negs=0 and powers>0: "Perfect" (∞); if both 0: N/A
-      const eAggressionValue = negs > 0 ? (100 * powers) / negs : null;
-      const eAggressionPerfect = negs === 0 && powers > 0;
+      // e_aggression = 100 × (3p − n) / (3p + n)  [normalises 15pt powers vs 5pt negs]
+      // Range: −100% (all negs, no powers) to +100% (all powers, no negs). 0% = both zero.
+      const _aggrDenom = 3 * powers + negs;
+      const eAggressionValue  = _aggrDenom > 0 ? (100 * (3 * powers - negs)) / _aggrDenom : 0;
+      const eAggressionZero   = _aggrDenom === 0; // no powers, no negs
 
-      function playerMetricBar(value, label, isPerfect, isRatio) {
-        if (value === null && !isPerfect) {
+      // ── Skill Score ──
+      const _buzzes = powers + tossups + negs;
+      const _isLowData = (_buzzes < _MIN_BUZZ || playerTHeard === 0) && !manuallyIncluded.has(playerName);
+      let modalSkill = null;
+      if (!_isLowData && _qualified.length > 0) {
+        const _mProd = playerTHeard > 0 ? (15 * powers + 40 * tossups - 5 * negs) / playerTHeard : 0;
+        const _mBuzz = playerTHeard > 0 ? (100 * _buzzes) / playerTHeard : 0;
+        const _mAggr = _aggrDenom > 0 ? eAggressionValue : 0;
+        const rP = _avgProd  !== 0 ? _mProd / _avgProd : (_mProd > 0 ? 2 : 1);
+        const rB = _avgBuzz  !== 0 ? _mBuzz / _avgBuzz : (_mBuzz > 0 ? 2 : 1);
+        const rA = (_avgAggr + 100) !== 0 ? (_mAggr + 100) / (_avgAggr + 100) : ((_mAggr + 100) > 100 ? 2 : 1);
+        modalSkill = Math.min(100, Math.max(0, (_wProd * rP + _wBuzz * rB + _wAggr * rA) * 50));
+      }
+      const modalSkillColor = modalSkill === null ? 'var(--text3)'
+                            : modalSkill >= 66 ? 'var(--success)'
+                            : modalSkill >= 34 ? '#f39c12' : 'var(--danger)';
+
+      function playerMetricBar(value, label, isRatio, isZero, isSigned) {
+        if (value === null) {
           return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
             <span style="font-size:.82em;font-weight:700;color:var(--text2);">${label}</span>
             <span style="font-size:.85em;color:var(--text3);font-style:italic;">N/A</span>
           </div>`;
         }
-        if (isPerfect) {
-          return `<div style="padding:8px 0;border-bottom:1px solid var(--border);">
-            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;">
-              <span style="font-size:.82em;font-weight:700;color:var(--text2);">${label}</span>
-              <span style="font-size:.9em;font-weight:700;color:var(--success);">100.0%</span>
-            </div>
-            <div style="height:7px;background:var(--border);border-radius:8px;overflow:hidden;">
-              <div style="height:100%;width:100%;background:var(--success);border-radius:8px;"></div>
-            </div>
+        if (isZero) {
+          return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
+            <span style="font-size:.82em;font-weight:700;color:var(--text2);">${label}</span>
+            <span style="font-size:.85em;color:var(--text3);">0%</span>
           </div>`;
         }
         if (isRatio) {
@@ -1270,6 +1380,22 @@ input:checked + .slider:before { transform: translateX(28px); }
           return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
             <span style="font-size:.82em;font-weight:700;color:var(--text2);">${label}</span>
             <span style="font-size:.95em;font-weight:700;color:${color};">${value.toFixed(2)}</span>
+          </div>`;
+        }
+        if (isSigned) {
+          // Signed −100% to +100% bar. Negative = hurting (red), positive = helping (green).
+          const isNeg = value < 0;
+          const barColor = isNeg ? 'var(--danger)' : value >= 66 ? 'var(--success)' : '#f39c12';
+          const barPct   = Math.min(Math.abs(value), 100);
+          const sign     = isNeg ? '' : '+';
+          return `<div style="padding:8px 0;border-bottom:1px solid var(--border);">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;">
+              <span style="font-size:.82em;font-weight:700;color:var(--text2);">${label}</span>
+              <span style="font-size:.9em;font-weight:700;color:${barColor};">${sign}${value.toFixed(1)}%</span>
+            </div>
+            <div style="height:7px;background:var(--border);border-radius:8px;overflow:hidden;">
+              <div style="height:100%;width:${barPct}%;background:${barColor};border-radius:8px;"></div>
+            </div>
           </div>`;
         }
         const pct = Math.min(Math.max(value, 0), 100);
@@ -1318,7 +1444,7 @@ input:checked + .slider:before { transform: translateX(28px); }
         });
       }
 
-      const tHeardLabel = playerTHeard > 0 ? `${playerTHeard} questions heard` : 'no questions-heard data';
+      const tHeardLabel = playerTHeard > 0 ? `${playerTHeard} toss-ups heard` : 'no toss-ups-heard data';
 
       document.getElementById('pdModalTitle').textContent = playerName;
       document.getElementById('pdModalBody').innerHTML = `
@@ -1343,9 +1469,20 @@ input:checked + .slider:before { transform: translateX(28px); }
             <span style="font-size:.82em;font-weight:700;color:var(--text2);">Potential Points</span>
             <span style="font-size:1.1em;font-weight:700;color:var(--primary);">${uPoints}</span>
           </div>
-          ${playerMetricBar(uRate, 'Point Production Rate', false, true)}
-          ${playerMetricBar(vBuzzed, 'Buzz Volume', false, false)}
-          ${playerMetricBar(eAggressionValue, 'Aggression Effectiveness', eAggressionPerfect, false)}
+          ${playerMetricBar(uRate, 'Point Production Rate', true, false, false)}
+          ${skillBuzzEnabled ? playerMetricBar(vBuzzed, 'Buzz Volume', false, false, false) : ''}
+          ${playerMetricBar(eAggressionValue, 'Aggression Effectiveness', false, eAggressionZero, true)}
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
+            <span style="font-size:.82em;font-weight:700;color:var(--text2);">Skill Score</span>
+            ${modalSkill !== null
+              ? `<div style="display:flex;align-items:center;gap:10px;">
+                   <div style="width:80px;height:6px;background:var(--border);border-radius:8px;overflow:hidden;">
+                     <div style="height:100%;width:${modalSkill.toFixed(1)}%;background:${modalSkillColor};border-radius:8px;"></div>
+                   </div>
+                   <span style="font-size:.95em;font-weight:700;color:${modalSkillColor};">${modalSkill.toFixed(1)} / 100</span>
+                 </div>`
+              : `<span style="font-size:.82em;color:#f39c12;font-weight:600;">⚠ Low data</span>`}
+          </div>
         </div>
         <div class="pd-section-title">Category Rankings &mdash; All ${catArr.length} Categor${catArr.length !== 1 ? 'ies' : 'y'}</div>
         <div style="overflow-x:auto;border-radius:8px;border:1px solid var(--border);">
@@ -1467,11 +1604,8 @@ input:checked + .slider:before { transform: translateX(28px); }
       const strengths=catArr.slice(0,5);
       const weaknesses=catArr.slice().reverse().slice(0,5);
 
-      let html=`<div style="background:rgba(102,126,234,.08);border:1px solid var(--primary);border-radius:8px;padding:10px 14px;margin-bottom:var(--sp);font-size:.85em;color:var(--primary);font-weight:600;">
-        Aggregated across <strong>all ${sessionCount} session${sessionCount!==1?'s':''}</strong> &mdash; ${globalTHeard} total toss-ups heard
-      </div>`;
-      html+='<div class="an-grid" style="margin-bottom:var(--sp);">';
-      [['Active Players',activePlayers.length],['Total Answers',totalAns],['Total Points',totalPts],['Accuracy',accuracy+'%'],['Powers',totalPowers],['Negs',totalNegs],['t_heard',globalTHeard]].forEach(b=>{
+      let html='<div class="an-grid" style="margin-bottom:var(--sp);">';
+      [['Active Players',activePlayers.length],['Total Answers',totalAns],['Total Points',totalPts],['Accuracy',accuracy+'%'],['Powers',totalPowers],['Negs',totalNegs],['Toss-ups Heard',globalTHeard]].forEach(b=>{
         html+='<div class="an-stat-box"><div class="an-val">'+b[1]+'</div><div class="an-lbl">'+b[0]+'</div></div>';
       });
       html+='</div>';
@@ -1514,6 +1648,8 @@ input:checked + .slider:before { transform: translateX(28px); }
 
     // ── Universal Players (cross-session) ──
     function buildUniversalPlayerStats() {
+      // Aggregate every player's stats across valid (non-excluded) sessions only
+      // Per-player tHeard = sum of session tHeard for every valid session they appeared in
       const playerMap = {};
       validSessions().forEach(session => {
         const sessionTHeard = session.tHeard || 0;
@@ -1549,17 +1685,272 @@ input:checked + .slider:before { transform: translateX(28px); }
       const active = allPlayers.filter(p => p.totalAnswers > 0);
       const validCount = validSessions().length;
 
-      let html = `<div style="background:rgba(102,126,234,.08);border:1px solid var(--primary);border-radius:8px;padding:10px 14px;margin-bottom:var(--sp);font-size:.85em;color:var(--primary);font-weight:600;">
-        Aggregated across <strong>all ${validCount} valid session${validCount !== 1 ? 's' : ''}</strong>
+      let html = '';
+
+      if (!active.length) { el.innerHTML = '<p style="color:var(--text2)">No player data yet.</p>'; return; }
+
+      // ── Skill Score: compute group averages from qualified players ──
+      // Dynamic threshold: 40% of median buzz count, minimum 3
+      const allBuzzCounts = active.map(p => p.powers + p.tossupsCorrect + p.negs).sort((a,b) => a - b);
+      const medBuzz = allBuzzCounts.length > 0
+        ? allBuzzCounts[Math.floor(allBuzzCounts.length / 2)]
+        : 0;
+      const MIN_BUZZ = Math.max(3, Math.floor(medBuzz * (skillThresholdPct / 100)));
+
+      const qualified = active.filter(p => {
+        const tH = p.tHeard || 0;
+        const buzzes = p.powers + p.tossupsCorrect + p.negs;
+        return (buzzes >= MIN_BUZZ && tH > 0) || manuallyIncluded.has(p.name);
+      });
+      const lowData = new Set(active.filter(p => {
+        const buzzes = p.powers + p.tossupsCorrect + p.negs;
+        return buzzes < MIN_BUZZ || (p.tHeard || 0) === 0;
+      }).map(p => p.name));
+
+      // Compute each qualified player's three metrics
+      function playerMetrics(p) {
+        const tH = p.tHeard || 0;
+        const uPts = 15 * p.powers + 40 * p.tossupsCorrect - 5 * p.negs;
+        const prodRate   = tH > 0 ? uPts / tH : 0;
+        const buzzVol    = tH > 0 ? (100 * (p.powers + p.tossupsCorrect + p.negs)) / tH : 0;
+        const _agDenom   = 3 * p.powers + p.negs;
+        const aggression = _agDenom > 0 ? (100 * (3 * p.powers - p.negs)) / _agDenom : 0;
+        return { prodRate, buzzVol, aggression };
+      }
+
+      let avgProd = 0, avgBuzz = 0, avgAggr = 0;
+      if (qualified.length > 0) {
+        qualified.forEach(p => {
+          const m = playerMetrics(p);
+          avgProd += m.prodRate;
+          avgBuzz += m.buzzVol;
+          avgAggr += m.aggression;
+        });
+        avgProd /= qualified.length;
+        avgBuzz /= qualified.length;
+        avgAggr /= qualified.length;
+      }
+
+      // When auto: 3/2/1 (buzz on) or 3/1 (buzz off) — 3/1 derived from realistic IHSA match math (75/25)
+      const _wProdRaw = skillWeightsAuto ? 3 : skillWeightProd;
+      const _wBuzzRaw = skillBuzzEnabled ? (skillWeightsAuto ? 2 : skillWeightBuzz) : 0;
+      const _wAggrRaw = skillWeightsAuto ? 1 : skillWeightAggr;
+      const rawWSum  = _wProdRaw + _wBuzzRaw + _wAggrRaw;
+      const wProd = _wProdRaw / rawWSum;
+      const wBuzz = _wBuzzRaw / rawWSum;
+      const wAggr = _wAggrRaw / rawWSum;
+
+      // Skill score: weighted ratio vs group average, anchored so avg player = 50
+      // For aggression, shift to 0–200 range before ratio (since it can be negative)
+      function calcSkill(p) {
+        if (lowData.has(p.name) && !manuallyIncluded.has(p.name)) return null;
+        const m = playerMetrics(p);
+        const rProd = avgProd  !== 0 ? m.prodRate   / avgProd  : (m.prodRate   > 0 ? 2 : 1);
+        const rBuzz = avgBuzz  !== 0 ? m.buzzVol    / avgBuzz  : (m.buzzVol    > 0 ? 2 : 1);
+        // Aggression: shift both to +100 offset so negatives don't break division
+        const aggrShifted    = m.aggression + 100;
+        const avgAggrShifted = avgAggr      + 100;
+        const rAggr = avgAggrShifted !== 0 ? aggrShifted / avgAggrShifted : (aggrShifted > 100 ? 2 : 1);
+        const composite = wProd * rProd + wBuzz * rBuzz + wAggr * rAggr;
+        // Anchor: composite of 1.0 = average = 50. Scale so 2.0 = 100, 0 = 0.
+        return Math.min(100, Math.max(0, composite * 50));
+      }
+
+      // Build team averages panel
+      const hasQualified = qualified.length > 0;
+      const lowDataList  = [...lowData].filter(n => active.find(p => p.name === n));
+
+      // ── Skill Settings panel (collapsible) ──
+      const ssCollapsed = skillSettingsCollapsed;
+      const effWProd = skillWeightsAuto ? 3 : skillWeightProd;
+      const effWBuzz = (skillBuzzEnabled && !skillWeightsAuto) ? skillWeightBuzz : (skillBuzzEnabled ? 2 : 0);
+      const effWAggr = skillWeightsAuto ? 1 : skillWeightAggr;
+      const totalW = effWProd + effWBuzz + effWAggr;
+      // stepper helper
+      const stepper = (varName, val, min, max, step, label, sublabel, accentColor, pct) => `
+        <div style="background:var(--sec-bg);border:1px solid var(--border);border-radius:10px;padding:12px 14px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <div>
+              <div style="font-size:.78em;font-weight:700;color:var(--text);">${label}</div>
+              ${sublabel ? `<div style="font-size:.7em;color:var(--text3);margin-top:1px;">${sublabel}</div>` : ''}
+            </div>
+            <span style="font-size:.75em;font-weight:600;color:var(--text3);">${pct}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <button onclick="${varName}=Math.max(${min},${varName}-${step});saveGlobalSettings();renderAnalyticsPlayersUniversal();"
+              style="width:32px;height:32px;border-radius:8px;border:2px solid var(--border);background:var(--card);color:var(--text2);font-size:1.1em;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit;transition:border-color .15s,color .15s;"
+              onmouseover="this.style.borderColor='${accentColor}';this.style.color='${accentColor}';"
+              onmouseout="this.style.borderColor='';this.style.color='';">−</button>
+            <div style="flex:1;display:flex;gap:3px;align-items:flex-end;height:28px;">
+              ${Array.from({length:max-min+1},(_,i)=>{
+                const v=min+i, filled=v<=val;
+                return `<div style="flex:1;border-radius:3px 3px 0 0;background:${filled ? accentColor : 'var(--border)'};transition:background .15s;height:${Math.round(50+50*(i/(max-min)))}%;"></div>`;
+              }).join('')}
+            </div>
+            <button onclick="${varName}=Math.min(${max},${varName}+${step});saveGlobalSettings();renderAnalyticsPlayersUniversal();"
+              style="width:32px;height:32px;border-radius:8px;border:2px solid var(--border);background:var(--card);color:var(--text2);font-size:1.1em;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit;transition:border-color .15s,color .15s;"
+              onmouseover="this.style.borderColor='${accentColor}';this.style.color='${accentColor}';"
+              onmouseout="this.style.borderColor='';this.style.color='';">+</button>
+            <div style="min-width:24px;font-size:1.15em;font-weight:800;color:${accentColor};text-align:right;">${val}</div>
+          </div>
+        </div>`;
+      html += `<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:var(--sp);overflow:hidden;box-shadow:var(--shadow-xs);">
+        <div onclick="skillSettingsCollapsed=!skillSettingsCollapsed;renderAnalyticsPlayersUniversal();"
+          style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;user-select:none;transition:background .15s;"
+          onmouseover="this.style.background='var(--hover)';" onmouseout="this.style.background='';">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:.85em;font-weight:700;color:var(--text);">⚙ Skill Score Settings</span>
+            ${ssCollapsed ? `<span style="font-size:.72em;color:var(--text3);">threshold ≥${MIN_BUZZ} &nbsp;·&nbsp; ${skillBuzzEnabled ? '' : 'buzz off · '}${skillWeightsAuto ? (skillBuzzEnabled ? 'auto 50/33/17' : 'auto 75/25') : `prod ${(effWProd/totalW*100).toFixed(0)}% / aggr ${(effWAggr/totalW*100).toFixed(0)}%${skillBuzzEnabled ? ' / buzz '+((effWBuzz/totalW*100).toFixed(0))+'%' : ''}`}</span>` : ''}
+          </div>
+          <span style="font-size:.75em;color:var(--text3);transition:transform .25s;display:inline-block;transform:${ssCollapsed?'':'rotate(180deg)'};">&#9660;</span>
+        </div>
+        ${ssCollapsed ? '' : `
+        <div style="border-top:1px solid var(--border);padding:16px;display:grid;gap:10px;">
+          ${stepper('skillThresholdPct', skillThresholdPct, 10, 80, 5,
+            'Low-Data Threshold',
+            `Players flagged when buzz count &lt; <strong style="color:var(--primary);">${MIN_BUZZ}</strong> &nbsp;(${skillThresholdPct}% of team median ${medBuzz})`,
+            'var(--primary)', skillThresholdPct+'%')}
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--sec-bg);border:1px solid var(--border);border-radius:10px;">
+            <div>
+              <div style="font-size:.78em;font-weight:700;color:var(--text);">Include Buzz Volume</div>
+              <div style="font-size:.7em;color:var(--text3);margin-top:1px;">${skillBuzzEnabled ? 'Buzz rate counted in Skill Score, shown in player cards &amp; modal' : 'Excluded from Skill Score — Production Rate &amp; Aggression only'}</div>
+            </div>
+            <label class="switch" onclick="event.stopPropagation();">
+              <input type="checkbox" ${skillBuzzEnabled ? 'checked' : ''} onchange="skillBuzzEnabled=this.checked;saveGlobalSettings();renderAnalyticsPlayersUniversal();">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--sec-bg);border:1px solid var(--border);border-radius:10px;">
+            <div>
+              <div style="font-size:.78em;font-weight:700;color:var(--text);">Auto Weights</div>
+              <div style="font-size:.7em;color:var(--text3);margin-top:1px;">${skillWeightsAuto ? (skillBuzzEnabled ? `Using defaults: Production 50% · Buzz 33% · Aggression 17%` : `Using math-derived defaults: Production 75% · Aggression 25%`) : `Manual: prod ${(effWProd/totalW*100).toFixed(0)}%${skillBuzzEnabled?' · buzz '+(effWBuzz/totalW*100).toFixed(0)+'%':''} · aggr ${(effWAggr/totalW*100).toFixed(0)}%`}</div>
+            </div>
+            <label class="switch" onclick="event.stopPropagation();">
+              <input type="checkbox" ${skillWeightsAuto ? 'checked' : ''} onchange="skillWeightsAuto=this.checked;saveGlobalSettings();renderAnalyticsPlayersUniversal();">
+              <span class="slider"></span>
+            </label>
+          </div>
+          ${skillWeightsAuto ? '' : `
+          <div style="font-size:.72em;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;">Manual Weights</div>
+          ${stepper('skillWeightProd', skillWeightProd, 1, 10, 1, 'Production Rate', 'Points generated per toss-up heard', 'var(--success)', (effWProd/totalW*100).toFixed(0)+'% influence')}
+          ${skillBuzzEnabled ? stepper('skillWeightBuzz', skillWeightBuzz, 1, 10, 1, 'Buzz Volume', '% of questions the player buzzed on', 'var(--primary)', (effWBuzz/totalW*100).toFixed(0)+'% influence') : ''}
+          ${stepper('skillWeightAggr', skillWeightAggr, 1, 10, 1, 'Aggression', 'Powers vs negs balance', '#f39c12', (effWAggr/totalW*100).toFixed(0)+'% influence')}
+          <div style="font-size:.7em;color:var(--text3);font-style:italic;padding-top:2px;">Weight % is the exact final proportion used. All changes sync to all devices instantly.</div>`}
+        </div>`}
+      </div>`;
+      if (lowDataList.length > 0) {
+        const isCollapsed = lowDataPanelCollapsed;
+        html += `<div style="background:var(--card);border:2px solid rgba(243,156,18,.4);border-radius:10px;margin-bottom:var(--sp);box-shadow:var(--shadow-sm);overflow:hidden;">
+          <div onclick="lowDataPanelCollapsed=!lowDataPanelCollapsed;renderAnalyticsPlayersUniversal();" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;user-select:none;">
+            <span style="font-size:.9em;font-weight:700;color:#f39c12;">⚠ Low-Data Players (${lowDataList.length})</span>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="display:flex;gap:6px;" onclick="event.stopPropagation();">
+                <button onclick="includeLowDataAll()" style="font-size:.75em;font-weight:700;padding:4px 10px;border-radius:6px;border:1px solid var(--success);background:rgba(40,167,69,.1);color:var(--success);cursor:pointer;">Include All</button>
+                <button onclick="excludeLowDataAll()" style="font-size:.75em;font-weight:700;padding:4px 10px;border-radius:6px;border:1px solid var(--danger);background:rgba(220,53,69,.1);color:var(--danger);cursor:pointer;">Exclude All</button>
+              </div>
+              <span style="font-size:.8em;color:var(--text2);transition:transform .2s;display:inline-block;transform:${isCollapsed ? '' : 'rotate(180deg)'};">&#9660;</span>
+            </div>
+          </div>
+          ${isCollapsed ? '' : `
+          <div style="border-top:1px solid rgba(243,156,18,.3);padding:12px 16px;">
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
+              ${lowDataList.map(name => {
+                const inc = manuallyIncluded.has(name);
+                const safeName = name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+                return `<div style="display:flex;align-items:center;gap:6px;background:var(--sec-bg);border:1px solid ${inc ? 'var(--success)' : 'var(--border)'};border-radius:20px;padding:5px 10px 5px 8px;cursor:pointer;user-select:none;" onclick="toggleLowDataInclude('${safeName}')">
+                  <div style="width:14px;height:14px;border-radius:3px;border:2px solid ${inc ? 'var(--success)' : 'var(--text3)'};background:${inc ? 'var(--success)' : 'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    ${inc ? '<span style="color:#fff;font-size:10px;line-height:1;">✓</span>' : ''}
+                  </div>
+                  <span style="font-size:.8em;font-weight:600;color:${inc ? 'var(--success)' : 'var(--text2)'};">${name}</span>
+                </div>`;
+              }).join('')}
+            </div>
+            <div style="font-size:.72em;color:var(--text3);font-style:italic;">Click a player to toggle inclusion. Threshold: ≥${MIN_BUZZ} buzz answers (${skillThresholdPct}% of team median ${medBuzz}).</div>
+          </div>`}
+        </div>`;
+      }
+
+      html += `<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 18px;margin-bottom:var(--sp);box-shadow:var(--shadow-xs);">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px;">
+          <span style="font-size:.9em;font-weight:700;color:var(--text);">Team Averages</span>
+          <span style="font-size:.72em;color:var(--text3);">${qualified.length} of ${active.length} players qualify</span>
+        </div>
+        ${!hasQualified ? `<p style="color:var(--text2);font-size:.85em;font-style:italic;margin:0;">Not enough data yet (threshold: ≥${MIN_BUZZ} buzz answers per player).</p>` : `
+        <div style="display:grid;grid-template-columns:repeat(${skillBuzzEnabled ? 3 : 2},1fr);gap:8px;margin-bottom:10px;">
+          <div style="background:var(--sec-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;text-align:center;">
+            <div class="metric-lbl">Avg Production Rate</div>
+            <div style="font-size:1.15em;font-weight:700;color:var(--primary);">${avgProd.toFixed(2)}</div>
+            <div style="font-size:.68em;color:var(--text3);margin-top:2px;">${(wProd*100).toFixed(1)}% weight</div>
+          </div>
+          ${skillBuzzEnabled ? `<div style="background:var(--sec-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;text-align:center;">
+            <div class="metric-lbl">Avg Buzz Volume</div>
+            <div style="font-size:1.15em;font-weight:700;color:var(--primary);">${avgBuzz.toFixed(1)}%</div>
+            <div style="font-size:.68em;color:var(--text3);margin-top:2px;">${(wBuzz*100).toFixed(1)}% weight</div>
+          </div>` : ''}
+          <div style="background:var(--sec-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;text-align:center;">
+            <div class="metric-lbl">Avg Aggression</div>
+            <div style="font-size:1.15em;font-weight:700;color:${avgAggr < 0 ? 'var(--danger)' : avgAggr >= 66 ? 'var(--success)' : '#f39c12'};">${avgAggr >= 0 ? '+' : ''}${avgAggr.toFixed(1)}%</div>
+            <div style="font-size:.68em;color:var(--text3);margin-top:2px;">${(wAggr*100).toFixed(1)}% weight</div>
+          </div>
+        </div>
+        <div style="font-size:.7em;color:var(--text3);font-style:italic;">Skill = 50 means exactly average. ${skillWeightsAuto ? (skillBuzzEnabled ? 'Auto weights: 50% prod / 33% buzz / 17% aggr.' : 'Auto weights: 75% prod / 25% aggr (math-derived).') : `Manual weights (${(wProd*100).toFixed(0)}% / ${skillBuzzEnabled ? (wBuzz*100).toFixed(0)+'% / ' : ''}${(wAggr*100).toFixed(0)}%).`} Adjust in ⚙ Skill Score Settings above.</div>`}
       </div>`;
 
-      if (!active.length) { el.innerHTML = html + '<p style="color:var(--text2)">No player data yet.</p>'; return; }
+      // ── Sort controls ──
+      const sortOptions = [
+        { key: 'points',     label: 'Points' },
+        { key: 'skill',      label: 'Skill' },
+        { key: 'prodRate',   label: 'Production Rate' },
+        ...(skillBuzzEnabled ? [{ key: 'buzzVol', label: 'Buzz Volume' }] : []),
+        { key: 'aggression', label: 'Aggression' },
+        { key: 'powers',     label: 'Powers' },
+        { key: 'negs',       label: 'Negs' },
+      ];
+      // If buzz was disabled and sort was on buzzVol, reset to points
+      if (!skillBuzzEnabled && playerSortKey === 'buzzVol') playerSortKey = 'points';
+      html += `<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border);">
+        <span style="font-size:.75em;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;flex-shrink:0;margin-right:2px;">Sort</span>
+        ${sortOptions.map(o => `<button class="sort-pill${playerSortKey===o.key?' active':''}" onclick="playerSortKey='${o.key}';renderAnalyticsPlayersUniversal();">${o.label}</button>`).join('')}
+      </div>`;
+
+      // Pre-compute sort values for each player, then sort
+      const playersSorted = active.map(p => {
+        const tH = p.tHeard || 0;
+        const uPts = 15 * p.powers + 40 * p.tossupsCorrect - 5 * p.negs;
+        const prodRate   = tH > 0 ? uPts / tH : 0;
+        const buzzVol    = tH > 0 ? (100 * (p.powers + p.tossupsCorrect + p.negs)) / tH : 0;
+        const _agD = 3 * p.powers + p.negs;
+        const aggression = _agD > 0 ? (100 * (3 * p.powers - p.negs)) / _agD : 0;
+        const skill = calcSkill(p) ?? -1;
+        return { ...p, _prodRate: prodRate, _buzzVol: buzzVol, _aggression: aggression, _skill: skill };
+      }).sort((a, b) => {
+        switch (playerSortKey) {
+          case 'skill':      return b._skill      - a._skill;
+          case 'prodRate':   return b._prodRate   - a._prodRate;
+          case 'buzzVol':    return b._buzzVol    - a._buzzVol;
+          case 'aggression': return b._aggression - a._aggression;
+          case 'powers':     return b.powers      - a.powers;
+          case 'negs':       return a.negs        - b.negs; // fewer negs = better
+          default:           return b.points !== a.points ? b.points - a.points
+                                  : b.powers !== a.powers ? b.powers - a.powers
+                                  : a.negs - b.negs;
+        }
+      });
 
       let rank = 1;
-      html += active.map((p, i) => {
+      html += playersSorted.map((p, i) => {
         if (i > 0) {
-          const prev = active[i-1];
-          if (prev.points !== p.points || prev.powers !== p.powers || prev.negs !== p.negs) rank = i + 1;
+          const prev = playersSorted[i-1];
+          const sameRank = playerSortKey === 'points'
+            ? (prev.points === p.points && prev.powers === p.powers && prev.negs === p.negs)
+            : playerSortKey === 'skill'      ? prev._skill      === p._skill
+            : playerSortKey === 'prodRate'   ? prev._prodRate   === p._prodRate
+            : playerSortKey === 'buzzVol'    ? prev._buzzVol    === p._buzzVol
+            : playerSortKey === 'aggression' ? prev._aggression === p._aggression
+            : playerSortKey === 'powers'     ? prev.powers      === p.powers
+            : playerSortKey === 'negs'       ? prev.negs        === p.negs
+            : false;
+          if (!sameRank) rank = i + 1;
         }
         const sfx = ['st','nd','rd'][rank-1] || 'th';
         const acc = p.totalAnswers ? Math.round(((p.totalAnswers - p.negs) / p.totalAnswers) * 100) : 0;
@@ -1569,58 +1960,74 @@ input:checked + .slider:before { transform: translateX(28px); }
         const uPts = 15 * p.powers + 40 * p.tossupsCorrect - 5 * p.negs;
         const uRate = tH > 0 ? (uPts / tH).toFixed(2) : null;
         const vBuzzed = tH > 0 ? ((100 * (p.powers + p.tossupsCorrect + p.negs)) / tH).toFixed(1) : null;
-        const eAggrPerfect = p.negs === 0 && p.powers > 0;
-        const eAggrRaw = p.negs > 0 ? (100 * p.powers) / p.negs : null;
-        const eAggrDisplay = eAggrPerfect ? '100.0%' : eAggrRaw !== null ? eAggrRaw.toFixed(1) + '%' : 'N/A';
-        const eAggrColor = eAggrPerfect ? 'var(--success)' : eAggrRaw !== null ? (eAggrRaw >= 66 ? 'var(--success)' : eAggrRaw >= 33 ? '#f39c12' : 'var(--danger)') : 'var(--text3)';
+        // e_aggression = 100 × (3p − n) / (3p + n)
+        const _agDenom = 3 * p.powers + p.negs;
+        const eAggrZero    = _agDenom === 0;
+        const eAggrRaw     = _agDenom > 0 ? (100 * (3 * p.powers - p.negs)) / _agDenom : 0;
+        const eAggrDisplay = eAggrZero ? '0%' : (eAggrRaw >= 0 ? '+' : '') + eAggrRaw.toFixed(1) + '%';
+        const eAggrColor   = eAggrZero ? 'var(--text3)'
+                           : eAggrRaw < 0  ? 'var(--danger)'
+                           : eAggrRaw >= 66 ? 'var(--success)' : '#f39c12';
         const topCats = Object.entries(p.catMap).sort((a,b) => b[1]-a[1]).slice(0,3);
+        const skillVal  = calcSkill(p);
+        const skillColor = skillVal === null ? 'var(--text3)'
+                         : skillVal >= 66 ? 'var(--success)'
+                         : skillVal >= 34 ? '#f39c12' : 'var(--danger)';
 
         return `
-        <div style="background:var(--card);border:2px solid var(--border);border-radius:10px;margin-bottom:10px;overflow:hidden;box-shadow:var(--shadow-sm);">
-          <div onclick="togglePlayerCard('${cardId}')" style="display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;user-select:none;">
-            <div style="font-size:1em;font-weight:700;color:var(--primary);min-width:36px;text-align:center;">${rank}${sfx}</div>
+        <div class="player-card-wrap">
+          <div class="player-card-header" onclick="togglePlayerCard('${cardId}')">
+            <div class="player-card-rank">${rank}${sfx}</div>
             <div style="flex:1;min-width:0;">
-              <div style="font-weight:700;font-size:1em;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.name}</div>
-              <div style="font-size:.78em;color:var(--text2);margin-top:2px;">${p.sessions} session${p.sessions!==1?'s':''} &bull; ${p.totalAnswers} answers &bull; ${acc}% acc</div>
+              <div style="font-weight:700;font-size:.95em;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.name}</div>
+              <div style="font-size:.75em;color:var(--text3);margin-top:1px;">${p.sessions} session${p.sessions!==1?'s':''} &bull; ${p.totalAnswers} answers &bull; ${acc}% acc</div>
             </div>
-            <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
-              ${p.powers ? `<span style="font-size:.75em;background:var(--success);color:#fff;padding:2px 7px;border-radius:8px;font-weight:700;">+${p.powers} Power</span>` : ''}
-              ${p.negs ? `<span style="font-size:.75em;background:var(--danger);color:#fff;padding:2px 7px;border-radius:8px;font-weight:700;">-${p.negs} Neg</span>` : ''}
-              <span style="font-size:1.05em;font-weight:700;color:var(--primary);">${p.points} pts</span>
-              <span id="${cardId}_arrow" style="font-size:.8em;color:var(--text2);transition:transform .2s;">&#9660;</span>
+            <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
+              ${p.powers ? `<span style="font-size:.72em;background:rgba(17,153,142,.12);color:var(--success);padding:2px 7px;border-radius:20px;font-weight:700;border:1px solid var(--success);">+${p.powers} Power${p.powers!==1?'s':''}</span>` : ''}
+              ${p.negs   ? `<span style="font-size:.72em;background:rgba(220,53,69,.1);color:var(--danger);padding:2px 7px;border-radius:20px;font-weight:700;border:1px solid var(--danger);">−${p.negs} Neg${p.negs!==1?'s':''}</span>` : ''}
+              <span style="font-size:1em;font-weight:800;color:var(--primary);min-width:52px;text-align:right;">${p.points} pts</span>
+              <span id="${cardId}_arrow" style="font-size:.75em;color:var(--text3);transition:transform .2s;margin-left:2px;">&#9660;</span>
             </div>
           </div>
-          <div id="${cardId}" style="display:none;border-top:1px solid var(--border);">
-            <div style="padding:14px 16px;">
-              <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">
-                <span style="background:var(--sec-bg);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:.8em;font-weight:600;">${p.tossupsCorrect} toss-up${p.tossupsCorrect!==1?'s':''}</span>
-                <span style="background:var(--sec-bg);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:.8em;font-weight:600;">${p.powers} power${p.powers!==1?'s':''}</span>
-                <span style="background:var(--sec-bg);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:.8em;font-weight:600;">${bonuses} bonus${bonuses!==1?'es':''}</span>
-                <span style="background:var(--sec-bg);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:.8em;font-weight:600;color:var(--danger);">${p.negs} neg${p.negs!==1?'s':''}</span>
-                ${tH > 0 ? `<span style="background:var(--sec-bg);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:.8em;font-weight:600;color:var(--primary);">${tH} heard</span>` : ''}
+          <div id="${cardId}" style="display:none;">
+            <div class="player-card-body">
+              <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px;">
+                <span style="background:rgba(17,153,142,.08);border:1px solid rgba(17,153,142,.3);color:var(--success);border-radius:6px;padding:3px 9px;font-size:.77em;font-weight:600;">${p.tossupsCorrect} TU${p.tossupsCorrect!==1?'s':''}</span>
+                <span style="background:rgba(102,126,234,.08);border:1px solid rgba(102,126,234,.3);color:var(--primary);border-radius:6px;padding:3px 9px;font-size:.77em;font-weight:600;">${p.powers} Power${p.powers!==1?'s':''}</span>
+                <span style="background:var(--sec-bg);border:1px solid var(--border);border-radius:6px;padding:3px 9px;font-size:.77em;font-weight:600;">${bonuses} Bonus${bonuses!==1?'es':''}</span>
+                <span style="background:rgba(220,53,69,.08);border:1px solid rgba(220,53,69,.3);color:var(--danger);border-radius:6px;padding:3px 9px;font-size:.77em;font-weight:600;">${p.negs} Neg${p.negs!==1?'s':''}</span>
+                ${tH > 0 ? `<span style="background:var(--sec-bg);border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:3px 9px;font-size:.77em;font-weight:600;">${tH} TU${tH!==1?'s':''} heard</span>` : ''}
               </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:${topCats.length?'14px':'0'};">
-                <div style="background:var(--sec-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;">
-                  <div style="font-size:.72em;font-weight:700;color:var(--text2);margin-bottom:4px;">Potential Pts</div>
-                  <div style="font-size:1.15em;font-weight:700;color:var(--primary);">${uPts}</div>
+              <div class="metric-grid">
+                <div class="metric-tile">
+                  <div class="metric-lbl">Potential Pts</div>
+                  <div class="metric-val" style="color:var(--primary);">${uPts}</div>
                 </div>
-                <div style="background:var(--sec-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;">
-                  <div style="font-size:.72em;font-weight:700;color:var(--text2);margin-bottom:4px;">Production Rate</div>
-                  <div style="font-size:1.15em;font-weight:700;color:var(--primary);">${uRate !== null ? uRate : 'N/A'}</div>
+                <div class="metric-tile">
+                  <div class="metric-lbl">Production Rate</div>
+                  <div class="metric-val" style="color:var(--primary);">${uRate !== null ? uRate : '—'}</div>
                 </div>
-                <div style="background:var(--sec-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;">
-                  <div style="font-size:.72em;font-weight:700;color:var(--text2);margin-bottom:4px;">Buzz Volume</div>
-                  <div style="font-size:1.15em;font-weight:700;color:var(--primary);">${vBuzzed !== null ? vBuzzed + '%' : 'N/A'}</div>
+                ${skillBuzzEnabled ? `<div class="metric-tile">
+                  <div class="metric-lbl">Buzz Volume</div>
+                  <div class="metric-val" style="color:var(--primary);">${vBuzzed !== null ? vBuzzed+'%' : '—'}</div>
+                </div>` : ''}
+                <div class="metric-tile">
+                  <div class="metric-lbl">Aggression</div>
+                  <div class="metric-val" style="color:${eAggrColor};margin-bottom:${!eAggrZero?'5px':'0'};">${eAggrDisplay}</div>
+                  ${!eAggrZero ? `<div style="height:4px;background:var(--border);border-radius:4px;overflow:hidden;"><div style="height:100%;width:${Math.min(Math.abs(eAggrRaw),100)}%;background:${eAggrColor};border-radius:4px;"></div></div>` : ''}
                 </div>
-                <div style="background:var(--sec-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;">
-                  <div style="font-size:.72em;font-weight:700;color:var(--text2);margin-bottom:4px;">Aggression</div>
-                  <div style="font-size:1.15em;font-weight:700;color:${eAggrColor};">${eAggrDisplay}</div>
+                <div class="metric-tile span2" style="border-color:${skillVal!==null?skillColor:'var(--border)'};">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:${skillVal!==null?'6px':'0'};">
+                    <div class="metric-lbl">Skill Score</div>
+                    <div class="metric-val" style="color:${skillColor};">${skillVal!==null ? skillVal.toFixed(1)+' / 100' : '⚠ Low data'}</div>
+                  </div>
+                  ${skillVal!==null ? `<div style="height:4px;background:var(--border);border-radius:4px;overflow:hidden;"><div style="height:100%;width:${skillVal.toFixed(1)}%;background:${skillColor};border-radius:4px;"></div></div>` : `<div style="font-size:.7em;color:var(--text3);font-style:italic;">Need ≥${MIN_BUZZ} buzz answers. Adjust threshold in Skill Settings above.</div>`}
                 </div>
               </div>
               ${topCats.length ? `
-              <div style="border-top:1px solid var(--border);padding-top:12px;">
-                <div style="font-size:.75em;font-weight:700;color:var(--text2);margin-bottom:8px;">Top Categories</div>
-                ${topCats.map(([cat, cnt]) => `<div class="stat-row"><span class="stat-label">${cat}</span><span class="stat-value">${cnt}</span></div>`).join('')}
+              <div style="border-top:1px solid var(--border);padding-top:10px;">
+                <div style="font-size:.7em;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;">Top Categories</div>
+                ${topCats.map(([cat, cnt]) => `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:.82em;border-bottom:1px solid var(--border);"><span style="color:var(--text2);font-weight:500;">${cat}</span><span style="font-weight:700;color:var(--primary);">${cnt}</span></div>`).join('')}
               </div>` : ''}
             </div>
           </div>
@@ -1648,11 +2055,46 @@ input:checked + .slider:before { transform: translateX(28px); }
       else expandedPlayerCards.delete(id);
     }
 
+    function toggleLowDataInclude(playerName) {
+      if (manuallyIncluded.has(playerName)) {
+        manuallyIncluded.delete(playerName);
+      } else {
+        manuallyIncluded.add(playerName);
+      }
+      saveManualInclusions();
+      renderAnalyticsPlayersUniversal();
+    }
+
+    function _getLowDataThresh() {
+      const all = buildUniversalPlayerStats();
+      const counts = all.map(p => p.powers + p.tossupsCorrect + p.negs).sort((a,b)=>a-b);
+      const med = counts[Math.floor(counts.length/2)] || 0;
+      return Math.max(3, Math.floor(med * (skillThresholdPct / 100)));
+    }
+    function includeLowDataAll() {
+      const thresh = _getLowDataThresh();
+      buildUniversalPlayerStats().forEach(p => {
+        const buzzes = p.powers + p.tossupsCorrect + p.negs;
+        if (buzzes < thresh || (p.tHeard || 0) === 0) manuallyIncluded.add(p.name);
+      });
+      saveManualInclusions();
+      renderAnalyticsPlayersUniversal();
+    }
+    function excludeLowDataAll() {
+      const thresh = _getLowDataThresh();
+      buildUniversalPlayerStats().forEach(p => {
+        const buzzes = p.powers + p.tossupsCorrect + p.negs;
+        if (buzzes < thresh || (p.tHeard || 0) === 0) manuallyIncluded.delete(p.name);
+      });
+      saveManualInclusions();
+      renderAnalyticsPlayersUniversal();
+    }
+
     // ── Team Compositions (cross-session) ──
     function calcTeamEfficiency(team, sessionTHeard) {
       const { tossups, bonuses, powers, negs } = team;
-      // e_bonus = 100 * (10b) / (30t)
-      const eBonus = tossups > 0 ? (100 * (10 * bonuses)) / (30 * tossups) : null;
+      // e_bonus = 100 * (10b) / (30(t+p))
+      const eBonus = (tossups + powers) > 0 ? (100 * (10 * bonuses)) / (30 * (tossups + powers)) : null;
       // t_heard: use real session value if available, otherwise fallback to max(20, tossups+negs)
       const tHeard = sessionTHeard > 0 ? sessionTHeard : Math.max(20, tossups + negs);
       const numerator = 15 * powers + 10 * tossups + 10 * bonuses - 5 * negs;
@@ -1734,8 +2176,8 @@ input:checked + .slider:before { transform: translateX(28px); }
         const cardId = 'tcomp_' + team.sessionId + '_' + team.teamName.replace(/\W/g, '_');
         const acc = team.answers ? Math.round(((team.answers - team.negs) / team.answers) * 100) : 0;
         const memberTitle = team.members.join(' / ');
-        const eBonusTooltip = `Bonus Efficiency = 100 × (10 × bonuses) / (30 × toss-ups). How well the team converted toss-up wins into bonus points.`;
-        const eTotalTooltip = `Point Efficiency = 100 × (15P + 10T + 10B − 5N) / (45 × questions heard). Questions heard = ${team.tHeard} (${team.tHeardIsReal ? 'from session counter' : 'estimated'}).`;
+        const eBonusTooltip = `Capitalization = 100 × (10 × bonuses) / (30 × (toss-ups + powers)). How well the team capitalized on the bonuses available after winning toss-ups.`;
+        const eTotalTooltip = `Point Control = 100 × (15P + 10T + 10B − 5N) / (45 × questions heard). Questions heard = ${team.tHeard} (${team.tHeardIsReal ? 'from session counter' : 'estimated'}).`;
 
         const statChips = [
           ['Points',   team.pts,      color],
@@ -1773,8 +2215,8 @@ input:checked + .slider:before { transform: translateX(28px); }
                 ${statChips}
               </div>
               <div style="border-top:1px solid var(--border);padding-top:12px;">
-                ${effBar(team.eBonus, color, 'Bonus Efficiency', eBonusTooltip)}
-                ${effBar(team.eTotal, color, 'Point Efficiency', eTotalTooltip)}
+                ${effBar(team.eBonus, color, 'Capitalization', eBonusTooltip)}
+                ${effBar(team.eTotal, color, 'Point Control', eTotalTooltip)}
                 ${(team.eBonus === null && team.eTotal === null) ? '<div style="font-size:.8em;color:var(--text2);font-style:italic;">No toss-up answers recorded yet.</div>' : ''}
               </div>
             </div>
@@ -1816,10 +2258,8 @@ input:checked + .slider:before { transform: translateX(28px); }
         else catData[a.category].players[a.player].correct++;
       });
       const sorted=Object.entries(catData).sort((a,b)=>b[1].total-a[1].total);
-      let html=`<div style="background:rgba(102,126,234,.08);border:1px solid var(--primary);border-radius:8px;padding:10px 14px;margin-bottom:var(--sp);font-size:.85em;color:var(--primary);font-weight:600;">
-        Aggregated across <strong>all ${sessionCount} session${sessionCount!==1?'s':''}</strong>
-      </div>`;
-      if(!sorted.length){el.innerHTML=html+'<p style="color:var(--text2)">No category data yet.</p>';return;}
+      let html='';
+      if(!sorted.length){el.innerHTML='<p style="color:var(--text2)">No category data yet.</p>';return;}
       html+=sorted.map(([cat,data])=>`
         <div class="an-cat-card">
           <div class="an-cat-title">${cat} <span style="font-weight:400;color:var(--text2);font-size:.88em;">${data.total} answers &bull; ${data.points} pts</span></div>
@@ -1838,9 +2278,7 @@ input:checked + .slider:before { transform: translateX(28px); }
     function renderAnalyticsLeaderboard(globalPs, sessionCount) {
       const el=document.getElementById('an-leaderboard'); if(!el) return;
       const active=globalPs.filter(p=>p.totalAnswers>0);
-      let html=`<div style="background:rgba(102,126,234,.08);border:1px solid var(--primary);border-radius:8px;padding:10px 14px;margin-bottom:var(--sp);font-size:.85em;color:var(--primary);font-weight:600;">
-        Global leaderboard &mdash; aggregated across <strong>all ${sessionCount} session${sessionCount!==1?'s':''}</strong>
-      </div>`;
+      let html='';
       if(active.length){
         let rank=1;
         html+=active.map((p,i)=>{
@@ -2160,95 +2598,6 @@ input:checked + .slider:before { transform: translateX(28px); }
       if (analyticsOpen) renderAnalytics();
     }
 
-    // ── Substitution state ──
-    var subOut = null, subIn = null;
-
-    function toggleSubPanel() {
-      const panel = document.getElementById('subPanel');
-      if (!panel) return;
-      const opening = panel.style.display === 'none';
-      panel.style.display = opening ? 'block' : 'none';
-      if (opening) populateSubPanel();
-    }
-
-    function populateSubPanel() {
-      const s = getCurrentSession(); if (!s) return;
-      subOut = null; subIn = null;
-      // Active = currently on a team
-      const active = [...new Set((s.teams||[]).flatMap(t=>toArray(t.playerMembers)))];
-      // All known players
-      const all = Object.keys(s.players||{});
-      // Bench = in player pool but not on a team
-      const bench = all.filter(p=>!active.includes(p));
-      const outEl = document.getElementById('subOutContainer');
-      const inEl  = document.getElementById('subInContainer');
-      if(!outEl||!inEl) return;
-      outEl.innerHTML = active.length
-        ? active.map(p=>`<button class="button-category" onclick="pickSubOut(this,'${p.replace(/\/g,'\\').replace(/'/g,"\'")}')">${p}</button>`).join('')
-        : '<span style="font-size:.82em;color:var(--text2);">No active players</span>';
-      inEl.innerHTML = bench.length
-        ? bench.map(p=>`<button class="button-category" onclick="pickSubIn(this,'${p.replace(/\/g,'\\').replace(/'/g,"\'")}')">${p}</button>`).join('')
-        : '<span style="font-size:.82em;color:var(--text2);">No bench players</span>';
-    }
-
-    function pickSubOut(btn, name) {
-      subOut = name;
-      document.querySelectorAll('#subOutContainer .button-category').forEach(b=>b.classList.remove('selected'));
-      btn.classList.add('selected');
-    }
-
-    function pickSubIn(btn, name) {
-      subIn = name;
-      document.querySelectorAll('#subInContainer .button-category').forEach(b=>b.classList.remove('selected'));
-      btn.classList.add('selected');
-    }
-
-    function confirmSubstitution() {
-      if (!subOut) { alert('Select a player to sub out.'); return; }
-      if (!subIn)  { alert('Select a player to sub in.'); return; }
-      const id = state.currentSessionId; if (!id) return;
-      const entry = { id: Date.now().toString(), type: 'sub', playerOut: subOut, playerIn: subIn, timestamp: new Date().toISOString() };
-      const apply = s => {
-        s.answerLog = toArray(s.answerLog);
-        entry.tHeardAtSub = s.tHeard || 0;
-        s.answerLog.push({...entry});
-        // Swap playerOut for playerIn on their team
-        toArray(s.teams).forEach(t => {
-          const m = toArray(t.playerMembers);
-          const i = m.indexOf(subOut);
-          if (i > -1) { m[i] = subIn; t.playerMembers = m; }
-        });
-        // Ensure subIn exists in players map
-        if (!s.players) s.players = {};
-        if (!s.players[subIn]) s.players[subIn] = { name: subIn, points: 0, answers: [] };
-      };
-      updateSessionAtomic(id, apply);
-      withWriteLock(id, () => { const s = getCurrentSession(); if (s) apply(s); });
-      document.getElementById('subPanel').style.display = 'none';
-      subOut = null; subIn = null;
-      renderAll();
-    }
-
-    function undoSubstitution(entryId) {
-      const id = state.currentSessionId; if (!id) return;
-      const apply = s => {
-        s.answerLog = toArray(s.answerLog);
-        const idx = s.answerLog.findIndex(e => e.id === entryId);
-        if (idx === -1) return;
-        const sub = s.answerLog[idx];
-        // Reverse the team swap: put playerOut back, remove playerIn
-        toArray(s.teams).forEach(t => {
-          const m = toArray(t.playerMembers);
-          const i = m.indexOf(sub.playerIn);
-          if (i > -1) { m[i] = sub.playerOut; t.playerMembers = m; }
-        });
-        s.answerLog.splice(idx, 1);
-      };
-      updateSessionAtomic(id, apply);
-      withWriteLock(id, () => { const s = getCurrentSession(); if (s) apply(s); });
-      renderAll();
-    }
-
     function recordAnswer() {
       const id=state.currentSessionId; if(!id) return;
       if(!state.selectedPlayer)    {alert('Please select a player.');return;}
@@ -2319,24 +2668,14 @@ input:checked + .slider:before { transform: translateX(28px); }
     function renderAnswerLog() {
       const s=getCurrentSession(); const el=document.getElementById('answerLog');
       if(!el||!s) return;
-      const log=toArray(s.answerLog);
-      if(!log.length){el.innerHTML='<p style="color:var(--text2)">No answers recorded yet.</p>';el.onscroll=updateFadeMasks;return;}
-      // Number only answer entries (not sub events)
-      const answers=log.filter(e=>e.type!=='sub');
-      const reversed=[...log].reverse();
-      let ansNum=answers.length;
-      el.innerHTML=reversed.map(e=>{
-        if(e.type==='sub'){
-          return `<div class="log-entry" style="background:rgba(102,126,234,.07);border-left:3px solid var(--primary);">
-            <span style="color:var(--primary);font-weight:600;">Sub: ${e.playerOut} &rarr; ${e.playerIn}</span>
-            <button class="button button-danger" onclick="undoSubstitution('${e.id}')" style="padding:4px 8px;font-size:.8em;">Undo</button>
-          </div>`;
-        }
-        return `<div class="log-entry">
-          <span><strong>${ansNum--}. ${e.player}</strong> &mdash; ${e.pointType} (${e.points>0?'+':''}${e.points} pts) &mdash; ${e.category}</span>
-          <button class="button button-danger" onclick="deleteAnswer('${e.id}')" style="padding:4px 8px;font-size:.8em;">Delete</button>
-        </div>`;
-      }).join('');
+      const answers=s.answerLog||[];
+      el.innerHTML=answers.length
+        ?[...answers].reverse().map((a,i)=>`
+            <div class="log-entry">
+              <span><strong>${answers.length-i}. ${a.player}</strong> &mdash; ${a.pointType} (${a.points>0?'+':''}${a.points} pts) &mdash; ${a.category}</span>
+              <button class="button button-danger" onclick="deleteAnswer('${a.id}')" style="padding:4px 8px;font-size:.8em;">Delete</button>
+            </div>`).join('')
+        :'<p style="color:var(--text2)">No answers recorded yet.</p>';
       el.onscroll=updateFadeMasks;
       setTimeout(updateFadeMasks,20);
     }
@@ -2449,6 +2788,5 @@ input:checked + .slider:before { transform: translateX(28px); }
     // Boot: call initFirebase which waits for SDK then calls startApp
     document.addEventListener('DOMContentLoaded', initFirebase);
   </script>
-
 </body>
 </html>
