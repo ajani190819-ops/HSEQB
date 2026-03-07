@@ -1,0 +1,2454 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HSE Quiz Bowl Tracker</title>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <style>
+    :root {
+      --sp: 20px; --hsp: 12px;
+      --primary: #667eea; --primary-light: #7c8ff0; --primary-dark: #5568d3;
+      --secondary: #764ba2;
+      --success: #11998e; --success2: #38ef7d;
+      --danger: #dc3545; --danger2: #e74c5c;
+      --warning: #ffc107;
+      --bg: #fff; --text: #1a1a2e; --text2: #606060; --text3: #999;
+      --sec-bg: #f5f7fb; --card: #fff;
+      --input-bg: #fff; --input-border: #e1e4e8; --input-text: #1a1a2e;
+      --hover: #f0f3f8; --border: #a8acb1;
+      --shadow-xs: 0 1px 2px rgba(0,0,0,.05);
+      --shadow-sm: 0 2px 4px rgba(0,0,0,.08);
+      --shadow-md: 0 6px 12px rgba(0,0,0,.1);
+      --shadow-xl: 0 20px 40px rgba(0,0,0,.15);
+    }
+    .dark-mode {
+      --danger: #ff6b6b; --warning: #ffd43b;
+      --bg: #0d1117; --text: #e6e6e6; --text2: #b0b0b0; --text3: #808080;
+      --sec-bg: #161b22; --card: #1c2128;
+      --input-bg: #0d1117; --input-border: #30363d; --input-text: #e6e6e6;
+      --hover: #21262d; --border: #3f444d;
+      --shadow-xs: 0 1px 2px rgba(0,0,0,.3); --shadow-sm: 0 2px 4px rgba(0,0,0,.3);
+      --shadow-md: 0 6px 12px rgba(0,0,0,.4); --shadow-xl: 0 20px 40px rgba(0,0,0,.6);
+    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { height: 100%; overflow: hidden; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-button { display: none; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--primary-dark); }
+    * { scrollbar-width: thin; scrollbar-color: var(--primary) transparent; }
+    .qb-scroll, .sidebar-sections, .log-container { scrollbar-gutter: stable; }
+    body.hide-scrollbars ::-webkit-scrollbar-thumb,
+    body.hide-scrollbars ::-webkit-scrollbar-track { background: transparent !important; }
+    body.hide-scrollbars * { scrollbar-color: transparent transparent !important; }
+
+```
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  height: 100vh; overflow: hidden; color: var(--text); display: flex; flex-direction: column;
+}
+.qb-container { width: 100%; flex: 1; display: flex; flex-direction: column; background: var(--bg); overflow: hidden; }
+
+/* ── Header ── */
+.qb-header {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: #fff; padding: 36px 24px 52px;
+  display: flex; justify-content: center; align-items: center;
+  box-shadow: 0 4px 20px rgba(102,126,234,.3);
+  position: relative; z-index: 200; flex-shrink: 0;
+  transition: filter .3s ease;
+}
+.qb-header h1 {
+  font-size: clamp(1.8em,5vw,2.8em); font-weight: 700; letter-spacing: -.5px;
+  position: absolute; left: 50%; transform: translateX(-50%); white-space: nowrap;
+}
+.version-badge {
+  font-size: .38em; font-weight: 600; background: rgba(255,255,255,.18);
+  border: 1px solid rgba(255,255,255,.3); color: rgba(255,255,255,.8);
+  padding: 3px 8px; border-radius: 20px; vertical-align: middle; position: relative; top: -4px;
+}
+.header-session-name {
+  position: absolute; left: 50%; transform: translateX(-50%); bottom: 14px;
+  font-size: .8em; font-weight: 600; color: rgba(255,255,255,.75); white-space: nowrap; pointer-events: none;
+}
+.header-session-name::before { content: 'Session: '; opacity: .6; }
+.header-controls {
+  position: absolute; right: 20px; top: 50%; transform: translateY(-50%);
+  display: flex; gap: 10px; align-items: center;
+}
+.header-btn {
+  background: rgba(255,255,255,.15); color: #fff; border: 1px solid rgba(255,255,255,.3);
+  border-radius: 8px; padding: 6px 12px; font-size: .85em; font-weight: 700;
+  cursor: pointer; font-family: inherit; white-space: nowrap; text-decoration: none;
+  display: inline-flex; align-items: center; gap: 5px; transition: background .2s;
+}
+.header-btn:hover { background: rgba(255,255,255,.28); }
+.header-btn.round { border-radius: 50%; width: 30px; height: 30px; padding: 0; justify-content: center; font-size: 1em; }
+.header-btn.active { background: rgba(255,255,255,.35); box-shadow: 0 0 0 2px rgba(255,255,255,.5); }
+.sidebar-open-btn {
+  display: none; position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+}
+.mobile-subrow { display: none; }
+
+/* ── Body ── */
+.qb-body { flex: 1; display: flex; overflow: hidden; position: relative; }
+
+/* ── Sidebar ── */
+.qb-sidebar {
+  width: 320px; flex-shrink: 0; display: flex; flex-direction: column;
+  padding: var(--sp) var(--hsp);
+  background: var(--bg); border-right: 2px solid var(--border);
+  overflow: visible; position: relative; z-index: 100;
+  transition: width .3s ease, padding .3s ease;
+}
+.qb-sidebar.collapsed { width: 0; padding: 0; overflow: hidden; border-right: none; }
+.qb-scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: var(--sp) var(--hsp); transition: filter .3s ease; }
+
+/* ── Views ── */
+#trackerView { display: flex; flex-direction: column; height: 100%; }
+#analyticsView { display: none; flex-direction: column; height: 100%; }
+#analyticsView.active { display: flex; }
+
+/* ── Analytics ── */
+.analytics-header {
+  padding: 16px var(--hsp); border-bottom: 2px solid var(--border);
+  background: var(--sec-bg); flex-shrink: 0;
+}
+.analytics-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+.analytics-tab {
+  background: var(--card); color: var(--primary); border: 2px solid var(--primary);
+  border-radius: 8px; padding: 8px 18px; font-size: .9em; font-weight: 600;
+  cursor: pointer; font-family: inherit; transition: all .2s;
+}
+.analytics-tab:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(102,126,234,.2); }
+.analytics-tab.active {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: #fff; border-color: transparent;
+}
+.analytics-scroll { flex: 1; overflow-y: auto; padding: var(--sp) var(--hsp); scrollbar-gutter: stable; }
+.analytics-panel { display: none; }
+.analytics-panel.active { display: block; }
+
+.an-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--sp); margin-bottom: var(--sp); }
+.an-stat-box {
+  background: var(--card); border: 2px solid var(--border); border-radius: 10px;
+  padding: 16px; text-align: center; box-shadow: var(--shadow-sm);
+}
+.an-stat-box .an-val { font-size: 2em; font-weight: 700; color: var(--primary); }
+.an-stat-box .an-lbl { font-size: .82em; color: var(--text2); margin-top: 4px; }
+
+.an-player-card {
+  background: var(--card); border: 2px solid var(--border); border-radius: 10px;
+  padding: 18px; margin-bottom: var(--sp); box-shadow: var(--shadow-sm);
+  transition: border-color .2s, box-shadow .2s;
+}
+.an-player-card:hover { border-color: var(--primary-light); box-shadow: var(--shadow-md); }
+.an-player-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.an-player-name {
+  font-size: 1.1em; font-weight: 700; color: var(--primary);
+  cursor: pointer; text-decoration: underline; text-underline-offset: 3px;
+  transition: color .15s;
+}
+.an-player-name:hover { color: var(--primary-dark); }
+.an-player-pts { font-size: 1.2em; font-weight: 700; color: var(--primary); }
+.an-player-meta { font-size: .82em; color: var(--text2); margin-bottom: 12px; }
+
+.an-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: .85em; }
+.an-bar-label { width: 110px; flex-shrink: 0; color: var(--text2); font-weight: 600; }
+.an-bar-track { flex: 1; height: 10px; background: var(--sec-bg); border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
+.an-bar-fill { height: 100%; border-radius: 10px; background: linear-gradient(90deg, var(--primary), var(--secondary)); transition: width .4s ease; }
+.an-bar-fill.neg { background: linear-gradient(90deg, var(--danger), var(--danger2)); }
+.an-bar-val { width: 36px; text-align: right; font-weight: 700; color: var(--text); flex-shrink: 0; }
+
+.an-cat-card {
+  background: var(--card); border: 2px solid var(--border); border-radius: 10px;
+  padding: 16px; margin-bottom: var(--sp); box-shadow: var(--shadow-sm);
+}
+.an-cat-title { font-weight: 700; font-size: 1em; color: var(--primary); margin-bottom: 10px; }
+.an-cat-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: .88em; align-items: center; }
+.an-cat-row:last-child { border-bottom: none; }
+
+.an-lb-row {
+  display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+  background: var(--card); border: 2px solid var(--border); border-radius: 10px;
+  margin-bottom: 10px; box-shadow: var(--shadow-xs); font-size: .92em;
+}
+.an-lb-rank { font-size: 1.2em; font-weight: 700; color: var(--primary); min-width: 42px; }
+.an-lb-name { flex: 1; font-weight: 600; }
+.an-lb-pts { font-weight: 700; color: var(--primary); margin-right: 8px; }
+.an-lb-chip {
+  font-size: .75em; padding: 2px 8px; border-radius: 10px; font-weight: 700;
+  background: var(--sec-bg); color: var(--text2); border: 1px solid var(--border);
+}
+.an-lb-chip.power { background: rgba(102,126,234,.12); color: var(--primary); border-color: var(--primary); }
+.an-lb-chip.neg   { background: rgba(220,53,69,.1); color: var(--danger); border-color: var(--danger); }
+
+.an-team-card {
+  background: var(--card); border: 2px solid var(--border); border-left: 5px solid var(--secondary);
+  border-radius: 10px; padding: 16px; margin-bottom: var(--sp); box-shadow: var(--shadow-sm);
+}
+.an-team-name { font-weight: 700; font-size: 1.05em; margin-bottom: 8px; }
+.an-team-pts { color: var(--primary); font-weight: 700; font-size: 1.3em; }
+
+/* ── Analytics/Tracker button — remove focus outline but preserve hover effect ── */
+#analyticsBtn,
+#analyticsBtnMobile {
+  -webkit-tap-highlight-color: transparent !important;
+}
+#analyticsBtn:focus:not(:hover),
+#analyticsBtnMobile:focus:not(:hover),
+#analyticsBtn:focus-visible,
+#analyticsBtnMobile:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+#analyticsBtn:active,
+#analyticsBtnMobile:active {
+  outline: none !important;
+}
+
+/* ── Mobile sidebar overlay ── */
+@media (max-width: 900px) {
+  .qb-sidebar {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    width: 100% !important; height: 100vh; max-height: 100vh;
+    overflow-y: auto; padding: 12px 16px 20px !important;
+    border-right: none; border-bottom: none;
+    background: rgba(255,255,255,0.18) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(1.8);
+    backdrop-filter: blur(28px) saturate(1.8);
+    box-shadow: 0 8px 32px rgba(0,0,0,.22); z-index: 6000;
+    transform: translateY(-110%); visibility: hidden;
+    transition: transform .35s cubic-bezier(.4,0,.2,1), visibility .35s ease;
+    pointer-events: none;
+  }
+  .dark-mode .qb-sidebar { background: rgba(13,17,23,0.6) !important; }
+  .qb-sidebar.mobile-open {
+    transform: translateY(0) !important; visibility: visible !important; pointer-events: auto !important;
+  }
+  .qb-sidebar.mobile-open * { pointer-events: auto !important; }
+  .qb-scroll.menu-blurred, .analytics-scroll.menu-blurred { filter: blur(3px); pointer-events: none; }
+  body.menu-open { overflow: hidden; }
+  #sidebarOpenBtn { display: none !important; }
+  .mobile-subrow {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 6px; width: 100%; margin-top: 4px;
+  }
+  .header-session-name, .header-controls { display: none !important; }
+  .sidebar-open-btn { display: none !important; }
+}
+
+/* ── Sections ── */
+.qb-section {
+  margin-bottom: var(--sp); padding: clamp(18px,5vw,24px);
+  background: var(--sec-bg); border-radius: 12px; border: 2px solid var(--border);
+  transition: border-color .2s, box-shadow .2s; overflow: visible;
+}
+.qb-section:hover { border-color: var(--primary-light); box-shadow: var(--shadow-md); }
+.qb-section h2 {
+  color: var(--primary); margin-bottom: var(--sp); font-size: clamp(1.3em,4vw,1.6em);
+  cursor: pointer; display: flex; align-items: center; justify-content: space-between;
+  user-select: none; font-weight: 600; transition: color .2s;
+}
+.qb-section h2:hover { color: var(--primary-dark); }
+.toggle-icon { font-size: .8em; transition: transform .3s cubic-bezier(.4,0,.2,1); display: inline-block; }
+.toggle-icon.collapsed { transform: rotate(-90deg); }
+.collapsible-content { max-height: 2000px; overflow: visible; transition: max-height .3s ease-out; }
+.collapsible-content.collapsed { max-height: 0 !important; overflow: hidden; }
+
+/* ── Inputs ── */
+.input-group { margin-bottom: var(--sp); }
+.input-group label { display: block; margin-bottom: 8px; font-weight: 600; font-size: clamp(.9em,2vw,1em); }
+.input-group input, .input-group textarea, .input-group select {
+  width: 100%; padding: 12px 14px; border: 2px solid var(--input-border);
+  border-radius: 8px; font-size: 1em; font-family: inherit;
+  background: var(--input-bg); color: var(--input-text); transition: border-color .2s, box-shadow .2s;
+}
+.input-group input::placeholder, .input-group textarea::placeholder { color: var(--text3); }
+.input-group input:focus, .input-group textarea:focus, .input-group select:focus {
+  border-color: var(--primary); outline: none; box-shadow: 0 0 0 4px rgba(102,126,234,.15);
+}
+input[type="file"] {
+  width: 100%; padding: 10px 12px; border-radius: 8px; border: 2px solid var(--input-border);
+  background: var(--card); color: var(--input-text); cursor: pointer; font-family: inherit; font-size: .95em;
+}
+input[type="file"]::file-selector-button {
+  margin-right: 10px; padding: 8px 12px; border-radius: 8px; border: none;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: #fff; font-weight: 700; cursor: pointer;
+}
+#newSessionName {
+  width: 100%; padding: 12px 14px; border: 2px solid var(--input-border); border-radius: 8px;
+  background: var(--input-bg); color: var(--input-text); font-weight: 600; font-size: 1em; font-family: inherit;
+}
+#newSessionName:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(102,126,234,.12); outline: none; }
+
+/* ── Buttons ── */
+.button {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: #fff; border: none; padding: clamp(10px,2vw,13px) clamp(18px,4vw,28px);
+  border-radius: 8px; font-size: clamp(.88em,2vw,1em); font-family: inherit;
+  cursor: pointer; font-weight: 600; white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(102,126,234,.3); transition: transform .2s, box-shadow .2s;
+}
+.button:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(102,126,234,.4); }
+.button:active { transform: translateY(-1px); }
+.button:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+.button-secondary { background: linear-gradient(135deg, var(--text2), var(--text3)); box-shadow: 0 4px 12px rgba(96,96,96,.2); }
+.button-danger { background: linear-gradient(135deg, var(--danger), var(--danger2)); box-shadow: 0 4px 12px rgba(220,53,69,.3); }
+.button-success { background: linear-gradient(135deg, var(--success), var(--success2)); box-shadow: 0 4px 12px rgba(17,153,142,.3); }
+.button-point-type, .button-category, .button-player {
+  background: var(--card); color: var(--primary); border: 2px solid var(--primary);
+  padding: clamp(10px,2vw,12px) clamp(14px,3vw,22px);
+  border-radius: 8px; font-size: clamp(.82em,1.8vw,1em); font-family: inherit;
+  cursor: pointer; font-weight: 600; transition: transform .2s, box-shadow .2s;
+  box-shadow: 0 2px 8px rgba(102,126,234,.1);
+}
+.button-point-type:hover, .button-category:hover, .button-player:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(102,126,234,.3); }
+.button-point-type.selected, .button-category.selected, .button-player.selected {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: #fff; transform: scale(1.05); box-shadow: 0 6px 16px rgba(102,126,234,.4); border-color: transparent;
+}
+.point-type-buttons, .category-buttons { display: grid; grid-template-columns: repeat(auto-fit,minmax(160px,1fr)); gap: 12px; padding: 4px; }
+.player-buttons { display: flex; flex-wrap: wrap; gap: 10px; padding: 4px; }
+.button-group { display: flex; gap: 12px; flex-wrap: wrap; }
+
+/* ── Player pool ── */
+.player-pool-item {
+  display: inline-flex; align-items: center; margin: 6px; padding: 10px 14px;
+  background: var(--card); border-radius: 8px; font-size: .92em;
+  border: 2px solid var(--border); box-shadow: var(--shadow-xs); transition: border-color .2s;
+}
+.player-pool-item:hover { border-color: var(--primary); }
+.player-pool-item .remove {
+  cursor: pointer; margin-left: 10px; color: var(--danger); font-weight: bold;
+  padding: 4px 8px; border-radius: 4px; border: 1px solid transparent; transition: all .2s; font-size: 1.1em;
+}
+.player-pool-item .remove:hover { background: var(--danger); color: #fff; }
+#playerPoolDisplay { padding: 12px; min-height: 40px; background: var(--card); border: 2px solid var(--border); border-radius: 8px; }
+
+/* ── Teams ── */
+.team-section {
+  margin-bottom: var(--sp); padding: var(--sp); background: var(--card);
+  border-radius: 10px; border: 2px solid var(--border); box-shadow: var(--shadow-sm);
+}
+.team-section input[type="text"] {
+  padding: 10px 12px; border: 2px solid var(--input-border); border-radius: 6px;
+  width: 100%; background: var(--input-bg); color: var(--input-text); font-weight: 600; font-family: inherit;
+}
+.team-section input[type="text"]:focus { border-color: var(--primary); outline: none; }
+
+/* ── Stats ── */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(300px,1fr)); gap: var(--sp); margin-top: var(--sp); }
+.stat-card, .team-stat-card {
+  background: var(--card); padding: 18px; border-radius: 10px; border: 2px solid var(--border);
+  box-shadow: var(--shadow-sm); transition: border-color .2s, box-shadow .2s, transform .2s; cursor: pointer;
+  font-size: clamp(.85em,2vw,1em);
+}
+.stat-card:hover, .team-stat-card:hover { border-color: var(--primary-light); box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.team-stat-card { border-left: 5px solid var(--secondary); grid-column: 1/-1; }
+.stat-card h3, .team-stat-card h3 { display: flex; align-items: center; justify-content: space-between; user-select: none; margin: 0; font-size: 1.1em; }
+.stat-details { max-height: 1000px; overflow: hidden; transition: max-height .3s ease-out, opacity .3s ease-out; opacity: 1; }
+.stat-card.collapsed .stat-details, .team-stat-card.collapsed .stat-details { max-height: 0; opacity: 0; pointer-events: none; }
+.player-score, .team-score { color: var(--primary); font-weight: 700; }
+.stat-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); align-items: center; }
+.stat-row:last-child { border-bottom: none; }
+.stat-label { font-weight: 600; color: var(--text2); font-size: .95em; }
+.stat-value { color: var(--primary); font-weight: 700; font-size: 1.1em; }
+.overall-ranking { grid-column: 1/-1; background: var(--card); padding: var(--sp); border-radius: 10px; border: 2px solid var(--border); box-shadow: var(--shadow-sm); margin-top: var(--sp); }
+
+/* ── Log ── */
+.log-entry {
+  padding: 12px; background: var(--hover); margin: var(--sp) 0;
+  border-radius: 8px; border-left: 4px solid var(--primary);
+  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;
+  gap: 8px; font-size: clamp(.8em,2vw,.95em); box-shadow: var(--shadow-xs);
+}
+.log-container { max-height: 450px; overflow-y: auto; border: 2px solid var(--border); border-radius: 8px; padding: 12px; background: var(--card); }
+.log-container-wrap { position: relative; margin-top: 15px; }
+
+/* ── Toggle switch ── */
+.switch { position: relative; display: inline-block; width: 56px; height: 28px; flex-shrink: 0; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; inset: 0; background: #ccc; transition: .4s; border-radius: 28px; }
+.slider:before { position: absolute; content: ""; height: 22px; width: 22px; left: 3px; bottom: 3px; background: #fff; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,.2); }
+input:checked + .slider { background: linear-gradient(135deg, var(--primary), var(--secondary)); }
+input:checked + .slider:before { transform: translateX(28px); }
+
+/* ── Session info ── */
+.session-info { background: var(--card); padding: var(--sp); border-radius: 10px; border: 2px solid var(--border); margin-bottom: var(--sp); font-size: clamp(.85em,2vw,1em); box-shadow: var(--shadow-sm); }
+.session-info-row { display: flex; justify-content: space-between; align-items: center; margin: var(--sp) 0; flex-wrap: wrap; gap: 8px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+.session-info-row:last-child { border-bottom: none; margin-bottom: 0; }
+.session-info-row span:first-child { font-weight: 600; color: var(--text2); }
+.session-info-row strong { color: var(--primary); font-weight: 700; }
+.session-controls { display: flex; gap: 12px; flex-wrap: wrap; margin-top: var(--sp); }
+
+/* ── Modal ── */
+.qb-modal { display: none; position: fixed; z-index: 9999; inset: 0; background: rgba(0,0,0,.6); backdrop-filter: blur(4px); }
+.qb-modal.open { display: block; }
+.modal-content { background: var(--card); margin: 50px auto; padding: 28px; border-radius: 12px; width: 90%; max-width: 550px; max-height: 80vh; overflow-y: auto; box-shadow: var(--shadow-xl); }
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid var(--border); }
+.modal-header h2 { color: var(--primary); margin: 0; font-weight: 700; font-size: 1.5em; }
+.close-modal { background: none; border: none; font-size: 28px; cursor: pointer; color: var(--text2); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 6px; }
+.close-modal:hover { background: var(--sec-bg); color: var(--primary); }
+.sessions-list { display: grid; grid-template-columns: repeat(auto-fill,minmax(240px,1fr)); gap: 16px; margin-top: 16px; }
+.session-card { background: var(--sec-bg); padding: 16px; border-radius: 10px; border: 1px solid var(--border); transition: transform .2s, box-shadow .2s, border-color .2s; box-shadow: var(--shadow-sm); }
+.session-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); border-color: var(--primary); }
+.session-card-title { color: var(--primary); font-weight: 700; margin-bottom: 10px; font-size: clamp(1em,2vw,1.15em); }
+.session-card-details { font-size: .82em; color: var(--text2); margin-bottom: 12px; line-height: 1.6; }
+.session-card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.session-card-actions button { flex: 1; min-width: 70px; font-size: .85em; padding: 8px 12px; }
+
+/* ── Player Detail Modal ── */
+#playerDetailModal .modal-content { max-width: 620px; }
+.pd-hero {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  border-radius: 10px; padding: 20px; color: #fff; margin-bottom: 20px;
+  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+}
+.pd-hero-name { font-size: 1.5em; font-weight: 700; }
+.pd-hero-sub { font-size: .88em; opacity: .85; margin-top: 4px; }
+.pd-hero-pts { font-size: 2.2em; font-weight: 700; }
+.pd-section-title {
+  font-size: .78em; font-weight: 700;
+  color: var(--text2); margin: 18px 0 10px;
+}
+.pd-stat-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.pd-chip {
+  padding: 6px 14px; border-radius: 20px; font-size: .85em; font-weight: 700;
+  background: var(--sec-bg); color: var(--text); border: 2px solid var(--border);
+}
+.pd-chip.power { background: rgba(102,126,234,.12); color: var(--primary); border-color: var(--primary); }
+.pd-chip.neg   { background: rgba(220,53,69,.1); color: var(--danger); border-color: var(--danger); }
+.pd-chip.tossup { background: rgba(17,153,142,.1); color: var(--success); border-color: var(--success); }
+.pd-cat-table { width: 100%; border-collapse: collapse; font-size: .9em; }
+.pd-cat-table th {
+  text-align: left; padding: 8px 10px; background: var(--sec-bg);
+  border-bottom: 2px solid var(--border); color: var(--text2); font-weight: 700; font-size: .82em;
+}
+.pd-cat-table th.right, .pd-cat-table td.right { text-align: right; }
+.pd-cat-table td { padding: 9px 10px; border-bottom: 1px solid var(--border); }
+.pd-cat-table tr:last-child td { border-bottom: none; }
+.pd-cat-table tr:hover td { background: var(--hover); }
+.pd-rank-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 50%; font-size: .78em; font-weight: 700;
+  background: var(--sec-bg); color: var(--text2); border: 1px solid var(--border);
+}
+.pd-rank-badge.gold   { background: #ffd700; color: #7a5800; border-color: #c8a600; }
+.pd-rank-badge.silver { background: #c0c0c0; color: #5a5a5a; border-color: #a0a0a0; }
+.pd-rank-badge.bronze { background: #cd7f32; color: #fff; border-color: #a06020; }
+.pd-bar-mini { height: 6px; border-radius: 6px; background: linear-gradient(90deg, var(--primary), var(--secondary)); min-width: 4px; }
+.pd-bar-mini.neg-bar { background: linear-gradient(90deg, var(--danger), var(--danger2)); }
+.pd-recent-log { max-height: 220px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; }
+.pd-log-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: .85em;
+}
+.pd-log-row:last-child { border-bottom: none; }
+.pd-log-row:hover { background: var(--hover); }
+.pd-pts-pos { color: var(--primary); font-weight: 700; }
+.pd-pts-neg { color: var(--danger); font-weight: 700; }
+.pd-no-data { color: var(--text2); font-style: italic; font-size: .9em; padding: 12px 0; }
+
+/* ── Autosave indicator ── */
+.auto-save-indicator { font-size: .78em; font-weight: 600; padding: 4px 10px; border-radius: 20px; background: rgba(255,255,255,.15); color: rgba(255,255,255,.9); border: 1px solid rgba(255,255,255,.3); animation: pulse 2s infinite; white-space: nowrap; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .7; } }
+
+/* ── Sidebar nav ── */
+.sidebar-nav {
+  display: flex; align-items: center; gap: 8px; padding: 10px 12px;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  border-radius: 10px; margin-bottom: var(--sp); box-shadow: var(--shadow-sm);
+  position: relative; z-index: 50; flex-shrink: 0;
+}
+.sidebar-jump-wrapper { flex: 1; position: relative; }
+.sidebar-jump-btn {
+  width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,.3);
+  background: rgba(255,255,255,.15); color: #fff; font-weight: 600; font-size: .9em;
+  cursor: pointer; font-family: inherit; display: flex; justify-content: space-between; align-items: center; gap: 8px;
+}
+.sidebar-jump-btn:hover { background: rgba(255,255,255,.25); }
+.sidebar-jump-arrow { font-size: .85em; opacity: .8; transition: transform .2s; }
+.sidebar-jump-wrapper.open .sidebar-jump-arrow { transform: rotate(180deg); }
+.sidebar-jump-menu {
+  display: none; position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+  background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.2); z-index: 9999; overflow: hidden;
+}
+.sidebar-jump-wrapper.open .sidebar-jump-menu { display: block; }
+.sidebar-jump-menu button {
+  display: block; width: 100%; padding: 10px 14px; text-align: left;
+  background: none; border: none; border-bottom: 1px solid var(--border);
+  color: var(--text); font-size: .9em; font-weight: 500; cursor: pointer; font-family: inherit; transition: background .15s;
+}
+.sidebar-jump-menu button:last-child { border-bottom: none; }
+.sidebar-jump-menu button:hover { background: var(--sec-bg); }
+.sidebar-jump-menu button.active-item { color: var(--primary); font-weight: 700; background: var(--sec-bg); }
+.sidebar-close-btn {
+  background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3); color: #fff;
+  padding: 8px 12px; border-radius: 6px; font-size: .85em; font-weight: 700;
+  cursor: pointer; white-space: nowrap; font-family: inherit; flex-shrink: 0;
+}
+.sidebar-close-btn:hover { background: rgba(255,255,255,.28); }
+.sidebar-sections { flex: 1; overflow-y: auto; overflow-x: visible; }
+.qb-sidebar .qb-section { display: none; }
+.qb-sidebar .qb-section.active-section { display: block; }
+
+/* ── Mobile header ── */
+@media (max-width: 768px) {
+  .qb-header { padding: 12px 16px 10px; flex-direction: column; align-items: center; gap: 0; }
+  .qb-header h1 { position: static; transform: none; white-space: normal; text-align: center; width: 100%; font-size: clamp(1.3em,6vw,1.8em); margin-bottom: 6px; }
+  .qb-scroll, .analytics-scroll { padding: 16px; }
+  .qb-section { padding: 16px; }
+  .point-type-buttons, .category-buttons { grid-template-columns: repeat(2,1fr); gap: 8px; }
+  .stats-grid { grid-template-columns: 1fr; }
+  .button-group { flex-direction: column; }
+  .button-group button, .button { width: 100%; }
+  .log-container { max-height: 350px; }
+  .sessions-list { grid-template-columns: 1fr; }
+  .modal-content { margin: 20px auto; width: 95%; padding: 20px; }
+  .an-grid { grid-template-columns: repeat(2,1fr); }
+}
+```
+
+  </style>
+</head>
+<body>
+  <div class="qb-container">
+
+```
+<div class="qb-header" id="qbHeader">
+  <button class="header-btn sidebar-open-btn" id="sidebarOpenBtn">&#9654; Menu</button>
+  <h1>HSE Quiz Bowl Tracker <span class="version-badge" id="versionBadge">v29</span></h1>
+  <div class="header-session-name" id="headerSessionName"></div>
+  <div class="header-controls">
+    <button class="header-btn" id="analyticsBtn" onclick="toggleAnalytics()" style="display:none;"></button>
+    <!-- Tracker / Analytics toggle switch -->
+    <div style="display:flex;align-items:center;gap:8px;user-select:none;" title="Switch between Tracker and Analytics">
+      <span id="toggleLabelTracker" style="font-size:.82em;font-weight:700;color:rgba(255,255,255,.95);">Tracker</span>
+      <div onclick="toggleAnalytics()" id="viewToggleSwitch" style="width:46px;height:24px;background:rgba(255,255,255,.25);border-radius:12px;border:2px solid rgba(255,255,255,.4);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;">
+        <div id="viewToggleKnob" style="width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:1px;left:2px;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,.3);"></div>
+      </div>
+      <span id="toggleLabelAnalytics" style="font-size:.82em;font-weight:700;color:rgba(255,255,255,.55);">Stats</span>
+    </div>
+    <button class="header-btn round" onclick="openHelpModal()" title="Help / Tutorial">?</button>
+    <span id="autosaveStatus" class="auto-save-indicator">✓ Saved</span>
+  </div>
+  <div class="mobile-subrow" id="mobileSubrow">
+    <button class="header-btn" id="sidebarOpenBtnMobile">&#9654; Menu</button>
+    <span id="headerSessionNameMobile" style="flex:1;text-align:center;font-size:.78em;font-weight:600;color:rgba(255,255,255,.75);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></span>
+    <button class="header-btn" id="analyticsBtnMobile" onclick="toggleAnalytics()" style="display:none;"></button>
+    <div onclick="toggleAnalytics()" id="viewToggleSwitchMobile" style="display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;" title="Switch view">
+      <span id="toggleLabelMobile" style="font-size:.75em;font-weight:700;color:rgba(255,255,255,.9);">Tracker</span>
+      <div style="width:38px;height:20px;background:rgba(255,255,255,.25);border-radius:10px;border:2px solid rgba(255,255,255,.4);position:relative;flex-shrink:0;">
+        <div id="viewToggleKnobMobile" style="width:14px;height:14px;background:#fff;border-radius:50%;position:absolute;top:1px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3);"></div>
+      </div>
+    </div>
+    <button class="header-btn round" onclick="openHelpModal()" title="Help">?</button>
+    <span id="autosaveStatusMobile" class="auto-save-indicator" style="flex-shrink:0;">✓ Saved</span>
+  </div>
+</div>
+
+<div class="qb-body">
+
+  <aside class="qb-sidebar" id="mainSidebar">
+    <div class="sidebar-nav">
+      <div class="sidebar-jump-wrapper" id="sidebarJumpWrapper">
+        <button class="sidebar-jump-btn" onclick="toggleJumpDropdown()" type="button">
+          <span id="sidebarJumpLabel">Session</span>
+          <span class="sidebar-jump-arrow">&#9662;</span>
+        </button>
+        <div class="sidebar-jump-menu">
+          <button onclick="showSection('sec-session')">Session</button>
+          <button onclick="showSection('sec-players')">Players</button>
+          <button onclick="showSection('sec-teams')">Teams</button>
+          <button onclick="showSection('sec-categories')">Categories</button>
+          <button onclick="showSection('sec-export')">Export / Import</button>
+          <button onclick="showSection('sec-visual')">Visual Settings</button>
+          <button onclick="showSection('sec-danger')">Data Management</button>
+        </div>
+      </div>
+      <button class="sidebar-close-btn" onclick="toggleSidebar()">&#9664; Hide</button>
+    </div>
+
+    <div class="sidebar-sections">
+
+      <div class="qb-section" id="sec-session">
+        <h2>Session <span class="toggle-icon">&#9660;</span></h2>
+        <div class="collapsible-content">
+          <div class="session-info">
+            <div class="session-info-row"><span>Name:</span><strong id="sessionName">&#8212;</strong></div>
+            <div class="session-info-row"><span>Created:</span><strong id="sessionCreated">&#8212;</strong></div>
+            <div class="session-info-row"><span>Last Updated:</span><strong id="sessionLastUpdated">&#8212;</strong></div>
+            <div class="session-info-row"><span>Answers:</span><strong id="sessionAnswerCount">0</strong></div>
+          </div>
+          <div class="input-group">
+            <label>New Session Name:</label>
+            <input type="text" id="newSessionName" placeholder="Session name..." />
+          </div>
+          <div class="session-controls">
+            <button class="button button-success" onclick="createNewSession()">+ New Session</button>
+            <button class="button" onclick="openSessionsModal()">Load</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="qb-section" id="sec-players">
+        <h2>Players <span class="toggle-icon">&#9660;</span></h2>
+        <div class="collapsible-content">
+          <div class="input-group">
+            <label>Add Player:</label>
+            <input type="text" id="playerInput" placeholder="Player name..." onkeydown="if(event.key==='Enter') addToPlayerPool()" />
+          </div>
+          <div class="button-group" style="margin-bottom:14px;">
+            <button class="button" onclick="addToPlayerPool()">Add Player</button>
+            <button class="button button-danger" onclick="clearPlayerPool()">Clear All</button>
+          </div>
+          <div class="input-group">
+            <label>Import from File (CSV/TXT):</label>
+            <input type="file" accept=".csv,.txt" onchange="handlePlayerImport(event)" />
+          </div>
+          <div id="playerPoolDisplay"></div>
+        </div>
+      </div>
+
+      <div class="qb-section" id="sec-teams">
+        <h2>Teams <span class="toggle-icon">&#9660;</span></h2>
+        <div class="collapsible-content">
+          <div class="input-group">
+            <label>Team Name:</label>
+            <input type="text" id="teamNameInput" placeholder="Team name..." />
+          </div>
+          <button class="button" onclick="addTeam()">Add Team</button>
+          <div id="teamsContainer" style="margin-top:20px;"></div>
+        </div>
+      </div>
+
+      <div class="qb-section" id="sec-categories">
+        <h2>Categories <span class="toggle-icon">&#9660;</span></h2>
+        <div class="collapsible-content">
+          <div class="input-group">
+            <label>Categories (comma-separated):</label>
+            <textarea id="categoriesInput" placeholder="e.g., Science, History, Literature..." rows="3"></textarea>
+          </div>
+          <button class="button" onclick="saveCategories()">Save Categories</button>
+        </div>
+      </div>
+
+      <div class="qb-section" id="sec-export">
+        <h2>Export Data <span class="toggle-icon">&#9660;</span></h2>
+        <div class="collapsible-content">
+          <div style="margin-bottom:var(--sp);">
+            <p style="margin-bottom:10px;font-weight:600;">Select what to include:</p>
+            <div style="display:flex;flex-wrap:wrap;gap:10px;">
+              <button class="button-category selected" id="exportPlayers" onclick="this.classList.toggle('selected')">Players &amp; Scores</button>
+              <button class="button-category selected" id="exportAnswerLog" onclick="this.classList.toggle('selected')">Answer Log</button>
+              <button class="button-category selected" id="exportTeamStats" onclick="this.classList.toggle('selected')">Team Statistics</button>
+            </div>
+          </div>
+          <div class="button-group">
+            <button class="button button-success" onclick="exportToExcel()">Export to Excel</button>
+            <button class="button button-secondary" onclick="exportToJSON()">Export as JSON</button>
+          </div>
+          <div style="margin-top:22px;padding-top:18px;border-top:1px solid var(--border);">
+            <p style="font-weight:600;margin-bottom:6px;">Import Session</p>
+            <p style="font-size:.85em;color:var(--text2);margin-bottom:12px;">Load a previously exported JSON file.</p>
+            <div class="input-group">
+              <label>Select JSON file:</label>
+              <input type="file" id="importSessionFile" accept=".json" onchange="importFromJSON(event)" />
+            </div>
+            <div id="importStatus" style="font-size:.85em;margin-top:8px;display:none;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="qb-section" id="sec-visual">
+        <h2>Visual Settings <span class="toggle-icon">&#9660;</span></h2>
+        <div class="collapsible-content">
+          <p style="font-size:.78em;color:var(--text2);margin-bottom:14px;padding:8px 10px;background:var(--hover);border-radius:6px;border:1px solid var(--border);">
+            <strong>Local settings</strong> &#8212; saved to this device only, do not sync.
+          </p>
+          <div class="input-group">
+            <label>Theme</label>
+            <div style="display:flex;align-items:center;gap:12px;">
+              <label class="switch"><input type="checkbox" id="darkModeToggle2" onchange="toggleDarkMode()"><span class="slider"></span></label>
+              <span>Dark Mode</span>
+            </div>
+          </div>
+          <div class="input-group">
+            <label>Scrollbars</label>
+            <div style="display:flex;align-items:center;gap:12px;">
+              <label class="switch"><input type="checkbox" id="hideScrollbarsToggle" onchange="toggleScrollbars()"><span class="slider"></span></label>
+              <span>Hide Scrollbars</span>
+            </div>
+          </div>
+          <div class="input-group">
+            <label>Accent Color</label>
+            <select id="accentColorSelect" onchange="setAccentColor(this.value)">
+              <option value="#667eea">Indigo</option>
+              <option value="#11998e">Teal</option>
+              <option value="#dc3545">Red</option>
+              <option value="#764ba2">Purple</option>
+            </select>
+          </div>
+          <div class="input-group" style="padding-top:14px;border-top:1px solid var(--border);">
+            <label>Version Number <span style="font-size:.75em;font-weight:400;color:var(--text2);">(syncs for all users)</span></label>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input type="text" id="versionInput" placeholder="e.g. v30" style="flex:1;" />
+              <button class="button" onclick="saveVersion()" style="white-space:nowrap;padding:10px 16px;">Save</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="qb-section" id="sec-danger" style="border:2px solid var(--danger);">
+        <h2 style="color:var(--danger);">Data Management <span class="toggle-icon">&#9660;</span></h2>
+        <div class="collapsible-content">
+          <button class="button button-danger" onclick="resetAllData()">Delete All Data</button>
+          <p style="margin-top:10px;font-size:.85em;color:var(--text2);">This cannot be undone. Export first!</p>
+        </div>
+      </div>
+
+    </div>
+  </aside>
+
+  <!-- Tracker view -->
+  <div id="trackerView" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+    <div class="qb-scroll" id="qbScroll">
+      <div class="qb-section" style="overflow:visible;">
+        <h2>Record Answer <span class="toggle-icon">&#9660;</span></h2>
+        <div class="collapsible-content">
+          <div class="input-group">
+            <label>Select Player:</label>
+            <div id="playerButtonsContainer" class="player-buttons"></div>
+          </div>
+          <div class="input-group">
+            <label>Point Type:</label>
+            <div class="point-type-buttons">
+              <button class="button-point-type" onclick="selectPointType('Toss-up')">Toss-up (+10)</button>
+              <button class="button-point-type" onclick="selectPointType('Bonus')">Bonus (+10)</button>
+              <button class="button-point-type" onclick="selectPointType('Neg')">Neg (-5)</button>
+              <button class="button-point-type" onclick="selectPointType('Power')">Power (+15)</button>
+            </div>
+          </div>
+          <div class="input-group">
+            <label>Category: <span id="categoryOptionalHint" style="font-weight:400;font-size:.85em;color:var(--text2);display:none;">(optional for Neg)</span></label>
+            <div id="categoryButtonsContainer" class="category-buttons"></div>
+          </div>
+          <!-- t_heard counter -->
+          <div style="display:flex;align-items:center;gap:12px;margin-top:14px;padding:12px 14px;background:var(--sec-bg);border:2px solid var(--border);border-radius:8px;">
+            <div style="flex:1;">
+              <div style="font-weight:700;font-size:.9em;color:var(--text2);margin-bottom:2px;">Toss-Ups Heard <span style="font-weight:400;font-size:.85em;">(auto-tracks on TU / Power / Neg)</span></div>
+              <div style="font-size:1.6em;font-weight:700;color:var(--primary);" id="tHeardDisplay">0</div>
+            </div>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <button onclick="adjustTHeard(-1)" style="width:34px;height:34px;border-radius:8px;border:2px solid var(--danger);background:var(--card);color:var(--danger);font-size:1.2em;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;">−</button>
+              <button onclick="adjustTHeard(1)"  style="width:34px;height:34px;border-radius:8px;border:2px solid var(--success);background:var(--card);color:var(--success);font-size:1.2em;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;">+</button>
+            </div>
+          </div>
+          <button class="button button-success" onclick="recordAnswer()" style="width:100%;margin-top:10px;padding:16px;font-size:1.05em;">Record Answer</button>
+          <button class="button button-secondary" onclick="toggleSubPanel()" style="width:100%;margin-top:8px;padding:10px;">Make Substitution</button>
+          <div id="subPanel" style="display:none;margin-top:10px;padding:14px;background:var(--sec-bg);border:2px solid var(--border);border-radius:8px;">
+            <div style="font-weight:700;font-size:.9em;margin-bottom:10px;color:var(--text);">Substitution</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+              <div>
+                <div style="font-size:.82em;font-weight:700;color:var(--text2);margin-bottom:5px;">Subbing Out:</div>
+                <div id="subOutContainer" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+              </div>
+              <div>
+                <div style="font-size:.82em;font-weight:700;color:var(--text2);margin-bottom:5px;">Subbing In:</div>
+                <div id="subInContainer" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+              </div>
+            </div>
+            <button onclick="confirmSubstitution()" class="button button-secondary" style="width:100%;padding:10px;">Confirm Substitution</button>
+          </div>
+        </div>
+      </div>
+      <div class="qb-section">
+        <h2>Statistics <span class="toggle-icon">&#9660;</span></h2>
+        <div class="collapsible-content">
+          <div id="statisticsContainer"></div>
+        </div>
+      </div>
+      <div class="qb-section">
+        <h2>Answer Log <span class="toggle-icon">&#9660;</span></h2>
+        <div class="collapsible-content">
+          <button class="button button-danger" onclick="clearAnswerLog()">Clear Log</button>
+          <div class="log-container-wrap">
+            <div id="answerLog" class="log-container"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Analytics view -->
+  <div id="analyticsView" style="flex:1;display:none;flex-direction:column;overflow:hidden;">
+    <div style="padding:12px var(--hsp);border-bottom:2px solid var(--border);background:var(--sec-bg);flex-shrink:0;">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="analytics-tab active" onclick="switchAnalyticsTab('overview',this)">Overview</button>
+        <button class="analytics-tab" onclick="switchAnalyticsTab('players',this)">Players</button>
+        <button class="analytics-tab" onclick="switchAnalyticsTab('categories',this)">Categories</button>
+        <button class="analytics-tab" onclick="switchAnalyticsTab('teams',this)">Team Compositions</button>
+      </div>
+    </div>
+    <div class="analytics-scroll" id="analyticsScroll">
+      <div id="an-overview" class="analytics-panel active"></div>
+      <div id="an-players" class="analytics-panel"></div>
+      <div id="an-categories" class="analytics-panel"></div>
+      <div id="an-teams" class="analytics-panel"></div>
+    </div>
+  </div>
+
+</div>
+```
+
+  </div>
+
+  <!-- Help Modal -->
+
+  <div id="helpModal" class="qb-modal">
+    <div class="modal-content" style="max-width:640px;">
+      <div class="modal-header">
+        <h2>Help &amp; Tutorial</h2>
+        <button class="close-modal" onclick="closeHelpModal()">&#215;</button>
+      </div>
+      <div style="line-height:1.7;color:var(--text);font-size:.95em;">
+
+```
+    <h3 style="color:var(--primary);margin:0 0 6px;">Getting Started</h3>
+    <p style="margin-bottom:14px;">Open the sidebar and work through each section in order: <strong>Session &rarr; Players &rarr; Teams &rarr; Categories</strong>. Once configured, use the <strong>Record Answer</strong> panel to log answers in real time. All data syncs automatically across connected devices via Firebase.</p>
+
+    <h3 style="color:var(--primary);margin:0 0 6px;">Sessions</h3>
+    <p style="margin-bottom:14px;">Each match is a <strong>Session</strong>. Create a new one with a descriptive name, or use <strong>Load Session</strong> to switch to a previous match. From the Load Session screen you can also mark sessions as excluded from analytics — excluded sessions are dimmed and ignored in all Stats calculations.</p>
+
+    <h3 style="color:var(--primary);margin:0 0 6px;">Players &amp; Teams</h3>
+    <p style="margin-bottom:14px;">Add players in the <strong>Players</strong> section, then create teams in <strong>Teams</strong> and assign players to them. Only players assigned to a team are selectable when recording answers. Players added to the global player pool are available across all sessions.</p>
+
+    <h3 style="color:var(--primary);margin:0 0 6px;">Recording Answers</h3>
+    <p style="margin-bottom:8px;">Select a <strong>Player</strong>, then a <strong>Point Type</strong>, then a <strong>Category</strong> (optional for Neg), then press <strong>Record Answer</strong>. Use the answer log to delete mistakes.</p>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:.9em;">
+      <tr style="background:var(--sec-bg);"><th style="padding:6px 10px;text-align:left;border:1px solid var(--border);">Type</th><th style="padding:6px 10px;text-align:left;border:1px solid var(--border);">Points</th><th style="padding:6px 10px;text-align:left;border:1px solid var(--border);">Notes</th></tr>
+      <tr><td style="padding:6px 10px;border:1px solid var(--border);">Toss-up</td><td style="padding:6px 10px;border:1px solid var(--border);">+10</td><td style="padding:6px 10px;border:1px solid var(--border);">Standard correct answer on a toss-up</td></tr>
+      <tr style="background:var(--sec-bg);"><td style="padding:6px 10px;border:1px solid var(--border);">Bonus</td><td style="padding:6px 10px;border:1px solid var(--border);">+10</td><td style="padding:6px 10px;border:1px solid var(--border);">Follow-up bonus question after a toss-up</td></tr>
+      <tr><td style="padding:6px 10px;border:1px solid var(--border);">Power</td><td style="padding:6px 10px;border:1px solid var(--border);">+15</td><td style="padding:6px 10px;border:1px solid var(--border);">Correct answer before the power mark</td></tr>
+      <tr style="background:var(--sec-bg);"><td style="padding:6px 10px;border:1px solid var(--border);">Neg</td><td style="padding:6px 10px;border:1px solid var(--border);">-5</td><td style="padding:6px 10px;border:1px solid var(--border);">Incorrect interrupt &mdash; category is optional</td></tr>
+    </table>
+
+    <h3 style="color:var(--primary);margin:0 0 6px;">Questions Heard Counter</h3>
+    <p style="margin-bottom:14px;">The <strong>Questions Heard</strong> counter in the Record Answer panel tracks how many toss-up questions have been read. It increments automatically on every Toss-up, Power, or Neg answer (counting a Neg followed immediately by a Toss-up/Power as one question). Use the +/- buttons to correct it manually. This value powers the efficiency metrics in Stats.</p>
+
+    <h3 style="color:var(--primary);margin:0 0 6px;">Stats (Analytics)</h3>
+    <p style="margin-bottom:6px;">Toggle to the <strong>Stats</strong> view using the switch in the header. Stats are aggregated across all valid (non-excluded) sessions and organized into four tabs:</p>
+    <ul style="margin:0 0 14px;padding-left:20px;">
+      <li><strong>Overview</strong> &mdash; session totals, category strengths &amp; weaknesses, top performers</li>
+      <li><strong>Players</strong> &mdash; ranked list of all players; click any row to expand their full breakdown including efficiency metrics</li>
+      <li><strong>Categories</strong> &mdash; answer counts and point totals by subject area</li>
+      <li><strong>Team Compositions</strong> &mdash; per-team stats for every session, titled by member names; click to expand efficiency data</li>
+    </ul>
+
+    <h3 style="color:var(--primary);margin:0 0 6px;">Player Efficiency Metrics</h3>
+    <p style="margin-bottom:14px;">Expand any player in the Players tab to see four metrics: <strong>Potential Points</strong> (total points if all toss-up wins earned bonuses), <strong>Production Rate</strong> (potential points per question heard), <strong>Buzz Volume</strong> (% of questions the player buzzed on), and <strong>Aggression</strong> (powers-to-negs ratio — 100% means powers with zero negs).</p>
+
+    <h3 style="color:var(--primary);margin:0 0 6px;">Rankings &amp; Tiebreakers</h3>
+    <p style="margin-bottom:14px;">Players are ranked by total points. Ties are broken first by most <strong>Powers</strong>, then by fewest <strong>Negs</strong>.</p>
+
+    <h3 style="color:var(--primary);margin:0 0 6px;">Export &amp; Import</h3>
+    <p style="margin-bottom:14px;">Export to <strong>CSV</strong> for use in spreadsheets, or <strong>JSON</strong> to back up and re-import a full session. Both options are in the Data section of the sidebar.</p>
+
+    <h3 style="color:var(--primary);margin:0 0 6px;">Visual Settings</h3>
+    <p>Toggle <strong>Dark Mode</strong>, change the <strong>Accent Color</strong>, or hide scrollbars in the Visual Settings section. These preferences are saved to your device only and do not sync.</p>
+
+  </div>
+</div>
+```
+
+  </div>
+
+  <!-- Sessions Modal -->
+
+  <div id="sessionsModal" class="qb-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Load Session</h2>
+        <button class="close-modal" onclick="closeSessionsModal()">&#215;</button>
+      </div>
+      <div id="sessionsList" class="sessions-list"></div>
+    </div>
+  </div>
+
+  <!-- Player Detail Modal -->
+
+  <div id="playerDetailModal" class="qb-modal">
+    <div class="modal-content" style="max-width:620px;">
+      <div class="modal-header">
+        <h2 id="pdModalTitle">Player Details</h2>
+        <button class="close-modal" onclick="closePlayerDetailModal()">&#215;</button>
+      </div>
+      <div id="pdModalBody"></div>
+    </div>
+  </div>
+
+  <script src="local-settings.js" onerror="void 0"></script>
+
+  <script>
+    // ── Firebase (initialized after DOM ready to ensure SDK scripts have loaded) ──
+    var db, sessionsRef, globalPlayersRef, versionRef;
+    function initFirebase() {
+      if (typeof firebase === 'undefined') { setTimeout(initFirebase, 50); return; }
+      const firebaseConfig = {
+      apiKey: "AIzaSyCRkK3IpRXeQC9JH73iC0tC-mjq5nulaAo",
+      authDomain: "hse-quiz-bowl.firebaseapp.com",
+      databaseURL: "https://hse-quiz-bowl-default-rtdb.firebaseio.com",
+      projectId: "hse-quiz-bowl",
+      storageBucket: "hse-quiz-bowl.firebasestorage.app",
+      messagingSenderId: "676670239956",
+      appId: "1:676670239956:web:9c569fc74ecf21de25f741"
+    };
+    try { firebase.app(); } catch(e) { firebase.initializeApp(firebaseConfig); }
+      db = firebase.database();
+      sessionsRef = db.ref('sessions');
+      globalPlayersRef = db.ref('globalPlayers');
+      versionRef = db.ref('appVersion');
+      startApp();
+    }
+
+    // ── startApp: called once Firebase is ready ──
+    function startApp() {
+      versionRef.on('value', snap => {
+        const v = snap.val(); if (!v) return;
+        const badge = document.getElementById('versionBadge');
+        const input = document.getElementById('versionInput');
+        if (badge) badge.textContent = v;
+        if (input && document.activeElement !== input) input.value = v;
+      });
+      restoreVisualSettings();
+      updateHeaderHeight();
+      window.addEventListener('resize',()=>{updateHeaderHeight();applySidebarState();updateFadeMasks();});
+      document.getElementById('qbScroll')?.addEventListener('scroll',updateFadeMasks);
+      document.getElementById('analyticsScroll')?.addEventListener('scroll',updateFadeMasks);
+      document.querySelector('.sidebar-sections')?.addEventListener('scroll',updateFadeMasks);
+      loadAllData();
+      setupGlobalPlayers();
+      setInterval(()=>{saveAllData();updateAutoSave();},5000);
+      setupSectionToggle();
+      applySidebarState();
+      const savedSection=localStorage.getItem('activeSidebarSection')||'sec-session';
+      showSection(savedSection);
+      document.getElementById('sidebarOpenBtn').onclick=toggleSidebar;
+      document.getElementById('sidebarOpenBtnMobile').onclick=toggleSidebar;
+      document.addEventListener('click',e=>{
+        const w=document.getElementById('sidebarJumpWrapper');
+        if(w&&!w.contains(e.target)) w.classList.remove('open');
+        ['helpModal','sessionsModal','playerDetailModal'].forEach(id=>{const m=document.getElementById(id);if(m&&e.target===m) m.classList.remove('open');});
+      });
+    }
+    function saveVersion() {
+      const v = (document.getElementById('versionInput').value||'').trim();
+      if (!v) { alert('Enter a version number.'); return; }
+      versionRef.set(v).then(() => alert('Version updated to ' + v)).catch(e => showFirebaseError(e.message));
+    }
+
+    // ── Helpers ──
+    const clientId = (() => {
+      try {
+        const k='qb_clientId', e=localStorage.getItem(k); if (e) return e;
+        const f=crypto?.randomUUID?.()??Date.now().toString(36)+Math.random().toString(36).slice(2);
+        localStorage.setItem(k,f); return f;
+      } catch { return Date.now().toString(36)+Math.random().toString(36).slice(2); }
+    })();
+
+    const writeInFlight = new Set();
+    function withWriteLock(id,fn) { writeInFlight.add(id); try{return fn();}finally{setTimeout(()=>writeInFlight.delete(id),300);} }
+    function updateSessionAtomic(id,mutator) {
+      writeInFlight.add(id);
+      return sessionsRef.child(id).transaction(cur=>{
+        if(!cur) return cur;
+        const n=normalizeSession(cur); mutator(n);
+        n.lastUpdated=new Date().toISOString(); n.updatedBy=clientId; return n;
+      },err=>{setTimeout(()=>writeInFlight.delete(id),300); if(err) showFirebaseError('Save failed: '+err.message);},false);
+    }
+    function setSessionNonAtomic(id,value) {
+      writeInFlight.add(id);
+      return sessionsRef.child(id).set(value).finally(()=>setTimeout(()=>writeInFlight.delete(id),300));
+    }
+    function toArray(val) {
+      if(!val) return []; if(Array.isArray(val)) return val;
+      return Object.keys(val).sort((a,b)=>+a-+b).map(k=>val[k]);
+    }
+    function normalizeSession(s) {
+      if(!s) return s;
+      s.teams=toArray(s.teams); s.answerLog=toArray(s.answerLog);
+      s.answers=toArray(s.answers); s.categories=toArray(s.categories);
+      if(s.players) Object.values(s.players).forEach(p=>{p.answers=toArray(p.answers);});
+      s.teams.forEach(t=>{t.playerMembers=toArray(t.playerMembers);});
+      if(typeof s.tHeard !== 'number') s.tHeard = 0;
+      return s;
+    }
+
+    const CURRENT_SESSION_KEY='currentSession';
+    const DEFAULT_CATEGORIES=['Art','Current Events','Geography','History','Literature','Math','Misc','Mythology','Music','Pop Culture','Religion','Science','Soc. Stu.','Sports'];
+    const state={sessions:{},currentSessionId:null,selectedPlayer:null,selectedPointType:null,selectedCategory:null,categories:[]};
+    let firebaseUnsubscribe=null, playersUnsubscribe=null;
+    var analyticsOpen=false, currentAnalyticsTab='overview';
+    var expandedPlayerCards = new Set(); // tracks which player cards are open
+    var expandedTeamCards = new Set();   // tracks which team composition session cards are open
+
+    // ── Indicators ──
+    function setIndicators(text,color,title) {
+      ['autosaveStatus','autosaveStatusMobile'].forEach(id=>{
+        const el=document.getElementById(id); if(!el) return;
+        el.textContent=text;
+        if(color) el.style.color=color; else el.style.removeProperty('color');
+        if(title) el.title=title; else el.removeAttribute('title');
+      });
+    }
+    const setLoadingState  = ()=>setIndicators('Connecting...','rgba(255,255,255,0.7)');
+    const updateAutoSave   = ()=>setIndicators('Saved',null);
+    const showFirebaseError = msg=>setIndicators('Offline','#ffcc00',msg);
+    const getCurrentSession = ()=>state.sessions[state.currentSessionId]||null;
+
+    // ── Fade masks ──
+    function updateFadeMasks() {
+      const FADE=28;
+      ['.qb-scroll','.sidebar-sections','.log-container','.analytics-scroll'].forEach(sel=>{
+        const el=document.querySelector(sel); if(!el) return;
+        const up=el.scrollTop>2, dn=el.scrollHeight>el.scrollTop+el.clientHeight+2;
+        let mask='none';
+        if(up&&dn) mask=`linear-gradient(to bottom,transparent 0,black ${FADE}px,black calc(100% - ${FADE}px),transparent 100%)`;
+        else if(up) mask=`linear-gradient(to bottom,transparent 0,black ${FADE}px,black 100%)`;
+        else if(dn) mask=`linear-gradient(to bottom,black 0%,black calc(100% - ${FADE}px),transparent 100%)`;
+        el.style.webkitMaskImage=mask; el.style.maskImage=mask;
+      });
+    }
+    function updateHeaderHeight() {
+      const h=document.getElementById('qbHeader');
+      if(h) document.documentElement.style.setProperty('--header-height',h.offsetHeight+'px');
+    }
+
+    // ── Global players ──
+    function setupGlobalPlayers() {
+      if(playersUnsubscribe) playersUnsubscribe();
+      playersUnsubscribe=globalPlayersRef.on('value',snap=>{
+        if(!state.currentSessionId) return;
+        applyGlobalPlayersToSession(snap.val()||{});
+      });
+    }
+    function applyGlobalPlayersToSession(data) {
+      const s=getCurrentSession(); if(!s) return;
+      let changed=false;
+      Object.keys(data).forEach(name=>{
+        if(!s.players[name]){s.players[name]={name,points:0,answers:[]};changed=true;}
+      });
+      if(changed){
+        sessionsRef.child(state.currentSessionId).set(s).catch(e=>showFirebaseError(e.message));
+        renderPlayerPool(); renderPlayerButtons(); renderTeams();
+      }
+    }
+    function saveGlobalPlayers(names) {
+      const updates={};
+      names.forEach(n=>{if(n) updates[n]=true;});
+      if(Object.keys(updates).length) globalPlayersRef.update(updates).catch(e=>showFirebaseError(e.message));
+    }
+    function removeGlobalPlayer(name) { globalPlayersRef.child(name).remove().catch(e=>showFirebaseError(e.message)); }
+
+    // ── Data loading ──
+    function loadAllData() {
+      setLoadingState();
+      if(firebaseUnsubscribe) firebaseUnsubscribe();
+      firebaseUnsubscribe=sessionsRef.on('value',snap=>{
+        const incoming=snap.val()||{};
+        if(state.currentSessionId&&writeInFlight.has(state.currentSessionId)){
+          Object.keys(incoming).forEach(id=>{if(id!==state.currentSessionId) state.sessions[id]=normalizeSession(incoming[id]);});
+        } else {
+          state.sessions=incoming;
+          Object.keys(state.sessions).forEach(id=>{state.sessions[id]=normalizeSession(state.sessions[id]);});
+        }
+        const savedId=localStorage.getItem(CURRENT_SESSION_KEY);
+        if(savedId&&state.sessions[savedId]) state.currentSessionId=savedId;
+        else if(Object.keys(state.sessions).length){
+          state.currentSessionId=Object.keys(state.sessions)[0];
+          localStorage.setItem(CURRENT_SESSION_KEY,state.currentSessionId);
+        } else { updateAutoSave(); createNewSession(); return; }
+        loadSessionData();
+        globalPlayersRef.once('value').then(s=>applyGlobalPlayersToSession(s.val()||{}));
+        updateAutoSave(); renderAll();
+        if(document.getElementById('sessionsModal')?.classList.contains('open')) renderSessionsList();
+      },err=>showFirebaseError('Connection failed: '+err.message));
+    }
+
+    function loadSessionData() {
+      const s=getCurrentSession(); if(!s){createNewSession();return;}
+      if(!s.categories?.length) s.categories=[...DEFAULT_CATEGORIES];
+      s.categories.sort((a,b)=>a.localeCompare(b));
+      state.categories=s.categories;
+      const ta=document.getElementById('categoriesInput');
+      if(ta) ta.value=state.categories.join(', ');
+    }
+
+    function saveAllData() {
+      const s=getCurrentSession();
+      if(s){s.categories=state.categories;s.lastUpdated=new Date().toISOString();s.updatedBy=clientId;}
+      localStorage.setItem(CURRENT_SESSION_KEY,state.currentSessionId);
+      if(s) setSessionNonAtomic(state.currentSessionId,s).catch(e=>showFirebaseError(e.message));
+    }
+
+    // ── Sessions ──
+    function createNewSession() {
+      const id=Date.now().toString();
+      const nameInput=document.getElementById('newSessionName');
+      const name=nameInput?.value.trim()||('Session '+new Date().toLocaleDateString());
+      const session={id,name,created:new Date().toISOString(),lastUpdated:new Date().toISOString(),updatedBy:clientId,players:{},teams:[],categories:[...DEFAULT_CATEGORIES],answers:[],answerLog:[]};
+      state.sessions[id]=session; state.currentSessionId=id; loadSessionData();
+      globalPlayersRef.once('value').then(snap=>{
+        Object.keys(snap.val()||{}).forEach(n=>{if(!session.players[n]) session.players[n]={name:n,points:0,answers:[]};});
+        setSessionNonAtomic(id,session).catch(e=>showFirebaseError(e.message));
+        localStorage.setItem(CURRENT_SESSION_KEY,id);
+        if(nameInput) nameInput.value=''; renderAll();
+      }).catch(()=>{
+        setSessionNonAtomic(id,session).catch(e=>showFirebaseError(e.message));
+        localStorage.setItem(CURRENT_SESSION_KEY,id);
+        if(nameInput) nameInput.value=''; renderAll();
+      });
+    }
+
+    function openSessionsModal()  { document.getElementById('sessionsModal').classList.add('open'); renderSessionsList(); }
+    function closeSessionsModal() { document.getElementById('sessionsModal').classList.remove('open'); }
+    function openHelpModal()      { document.getElementById('helpModal').classList.add('open'); }
+    function closeHelpModal()     { document.getElementById('helpModal').classList.remove('open'); }
+
+    function renderSessionsList() {
+      const list=document.getElementById('sessionsList');
+      const sessions=Object.values(state.sessions).sort((a,b)=>new Date(b.created)-new Date(a.created));
+      if(!sessions.length){list.innerHTML='<p style="color:var(--text2)">No sessions found.</p>';return;}
+      list.innerHTML=sessions.map(s=>{
+        const isInvalid = s.invalid === true;
+        const isCurrent = s.id === state.currentSessionId;
+        return `
+        <div class="session-card" style="${isInvalid ? 'opacity:.6;border-color:var(--danger);' : ''}">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+            <div>
+              <div class="session-card-title" style="${isInvalid ? 'text-decoration:line-through;color:var(--text2);' : ''}">${s.name}${isCurrent ? ' <span style="font-size:.7em;background:var(--primary);color:#fff;padding:2px 7px;border-radius:8px;font-weight:700;vertical-align:middle;">Active</span>' : ''}</div>
+              <div class="session-card-details">
+                <div>Created: ${new Date(s.created).toLocaleString()}</div>
+                <div>${(s.answerLog||[]).length} answers &bull; ${s.tHeard||0} questions heard</div>
+              </div>
+              ${isInvalid ? '<div style="font-size:.78em;color:var(--danger);font-weight:700;margin-top:4px;">! Excluded from analytics</div>' : ''}
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0;padding-top:2px;">
+              <span style="font-size:.7em;font-weight:700;color:var(--text2);">Analytics</span>
+              <div onclick="toggleSessionInvalid('${s.id}')" style="width:38px;height:20px;background:${isInvalid ? 'var(--danger)' : 'var(--success)'};border-radius:10px;cursor:pointer;position:relative;transition:background .2s;" title="${isInvalid ? 'Session excluded — click to include' : 'Session included — click to exclude'}">
+                <div style="width:14px;height:14px;background:#fff;border-radius:50%;position:absolute;top:3px;${isInvalid ? 'left:3px' : 'left:21px'};transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3);"></div>
+              </div>
+              <span style="font-size:.68em;font-weight:700;color:${isInvalid ? 'var(--danger)' : 'var(--success)'};">${isInvalid ? 'OFF' : 'ON'}</span>
+            </div>
+          </div>
+          <div class="session-card-actions" style="margin-top:10px;">
+            <button class="button" onclick="loadSession('${s.id}')">Load</button>
+            <button class="button button-danger" onclick="deleteSession('${s.id}')">Delete</button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function toggleSessionInvalid(id) {
+      const s = state.sessions[id]; if (!s) return;
+      const nowInvalid = !(s.invalid === true);
+      const apply = sess => { sess.invalid = nowInvalid; };
+      updateSessionAtomic(id, apply);
+      withWriteLock(id, () => { const sess = state.sessions[id]; if (sess) apply(sess); });
+      renderSessionsList();
+      if (analyticsOpen) renderAnalytics();
+    }
+
+    function loadSession(id) {
+      state.currentSessionId=id; loadSessionData();
+      globalPlayersRef.once('value').then(s=>applyGlobalPlayersToSession(s.val()||{}));
+      saveAllData(); renderAll(); closeSessionsModal();
+    }
+
+    function deleteSession(id) {
+      if(!confirm('Delete session "'+state.sessions[id].name+'"?')) return;
+      sessionsRef.child(id).remove().catch(e=>showFirebaseError(e.message));
+      delete state.sessions[id];
+      if(state.currentSessionId===id){
+        state.currentSessionId=Object.keys(state.sessions)[0]||null;
+        if(!state.currentSessionId) createNewSession();
+        else{localStorage.setItem(CURRENT_SESSION_KEY,state.currentSessionId);loadSessionData();}
+      }
+      renderSessionsList(); renderAll();
+    }
+
+    // ── Player Detail Modal ──
+    function openPlayerDetailModal(playerName) {
+      // Aggregate this player's data across valid (non-excluded) sessions only
+      let totalPoints = 0;
+      const answers = [];
+      const sessionNames = [];
+      let playerTHeard = 0;
+      validSessions().forEach(sess => {
+        const p = (sess.players || {})[playerName];
+        if (!p) return;
+        const a = toArray(p.answers);
+        if (!a.length) return;
+        totalPoints += (p.points || 0);
+        answers.push(...a);
+        sessionNames.push(sess.name);
+        playerTHeard += (sess.tHeard || 0);
+      });
+      if (!answers.length) { alert('No data found for ' + playerName); return; }
+
+      const player = { name: playerName, points: totalPoints };
+      const sessionCount = sessionNames.length;
+      const sessionLabel = sessionCount > 1 ? `${sessionCount} sessions` : sessionNames[0] || 'No session';
+
+      // If no tHeard tracked, fall back to estimate
+      if (playerTHeard === 0) playerTHeard = Math.max(20 * Math.max(sessionCount, 1), answers.filter(a=>['Toss-up','Power','Neg'].includes(a.pointType)).length);
+
+      const catMap = {};
+      answers.forEach(a => {
+        const cat = a.category || '—';
+        if (!catMap[cat]) catMap[cat] = { pts: 0, correct: 0, neg: 0, tossup: 0, bonus: 0, power: 0 };
+        catMap[cat].pts += (a.points || 0);
+        if (a.pointType === 'Neg')      catMap[cat].neg++;
+        else if (a.pointType === 'Power')  { catMap[cat].power++; catMap[cat].correct++; }
+        else if (a.pointType === 'Toss-up'){ catMap[cat].tossup++; catMap[cat].correct++; }
+        else if (a.pointType === 'Bonus')  { catMap[cat].bonus++; catMap[cat].correct++; }
+      });
+      const catArr = Object.entries(catMap)
+        .map(([name, d]) => ({ name, ...d, total: d.correct + d.neg }))
+        .sort((a, b) => b.pts !== a.pts ? b.pts - a.pts : b.correct - a.correct);
+
+      const maxPts = Math.max(...catArr.map(c => Math.abs(c.pts)), 1);
+
+      const powers     = answers.filter(a => a.pointType === 'Power').length;
+      const tossups    = answers.filter(a => a.pointType === 'Toss-up').length;
+      const bonuses    = answers.filter(a => a.pointType === 'Bonus').length;
+      const negs       = answers.filter(a => a.pointType === 'Neg').length;
+      const correct    = powers + tossups + bonuses;
+      const total      = answers.length;
+      const acc        = total ? Math.round((correct / total) * 100) : 0;
+      const ppa        = total ? (player.points / total).toFixed(1) : '0.0';
+
+      // ── Player efficiency equations ──
+      // u_points = 15p + 10t + 30t − 5n  (15p + 40t - 5n)
+      const uPoints = 15 * powers + 10 * tossups + 30 * tossups - 5 * negs;
+      // u_rate = u_points / t_heard
+      const uRate = playerTHeard > 0 ? uPoints / playerTHeard : null;
+      // v_buzzed = 100 * (p + t + n) / t_heard
+      const vBuzzed = playerTHeard > 0 ? (100 * (powers + tossups + negs)) / playerTHeard : null;
+      // e_aggression = 100 * p / n — if negs=0 and powers>0: "Perfect" (∞); if both 0: N/A
+      const eAggressionValue = negs > 0 ? (100 * powers) / negs : null;
+      const eAggressionPerfect = negs === 0 && powers > 0;
+
+      function playerMetricBar(value, label, isPerfect, isRatio) {
+        if (value === null && !isPerfect) {
+          return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
+            <span style="font-size:.82em;font-weight:700;color:var(--text2);">${label}</span>
+            <span style="font-size:.85em;color:var(--text3);font-style:italic;">N/A</span>
+          </div>`;
+        }
+        if (isPerfect) {
+          return `<div style="padding:8px 0;border-bottom:1px solid var(--border);">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;">
+              <span style="font-size:.82em;font-weight:700;color:var(--text2);">${label}</span>
+              <span style="font-size:.9em;font-weight:700;color:var(--success);">100.0%</span>
+            </div>
+            <div style="height:7px;background:var(--border);border-radius:8px;overflow:hidden;">
+              <div style="height:100%;width:100%;background:var(--success);border-radius:8px;"></div>
+            </div>
+          </div>`;
+        }
+        if (isRatio) {
+          const color = value >= 10 ? 'var(--success)' : value >= 5 ? '#f39c12' : 'var(--danger)';
+          return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
+            <span style="font-size:.82em;font-weight:700;color:var(--text2);">${label}</span>
+            <span style="font-size:.95em;font-weight:700;color:${color};">${value.toFixed(2)}</span>
+          </div>`;
+        }
+        const pct = Math.min(Math.max(value, 0), 100);
+        const barColor = pct >= 66 ? 'var(--success)' : pct >= 33 ? '#f39c12' : 'var(--danger)';
+        return `<div style="padding:8px 0;border-bottom:1px solid var(--border);">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;">
+            <span style="font-size:.82em;font-weight:700;color:var(--text2);">${label}</span>
+            <span style="font-size:.9em;font-weight:700;color:${barColor};">${value.toFixed(1)}%</span>
+          </div>
+          <div style="height:7px;background:var(--border);border-radius:8px;overflow:hidden;">
+            <div style="height:100%;width:${pct}%;background:${barColor};border-radius:8px;"></div>
+          </div>
+        </div>`;
+      }
+
+      function rankBadge(i) {
+        if (i === 0) return '<span class="pd-rank-badge gold">1</span>';
+        if (i === 1) return '<span class="pd-rank-badge silver">2</span>';
+        if (i === 2) return '<span class="pd-rank-badge bronze">3</span>';
+        return `<span class="pd-rank-badge">${i+1}</span>`;
+      }
+
+      let catRows = '';
+      if (catArr.length === 0) {
+        catRows = '<tr><td colspan="6" style="color:var(--text2);font-style:italic;padding:12px 10px;">No category data yet.</td></tr>';
+      } else {
+        catArr.forEach((c, i) => {
+          const barWidth = Math.max(2, (Math.abs(c.pts) / maxPts) * 100);
+          const isNeg = c.pts < 0;
+          catRows += `
+            <tr>
+              <td>${rankBadge(i)}</td>
+              <td style="font-weight:600;">${c.name}</td>
+              <td class="right" style="color:${isNeg ? 'var(--danger)' : 'var(--primary)'};font-weight:700;">${c.pts > 0 ? '+' : ''}${c.pts}</td>
+              <td class="right">${c.total}</td>
+              <td class="right" style="color:var(--success);font-weight:600;">${c.correct}</td>
+              <td class="right" style="color:var(--danger);font-weight:600;">${c.neg || '—'}</td>
+            </tr>
+            <tr>
+              <td colspan="6" style="padding:0 10px 10px;">
+                <div style="background:var(--sec-bg);border-radius:6px;height:6px;overflow:hidden;border:1px solid var(--border);">
+                  <div class="pd-bar-mini ${isNeg ? 'neg-bar' : ''}" style="width:${barWidth}%;"></div>
+                </div>
+              </td>
+            </tr>`;
+        });
+      }
+
+      const tHeardLabel = playerTHeard > 0 ? `${playerTHeard} questions heard` : 'no questions-heard data';
+
+      document.getElementById('pdModalTitle').textContent = playerName;
+      document.getElementById('pdModalBody').innerHTML = `
+        <div class="pd-hero">
+          <div>
+            <div class="pd-hero-name">${playerName}</div>
+            <div class="pd-hero-sub">${sessionLabel} &bull; ${total} answers &bull; ${acc}% accuracy &bull; ${ppa} pts/answer</div>
+          </div>
+          <div class="pd-hero-pts">${player.points} pts</div>
+        </div>
+        <div class="pd-section-title">Answer Breakdown</div>
+        <div class="pd-stat-chips">
+          <span class="pd-chip power">${powers} Power${powers !== 1 ? 's' : ''}</span>
+          <span class="pd-chip tossup">${tossups} Toss-up${tossups !== 1 ? 's' : ''}</span>
+          <span class="pd-chip">&#43; ${bonuses} Bonus${bonuses !== 1 ? 'es' : ''}</span>
+          <span class="pd-chip neg">&#8722; ${negs} Neg${negs !== 1 ? 's' : ''}</span>
+          <span class="pd-chip" style="background:rgba(102,126,234,.1);color:var(--primary);">${tHeardLabel}</span>
+        </div>
+        <div class="pd-section-title">Performance Metrics</div>
+        <div style="background:var(--sec-bg);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:var(--sp);">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
+            <span style="font-size:.82em;font-weight:700;color:var(--text2);">Potential Points</span>
+            <span style="font-size:1.1em;font-weight:700;color:var(--primary);">${uPoints}</span>
+          </div>
+          ${playerMetricBar(uRate, 'Point Production Rate', false, true)}
+          ${playerMetricBar(vBuzzed, 'Buzz Volume', false, false)}
+          ${playerMetricBar(eAggressionValue, 'Aggression Effectiveness', eAggressionPerfect, false)}
+        </div>
+        <div class="pd-section-title">Category Rankings &mdash; All ${catArr.length} Categor${catArr.length !== 1 ? 'ies' : 'y'}</div>
+        <div style="overflow-x:auto;border-radius:8px;border:1px solid var(--border);">
+          <table class="pd-cat-table">
+            <thead>
+              <tr>
+                <th style="width:42px;">#</th>
+                <th>Category</th>
+                <th class="right">Points</th>
+                <th class="right">Answers</th>
+                <th class="right" style="color:var(--success);">Correct</th>
+                <th class="right" style="color:var(--danger);">Negs</th>
+              </tr>
+            </thead>
+            <tbody>${catRows}</tbody>
+          </table>
+        </div>
+      `;
+
+      document.getElementById('playerDetailModal').classList.add('open');
+    }
+
+    function closePlayerDetailModal() {
+      document.getElementById('playerDetailModal').classList.remove('open');
+    }
+    // ── Analytics ──
+    function setToggleSwitchState(on) {
+      // Desktop knob
+      const knob = document.getElementById('viewToggleKnob');
+      const sw   = document.getElementById('viewToggleSwitch');
+      const tl   = document.getElementById('toggleLabelTracker');
+      const al   = document.getElementById('toggleLabelAnalytics');
+      if (knob) knob.style.left = on ? '24px' : '2px';
+      if (sw)   sw.style.background = on ? 'rgba(255,255,255,.5)' : 'rgba(255,255,255,.25)';
+      if (tl)   tl.style.color = on ? 'rgba(255,255,255,.55)' : 'rgba(255,255,255,.95)';
+      if (al)   al.style.color = on ? 'rgba(255,255,255,.95)' : 'rgba(255,255,255,.55)';
+      // Mobile
+      const mknob = document.getElementById('viewToggleKnobMobile');
+      const mlbl  = document.getElementById('toggleLabelMobile');
+      if (mknob) mknob.style.left = on ? '20px' : '2px';
+      if (mlbl)  mlbl.textContent = on ? 'Stats' : 'Tracker';
+    }
+
+    function toggleAnalytics() {
+      analyticsOpen=!analyticsOpen;
+      const tv=document.getElementById('trackerView');
+      const av=document.getElementById('analyticsView');
+      if(analyticsOpen){
+        tv.style.display='none'; av.style.display='flex';
+        renderAnalytics();
+      } else {
+        tv.style.display='flex'; av.style.display='none';
+      }
+      setToggleSwitchState(analyticsOpen);
+      setTimeout(updateFadeMasks,50);
+    }
+
+    function switchAnalyticsTab(tab, el) {
+      currentAnalyticsTab=tab;
+      document.querySelectorAll('.analytics-tab').forEach(b=>b.classList.remove('active'));
+      el.classList.add('active');
+      document.querySelectorAll('.analytics-panel').forEach(p=>p.classList.remove('active'));
+      document.getElementById('an-'+tab)?.classList.add('active');
+      renderAnalytics();
+    }
+
+    // ── Global aggregation helpers ──
+    function validSessions() {
+      return Object.values(state.sessions).filter(s => s.invalid !== true);
+    }
+
+    function buildGlobalAnswerLog() {
+      const all = [];
+      validSessions().forEach(s => all.push(...toArray(s.answerLog)));
+      return all;
+    }
+
+    function buildGlobalTHeard() {
+      return validSessions().reduce((sum, s) => sum + (s.tHeard || 0), 0);
+    }
+
+    function renderAnalytics() {
+      const s=getCurrentSession(); if(!s) return;
+      const tab=currentAnalyticsTab;
+      // All tabs use global data
+      const globalPs = buildUniversalPlayerStats();
+      const globalLog = buildGlobalAnswerLog();
+      const globalTHeard = buildGlobalTHeard();
+      const sessionCount = validSessions().length;
+
+      if(tab==='overview') renderAnalyticsOverview(globalLog, globalPs, globalTHeard, sessionCount);
+      else if(tab==='players') renderAnalyticsPlayersUniversal();
+      else if(tab==='categories') renderAnalyticsCategories(globalLog, sessionCount);
+      else if(tab==='teams') renderAnalyticsTeamCompositions();
+    }
+
+    function renderAnalyticsOverview(allAnswers, ps, globalTHeard, sessionCount) {
+      const el=document.getElementById('an-overview'); if(!el) return;
+      const totalPts=ps.reduce((sum,p)=>sum+p.points,0);
+      const totalAns=allAnswers.length;
+      const totalNegs=allAnswers.filter(a=>a.pointType==='Neg').length;
+      const totalPowers=allAnswers.filter(a=>a.pointType==='Power').length;
+      const totalTossups=allAnswers.filter(a=>a.pointType==='Toss-up').length;
+      const totalBonuses=allAnswers.filter(a=>a.pointType==='Bonus').length;
+      const correctAns=totalAns-totalNegs;
+      const accuracy=totalAns>0?((correctAns/totalAns)*100).toFixed(1):'0.0';
+      const ppa=totalAns>0?(totalPts/totalAns).toFixed(1):'0.0';
+      const activePlayers=ps.filter(p=>p.totalAnswers>0);
+
+      const catMap={};
+      allAnswers.forEach(a=>{
+        const cat=a.category||'—'; if(cat==='—') return;
+        if(!catMap[cat]) catMap[cat]={pts:0,count:0,negs:0};
+        catMap[cat].pts+=(a.points||0); catMap[cat].count++;
+        if(a.pointType==='Neg') catMap[cat].negs++;
+      });
+      const catArr=Object.keys(catMap).map(c=>({name:c,pts:catMap[c].pts,count:catMap[c].count,negs:catMap[c].negs}));
+      catArr.sort((a,b)=>b.pts-a.pts);
+      const strengths=catArr.slice(0,5);
+      const weaknesses=catArr.slice().reverse().slice(0,5);
+
+      let html=`<div style="background:rgba(102,126,234,.08);border:1px solid var(--primary);border-radius:8px;padding:10px 14px;margin-bottom:var(--sp);font-size:.85em;color:var(--primary);font-weight:600;">
+        Aggregated across <strong>all ${sessionCount} session${sessionCount!==1?'s':''}</strong> &mdash; ${globalTHeard} total toss-ups heard
+      </div>`;
+      html+='<div class="an-grid" style="margin-bottom:var(--sp);">';
+      [['Active Players',activePlayers.length],['Total Answers',totalAns],['Total Points',totalPts],['Accuracy',accuracy+'%'],['Powers',totalPowers],['Negs',totalNegs],['t_heard',globalTHeard]].forEach(b=>{
+        html+='<div class="an-stat-box"><div class="an-val">'+b[1]+'</div><div class="an-lbl">'+b[0]+'</div></div>';
+      });
+      html+='</div>';
+
+      html+='<div style="background:var(--card);border:2px solid var(--border);border-radius:10px;padding:18px;margin-bottom:var(--sp);box-shadow:var(--shadow-sm);">';
+      html+='<h3 style="margin:0 0 12px;font-size:1.1em;color:var(--primary);">HSE Team Overview</h3>';
+      [['Powers',totalPowers],['Toss-ups',totalTossups],['Bonuses',totalBonuses],['Negs',totalNegs],['Toss-ups Heard',globalTHeard],['Points Per Answer',ppa],['Accuracy',accuracy+'%']].forEach(r=>{
+        html+='<div class="stat-row"><span class="stat-label">'+r[0]+'</span><span class="stat-value">'+r[1]+'</span></div>';
+      });
+      html+='</div>';
+
+      if(strengths.length){
+        html+='<div style="background:var(--card);border:2px solid var(--border);border-radius:10px;padding:18px;margin-bottom:var(--sp);box-shadow:var(--shadow-sm);">';
+        html+='<h3 style="margin:0 0 12px;font-size:1.1em;color:var(--success);">Category Strengths</h3>';
+        strengths.forEach(c=>{html+='<div class="stat-row"><span class="stat-label">'+c.name+'</span><span class="stat-value" style="color:var(--success)">'+c.pts+' pts</span></div>';});
+        html+='</div>';
+      }
+      if(weaknesses.length){
+        html+='<div style="background:var(--card);border:2px solid var(--border);border-radius:10px;padding:18px;margin-bottom:var(--sp);box-shadow:var(--shadow-sm);">';
+        html+='<h3 style="margin:0 0 12px;font-size:1.1em;color:var(--danger);">Category Weaknesses</h3>';
+        weaknesses.forEach(c=>{html+='<div class="stat-row"><span class="stat-label">'+c.name+'</span><span class="stat-value" style="color:var(--danger)">'+c.pts+' pts</span></div>';});
+        html+='</div>';
+      }
+      if(activePlayers.length){
+        html+='<div style="background:var(--card);border:2px solid var(--border);border-radius:10px;padding:18px;margin-bottom:var(--sp);box-shadow:var(--shadow-sm);">';
+        html+='<h3 style="margin:0 0 12px;font-size:1.1em;color:var(--primary);">Top Performers</h3>';
+        activePlayers.slice(0,5).forEach(function(p,i){
+          var pw=p.powers, ng=p.negs;
+          html+='<div class="stat-row"><span class="stat-label"><strong style="color:var(--primary);min-width:28px;display:inline-block;">#'+(i+1)+'</strong> '+p.name+'</span>';
+          html+='<span style="display:flex;gap:8px;align-items:center;"><span class="stat-value">'+p.points+' pts</span>';
+          if(pw>0) html+='<span style="font-size:.75em;background:var(--success);color:white;padding:2px 8px;border-radius:10px;font-weight:700;">+'+pw+' Power</span>';
+          if(ng>0) html+='<span style="font-size:.75em;background:var(--danger);color:white;padding:2px 8px;border-radius:10px;font-weight:700;">-'+ng+' Neg</span>';
+          html+='</span></div>';
+        });
+        html+='</div>';
+      }
+      if(!totalAns) html+='<p style="color:var(--text2)">No answers recorded yet. Start tracking to see your team overview!</p>';
+      el.innerHTML=html;
+    }
+
+    // ── Universal Players (cross-session) ──
+    function buildUniversalPlayerStats() {
+      const playerMap = {};
+      validSessions().forEach(session => {
+        const sessionTHeard = session.tHeard || 0;
+        Object.values(session.players || {}).forEach(p => {
+          const answers = toArray(p.answers);
+          if (!answers.length) return;
+          if (!playerMap[p.name]) playerMap[p.name] = {
+            name: p.name, points: 0, totalAnswers: 0,
+            tossupsCorrect: 0, bonusPoints: 0, negs: 0, powers: 0,
+            sessions: 0, catMap: {}, tHeard: 0
+          };
+          const u = playerMap[p.name];
+          u.points += (p.points || 0);
+          u.totalAnswers += answers.length;
+          u.tossupsCorrect += answers.filter(a => a.pointType === 'Toss-up').length;
+          u.bonusPoints += answers.filter(a => a.pointType === 'Bonus').length * 10;
+          u.negs += answers.filter(a => a.pointType === 'Neg').length;
+          u.powers += answers.filter(a => a.pointType === 'Power').length;
+          u.tHeard += sessionTHeard;
+          u.sessions++;
+          answers.forEach(a => {
+            if (a.category && a.category !== '—') u.catMap[a.category] = (u.catMap[a.category] || 0) + 1;
+          });
+        });
+      });
+      return Object.values(playerMap)
+        .sort((a, b) => b.points !== a.points ? b.points - a.points : b.powers !== a.powers ? b.powers - a.powers : a.negs - b.negs);
+    }
+
+    function renderAnalyticsPlayersUniversal() {
+      const el = document.getElementById('an-players'); if (!el) return;
+      const allPlayers = buildUniversalPlayerStats();
+      const active = allPlayers.filter(p => p.totalAnswers > 0);
+      const validCount = validSessions().length;
+
+      let html = `<div style="background:rgba(102,126,234,.08);border:1px solid var(--primary);border-radius:8px;padding:10px 14px;margin-bottom:var(--sp);font-size:.85em;color:var(--primary);font-weight:600;">
+        Aggregated across <strong>all ${validCount} valid session${validCount !== 1 ? 's' : ''}</strong>
+      </div>`;
+
+      if (!active.length) { el.innerHTML = html + '<p style="color:var(--text2)">No player data yet.</p>'; return; }
+
+      let rank = 1;
+      html += active.map((p, i) => {
+        if (i > 0) {
+          const prev = active[i-1];
+          if (prev.points !== p.points || prev.powers !== p.powers || prev.negs !== p.negs) rank = i + 1;
+        }
+        const sfx = ['st','nd','rd'][rank-1] || 'th';
+        const acc = p.totalAnswers ? Math.round(((p.totalAnswers - p.negs) / p.totalAnswers) * 100) : 0;
+        const cardId = 'pcard_' + p.name.replace(/\W/g, '_');
+        const tH = p.tHeard || 0;
+        const bonuses = p.bonusPoints / 10;
+        const uPts = 15 * p.powers + 40 * p.tossupsCorrect - 5 * p.negs;
+        const uRate = tH > 0 ? (uPts / tH).toFixed(2) : null;
+        const vBuzzed = tH > 0 ? ((100 * (p.powers + p.tossupsCorrect + p.negs)) / tH).toFixed(1) : null;
+        const eAggrPerfect = p.negs === 0 && p.powers > 0;
+        const eAggrRaw = p.negs > 0 ? (100 * p.powers) / p.negs : null;
+        const eAggrDisplay = eAggrPerfect ? '100.0%' : eAggrRaw !== null ? eAggrRaw.toFixed(1) + '%' : 'N/A';
+        const eAggrColor = eAggrPerfect ? 'var(--success)' : eAggrRaw !== null ? (eAggrRaw >= 66 ? 'var(--success)' : eAggrRaw >= 33 ? '#f39c12' : 'var(--danger)') : 'var(--text3)';
+        const topCats = Object.entries(p.catMap).sort((a,b) => b[1]-a[1]).slice(0,3);
+
+        return `
+        <div style="background:var(--card);border:2px solid var(--border);border-radius:10px;margin-bottom:10px;overflow:hidden;box-shadow:var(--shadow-sm);">
+          <div onclick="togglePlayerCard('${cardId}')" style="display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;user-select:none;">
+            <div style="font-size:1em;font-weight:700;color:var(--primary);min-width:36px;text-align:center;">${rank}${sfx}</div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-weight:700;font-size:1em;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.name}</div>
+              <div style="font-size:.78em;color:var(--text2);margin-top:2px;">${p.sessions} session${p.sessions!==1?'s':''} &bull; ${p.totalAnswers} answers &bull; ${acc}% acc</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
+              ${p.powers ? `<span style="font-size:.75em;background:var(--success);color:#fff;padding:2px 7px;border-radius:8px;font-weight:700;">+${p.powers} Power</span>` : ''}
+              ${p.negs ? `<span style="font-size:.75em;background:var(--danger);color:#fff;padding:2px 7px;border-radius:8px;font-weight:700;">-${p.negs} Neg</span>` : ''}
+              <span style="font-size:1.05em;font-weight:700;color:var(--primary);">${p.points} pts</span>
+              <span id="${cardId}_arrow" style="font-size:.8em;color:var(--text2);transition:transform .2s;">&#9660;</span>
+            </div>
+          </div>
+          <div id="${cardId}" style="display:none;border-top:1px solid var(--border);">
+            <div style="padding:14px 16px;">
+              <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">
+                <span style="background:var(--sec-bg);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:.8em;font-weight:600;">${p.tossupsCorrect} toss-up${p.tossupsCorrect!==1?'s':''}</span>
+                <span style="background:var(--sec-bg);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:.8em;font-weight:600;">${p.powers} power${p.powers!==1?'s':''}</span>
+                <span style="background:var(--sec-bg);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:.8em;font-weight:600;">${bonuses} bonus${bonuses!==1?'es':''}</span>
+                <span style="background:var(--sec-bg);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:.8em;font-weight:600;color:var(--danger);">${p.negs} neg${p.negs!==1?'s':''}</span>
+                ${tH > 0 ? `<span style="background:var(--sec-bg);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:.8em;font-weight:600;color:var(--primary);">${tH} heard</span>` : ''}
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:${topCats.length?'14px':'0'};">
+                <div style="background:var(--sec-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;">
+                  <div style="font-size:.72em;font-weight:700;color:var(--text2);margin-bottom:4px;">Potential Pts</div>
+                  <div style="font-size:1.15em;font-weight:700;color:var(--primary);">${uPts}</div>
+                </div>
+                <div style="background:var(--sec-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;">
+                  <div style="font-size:.72em;font-weight:700;color:var(--text2);margin-bottom:4px;">Production Rate</div>
+                  <div style="font-size:1.15em;font-weight:700;color:var(--primary);">${uRate !== null ? uRate : 'N/A'}</div>
+                </div>
+                <div style="background:var(--sec-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;">
+                  <div style="font-size:.72em;font-weight:700;color:var(--text2);margin-bottom:4px;">Buzz Volume</div>
+                  <div style="font-size:1.15em;font-weight:700;color:var(--primary);">${vBuzzed !== null ? vBuzzed + '%' : 'N/A'}</div>
+                </div>
+                <div style="background:var(--sec-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;">
+                  <div style="font-size:.72em;font-weight:700;color:var(--text2);margin-bottom:4px;">Aggression</div>
+                  <div style="font-size:1.15em;font-weight:700;color:${eAggrColor};">${eAggrDisplay}</div>
+                </div>
+              </div>
+              ${topCats.length ? `
+              <div style="border-top:1px solid var(--border);padding-top:12px;">
+                <div style="font-size:.75em;font-weight:700;color:var(--text2);margin-bottom:8px;">Top Categories</div>
+                ${topCats.map(([cat, cnt]) => `<div class="stat-row"><span class="stat-label">${cat}</span><span class="stat-value">${cnt}</span></div>`).join('')}
+              </div>` : ''}
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+
+      el.innerHTML = html;
+      // Restore any previously expanded cards
+      expandedPlayerCards.forEach(id => {
+        const panel = document.getElementById(id);
+        const arrow = document.getElementById(id + '_arrow');
+        if (panel) { panel.style.display = 'block'; }
+        if (arrow) { arrow.style.transform = 'rotate(180deg)'; }
+      });
+    }
+
+    function togglePlayerCard(id) {
+      const panel = document.getElementById(id);
+      const arrow = document.getElementById(id + '_arrow');
+      if (!panel) return;
+      const open = panel.style.display === 'none';
+      panel.style.display = open ? 'block' : 'none';
+      if (arrow) arrow.style.transform = open ? 'rotate(180deg)' : '';
+      if (open) expandedPlayerCards.add(id);
+      else expandedPlayerCards.delete(id);
+    }
+
+    // ── Team Compositions (cross-session) ──
+    function calcTeamEfficiency(team, sessionTHeard) {
+      const { tossups, bonuses, powers, negs } = team;
+      // e_bonus = 100 * (10b) / (30t)
+      const eBonus = tossups > 0 ? (100 * (10 * bonuses)) / (30 * tossups) : null;
+      // t_heard: use real session value if available, otherwise fallback to max(20, tossups+negs)
+      const tHeard = sessionTHeard > 0 ? sessionTHeard : Math.max(20, tossups + negs);
+      const numerator = 15 * powers + 10 * tossups + 10 * bonuses - 5 * negs;
+      const eTotal = tHeard > 0 ? (100 * numerator) / (45 * tHeard) : null;
+      return { eBonus, eTotal, tHeard, tHeardIsReal: sessionTHeard > 0 };
+    }
+
+    function effBar(value, color, label, tooltip) {
+      if (value === null) return '';
+      const pct = Math.min(Math.max(value, 0), 100);
+      const display = value.toFixed(1);
+      // Color the bar: green above 66, yellow 33-66, red below 33
+      const barColor = pct >= 66 ? 'var(--success)' : pct >= 33 ? '#f39c12' : 'var(--danger)';
+      return `
+        <div style="margin-bottom:10px;" title="${tooltip}">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;">
+            <span style="font-size:.78em;font-weight:700;color:var(--text2);">${label}</span>
+            <span style="font-size:.9em;font-weight:700;color:${barColor};">${display}%</span>
+          </div>
+          <div style="height:8px;background:var(--border);border-radius:8px;overflow:hidden;">
+            <div style="height:100%;width:${pct}%;background:${barColor};border-radius:8px;transition:width .4s ease;"></div>
+          </div>
+        </div>`;
+    }
+
+    function renderAnalyticsTeamCompositions() {
+      const el = document.getElementById('an-teams'); if (!el) return;
+      const sessions = validSessions();
+
+      // Build one card per team (not per session) — title = member names + date
+      const allTeamCards = [];
+      sessions.forEach(session => {
+        const dateStr = new Date(session.created).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+        const teams = toArray(session.teams).filter(t => toArray(t.playerMembers).length > 0);
+        teams.forEach(team => {
+          const members = toArray(team.playerMembers);
+          let pts = 0, answers = 0, powers = 0, negs = 0, tossups = 0, bonuses = 0;
+          members.forEach(name => {
+            const p = (session.players || {})[name];
+            if (!p) return;
+            const a = toArray(p.answers);
+            pts     += (p.points || 0);
+            answers += a.length;
+            powers  += a.filter(x => x.pointType === 'Power').length;
+            negs    += a.filter(x => x.pointType === 'Neg').length;
+            tossups += a.filter(x => x.pointType === 'Toss-up').length;
+            bonuses += a.filter(x => x.pointType === 'Bonus').length;
+          });
+          const eff = calcTeamEfficiency({ tossups, bonuses, powers, negs, answers }, session.tHeard || 0);
+          allTeamCards.push({
+            teamName: team.name,
+            members,
+            dateStr,
+            sessionDate: session.created,
+            sessionId: session.id,
+            isCurrent: session.id === state.currentSessionId,
+            pts, answers, powers, negs, tossups, bonuses, ...eff
+          });
+        });
+      });
+
+      // Sort newest first
+      allTeamCards.sort((a, b) => new Date(b.sessionDate) - new Date(a.sessionDate));
+
+      if (!allTeamCards.length) {
+        el.innerHTML = '<p style="color:var(--text2)">No team compositions found. Create teams and assign players to sessions to see them here.</p>';
+        return;
+      }
+
+      const sessionCount = validSessions().length;
+      let html = `<div style="background:rgba(118,75,162,.08);border:1px solid var(--secondary);border-radius:8px;padding:10px 14px;margin-bottom:var(--sp);font-size:.85em;color:var(--secondary);font-weight:600;">
+        ${allTeamCards.length} team composition${allTeamCards.length !== 1 ? 's' : ''} across <strong>${sessionCount} session${sessionCount !== 1 ? 's' : ''}</strong> &mdash; most recent first
+      </div>`;
+
+      const accentColors = ['var(--primary)', 'var(--secondary)', 'var(--success)', '#e67e22', '#e74c3c'];
+
+      allTeamCards.forEach((team, ti) => {
+        const color = accentColors[ti % accentColors.length];
+        const cardId = 'tcomp_' + team.sessionId + '_' + team.teamName.replace(/\W/g, '_');
+        const acc = team.answers ? Math.round(((team.answers - team.negs) / team.answers) * 100) : 0;
+        const memberTitle = team.members.join(' / ');
+        const eBonusTooltip = `Bonus Efficiency = 100 × (10 × bonuses) / (30 × toss-ups). How well the team converted toss-up wins into bonus points.`;
+        const eTotalTooltip = `Point Efficiency = 100 × (15P + 10T + 10B − 5N) / (45 × questions heard). Questions heard = ${team.tHeard} (${team.tHeardIsReal ? 'from session counter' : 'estimated'}).`;
+
+        const statChips = [
+          ['Points',   team.pts,      color],
+          ['Toss-ups', team.tossups,  'var(--success)'],
+          ['Bonuses',  team.bonuses,  'var(--primary)'],
+          ['Powers',   team.powers,   '#9b59b6'],
+          ['Negs',     team.negs,     'var(--danger)'],
+          ['Accuracy', acc + '%',     'var(--text2)'],
+        ].filter(([, v]) => v !== 0 && v !== '0%').map(([label, val, c]) =>
+          `<div style="text-align:center;background:var(--sec-bg);border:1px solid var(--border);border-radius:8px;padding:8px 12px;flex:1;min-width:64px;">
+            <div style="font-size:.72em;color:var(--text2);font-weight:600;margin-bottom:3px;">${label}</div>
+            <div style="font-size:.95em;font-weight:700;color:${c};">${val}</div>
+          </div>`
+        ).join('');
+
+        html += `
+        <div style="background:var(--card);border:2px solid ${team.isCurrent ? 'var(--primary)' : 'var(--border)'};border-left:4px solid ${color};border-radius:10px;margin-bottom:10px;overflow:hidden;box-shadow:var(--shadow-sm);">
+          <div onclick="toggleTeamCard('${cardId}')" style="display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;user-select:none;">
+            <div style="flex:1;min-width:0;">
+              <div style="font-weight:700;font-size:1em;color:${color};display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                ${team.teamName}
+                ${team.isCurrent ? '<span style="font-size:.7em;background:var(--primary);color:#fff;padding:2px 8px;border-radius:8px;font-weight:700;">Current</span>' : ''}
+              </div>
+              <div style="font-size:.82em;color:var(--text);font-weight:600;margin-top:2px;">${memberTitle}</div>
+              <div style="font-size:.75em;color:var(--text2);margin-top:1px;">${team.dateStr} &bull; ${team.answers} answers</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
+              <span style="font-size:1.05em;font-weight:700;color:var(--primary);">${team.pts} pts</span>
+              <span id="${cardId}_arrow" style="font-size:.8em;color:var(--text2);transition:transform .2s;">&#9660;</span>
+            </div>
+          </div>
+          <div id="${cardId}" style="display:none;border-top:1px solid var(--border);">
+            <div style="padding:14px 16px;">
+              <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
+                ${statChips}
+              </div>
+              <div style="border-top:1px solid var(--border);padding-top:12px;">
+                ${effBar(team.eBonus, color, 'Bonus Efficiency', eBonusTooltip)}
+                ${effBar(team.eTotal, color, 'Point Efficiency', eTotalTooltip)}
+                ${(team.eBonus === null && team.eTotal === null) ? '<div style="font-size:.8em;color:var(--text2);font-style:italic;">No toss-up answers recorded yet.</div>' : ''}
+              </div>
+            </div>
+          </div>
+        </div>`;
+      });
+
+      el.innerHTML = html;
+
+      // Restore expanded state
+      expandedTeamCards.forEach(id => {
+        const panel = document.getElementById(id);
+        const arrow = document.getElementById(id + '_arrow');
+        if (panel) panel.style.display = 'block';
+        if (arrow) arrow.style.transform = 'rotate(180deg)';
+      });
+    }
+
+    function toggleTeamCard(id) {
+      const panel = document.getElementById(id);
+      const arrow = document.getElementById(id + '_arrow');
+      if (!panel) return;
+      const open = panel.style.display === 'none';
+      panel.style.display = open ? 'block' : 'none';
+      if (arrow) arrow.style.transform = open ? 'rotate(180deg)' : '';
+      if (open) expandedTeamCards.add(id); else expandedTeamCards.delete(id);
+    }
+
+    function renderAnalyticsCategories(allAnswers, sessionCount) {
+      const el=document.getElementById('an-categories'); if(!el) return;
+      const catData={};
+      allAnswers.forEach(a=>{
+        if(!a.category||a.category==='—') return;
+        if(!catData[a.category]) catData[a.category]={total:0,points:0,players:{}};
+        catData[a.category].total++;
+        catData[a.category].points+=a.points||0;
+        if(!catData[a.category].players[a.player]) catData[a.category].players[a.player]={correct:0,neg:0};
+        if(a.points<0) catData[a.category].players[a.player].neg++;
+        else catData[a.category].players[a.player].correct++;
+      });
+      const sorted=Object.entries(catData).sort((a,b)=>b[1].total-a[1].total);
+      let html=`<div style="background:rgba(102,126,234,.08);border:1px solid var(--primary);border-radius:8px;padding:10px 14px;margin-bottom:var(--sp);font-size:.85em;color:var(--primary);font-weight:600;">
+        Aggregated across <strong>all ${sessionCount} session${sessionCount!==1?'s':''}</strong>
+      </div>`;
+      if(!sorted.length){el.innerHTML=html+'<p style="color:var(--text2)">No category data yet.</p>';return;}
+      html+=sorted.map(([cat,data])=>`
+        <div class="an-cat-card">
+          <div class="an-cat-title">${cat} <span style="font-weight:400;color:var(--text2);font-size:.88em;">${data.total} answers &bull; ${data.points} pts</span></div>
+          ${Object.entries(data.players).sort((a,b)=>(b[1].correct+b[1].neg)-(a[1].correct+a[1].neg)).map(([player,d])=>`
+            <div class="an-cat-row">
+              <span style="font-weight:600;">${player}</span>
+              <span style="display:flex;gap:8px;font-size:.82em;">
+                ${d.correct?`<span style="color:var(--success);font-weight:700;">+${d.correct}</span>`:''}
+                ${d.neg?`<span style="color:var(--danger);font-weight:700;">-${d.neg}</span>`:''}
+              </span>
+            </div>`).join('')}
+        </div>`).join('');
+      el.innerHTML=html;
+    }
+
+    function renderAnalyticsLeaderboard(globalPs, sessionCount) {
+      const el=document.getElementById('an-leaderboard'); if(!el) return;
+      const active=globalPs.filter(p=>p.totalAnswers>0);
+      let html=`<div style="background:rgba(102,126,234,.08);border:1px solid var(--primary);border-radius:8px;padding:10px 14px;margin-bottom:var(--sp);font-size:.85em;color:var(--primary);font-weight:600;">
+        Global leaderboard &mdash; aggregated across <strong>all ${sessionCount} session${sessionCount!==1?'s':''}</strong>
+      </div>`;
+      if(active.length){
+        let rank=1;
+        html+=active.map((p,i)=>{
+          const prev=active[i-1];
+          const tied=prev&&prev.points===p.points&&prev.powers===p.powers&&prev.negs===p.negs;
+          if(i>0&&!tied) rank=i+1;
+          const sfx=['st','nd','rd'][rank-1]||'th';
+          const escapedName=p.name.replace(/'/g,"\\'");
+          return `<div class="an-lb-row" style="cursor:pointer;" onclick="openPlayerDetailModal('${escapedName}')" title="Click for full details">
+            <span class="an-lb-rank">${rank}${sfx}</span>
+            <span class="an-lb-name" style="color:var(--primary);text-decoration:underline;text-underline-offset:2px;">${p.name}</span>
+            <span class="an-lb-pts">${p.points} pts</span>
+            ${p.powers?`<span class="an-lb-chip power">+${p.powers} Power</span>`:''}
+            ${p.negs?`<span class="an-lb-chip neg">-${p.negs} Neg</span>`:''}
+            <span class="an-lb-chip">${p.totalAnswers} ans</span>
+            ${p.sessions>1?`<span class="an-lb-chip">${p.sessions}s</span>`:''}
+          </div>`;
+        }).join('');
+      } else {
+        html+='<p style="color:var(--text2)">No player data yet.</p>';
+      }
+      el.innerHTML=html;
+    }
+
+    // ── UI ──
+    function setupSectionToggle() {
+      document.querySelectorAll('.qb-section h2').forEach(h2=>{
+        h2.addEventListener('click',function(){
+          this.querySelector('.toggle-icon')?.classList.toggle('collapsed');
+          this.nextElementSibling?.classList.toggle('collapsed');
+        });
+      });
+    }
+
+    const SECTION_LABELS={'sec-session':'Session','sec-players':'Players','sec-teams':'Teams','sec-categories':'Categories','sec-export':'Export / Import','sec-visual':'Visual Settings','sec-danger':'Data Management'};
+
+    function showSection(id) {
+      document.querySelectorAll('.qb-sidebar .qb-section').forEach(s=>s.classList.remove('active-section'));
+      const el=document.getElementById(id);
+      if(el){
+        el.classList.add('active-section');
+        el.querySelector('.collapsible-content')?.classList.remove('collapsed');
+        el.querySelector('.toggle-icon')?.classList.remove('collapsed');
+      }
+      localStorage.setItem('activeSidebarSection',id);
+      updateJumpDropdown(id);
+      document.getElementById('sidebarJumpWrapper')?.classList.remove('open');
+    }
+
+    function updateJumpDropdown(activeId) {
+      const labelEl=document.getElementById('sidebarJumpLabel');
+      if(labelEl&&SECTION_LABELS[activeId]) labelEl.textContent=SECTION_LABELS[activeId];
+      document.querySelectorAll('.sidebar-jump-menu button').forEach(btn=>{
+        btn.classList.toggle('active-item',(btn.getAttribute('onclick')||'').includes(activeId));
+      });
+    }
+
+    function toggleJumpDropdown() { document.getElementById('sidebarJumpWrapper')?.classList.toggle('open'); }
+
+    const isMobile=()=>window.innerWidth<=900;
+
+    function toggleSidebar() {
+      const sidebar=document.getElementById('mainSidebar');
+      const scroll=document.getElementById('qbScroll');
+      const ascroll=document.getElementById('analyticsScroll');
+      if(!sidebar) return;
+      if(isMobile()){
+        const opening=!sidebar.classList.contains('mobile-open');
+        sidebar.classList.toggle('mobile-open',opening);
+        scroll?.classList.toggle('menu-blurred',opening);
+        ascroll?.classList.toggle('menu-blurred',opening);
+        document.body.classList.toggle('menu-open',opening);
+        updateMobileBtn(opening);
+      } else {
+        const collapsed=sidebar.classList.toggle('collapsed');
+        localStorage.setItem('sidebarCollapsed',collapsed);
+        updateDesktopBtn(collapsed);
+      }
+    }
+
+    function updateDesktopBtn(collapsed) {
+      const btn=document.getElementById('sidebarOpenBtn');
+      if(btn){btn.style.display=collapsed?'inline-flex':'none'; btn.style.alignItems='center'; btn.style.gap='6px';}
+    }
+    function updateMobileBtn(open) {
+      const btn=document.getElementById('sidebarOpenBtnMobile');
+      if(btn) btn.innerHTML=open?'&#9664; Hide':'&#9654; Menu';
+    }
+
+    function applySidebarState() {
+      const sidebar=document.getElementById('mainSidebar');
+      const scroll=document.getElementById('qbScroll');
+      const ascroll=document.getElementById('analyticsScroll');
+      if(!sidebar) return;
+      sidebar.classList.remove('mobile-open');
+      scroll?.classList.remove('menu-blurred');
+      ascroll?.classList.remove('menu-blurred');
+      document.body.classList.remove('menu-open');
+      updateMobileBtn(false);
+      if(isMobile()){sidebar.classList.remove('collapsed');updateDesktopBtn(false);}
+      else{const c=localStorage.getItem('sidebarCollapsed')==='true';sidebar.classList.toggle('collapsed',c);updateDesktopBtn(c);}
+    }
+
+    // ── Visual settings ──
+    function toggleDarkMode() {
+      const on=document.body.classList.toggle('dark-mode');
+      localStorage.setItem('darkMode',on);
+      const el=document.getElementById('darkModeToggle2'); if(el) el.checked=on;
+    }
+    function setAccentColor(color) {
+      document.documentElement.style.setProperty('--primary',color);
+      localStorage.setItem('accentColor',color);
+    }
+    function toggleScrollbars() {
+      const on=document.body.classList.toggle('hide-scrollbars');
+      localStorage.setItem('hideScrollbars',on);
+      const el=document.getElementById('hideScrollbarsToggle'); if(el) el.checked=on;
+    }
+    function restoreVisualSettings() {
+      const ls=window.LOCAL_SETTINGS||{};
+      const get=(key,fb)=>ls[key]!==undefined?ls[key]:(localStorage.getItem(key)??fb);
+      if(get('darkMode','false')==='true'||get('darkMode',false)===true){
+        document.body.classList.add('dark-mode');
+        const el=document.getElementById('darkModeToggle2'); if(el) el.checked=true;
+      }
+      if(get('hideScrollbars','false')==='true'||get('hideScrollbars',false)===true){
+        document.body.classList.add('hide-scrollbars');
+        const el=document.getElementById('hideScrollbarsToggle'); if(el) el.checked=true;
+      }
+      const ac=get('accentColor',null);
+      if(ac){document.documentElement.style.setProperty('--primary',ac);const el=document.getElementById('accentColorSelect');if(el) el.value=ac;}
+    }
+
+    // ── Render ──
+    function renderAll() {
+      renderSessionInfo(); renderPlayerPool(); renderPlayerButtons(); renderPointTypeButtons();
+      renderTeams(); renderCategories(); renderAnswerLog(); renderStatistics(); renderTHeard();
+      if(analyticsOpen) renderAnalytics();
+      if(document.getElementById('sessionsModal')?.classList.contains('open')) renderSessionsList();
+      setTimeout(updateFadeMasks,50);
+    }
+
+    function renderSessionInfo() {
+      const s=getCurrentSession(); if(!s) return;
+      const set=(id,val)=>{const el=document.getElementById(id);if(el) el.textContent=val;};
+      set('sessionName',s.name); set('headerSessionName',s.name); set('headerSessionNameMobile',s.name);
+      set('sessionCreated',new Date(s.created).toLocaleString());
+      set('sessionLastUpdated',new Date(s.lastUpdated).toLocaleString());
+      set('sessionAnswerCount',(s.answerLog||[]).length);
+    }
+
+    // ── Players ──
+    function addToPlayerPool() {
+      const input=document.getElementById('playerInput');
+      const player=input.value.trim();
+      if(!player){alert('Please enter a player name.');return;}
+      const id=state.currentSessionId; if(!id) return;
+      updateSessionAtomic(id,s=>{if(!s.players) s.players={};if(!s.players[player]) s.players[player]={name:player,points:0,answers:[]};}).then(()=>{input.value='';saveGlobalPlayers([player]);});
+      withWriteLock(id,()=>{const s=getCurrentSession();if(!s.players) s.players={};if(!s.players[player]) s.players[player]={name:player,points:0,answers:[]};});
+      renderPlayerPool(); renderPlayerButtons(); renderTeams();
+    }
+
+    function removeFromPlayerPool(player) {
+      const id=state.currentSessionId; if(!id) return;
+      updateSessionAtomic(id,s=>{if(s.players) delete s.players[player];(s.teams||[]).forEach(t=>{t.playerMembers=(t.playerMembers||[]).filter(p=>p!==player);});});
+      removeGlobalPlayer(player);
+      withWriteLock(id,()=>{const s=getCurrentSession();if(!s) return;if(s.players) delete s.players[player];(s.teams||[]).forEach(t=>{t.playerMembers=(t.playerMembers||[]).filter(p=>p!==player);});});
+      renderPlayerPool(); renderPlayerButtons(); renderTeams();
+    }
+
+    function clearPlayerPool() {
+      if(!confirm('Clear all players?')) return;
+      const id=state.currentSessionId; if(!id) return;
+      const reset=s=>{s.players={};(s.teams||[]).forEach(t=>{t.playerMembers=[];});s.answerLog=[];s.answers=[];};
+      updateSessionAtomic(id,reset);
+      withWriteLock(id,()=>{const s=getCurrentSession();if(s) reset(s);});
+      renderPlayerPool(); renderPlayerButtons(); renderTeams(); renderAnswerLog(); renderStatistics(); renderSessionInfo();
+    }
+
+    function renderPlayerPool() {
+      const s=getCurrentSession(); const el=document.getElementById('playerPoolDisplay');
+      if(!el||!s) return;
+      const players=Object.keys(s.players||{});
+      el.innerHTML=players.length
+        ?players.map(p=>`<span class="player-pool-item">${p}<span class="remove" onclick="removeFromPlayerPool('${p}')">&#215;</span></span>`).join('')
+        :'<p style="color:var(--text2)">No players added yet.</p>';
+    }
+
+    function getDisplayName(full,all) {
+      const parts=full.trim().split(/\s+/), first=parts[0];
+      const shared=all.some(n=>n!==full&&n.trim().split(/\s+/)[0]===first);
+      return (shared&&parts.length>1)?first+' '+parts[parts.length-1][0]+'.':first;
+    }
+
+    function renderPlayerButtons() {
+      const s=getCurrentSession(); const el=document.getElementById('playerButtonsContainer');
+      if(!el||!s) return;
+      const players=[...new Set((s.teams||[]).flatMap(t=>t.playerMembers||[]))];
+      el.innerHTML=players.length
+        ?players.map(p=>`<button class="button-player ${state.selectedPlayer===p?'selected':''}" onclick="selectPlayer('${p}')" title="${p}">${getDisplayName(p,players)}</button>`).join('')
+        :'<p style="color:var(--text2)">No players in any team yet.</p>';
+    }
+
+    function selectPlayer(p){state.selectedPlayer=state.selectedPlayer===p?null:p;renderPlayerButtons();}
+
+    function handlePlayerImport(event) {
+      const file=event.target.files[0]; if(!file) return;
+      const reader=new FileReader();
+      reader.onload=e=>{
+        const players=e.target.result.replace(/\r\n?/g,'\n').split('\n').flatMap(l=>l.split(/[,;]+/)).map(p=>p.trim()).filter(Boolean);
+        const id=state.currentSessionId; if(!id) return;
+        updateSessionAtomic(id,s=>{if(!s.players) s.players={};players.forEach(p=>{if(!s.players[p]) s.players[p]={name:p,points:0,answers:[]};});}).then(()=>saveGlobalPlayers(players));
+        withWriteLock(id,()=>{const s=getCurrentSession();if(!s.players) s.players={};players.forEach(p=>{if(!s.players[p]) s.players[p]={name:p,points:0,answers:[]};});});
+        renderPlayerPool(); renderPlayerButtons(); renderTeams();
+      };
+      reader.readAsText(file); event.target.value='';
+    }
+
+    // ── Teams ──
+    function addTeam() {
+      const input=document.getElementById('teamNameInput');
+      const name=input.value.trim(); if(!name){alert('Please enter a team name.');return;}
+      const id=state.currentSessionId; if(!id) return;
+      const team={id:Date.now().toString(),name,playerMembers:[]};
+      updateSessionAtomic(id,s=>{s.teams=toArray(s.teams);s.teams.push(team);});
+      withWriteLock(id,()=>{const s=getCurrentSession();s.teams=toArray(s.teams);s.teams.push(team);});
+      input.value=''; renderTeams();
+    }
+
+    function removeTeam(teamId) {
+      const id=state.currentSessionId; if(!id) return;
+      const filter=s=>{s.teams=toArray(s.teams).filter(t=>t.id!==teamId);};
+      updateSessionAtomic(id,filter);
+      withWriteLock(id,()=>{const s=getCurrentSession();if(s) filter(s);});
+      renderTeams(); renderPlayerButtons();
+    }
+
+    function updateTeamName(teamId,newName) {
+      const id=state.currentSessionId; if(!id) return;
+      const update=s=>{const t=toArray(s.teams).find(t=>t.id===teamId);if(t) t.name=newName;};
+      updateSessionAtomic(id,update);
+      withWriteLock(id,()=>{const s=getCurrentSession();if(s) update(s);});
+    }
+
+    function togglePlayerInTeam(teamId,player) {
+      const id=state.currentSessionId; if(!id) return;
+      const toggle=s=>{const t=toArray(s.teams).find(t=>t.id===teamId);if(!t) return;t.playerMembers=toArray(t.playerMembers);const i=t.playerMembers.indexOf(player);if(i>-1) t.playerMembers.splice(i,1);else t.playerMembers.push(player);};
+      updateSessionAtomic(id,toggle);
+      withWriteLock(id,()=>{const s=getCurrentSession();if(s) toggle(s);});
+      renderTeams(); renderPlayerButtons();
+    }
+
+    function renderTeams() {
+      const s=getCurrentSession(); const el=document.getElementById('teamsContainer');
+      if(!el||!s) return;
+      const teams=s.teams||[];
+      if(!teams.length){el.innerHTML='<p style="color:var(--text2)">No teams created yet.</p>';return;}
+      const players=Object.keys(s.players||{});
+      el.innerHTML=teams.map(team=>`
+        <div class="team-section">
+          <input type="text" value="${team.name}" onchange="updateTeamName('${team.id}',this.value)" />
+          <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;">
+            ${players.length?players.map(p=>`<button class="button-category ${team.playerMembers.includes(p)?'selected':''}" onclick="togglePlayerInTeam('${team.id}','${p}')">${p}</button>`).join(''):'<p style="color:var(--text2)">No players available.</p>'}
+          </div>
+          <button class="button button-danger" onclick="removeTeam('${team.id}')" style="margin-top:10px;">Remove Team</button>
+        </div>`).join('');
+    }
+
+    // ── Categories ──
+    function saveCategories() {
+      state.categories=document.getElementById('categoriesInput').value.split(',').map(c=>c.trim()).filter(Boolean).sort((a,b)=>a.localeCompare(b));
+      const id=state.currentSessionId; if(!id) return;
+      updateSessionAtomic(id,s=>{s.categories=[...state.categories];});
+      withWriteLock(id,()=>{const s=getCurrentSession();if(s) s.categories=[...state.categories];});
+      renderCategories();
+    }
+
+    function renderCategories() {
+      const el=document.getElementById('categoryButtonsContainer'); if(!el) return;
+      el.innerHTML=state.categories.length
+        ?state.categories.map(c=>`<button class="button-category ${state.selectedCategory===c?'selected':''}" data-category="${c}" onclick="selectCategory('${c}')">${c}</button>`).join('')
+        :'<p style="color:var(--text2);grid-column:1/-1">No categories added yet.</p>';
+    }
+
+    function selectCategory(c) {
+      state.selectedCategory=state.selectedCategory===c?null:c;
+      document.querySelectorAll('#categoryButtonsContainer .button-category').forEach(btn=>btn.classList.toggle('selected',btn.dataset.category===state.selectedCategory));
+    }
+
+    // ── Answers ──
+    function selectPointType(type) {
+      state.selectedPointType=state.selectedPointType===type?null:type;
+      renderPointTypeButtons();
+      const hint=document.getElementById('categoryOptionalHint');
+      if(hint) hint.style.display=state.selectedPointType==='Neg'?'inline':'none';
+    }
+
+    function renderPointTypeButtons() {
+      document.querySelectorAll('.button-point-type').forEach(btn=>{
+        btn.classList.toggle('selected',!!state.selectedPointType&&btn.textContent.includes(state.selectedPointType));
+      });
+    }
+
+    // ── t_heard helpers ──
+    function renderTHeard() {
+      const s = getCurrentSession();
+      const el = document.getElementById('tHeardDisplay');
+      if (el) el.textContent = s ? (s.tHeard || 0) : 0;
+    }
+
+    function adjustTHeard(delta) {
+      const id = state.currentSessionId; if (!id) return;
+      const apply = s => { s.tHeard = Math.max(0, (s.tHeard || 0) + delta); };
+      updateSessionAtomic(id, apply);
+      withWriteLock(id, () => { const s = getCurrentSession(); if (s) apply(s); });
+      renderTHeard();
+      if (analyticsOpen) renderAnalytics();
+    }
+
+    // ── Substitution state ──
+    var subOut = null, subIn = null;
+
+    function toggleSubPanel() {
+      const panel = document.getElementById('subPanel');
+      if (!panel) return;
+      const opening = panel.style.display === 'none';
+      panel.style.display = opening ? 'block' : 'none';
+      if (opening) populateSubPanel();
+    }
+
+    function populateSubPanel() {
+      const s = getCurrentSession(); if (!s) return;
+      subOut = null; subIn = null;
+      // Active = currently on a team
+      const active = [...new Set((s.teams||[]).flatMap(t=>toArray(t.playerMembers)))];
+      // All known players
+      const all = Object.keys(s.players||{});
+      // Bench = in player pool but not on a team
+      const bench = all.filter(p=>!active.includes(p));
+      const outEl = document.getElementById('subOutContainer');
+      const inEl  = document.getElementById('subInContainer');
+      if(!outEl||!inEl) return;
+      outEl.innerHTML = active.length
+        ? active.map(p=>`<button class="button-category" onclick="pickSubOut(this,'${p.replace(/\/g,'\\').replace(/'/g,"\'")}')">${p}</button>`).join('')
+        : '<span style="font-size:.82em;color:var(--text2);">No active players</span>';
+      inEl.innerHTML = bench.length
+        ? bench.map(p=>`<button class="button-category" onclick="pickSubIn(this,'${p.replace(/\/g,'\\').replace(/'/g,"\'")}')">${p}</button>`).join('')
+        : '<span style="font-size:.82em;color:var(--text2);">No bench players</span>';
+    }
+
+    function pickSubOut(btn, name) {
+      subOut = name;
+      document.querySelectorAll('#subOutContainer .button-category').forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected');
+    }
+
+    function pickSubIn(btn, name) {
+      subIn = name;
+      document.querySelectorAll('#subInContainer .button-category').forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected');
+    }
+
+    function confirmSubstitution() {
+      if (!subOut) { alert('Select a player to sub out.'); return; }
+      if (!subIn)  { alert('Select a player to sub in.'); return; }
+      const id = state.currentSessionId; if (!id) return;
+      const entry = { id: Date.now().toString(), type: 'sub', playerOut: subOut, playerIn: subIn, timestamp: new Date().toISOString() };
+      const apply = s => {
+        s.answerLog = toArray(s.answerLog);
+        entry.tHeardAtSub = s.tHeard || 0;
+        s.answerLog.push({...entry});
+        // Swap playerOut for playerIn on their team
+        toArray(s.teams).forEach(t => {
+          const m = toArray(t.playerMembers);
+          const i = m.indexOf(subOut);
+          if (i > -1) { m[i] = subIn; t.playerMembers = m; }
+        });
+        // Ensure subIn exists in players map
+        if (!s.players) s.players = {};
+        if (!s.players[subIn]) s.players[subIn] = { name: subIn, points: 0, answers: [] };
+      };
+      updateSessionAtomic(id, apply);
+      withWriteLock(id, () => { const s = getCurrentSession(); if (s) apply(s); });
+      document.getElementById('subPanel').style.display = 'none';
+      subOut = null; subIn = null;
+      renderAll();
+    }
+
+    function undoSubstitution(entryId) {
+      const id = state.currentSessionId; if (!id) return;
+      const apply = s => {
+        s.answerLog = toArray(s.answerLog);
+        const idx = s.answerLog.findIndex(e => e.id === entryId);
+        if (idx === -1) return;
+        const sub = s.answerLog[idx];
+        // Reverse the team swap: put playerOut back, remove playerIn
+        toArray(s.teams).forEach(t => {
+          const m = toArray(t.playerMembers);
+          const i = m.indexOf(sub.playerIn);
+          if (i > -1) { m[i] = sub.playerOut; t.playerMembers = m; }
+        });
+        s.answerLog.splice(idx, 1);
+      };
+      updateSessionAtomic(id, apply);
+      withWriteLock(id, () => { const s = getCurrentSession(); if (s) apply(s); });
+      renderAll();
+    }
+
+    function recordAnswer() {
+      const id=state.currentSessionId; if(!id) return;
+      if(!state.selectedPlayer)    {alert('Please select a player.');return;}
+      if(!state.selectedPointType) {alert('Please select a point type.');return;}
+      if(!state.selectedCategory&&state.selectedPointType!=='Neg') {alert('Please select a category.');return;}
+      const pointMap={'Toss-up':10,'Bonus':10,'Neg':-5,'Power':15};
+      const points=pointMap[state.selectedPointType];
+      const isBuzzIn = ['Toss-up','Power','Neg'].includes(state.selectedPointType);
+      const answer={id:Date.now().toString(),player:state.selectedPlayer,pointType:state.selectedPointType,category:state.selectedCategory||'—',points,timestamp:new Date().toISOString()};
+
+      const applyAnswer=s=>{
+        s.answerLog=toArray(s.answerLog);
+        // t_heard: increment on buzz-in types, but not if previous entry was a Neg
+        // (neg→tossup/power on same question = only 1 increment total)
+        if (isBuzzIn) {
+          const prev = s.answerLog.length > 0 ? s.answerLog[s.answerLog.length - 1] : null;
+          const prevWasNeg = prev && prev.pointType === 'Neg';
+          const thisIsFollowup = prevWasNeg && (state.selectedPointType === 'Toss-up' || state.selectedPointType === 'Power');
+          if (!thisIsFollowup) {
+            s.tHeard = (s.tHeard || 0) + 1;
+          }
+        }
+        s.answerLog.push(answer);
+        if(!s.players) s.players={};
+        const p=s.players[answer.player]||(s.players[answer.player]={name:answer.player,points:0,answers:[]});
+        p.answers=toArray(p.answers); p.answers.push(answer); p.points=(p.points||0)+points;
+      };
+      updateSessionAtomic(id,applyAnswer);
+      withWriteLock(id,()=>{const s=getCurrentSession();if(s) applyAnswer(s);});
+      state.selectedPlayer=null; state.selectedPointType=null; state.selectedCategory=null;
+      renderAll();
+    }
+
+    function deleteAnswer(answerId) {
+      const id=state.currentSessionId; if(!id) return;
+      const del=s=>{
+        s.answerLog=toArray(s.answerLog);
+        const idx = s.answerLog.findIndex(x=>x.id===answerId);
+        if(idx === -1) return;
+        const a = s.answerLog[idx];
+        // Undo t_heard: reverse the increment logic
+        const isBuzzIn = ['Toss-up','Power','Neg'].includes(a.pointType);
+        if (isBuzzIn) {
+          const prev = idx > 0 ? s.answerLog[idx - 1] : null;
+          const prevWasNeg = prev && prev.pointType === 'Neg';
+          const wasFollowup = prevWasNeg && (a.pointType === 'Toss-up' || a.pointType === 'Power');
+          if (!wasFollowup) {
+            s.tHeard = Math.max(0, (s.tHeard || 0) - 1);
+          }
+        }
+        s.answerLog = s.answerLog.filter(x=>x.id!==answerId);
+        if(s.players?.[a.player]){s.players[a.player].answers=toArray(s.players[a.player].answers).filter(x=>x.id!==answerId);s.players[a.player].points=(s.players[a.player].points||0)-(a.points||0);}
+      };
+      updateSessionAtomic(id,del);
+      withWriteLock(id,()=>{const s=getCurrentSession();if(s) del(s);});
+      renderAll();
+    }
+
+    function clearAnswerLog() {
+      if(!confirm('Clear all answers?')) return;
+      const id=state.currentSessionId; if(!id) return;
+      const clear=s=>{s.answerLog=[];s.tHeard=0;Object.values(s.players||{}).forEach(p=>{p.points=0;p.answers=[];});};
+      updateSessionAtomic(id,clear);
+      withWriteLock(id,()=>{const s=getCurrentSession();if(s) clear(s);});
+      renderAll();
+    }
+
+    function renderAnswerLog() {
+      const s=getCurrentSession(); const el=document.getElementById('answerLog');
+      if(!el||!s) return;
+      const log=toArray(s.answerLog);
+      if(!log.length){el.innerHTML='<p style="color:var(--text2)">No answers recorded yet.</p>';el.onscroll=updateFadeMasks;return;}
+      // Number only answer entries (not sub events)
+      const answers=log.filter(e=>e.type!=='sub');
+      const reversed=[...log].reverse();
+      let ansNum=answers.length;
+      el.innerHTML=reversed.map(e=>{
+        if(e.type==='sub'){
+          return `<div class="log-entry" style="background:rgba(102,126,234,.07);border-left:3px solid var(--primary);">
+            <span style="color:var(--primary);font-weight:600;">Sub: ${e.playerOut} &rarr; ${e.playerIn}</span>
+            <button class="button button-danger" onclick="undoSubstitution('${e.id}')" style="padding:4px 8px;font-size:.8em;">Undo</button>
+          </div>`;
+        }
+        return `<div class="log-entry">
+          <span><strong>${ansNum--}. ${e.player}</strong> &mdash; ${e.pointType} (${e.points>0?'+':''}${e.points} pts) &mdash; ${e.category}</span>
+          <button class="button button-danger" onclick="deleteAnswer('${e.id}')" style="padding:4px 8px;font-size:.8em;">Delete</button>
+        </div>`;
+      }).join('');
+      el.onscroll=updateFadeMasks;
+      setTimeout(updateFadeMasks,20);
+    }
+
+    // ── Statistics ──
+    function calculatePlayerStats() {
+      return Object.values(getCurrentSession()?.players||{}).map(p=>{
+        const a=p.answers||[];
+        return {name:p.name,points:p.points,totalAnswers:a.length,tossupsCorrect:a.filter(x=>x.pointType==='Toss-up').length,bonusPoints:a.filter(x=>x.pointType==='Bonus').length*10,negs:a.filter(x=>x.pointType==='Neg').length,powers:a.filter(x=>x.pointType==='Power').length};
+      }).sort((a,b)=>b.points!==a.points?b.points-a.points:b.powers!==a.powers?b.powers-a.powers:a.negs-b.negs);
+    }
+
+    function calculateTeamStats() {
+      const s=getCurrentSession();
+      return (s?.teams||[]).map(team=>{
+        let pts=0,ans=0;
+        team.playerMembers.forEach(n=>{const p=s.players[n];if(p){pts+=p.points;ans+=(p.answers||[]).length;}});
+        return {name:team.name,totalPoints:pts,totalAnswers:ans,members:team.playerMembers,averagePerMember:team.playerMembers.length?(pts/team.playerMembers.length).toFixed(2):0};
+      }).sort((a,b)=>b.totalPoints-a.totalPoints);
+    }
+
+    function buildRankingList(players) {
+      let html='',rank=1;
+      players.forEach((s,i)=>{
+        const prev=players[i-1];
+        const tied=prev&&prev.points===s.points&&prev.powers===s.powers&&prev.negs===s.negs;
+        if(i>0&&!tied) rank=i+1;
+        const sfx=['st','nd','rd'][rank-1]||'th';
+        html+=`<li style="padding:6px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;"><span><strong style="color:var(--primary);min-width:42px;display:inline-block;">${rank}${sfx}</strong> ${s.name}</span><span style="color:var(--text2);font-size:.92em;">${s.points} pts${s.powers?' &middot; '+'+'+s.powers+' Power':''}${s.negs?' &middot; '+'-'+s.negs+' Neg':''}</span></li>`;
+      });
+      return html;
+    }
+
+    function renderStatistics() {
+      const el=document.getElementById('statisticsContainer'); if(!el) return;
+      const open=new Set();
+      el.querySelectorAll('.stat-card:not(.collapsed),.team-stat-card:not(.collapsed)').forEach(c=>{const n=c.querySelector('.player-name,.team-name');if(n) open.add(n.textContent.trim());});
+      const ps=calculatePlayerStats(),ts=calculateTeamStats(),active=ps.filter(s=>s.totalAnswers>0);
+      let html='<div class="stats-grid">';
+      ts.forEach(t=>{html+=`<div class="team-stat-card collapsed"><h3 onclick="toggleStatCard(event)"><span class="team-name">${t.name}</span><span class="team-score">${t.totalPoints} pts</span></h3><div class="stat-details"><div class="stat-row"><span class="stat-label">Total Points:</span><span class="stat-value">${t.totalPoints}</span></div><div class="stat-row"><span class="stat-label">Total Answers:</span><span class="stat-value">${t.totalAnswers}</span></div><div class="stat-row"><span class="stat-label">Avg per Member:</span><span class="stat-value">${t.averagePerMember}</span></div><div class="stat-row"><span class="stat-label">Members:</span><span>${t.members.join(', ')||'None'}</span></div></div></div>`;});
+      if(active.length){
+        active.forEach(s=>{html+=`<div class="stat-card collapsed"><h3 onclick="toggleStatCard(event)"><span class="player-name">${s.name}</span><span class="player-score">${s.points} pts</span></h3><div class="stat-details"><div class="stat-row"><span class="stat-label">Total Points:</span><span class="stat-value">${s.points}</span></div><div class="stat-row"><span class="stat-label">Answers:</span><span class="stat-value">${s.totalAnswers}</span></div><div class="stat-row"><span class="stat-label">Toss-ups:</span><span class="stat-value">${s.tossupsCorrect}</span></div><div class="stat-row"><span class="stat-label">Bonus Pts:</span><span class="stat-value">${s.bonusPoints}</span></div><div class="stat-row"><span class="stat-label">Negs:</span><span class="stat-value">${s.negs}</span></div><div class="stat-row"><span class="stat-label">Powers:</span><span class="stat-value">${s.powers}</span></div></div></div>`;});
+        html+=`<div class="overall-ranking"><h3 style="margin-top:0;">Player Rankings</h3><ol style="list-style:none;margin:12px 0 0;padding:0;">${buildRankingList(active)}</ol></div>`;
+      } else {html+='<p style="color:var(--text2)">No statistics available yet.</p>';}
+      html+='</div>';
+      el.innerHTML=html;
+      if(open.size){el.querySelectorAll('.stat-card,.team-stat-card').forEach(c=>{const n=c.querySelector('.player-name,.team-name');if(n&&open.has(n.textContent.trim())) c.classList.remove('collapsed');});}
+    }
+
+    function toggleStatCard(e){e.currentTarget.closest('.stat-card,.team-stat-card')?.classList.toggle('collapsed');}
+
+    // ── Export / Import ──
+    function importFromJSON(event) {
+      const file=event.target.files[0]; if(!file) return;
+      const statusEl=document.getElementById('importStatus');
+      statusEl.style.display='block'; statusEl.style.color='var(--text2)'; statusEl.textContent='Reading file...';
+      const reader=new FileReader();
+      reader.onload=e=>{
+        try {
+          const data=JSON.parse(e.target.result);
+          if(!data.sessionName||(!data.players&&!data.answerLog)) throw new Error('Not a valid export.');
+          const existingId=Object.keys(state.sessions).find(id=>state.sessions[id].name===data.sessionName);
+          if(existingId&&!confirm('Session "'+data.sessionName+'" exists. Overwrite?')){statusEl.textContent='Cancelled.';event.target.value='';return;}
+          const sid=existingId||Date.now().toString();
+          const imported={id:sid,name:data.sessionName,created:data.created||new Date().toISOString(),lastUpdated:new Date().toISOString(),players:data.players||{},teams:data.teams||[],categories:data.categories||[],answers:data.answers||[],answerLog:data.answerLog||[]};
+          Object.keys(imported.players).forEach(name=>{imported.players[name].answers=imported.answerLog.filter(a=>a.player===name);imported.players[name].points=imported.players[name].answers.reduce((s,a)=>s+(a.points||0),0);});
+          state.sessions[sid]=imported; state.currentSessionId=sid;
+          loadSessionData(); saveAllData(); renderAll();
+          statusEl.style.color='var(--success)'; statusEl.textContent='Imported "'+imported.name+'" with '+imported.answerLog.length+' answers.';
+        } catch(err){statusEl.style.color='var(--danger)';statusEl.textContent='Import failed: '+err.message;}
+        event.target.value='';
+      };
+      reader.onerror=()=>{statusEl.style.color='var(--danger)';statusEl.textContent='Failed to read file.';};
+      reader.readAsText(file);
+    }
+
+    function exportToExcel() {
+      const s=getCurrentSession(); if(!s) return;
+      const ps=calculatePlayerStats(),ts=calculateTeamStats(),csv=[];
+      if(document.getElementById('exportPlayers').classList.contains('selected')){csv.push('Player Statistics','Player Name,Total Points,Total Answers,Toss-ups,Bonuses,Negs,Powers');ps.forEach(p=>csv.push([p.name,p.points,p.totalAnswers,p.tossupsCorrect,p.bonusPoints/10,p.negs,p.powers].join(',')));csv.push('');}
+      if(document.getElementById('exportTeamStats').classList.contains('selected')&&ts.length){csv.push('Team Statistics','Team Name,Total Points,Total Answers,Members');ts.forEach(t=>csv.push([t.name,t.totalPoints,t.totalAnswers,'"'+t.members.join(', ')+'"'].join(',')));csv.push('');}
+      if(document.getElementById('exportAnswerLog').classList.contains('selected')){csv.push('Answer Log','Player,Point Type,Category,Points,Timestamp');(s.answerLog||[]).forEach(a=>csv.push([a.player,a.pointType,a.category,a.points,new Date(a.timestamp).toLocaleString()].join(',')));}
+      downloadFile(csv.join('\n'),'quiz-bowl-'+s.name+'-'+new Date().toISOString().split('T')[0]+'.csv','text/csv');
+    }
+
+    function exportToJSON() {
+      const s=getCurrentSession(); if(!s) return;
+      downloadFile(JSON.stringify({sessionName:s.name,created:s.created,lastUpdated:s.lastUpdated,players:s.players,teams:s.teams,answerLog:s.answerLog,categories:state.categories},null,2),'quiz-bowl-'+s.name+'-'+new Date().toISOString().split('T')[0]+'.json','application/json');
+    }
+
+    function downloadFile(content,filename,mimeType) {
+      const a=document.createElement('a');
+      a.href='data:'+mimeType+';charset=utf-8,'+encodeURIComponent(content);
+      a.download=filename; a.style.display='none';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    }
+
+    // ── Reset ──
+    function resetAllData() {
+      if(prompt('Enter the admin password:')!=='Neg 5'){alert('Incorrect password.');return;}
+      if(!confirm('Delete ALL sessions and data? Cannot be undone!')) return;
+      sessionsRef.remove().catch(e=>showFirebaseError(e.message));
+      globalPlayersRef.remove().catch(e=>showFirebaseError(e.message));
+      localStorage.setItem(CURRENT_SESSION_KEY,'');
+      state.sessions={}; state.currentSessionId=null;
+      createNewSession(); renderAll();
+    }
+
+    // ── Init ──
+    // Boot: call initFirebase which waits for SDK then calls startApp
+    document.addEventListener('DOMContentLoaded', initFirebase);
+  </script>
+
+</body>
+</html>
