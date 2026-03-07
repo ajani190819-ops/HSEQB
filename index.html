@@ -881,8 +881,18 @@
         <h3 style="color:var(--primary);margin:0 0 6px;">Export &amp; Import</h3>
         <p style="margin-bottom:14px;">Export to <strong>CSV</strong> for spreadsheets or <strong>JSON</strong> to back up and re-import a full session. Both options are in the Data section of the sidebar.</p>
 
+        <h3 style="color:var(--primary);margin:0 0 6px;">What Syncs Globally</h3>
+        <p style="margin-bottom:6px;">The following are stored in Firebase and sync instantly across all connected devices:</p>
+        <ul style="margin:0 0 8px;padding-left:20px;">
+          <li>All session data (answers, scores, toss-ups heard)</li>
+          <li>The global player pool</li>
+          <li>Skill Score settings (threshold, weights, buzz on/off, auto weights toggle)</li>
+          <li>Low-data player inclusion/exclusion overrides</li>
+        </ul>
+        <p style="margin-bottom:14px;">The following are stored <strong>on your device only</strong> and do not sync: Dark Mode, accent color, scrollbar visibility, and sidebar state.</p>
+
         <h3 style="color:var(--primary);margin:0 0 6px;">Visual Settings</h3>
-        <p>Toggle <strong>Dark Mode</strong>, change the <strong>Accent Color</strong>, or hide scrollbars in Visual Settings. These preferences are stored on your device only and do not sync.</p>
+        <p>Toggle <strong>Dark Mode</strong>, change the <strong>Accent Color</strong>, or hide scrollbars in the Visual Settings section of the sidebar.</p>
 
       </div>
     </div>
@@ -1594,10 +1604,7 @@
       const strengths=catArr.slice(0,5);
       const weaknesses=catArr.slice().reverse().slice(0,5);
 
-      let html=`<div style="background:rgba(102,126,234,.08);border:1px solid var(--primary);border-radius:8px;padding:10px 14px;margin-bottom:var(--sp);font-size:.85em;color:var(--primary);font-weight:600;">
-        Aggregated across <strong>all ${sessionCount} session${sessionCount!==1?'s':''}</strong> &mdash; ${globalTHeard} total toss-ups heard
-      </div>`;
-      html+='<div class="an-grid" style="margin-bottom:var(--sp);">';
+      let html='<div class="an-grid" style="margin-bottom:var(--sp);">';
       [['Active Players',activePlayers.length],['Total Answers',totalAns],['Total Points',totalPts],['Accuracy',accuracy+'%'],['Powers',totalPowers],['Negs',totalNegs],['Toss-ups Heard',globalTHeard]].forEach(b=>{
         html+='<div class="an-stat-box"><div class="an-val">'+b[1]+'</div><div class="an-lbl">'+b[0]+'</div></div>';
       });
@@ -1678,11 +1685,9 @@
       const active = allPlayers.filter(p => p.totalAnswers > 0);
       const validCount = validSessions().length;
 
-      let html = `<div style="background:rgba(102,126,234,.08);border:1px solid var(--primary);border-radius:8px;padding:10px 14px;margin-bottom:var(--sp);font-size:.85em;color:var(--primary);font-weight:600;">
-        Aggregated across <strong>all ${validCount} valid session${validCount !== 1 ? 's' : ''}</strong>
-      </div>`;
+      let html = '';
 
-      if (!active.length) { el.innerHTML = html + '<p style="color:var(--text2)">No player data yet.</p>'; return; }
+      if (!active.length) { el.innerHTML = '<p style="color:var(--text2)">No player data yet.</p>'; return; }
 
       // ── Skill Score: compute group averages from qualified players ──
       // Dynamic threshold: 40% of median buzz count, minimum 3
@@ -1795,7 +1800,6 @@
           onmouseover="this.style.background='var(--hover)';" onmouseout="this.style.background='';">
           <div style="display:flex;align-items:center;gap:10px;">
             <span style="font-size:.85em;font-weight:700;color:var(--text);">⚙ Skill Score Settings</span>
-            <span style="font-size:.68em;padding:2px 8px;border-radius:20px;background:rgba(102,126,234,.1);color:var(--primary);border:1px solid rgba(102,126,234,.25);font-weight:600;">synced globally</span>
             ${ssCollapsed ? `<span style="font-size:.72em;color:var(--text3);">threshold ≥${MIN_BUZZ} &nbsp;·&nbsp; ${skillBuzzEnabled ? '' : 'buzz off · '}${skillWeightsAuto ? (skillBuzzEnabled ? 'auto 50/33/17' : 'auto 75/25') : `prod ${(effWProd/totalW*100).toFixed(0)}% / aggr ${(effWAggr/totalW*100).toFixed(0)}%${skillBuzzEnabled ? ' / buzz '+((effWBuzz/totalW*100).toFixed(0))+'%' : ''}`}</span>` : ''}
           </div>
           <span style="font-size:.75em;color:var(--text3);transition:transform .25s;display:inline-block;transform:${ssCollapsed?'':'rotate(180deg)'};">&#9660;</span>
@@ -1839,7 +1843,6 @@
         html += `<div style="background:var(--card);border:2px solid rgba(243,156,18,.4);border-radius:10px;margin-bottom:var(--sp);box-shadow:var(--shadow-sm);overflow:hidden;">
           <div onclick="lowDataPanelCollapsed=!lowDataPanelCollapsed;renderAnalyticsPlayersUniversal();" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;user-select:none;">
             <span style="font-size:.9em;font-weight:700;color:#f39c12;">⚠ Low-Data Players (${lowDataList.length})</span>
-            <span style="font-size:.68em;padding:2px 8px;border-radius:20px;background:rgba(102,126,234,.1);color:var(--primary);border:1px solid rgba(102,126,234,.25);font-weight:600;">synced globally</span>
             <div style="display:flex;align-items:center;gap:8px;">
               <div style="display:flex;gap:6px;" onclick="event.stopPropagation();">
                 <button onclick="includeLowDataAll()" style="font-size:.75em;font-weight:700;padding:4px 10px;border-radius:6px;border:1px solid var(--success);background:rgba(40,167,69,.1);color:var(--success);cursor:pointer;">Include All</button>
@@ -2255,10 +2258,8 @@
         else catData[a.category].players[a.player].correct++;
       });
       const sorted=Object.entries(catData).sort((a,b)=>b[1].total-a[1].total);
-      let html=`<div style="background:rgba(102,126,234,.08);border:1px solid var(--primary);border-radius:8px;padding:10px 14px;margin-bottom:var(--sp);font-size:.85em;color:var(--primary);font-weight:600;">
-        Aggregated across <strong>all ${sessionCount} session${sessionCount!==1?'s':''}</strong>
-      </div>`;
-      if(!sorted.length){el.innerHTML=html+'<p style="color:var(--text2)">No category data yet.</p>';return;}
+      let html='';
+      if(!sorted.length){el.innerHTML='<p style="color:var(--text2)">No category data yet.</p>';return;}
       html+=sorted.map(([cat,data])=>`
         <div class="an-cat-card">
           <div class="an-cat-title">${cat} <span style="font-weight:400;color:var(--text2);font-size:.88em;">${data.total} answers &bull; ${data.points} pts</span></div>
@@ -2277,9 +2278,7 @@
     function renderAnalyticsLeaderboard(globalPs, sessionCount) {
       const el=document.getElementById('an-leaderboard'); if(!el) return;
       const active=globalPs.filter(p=>p.totalAnswers>0);
-      let html=`<div style="background:rgba(102,126,234,.08);border:1px solid var(--primary);border-radius:8px;padding:10px 14px;margin-bottom:var(--sp);font-size:.85em;color:var(--primary);font-weight:600;">
-        Global leaderboard &mdash; aggregated across <strong>all ${sessionCount} session${sessionCount!==1?'s':''}</strong>
-      </div>`;
+      let html='';
       if(active.length){
         let rank=1;
         html+=active.map((p,i)=>{
