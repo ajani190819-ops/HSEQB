@@ -705,7 +705,7 @@
             <h2>Visual Settings <span class="toggle-icon">&#9660;</span></h2>
             <div class="collapsible-content">
               <p style="font-size:.78em;color:var(--text2);margin-bottom:14px;padding:8px 10px;background:var(--hover);border-radius:6px;border:1px solid var(--border);">
-                <strong>Local settings</strong> &#8212; saved to this device only, do not sync.
+                <strong>Local settings</strong> &#8212; Saved to this device only, do not sync.
               </p>
               <div class="input-group">
                 <label>Theme</label>
@@ -731,7 +731,7 @@
                 </select>
               </div>
               <div class="input-group" style="padding-top:14px;border-top:1px solid var(--border);">
-                <label>Version Number <span style="font-size:.75em;font-weight:400;color:var(--text2);">(syncs for all users)</span></label>
+                <label>Version Number <span style="font-size:.75em;font-weight:400;color:var(--text2);">(Syncs for all users)</span></label>
                 <div style="display:flex;gap:8px;align-items:center;">
                   <input type="text" id="versionInput" placeholder="e.g. v30" style="flex:1;" />
                   <button class="button" onclick="saveVersion()" style="white-space:nowrap;padding:10px 16px;">Save</button>
@@ -758,7 +758,7 @@
             <h2>Record Answer <span class="toggle-icon">&#9660;</span></h2>
             <div class="collapsible-content">
               <div class="input-group">
-                <label>Select Player: <span id="playerOptionalHint" style="font-weight:400;font-size:.85em;color:var(--text2);display:none;">(optional — skip to give bonus to team)</span></label>
+                <label>Select Player: <span id="playerOptionalHint" style="font-weight:400;font-size:.85em;color:var(--text2);display:none;">(Optional — skip to give bonus to team)</span></label>
                 <div id="playerButtonsContainer" class="player-buttons"></div>
               </div>
               <div class="input-group">
@@ -771,13 +771,13 @@
                 </div>
               </div>
               <div class="input-group">
-                <label>Category: <span id="categoryOptionalHint" style="font-weight:400;font-size:.85em;color:var(--text2);display:none;">(optional for Neg)</span></label>
+                <label>Category: <span id="categoryOptionalHint" style="font-weight:400;font-size:.85em;color:var(--text2);display:none;">(Optional for Neg)</span></label>
                 <div id="categoryButtonsContainer" class="category-buttons"></div>
               </div>
               <!-- t_heard counter -->
               <div style="display:flex;align-items:center;gap:12px;margin-top:14px;padding:12px 14px;background:var(--sec-bg);border:2px solid var(--border);border-radius:8px;">
                 <div style="flex:1;">
-                  <div style="font-weight:700;font-size:.9em;color:var(--text2);margin-bottom:2px;">Toss-Ups Heard <span style="font-weight:400;font-size:.85em;">(auto-tracks on TU / Power / Neg)</span></div>
+                  <div style="font-weight:700;font-size:.9em;color:var(--text2);margin-bottom:2px;">Toss-Ups Heard <span style="font-weight:400;font-size:.85em;">(Auto-tracks on TU / Power / Neg)</span></div>
                   <div style="font-size:1.6em;font-weight:700;color:var(--primary);" id="tHeardDisplay">0</div>
                 </div>
                 <div style="display:flex;gap:6px;align-items:center;">
@@ -789,15 +789,15 @@
             </div>
           </div>
           <div class="qb-section">
-            <h2>Statistics <span class="toggle-icon">&#9660;</span></h2>
-            <div class="collapsible-content">
-              <div id="statisticsContainer"></div>
-            </div>
-          </div>
-          <div class="qb-section">
             <h2>Substitutions <span class="toggle-icon">&#9660;</span></h2>
             <div class="collapsible-content">
               <div id="subPanelContent"></div>
+            </div>
+          </div>
+          <div class="qb-section">
+            <h2>Statistics <span class="toggle-icon">&#9660;</span></h2>
+            <div class="collapsible-content">
+              <div id="statisticsContainer"></div>
             </div>
           </div>
           <div class="qb-section">
@@ -984,6 +984,10 @@
           const same = incoming.size === current.size && [...incoming].every(n => current.has(n));
           if (!same) { manuallyIncluded = incoming; changed = true; }
         }
+        if (s.playerTHeardOverrides && typeof s.playerTHeardOverrides === 'object') {
+          playerTHeardOverrides = s.playerTHeardOverrides;
+          changed = true;
+        }
         if (changed && analyticsOpen && currentAnalyticsTab === 'players') renderAnalyticsPlayersUniversal();
       });
       restoreVisualSettings();
@@ -1009,7 +1013,7 @@
     }
     function saveGlobalSettings() {
       if (!globalSettingsRef) return;
-      globalSettingsRef.set({ skillThresholdPct, manuallyIncluded: [...manuallyIncluded] })
+      globalSettingsRef.set({ skillThresholdPct, manuallyIncluded: [...manuallyIncluded], playerTHeardOverrides })
         .catch(e => showFirebaseError('Settings save failed: ' + e.message));
     }
 
@@ -1017,6 +1021,15 @@
       if (!globalSettingsRef) return;
       globalSettingsRef.child('manuallyIncluded').set([...manuallyIncluded])
         .catch(e => showFirebaseError('Inclusion save failed: ' + e.message));
+    }
+
+    function adjustPlayerTHeard(playerName, delta) {
+      playerTHeardOverrides[playerName] = (playerTHeardOverrides[playerName] || 0) + delta;
+      if (playerTHeardOverrides[playerName] === 0) delete playerTHeardOverrides[playerName];
+      if (!globalSettingsRef) return;
+      globalSettingsRef.child('playerTHeardOverrides').set(playerTHeardOverrides)
+        .catch(e => showFirebaseError('TH save failed: ' + e.message));
+      renderAnalyticsPlayersUniversal();
     }
 
     function saveVersion() {
@@ -1074,6 +1087,7 @@
     var expandedPlayerCards = new Set(); // tracks which player cards are open
     var expandedTeamCards = new Set();   // tracks which team composition session cards are open
     var manuallyIncluded = new Set();    // low-data players manually forced into skill score averages
+    var playerTHeardOverrides = {};         // per-player manual tHeard adjustments (delta), synced globally
 
     // ── Indicators ──
     function setIndicators(text,color,title) {
@@ -1214,13 +1228,13 @@
               <div class="session-card-title" style="${isInvalid ? 'text-decoration:line-through;color:var(--text2);' : ''}">${s.name}${isCurrent ? ' <span style="font-size:.7em;background:var(--primary);color:#fff;padding:2px 7px;border-radius:8px;font-weight:700;vertical-align:middle;">Active</span>' : ''}</div>
               <div class="session-card-details">
                 <div>Created: ${new Date(s.created).toLocaleString()}</div>
-                <div>${(s.answerLog||[]).length} answers &bull; ${s.tHeard||0} questions heard</div>
+                <div>${(s.answerLog||[]).length} Answers &bull; ${s.tHeard||0} Questions Heard</div>
               </div>
-              ${isInvalid ? '<div style="font-size:.78em;color:var(--danger);font-weight:700;margin-top:4px;">! Excluded from analytics</div>' : ''}
+              ${isInvalid ? '<div style="font-size:.78em;color:var(--danger);font-weight:700;margin-top:4px;">! Excluded From Analytics</div>' : ''}
             </div>
             <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0;padding-top:2px;">
               <span style="font-size:.7em;font-weight:700;color:var(--text2);">Analytics</span>
-              <div onclick="toggleSessionInvalid('${s.id}')" style="width:38px;height:20px;background:${isInvalid ? 'var(--danger)' : 'var(--success)'};border-radius:10px;cursor:pointer;position:relative;transition:background .2s;" title="${isInvalid ? 'Session excluded — click to include' : 'Session included — click to exclude'}">
+              <div onclick="toggleSessionInvalid('${s.id}')" style="width:38px;height:20px;background:${isInvalid ? 'var(--danger)' : 'var(--success)'};border-radius:10px;cursor:pointer;position:relative;transition:background .2s;" title="${isInvalid ? 'Session Excluded — click to include' : 'Session Included — click to exclude'}">
                 <div style="width:14px;height:14px;background:#fff;border-radius:50%;position:absolute;top:3px;${isInvalid ? 'left:3px' : 'left:21px'};transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3);"></div>
               </div>
               <span style="font-size:.68em;font-weight:700;color:${isInvalid ? 'var(--danger)' : 'var(--success)'};">${isInvalid ? 'OFF' : 'ON'}</span>
@@ -1449,16 +1463,16 @@
         });
       }
 
-      const tHeardLabel = playerTHeard > 0 ? `${playerTHeard} toss-ups heard` : 'no toss-ups-heard data';
+      const tHeardLabel = playerTHeard > 0 ? `${playerTHeard} Toss-Ups Heard` : 'No Toss-Ups-Heard Data';
 
       document.getElementById('pdModalTitle').textContent = playerName;
       document.getElementById('pdModalBody').innerHTML = `
         <div class="pd-hero">
           <div>
             <div class="pd-hero-name">${playerName}</div>
-            <div class="pd-hero-sub">${sessionLabel} &bull; ${total} answers &bull; ${acc}% accuracy &bull; ${ppa} pts/answer</div>
+            <div class="pd-hero-sub">${sessionLabel} &bull; ${total} Answers &bull; ${acc}% Accuracy &bull; ${ppa} Pts/Answer</div>
           </div>
-          <div class="pd-hero-pts">${player.points} pts</div>
+          <div class="pd-hero-pts">${player.points} Pts</div>
         </div>
         <div class="pd-section-title">Answer Breakdown</div>
         <div class="pd-stat-chips">
@@ -1659,9 +1673,33 @@
       });
       html+='</div>';
 
+      // ── Derived team-level metrics ──
+      const teamUPoints = 30 * (totalPowers + totalTossups);
+      const teamActualPts20 = globalTHeard > 0 ? ((totalPts / globalTHeard) * 20).toFixed(1) : '—';
+      const teamPotPts20    = globalTHeard > 0 ? ((teamUPoints / globalTHeard) * 20).toFixed(1) : '—';
+      const teamActualizedPot = (teamUPoints > 0 && globalTHeard > 0)
+        ? ((totalPts / teamUPoints) * 100).toFixed(1) + '%' : '—';
+      const totalBuzzes = totalPowers + totalTossups + totalNegs;
+      const teamConf    = globalTHeard > 0 ? ((100 * totalBuzzes / globalTHeard)).toFixed(1) + '%' : '—';
+      const teamPowerRate = (totalPowers + totalNegs) > 0
+        ? ((100 * totalPowers) / (totalPowers + totalNegs)).toFixed(1) + '%' : '—';
+
       html+='<div style="background:var(--card);border:2px solid var(--border);border-radius:10px;padding:18px;margin-bottom:var(--sp);box-shadow:var(--shadow-sm);">';
       html+='<h3 style="margin:0 0 12px;font-size:1.1em;color:var(--primary);">HSE Team Overview</h3>';
-      [['Powers',totalPowers],['Toss-ups',totalTossups],['Bonuses',totalBonuses],['Negs',totalNegs],['Toss-ups Heard',globalTHeard],['Points Per Answer',ppa],['Accuracy',accuracy+'%']].forEach(r=>{
+      [
+        ['Powers',          totalPowers],
+        ['Toss-ups',        totalTossups],
+        ['Bonuses',         totalBonuses],
+        ['Negs',            totalNegs],
+        ['Toss-ups Heard',  globalTHeard],
+        ['Points Per Answer', ppa],
+        ['Accuracy',        accuracy + '%'],
+        ['Actual Pts / 20 TU', teamActualPts20],
+        ['Pot. Pts / 20 TU',   teamPotPts20],
+        ['Actualized Potential', teamActualizedPot],
+        ['Confidence (Buzz Rate)', teamConf],
+        ['Power Rate',      teamPowerRate],
+      ].forEach(r=>{
         html+='<div class="stat-row"><span class="stat-label">'+r[0]+'</span><span class="stat-value">'+r[1]+'</span></div>';
       });
       html+='</div>';
@@ -1669,13 +1707,13 @@
       if(strengths.length){
         html+='<div style="background:var(--card);border:2px solid var(--border);border-radius:10px;padding:18px;margin-bottom:var(--sp);box-shadow:var(--shadow-sm);">';
         html+='<h3 style="margin:0 0 12px;font-size:1.1em;color:var(--success);">Category Strengths</h3>';
-        strengths.forEach(c=>{html+='<div class="stat-row"><span class="stat-label">'+c.name+'</span><span class="stat-value" style="color:var(--success)">'+c.pts+' pts</span></div>';});
+        strengths.forEach(c=>{html+='<div class="stat-row"><span class="stat-label">'+c.name+'</span><span class="stat-value" style="color:var(--success)">'+c.pts+' Pts</span></div>';});
         html+='</div>';
       }
       if(weaknesses.length){
         html+='<div style="background:var(--card);border:2px solid var(--border);border-radius:10px;padding:18px;margin-bottom:var(--sp);box-shadow:var(--shadow-sm);">';
         html+='<h3 style="margin:0 0 12px;font-size:1.1em;color:var(--danger);">Category Weaknesses</h3>';
-        weaknesses.forEach(c=>{html+='<div class="stat-row"><span class="stat-label">'+c.name+'</span><span class="stat-value" style="color:var(--danger)">'+c.pts+' pts</span></div>';});
+        weaknesses.forEach(c=>{html+='<div class="stat-row"><span class="stat-label">'+c.name+'</span><span class="stat-value" style="color:var(--danger)">'+c.pts+' Pts</span></div>';});
         html+='</div>';
       }
       if(activePlayers.length){
@@ -1684,7 +1722,7 @@
         activePlayers.slice(0,5).forEach(function(p,i){
           var pw=p.powers, ng=p.negs;
           html+='<div class="stat-row"><span class="stat-label"><strong style="color:var(--primary);min-width:28px;display:inline-block;">#'+(i+1)+'</strong> '+p.name+'</span>';
-          html+='<span style="display:flex;gap:8px;align-items:center;"><span class="stat-value">'+p.points+' pts</span>';
+          html+='<span style="display:flex;gap:8px;align-items:center;"><span class="stat-value">'+p.points+' Pts</span>';
           if(pw>0) html+='<span style="font-size:.75em;background:var(--success);color:white;padding:2px 8px;border-radius:10px;font-weight:700;">+'+pw+' Power</span>';
           if(ng>0) html+='<span style="font-size:.75em;background:var(--danger);color:white;padding:2px 8px;border-radius:10px;font-weight:700;">-'+ng+' Neg</span>';
           html+='</span></div>';
@@ -1720,12 +1758,19 @@
           u.powers += answers.filter(a => a.pointType === 'Power').length;
           u.tHeard += sessionTHeard;
           u.sessions++;
+          u._tHeardBase = (u._tHeardBase || 0) + sessionTHeard;
           answers.forEach(a => {
             if (a.category && a.category !== '—') u.catMap[a.category] = (u.catMap[a.category] || 0) + 1;
           });
         });
       });
       return Object.values(playerMap)
+        .map(p => {
+          const delta = playerTHeardOverrides[p.name] || 0;
+          p.tHeard = Math.max(0, (p._tHeardBase || 0) + delta);
+          p.tHeardDelta = delta;
+          return p;
+        })
         .sort((a, b) => b.points !== a.points ? b.points - a.points : b.powers !== a.powers ? b.powers - a.powers : a.negs - b.negs);
     }
 
@@ -1816,7 +1861,7 @@
           onmouseover="this.style.background='var(--hover)';" onmouseout="this.style.background='';">
           <div style="display:flex;align-items:center;gap:10px;">
             <span style="font-size:.85em;font-weight:700;color:var(--text);">⚙ Skill Score Settings</span>
-            ${ssCollapsed ? `<span style="font-size:.72em;color:var(--text3);">threshold ≥${MIN_BUZZ} &nbsp;·&nbsp; prod + power rate + acc</span>` : ''}
+            ${ssCollapsed ? `<span style="font-size:.72em;color:var(--text3);">Threshold ≥${MIN_BUZZ} &nbsp;·&nbsp; Pot. Pts + Power Rate + Accuracy</span>` : ''}
           </div>
           <span style="font-size:.75em;color:var(--text3);transition:transform .25s;display:inline-block;transform:${ssCollapsed?'':'rotate(180deg)'};">&#9660;</span>
         </div>
@@ -1888,9 +1933,9 @@
       html += `<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 18px;margin-bottom:var(--sp);box-shadow:var(--shadow-xs);">
         <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px;">
           <span style="font-size:.9em;font-weight:700;color:var(--text);">Team Averages</span>
-          <span style="font-size:.72em;color:var(--text3);">${qualified.length} of ${active.length} players qualify</span>
+          <span style="font-size:.72em;color:var(--text3);">${qualified.length} of ${active.length} Players Qualify</span>
         </div>
-        ${!hasQualified ? `<p style="color:var(--text2);font-size:.85em;font-style:italic;margin:0;">Not enough data yet (threshold: ≥${MIN_BUZZ} buzz answers per player).</p>` : `
+        ${!hasQualified ? `<p style="color:var(--text2);font-size:.85em;font-style:italic;margin:0;">Not enough data yet — threshold: ≥${MIN_BUZZ} buzz answers per player.</p>` : `
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px;">
           <div style="background:var(--sec-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;text-align:center;">
             <div class="metric-lbl">Avg Pot. Pts / 20 TU</div>
@@ -1909,7 +1954,7 @@
             <div style="font-size:1.15em;font-weight:700;color:${avgAcc >= 80 ? 'var(--success)' : avgAcc >= 50 ? '#f39c12' : 'var(--danger)'};">${avgAcc.toFixed(1)}%</div>
           </div>
         </div>
-        <div style="font-size:.7em;color:var(--text3);font-style:italic;">Skill Score anchored at 100 = exactly team average. Each of the three metrics is normalized by team average before summing, so all three contribute equally.</div>`}
+        <div style="font-size:.7em;color:var(--text3);font-style:italic;">Skill Score anchored at 100 = exactly team average. Each of the three metrics is normalized by the team average before summing, so all three contribute equally.</div>`}
       </div>`;
 
       // ── Sort controls ──
@@ -1978,6 +2023,7 @@
         const sfx = ['st','nd','rd'][rank-1] || 'th';
         const acc = p.totalAnswers ? Math.round(((p.totalAnswers - p.negs) / p.totalAnswers) * 100) : 0;
         const cardId = 'pcard_' + p.name.replace(/\W/g, '_');
+        const safeName = p.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
         const tH = p.tHeard || 0;
         const bonuses = p.bonusPoints / 10;
         const totalBuzzes = p.powers + p.tossupsCorrect + p.negs;
@@ -2007,23 +2053,32 @@
             <div class="player-card-rank">${rank}${sfx}</div>
             <div style="flex:1;min-width:0;">
               <div style="font-weight:700;font-size:.95em;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.name}</div>
-              <div style="font-size:.75em;color:var(--text3);margin-top:1px;">${p.sessions} session${p.sessions!==1?'s':''} &bull; ${p.totalAnswers} answers &bull; ${acc}% acc</div>
+              <div style="font-size:.75em;color:var(--text3);margin-top:1px;">${p.sessions} Session${p.sessions!==1?'s':''} &bull; ${p.totalAnswers} Answers &bull; ${acc}% Acc</div>
             </div>
             <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
               ${p.powers ? `<span style="font-size:.72em;background:rgba(17,153,142,.12);color:var(--success);padding:2px 7px;border-radius:20px;font-weight:700;border:1px solid var(--success);">+${p.powers} Power${p.powers!==1?'s':''}</span>` : ''}
               ${p.negs   ? `<span style="font-size:.72em;background:rgba(220,53,69,.1);color:var(--danger);padding:2px 7px;border-radius:20px;font-weight:700;border:1px solid var(--danger);">−${p.negs} Neg${p.negs!==1?'s':''}</span>` : ''}
-              <span style="font-size:1em;font-weight:800;color:var(--primary);min-width:52px;text-align:right;">${p.points} pts</span>
+              <span style="font-size:1em;font-weight:800;color:var(--primary);min-width:52px;text-align:right;">${p.points} Pts</span>
               <span id="${cardId}_arrow" style="font-size:.75em;color:var(--text3);transition:transform .2s;margin-left:2px;">&#9660;</span>
             </div>
           </div>
           <div id="${cardId}" style="display:none;">
             <div class="player-card-body">
-              <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px;">
-                <span style="background:rgba(17,153,142,.08);border:1px solid rgba(17,153,142,.3);color:var(--success);border-radius:6px;padding:3px 9px;font-size:.77em;font-weight:600;">${p.tossupsCorrect} TU${p.tossupsCorrect!==1?'s':''}</span>
-                <span style="background:rgba(102,126,234,.08);border:1px solid rgba(102,126,234,.3);color:var(--primary);border-radius:6px;padding:3px 9px;font-size:.77em;font-weight:600;">${p.powers} Power${p.powers!==1?'s':''}</span>
-                <span style="background:var(--sec-bg);border:1px solid var(--border);border-radius:6px;padding:3px 9px;font-size:.77em;font-weight:600;">${bonuses} Bonus${bonuses!==1?'es':''}</span>
-                <span style="background:rgba(220,53,69,.08);border:1px solid rgba(220,53,69,.3);color:var(--danger);border-radius:6px;padding:3px 9px;font-size:.77em;font-weight:600;">${p.negs} Neg${p.negs!==1?'s':''}</span>
-                ${tH > 0 ? `<span style="background:var(--sec-bg);border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:3px 9px;font-size:.77em;font-weight:600;">${tH} TU${tH!==1?'s':''} heard</span>` : ''}
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:12px;">
+                <div style="display:flex;flex-wrap:wrap;gap:5px;">
+                  <span style="background:rgba(17,153,142,.08);border:1px solid rgba(17,153,142,.3);color:var(--success);border-radius:6px;padding:3px 9px;font-size:.77em;font-weight:600;">${p.tossupsCorrect} TU${p.tossupsCorrect!==1?'s':''}</span>
+                  <span style="background:rgba(102,126,234,.08);border:1px solid rgba(102,126,234,.3);color:var(--primary);border-radius:6px;padding:3px 9px;font-size:.77em;font-weight:600;">${p.powers} Power${p.powers!==1?'s':''}</span>
+                  <span style="background:var(--sec-bg);border:1px solid var(--border);border-radius:6px;padding:3px 9px;font-size:.77em;font-weight:600;">${bonuses} Bonus${bonuses!==1?'es':''}</span>
+                  <span style="background:rgba(220,53,69,.08);border:1px solid rgba(220,53,69,.3);color:var(--danger);border-radius:6px;padding:3px 9px;font-size:.77em;font-weight:600;">${p.negs} Neg${p.negs!==1?'s':''}</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:5px;flex-shrink:0;background:var(--sec-bg);border:1.5px solid var(--border);border-radius:8px;padding:4px 8px;" title="Manually adjust Toss-Ups Heard for this player">
+                  <button onclick="event.stopPropagation();adjustPlayerTHeard('${safeName}',-1);" style="width:20px;height:20px;border-radius:5px;border:1.5px solid var(--border);background:var(--card);color:var(--text2);font-size:.85em;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;">−</button>
+                  <div style="text-align:center;min-width:36px;">
+                    <div style="font-size:.7em;font-weight:700;color:var(--text3);line-height:1;margin-bottom:1px;">TU Heard</div>
+                    <div style="font-size:.88em;font-weight:800;color:${tH > 0 ? 'var(--primary)' : 'var(--text3)'};">${tH}${p.tHeardDelta ? `<span style="font-size:.75em;color:${p.tHeardDelta > 0 ? 'var(--success)' : 'var(--danger)'};">(${p.tHeardDelta > 0 ? '+' : ''}${p.tHeardDelta})</span>` : ''}</div>
+                  </div>
+                  <button onclick="event.stopPropagation();adjustPlayerTHeard('${safeName}',1);" style="width:20px;height:20px;border-radius:5px;border:1.5px solid var(--border);background:var(--card);color:var(--text2);font-size:.85em;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;">+</button>
+                </div>
               </div>
               <div class="metric-grid">
                 <div class="metric-tile">
@@ -2215,7 +2270,7 @@
 
       const sessionCount = validSessions().length;
       let html = `<div style="background:rgba(118,75,162,.08);border:1px solid var(--secondary);border-radius:8px;padding:10px 14px;margin-bottom:var(--sp);font-size:.85em;color:var(--secondary);font-weight:600;">
-        ${allTeamCards.length} team composition${allTeamCards.length !== 1 ? 's' : ''} across <strong>${sessionCount} session${sessionCount !== 1 ? 's' : ''}</strong> &mdash; most recent first
+        ${allTeamCards.length} team composition${allTeamCards.length !== 1 ? 's' : ''} across <strong>${sessionCount} session${sessionCount !== 1 ? 's' : ''}</strong> &mdash; Most Recent First
       </div>`;
 
       const accentColors = ['var(--primary)', 'var(--secondary)', 'var(--success)', '#e67e22', '#e74c3c'];
@@ -2226,7 +2281,7 @@
         const acc = team.answers ? Math.round(((team.answers - team.negs) / team.answers) * 100) : 0;
         const memberTitle = team.members.join(' / ');
         const eBonusTooltip = `Capitalization = 100 × (10 × bonuses) / (30 × (toss-ups + powers)). How well the team capitalized on the bonuses available after winning toss-ups.`;
-        const eTotalTooltip = `Point Control = 100 × (15P + 10T + 10B − 5N) / (45 × questions heard). Questions heard = ${team.tHeard} (${team.tHeardIsReal ? 'from session counter' : 'estimated'}).`;
+        const eTotalTooltip = `Point Control = 100 × (15P + 10T + 10B − 5N) / (45 × questions heard). Questions heard = ${team.tHeard} (${team.tHeardIsReal ? 'From Session Counter' : 'Estimated'}).`;
 
         const statChips = [
           ['Points',   team.pts,      color],
@@ -2251,10 +2306,10 @@
                 ${team.isCurrent ? '<span style="font-size:.7em;background:var(--primary);color:#fff;padding:2px 8px;border-radius:8px;font-weight:700;">Current</span>' : ''}
               </div>
               <div style="font-size:.82em;color:var(--text);font-weight:600;margin-top:2px;">${memberTitle}</div>
-              <div style="font-size:.75em;color:var(--text2);margin-top:1px;">${team.dateStr} &bull; ${team.answers} answers</div>
+              <div style="font-size:.75em;color:var(--text2);margin-top:1px;">${team.dateStr} &bull; ${team.answers} Answers</div>
             </div>
             <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
-              <span style="font-size:1.05em;font-weight:700;color:var(--primary);">${team.pts} pts</span>
+              <span style="font-size:1.05em;font-weight:700;color:var(--primary);">${team.pts} Pts</span>
               <span id="${cardId}_arrow" style="font-size:.8em;color:var(--text2);transition:transform .2s;">&#9660;</span>
             </div>
           </div>
@@ -2266,7 +2321,7 @@
               <div style="border-top:1px solid var(--border);padding-top:12px;">
                 ${effBar(team.eBonus, color, 'Capitalization', eBonusTooltip)}
                 ${effBar(team.eTotal, color, 'Point Control', eTotalTooltip)}
-                ${(team.eBonus === null && team.eTotal === null) ? '<div style="font-size:.8em;color:var(--text2);font-style:italic;">No toss-up answers recorded yet.</div>' : ''}
+                ${(team.eBonus === null && team.eTotal === null) ? '<div style="font-size:.8em;color:var(--text2);font-style:italic;">No Toss-Up Answers Recorded Yet.</div>' : ''}
               </div>
             </div>
           </div>
@@ -2311,7 +2366,7 @@
       if(!sorted.length){el.innerHTML='<p style="color:var(--text2)">No category data yet.</p>';return;}
       html+=sorted.map(([cat,data])=>`
         <div class="an-cat-card">
-          <div class="an-cat-title">${cat} <span style="font-weight:400;color:var(--text2);font-size:.88em;">${data.total} answers &bull; ${data.points} pts</span></div>
+          <div class="an-cat-title">${cat} <span style="font-weight:400;color:var(--text2);font-size:.88em;">${data.total} Answers &bull; ${data.points} Pts</span></div>
           ${Object.entries(data.players).sort((a,b)=>(b[1].correct+b[1].neg)-(a[1].correct+a[1].neg)).map(([player,d])=>`
             <div class="an-cat-row">
               <span style="font-weight:600;">${player}</span>
@@ -2339,11 +2394,11 @@
           return `<div class="an-lb-row" style="cursor:pointer;" onclick="openPlayerDetailModal('${escapedName}')" title="Click for full details">
             <span class="an-lb-rank">${rank}${sfx}</span>
             <span class="an-lb-name" style="color:var(--primary);text-decoration:underline;text-underline-offset:2px;">${p.name}</span>
-            <span class="an-lb-pts">${p.points} pts</span>
+            <span class="an-lb-pts">${p.points} Pts</span>
             ${p.powers?`<span class="an-lb-chip power">+${p.powers} Power</span>`:''}
             ${p.negs?`<span class="an-lb-chip neg">-${p.negs} Neg</span>`:''}
-            <span class="an-lb-chip">${p.totalAnswers} ans</span>
-            ${p.sessions>1?`<span class="an-lb-chip">${p.sessions}s</span>`:''}
+            <span class="an-lb-chip">${p.totalAnswers} Ans</span>
+            ${p.sessions>1?`<span class="an-lb-chip">${p.sessions} Sessions</span>`:''}
           </div>`;
         }).join('');
       } else {
@@ -2550,29 +2605,35 @@
 
       const benchOpts = bench.length
         ? bench.map(b => `<option value="${b.replace(/"/g,'&quot;')}">${b}</option>`).join('')
-        : `<option value="" disabled>No bench players available</option>`;
+        : `<option value="" disabled>No Bench Players Available</option>`;
+
+      const disabledAttr  = !bench.length ? 'disabled' : '';
+      const disabledStyle = !bench.length ? 'opacity:.5;cursor:not-allowed;' : '';
 
       el.innerHTML = `
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-          <div class="input-group" style="margin-bottom:0;">
-            <label>Sub Out</label>
-            <select id="subOutSelect">
-              <option value="">— active player —</option>
-              ${activeOpts}
-            </select>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:10px;">
+            <div class="input-group" style="margin-bottom:0;">
+              <label>Sub Out</label>
+              <select id="subOutSelect">
+                <option value="">— Active Player —</option>
+                ${activeOpts}
+              </select>
+            </div>
+            <div style="padding-bottom:12px;font-size:1.3em;color:var(--text3);font-weight:700;line-height:1;user-select:none;">⇄</div>
+            <div class="input-group" style="margin-bottom:0;">
+              <label>Sub In</label>
+              <select id="subInSelect" ${disabledAttr} style="${disabledStyle}">
+                <option value="">— Bench Player —</option>
+                ${benchOpts}
+              </select>
+            </div>
           </div>
-          <div class="input-group" style="margin-bottom:0;">
-            <label>Sub In</label>
-            <select id="subInSelect" ${!bench.length ? 'disabled style="opacity:.55;cursor:not-allowed;"' : ''}>
-              <option value="">— bench player —</option>
-              ${benchOpts}
-            </select>
-          </div>
+          <button onclick="executeSubFromPanel2();" class="button button-success" style="width:100%;">
+            Make Substitution
+          </button>
+          ${!bench.length ? '<p style="color:var(--text2);font-size:.82em;margin:0;">All pool players are already active. Add more players in the Players section.</p>' : ''}
         </div>
-        <button onclick="executeSubFromPanel2();" class="button button-success" style="width:100%;margin-top:14px;">
-          ⇄ Make Substitution
-        </button>
-        ${!bench.length ? `<p style="color:var(--text2);font-size:.82em;margin-top:10px;margin-bottom:0;">All pool players are already active. Add more players in the Players section.</p>` : ''}
       `;
     }
 
@@ -2803,7 +2864,7 @@
       el.innerHTML=answers.length
         ?[...answers].reverse().map((a,i)=>`
             <div class="log-entry">
-              <span><strong>${answers.length-i}. ${a.player === '— Team Bonus —' ? '<span style="color:var(--warning);">Team Bonus</span>' : a.player}</strong> &mdash; ${a.pointType} (${a.points>0?'+':''}${a.points} pts) &mdash; ${a.category}</span>
+              <span><strong>${answers.length-i}. ${a.player === '— Team Bonus —' ? '<span style="color:var(--warning);">Team Bonus</span>' : a.player}</strong> &mdash; ${a.pointType} (${a.points>0?'+':''}${a.points} Pts) &mdash; ${a.category}</span>
               <button class="button button-danger" onclick="deleteAnswer('${a.id}')" style="padding:4px 8px;font-size:.8em;">Delete</button>
             </div>`).join('')
         :'<p style="color:var(--text2)">No answers recorded yet.</p>';
@@ -2835,7 +2896,7 @@
         const tied=prev&&prev.points===s.points&&prev.powers===s.powers&&prev.negs===s.negs;
         if(i>0&&!tied) rank=i+1;
         const sfx=['st','nd','rd'][rank-1]||'th';
-        html+=`<li style="padding:6px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;"><span><strong style="color:var(--primary);min-width:42px;display:inline-block;">${rank}${sfx}</strong> ${s.name}</span><span style="color:var(--text2);font-size:.92em;">${s.points} pts${s.powers?' &middot; '+'+'+s.powers+' Power':''}${s.negs?' &middot; '+'-'+s.negs+' Neg':''}</span></li>`;
+        html+=`<li style="padding:6px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;"><span><strong style="color:var(--primary);min-width:42px;display:inline-block;">${rank}${sfx}</strong> ${s.name}</span><span style="color:var(--text2);font-size:.92em;">${s.points} Pts${s.powers?' &middot; '+'+'+s.powers+' Power':''}${s.negs?' &middot; '+'-'+s.negs+' Neg':''}</span></li>`;
       });
       return html;
     }
@@ -2846,9 +2907,9 @@
       el.querySelectorAll('.stat-card:not(.collapsed),.team-stat-card:not(.collapsed)').forEach(c=>{const n=c.querySelector('.player-name,.team-name');if(n) open.add(n.textContent.trim());});
       const ps=calculatePlayerStats(),ts=calculateTeamStats(),active=ps.filter(s=>s.totalAnswers>0);
       let html='<div class="stats-grid">';
-      ts.forEach(t=>{html+=`<div class="team-stat-card collapsed"><h3 onclick="toggleStatCard(event)"><span class="team-name">${t.name}</span><span class="team-score">${t.totalPoints} pts</span></h3><div class="stat-details"><div class="stat-row"><span class="stat-label">Total Points:</span><span class="stat-value">${t.totalPoints}</span></div><div class="stat-row"><span class="stat-label">Total Answers:</span><span class="stat-value">${t.totalAnswers}</span></div><div class="stat-row"><span class="stat-label">Avg per Member:</span><span class="stat-value">${t.averagePerMember}</span></div><div class="stat-row"><span class="stat-label">Members:</span><span>${t.members.join(', ')||'None'}</span></div></div></div>`;});
+      ts.forEach(t=>{html+=`<div class="team-stat-card collapsed"><h3 onclick="toggleStatCard(event)"><span class="team-name">${t.name}</span><span class="team-score">${t.totalPoints} Pts</span></h3><div class="stat-details"><div class="stat-row"><span class="stat-label">Total Points:</span><span class="stat-value">${t.totalPoints}</span></div><div class="stat-row"><span class="stat-label">Total Answers:</span><span class="stat-value">${t.totalAnswers}</span></div><div class="stat-row"><span class="stat-label">Avg per Member:</span><span class="stat-value">${t.averagePerMember}</span></div><div class="stat-row"><span class="stat-label">Members:</span><span>${t.members.join(', ')||'None'}</span></div></div></div>`;});
       if(active.length){
-        active.forEach(s=>{html+=`<div class="stat-card collapsed"><h3 onclick="toggleStatCard(event)"><span class="player-name">${s.name}</span><span class="player-score">${s.points} pts</span></h3><div class="stat-details"><div class="stat-row"><span class="stat-label">Total Points:</span><span class="stat-value">${s.points}</span></div><div class="stat-row"><span class="stat-label">Answers:</span><span class="stat-value">${s.totalAnswers}</span></div><div class="stat-row"><span class="stat-label">Toss-ups:</span><span class="stat-value">${s.tossupsCorrect}</span></div><div class="stat-row"><span class="stat-label">Bonus Pts:</span><span class="stat-value">${s.bonusPoints}</span></div><div class="stat-row"><span class="stat-label">Negs:</span><span class="stat-value">${s.negs}</span></div><div class="stat-row"><span class="stat-label">Powers:</span><span class="stat-value">${s.powers}</span></div></div></div>`;});
+        active.forEach(s=>{html+=`<div class="stat-card collapsed"><h3 onclick="toggleStatCard(event)"><span class="player-name">${s.name}</span><span class="player-score">${s.points} Pts</span></h3><div class="stat-details"><div class="stat-row"><span class="stat-label">Total Points:</span><span class="stat-value">${s.points}</span></div><div class="stat-row"><span class="stat-label">Answers:</span><span class="stat-value">${s.totalAnswers}</span></div><div class="stat-row"><span class="stat-label">Toss-ups:</span><span class="stat-value">${s.tossupsCorrect}</span></div><div class="stat-row"><span class="stat-label">Bonus Pts:</span><span class="stat-value">${s.bonusPoints}</span></div><div class="stat-row"><span class="stat-label">Negs:</span><span class="stat-value">${s.negs}</span></div><div class="stat-row"><span class="stat-label">Powers:</span><span class="stat-value">${s.powers}</span></div></div></div>`;});
         html+=`<div class="overall-ranking"><h3 style="margin-top:0;">Player Rankings</h3><ol style="list-style:none;margin:12px 0 0;padding:0;">${buildRankingList(active)}</ol></div>`;
       } else {html+='<p style="color:var(--text2)">No statistics available yet.</p>';}
       html+='</div>';
@@ -2862,7 +2923,7 @@
     function importFromJSON(event) {
       const file=event.target.files[0]; if(!file) return;
       const statusEl=document.getElementById('importStatus');
-      statusEl.style.display='block'; statusEl.style.color='var(--text2)'; statusEl.textContent='Reading file...';
+      statusEl.style.display='block'; statusEl.style.color='var(--text2)'; statusEl.textContent='Reading file…';
       const reader=new FileReader();
       reader.onload=e=>{
         try {
