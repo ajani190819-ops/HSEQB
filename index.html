@@ -822,7 +822,6 @@
             <button class="analytics-tab active" onclick="switchAnalyticsTab('overview',this)">Overview</button>
             <button class="analytics-tab" onclick="switchAnalyticsTab('players',this)">Players</button>
             <button class="analytics-tab" onclick="switchAnalyticsTab('charts',this)">Charts</button>
-            <button class="analytics-tab" onclick="switchAnalyticsTab('categories',this)">Categories</button>
             <button class="analytics-tab" onclick="switchAnalyticsTab('teams',this)">Team Compositions</button>
           </div>
         </div>
@@ -830,7 +829,6 @@
           <div id="an-overview" class="analytics-panel active"></div>
           <div id="an-players" class="analytics-panel"></div>
           <div id="an-charts" class="analytics-panel"></div>
-          <div id="an-categories" class="analytics-panel"></div>
           <div id="an-teams" class="analytics-panel"></div>
         </div>
       </div>
@@ -1714,7 +1712,6 @@
           renderAnalyticsCharts(globalLog, globalPs, globalTHeard);
         }
       }
-      else if(tab==='categories') renderAnalyticsCategories(globalLog, sessionCount);
       else if(tab==='teams') renderAnalyticsTeamCompositions();
     }
 
@@ -1890,31 +1887,23 @@
 
       html += `</div>`; // end panel
 
-      if(strengths.length){
-        html+='<div style="background:var(--card);border:2px solid var(--border);border-radius:10px;padding:18px;margin-bottom:var(--sp);box-shadow:var(--shadow-sm);">';
-        html+='<h3 style="margin:0 0 12px;font-size:1.1em;color:var(--success);">Category Strengths</h3>';
-        strengths.forEach(c=>{html+='<div class="stat-row"><span class="stat-label">'+c.name+'</span><span class="stat-value" style="color:var(--success)">'+c.pts+' Pts</span></div>';});
-        html+='</div>';
-      }
-      if(weaknesses.length){
-        html+='<div style="background:var(--card);border:2px solid var(--border);border-radius:10px;padding:18px;margin-bottom:var(--sp);box-shadow:var(--shadow-sm);">';
-        html+='<h3 style="margin:0 0 12px;font-size:1.1em;color:var(--danger);">Category Weaknesses</h3>';
-        weaknesses.forEach(c=>{html+='<div class="stat-row"><span class="stat-label">'+c.name+'</span><span class="stat-value" style="color:var(--danger)">'+c.pts+' Pts</span></div>';});
-        html+='</div>';
-      }
-      if(activePlayers.length){
-        html+='<div style="background:var(--card);border:2px solid var(--border);border-radius:10px;padding:18px;margin-bottom:var(--sp);box-shadow:var(--shadow-sm);">';
-        html+='<h3 style="margin:0 0 12px;font-size:1.1em;color:var(--primary);">Top Performers</h3>';
-        activePlayers.slice(0,5).forEach(function(p,i){
-          var pw=p.powers, ng=p.negs, ms=p.misses||0;
-          html+='<div class="stat-row"><span class="stat-label"><strong style="color:var(--primary);min-width:28px;display:inline-block;">#'+(i+1)+'</strong> '+p.name+'</span>';
-          html+='<span style="display:flex;gap:8px;align-items:center;"><span class="stat-value">'+p.points+' Pts</span>';
-          if(pw>0) html+='<span style="font-size:.75em;background:var(--success);color:white;padding:2px 8px;border-radius:10px;font-weight:700;">+'+pw+' Power</span>';
-          if(ng>0) html+='<span style="font-size:.75em;background:var(--danger);color:white;padding:2px 8px;border-radius:10px;font-weight:700;">-'+ng+' Neg</span>';
-          if(ms>0) html+='<span style="font-size:.75em;background:var(--warning);color:white;padding:2px 8px;border-radius:10px;font-weight:700;">'+ms+' Miss</span>';
-          html+='</span></div>';
-        });
-        html+='</div>';
+      if(strengths.length || weaknesses.length){
+        const both = strengths.length && weaknesses.length;
+        html+='<div style="background:var(--card);border:2px solid var(--border);border-radius:10px;padding:16px;margin-bottom:var(--sp);box-shadow:var(--shadow-sm);">';
+        html+='<div style="display:'+(both?'grid':'block')+';grid-template-columns:1fr 1fr;gap:16px;">';
+        if(strengths.length){
+          html+='<div>';
+          html+='<h3 style="margin:0 0 10px;font-size:.95em;color:var(--success);">&#9650; Category Strengths</h3>';
+          strengths.forEach(c=>{html+='<div class="stat-row"><span class="stat-label">'+c.name+'</span><span class="stat-value" style="color:var(--success)">'+c.pts+' Pts</span></div>';});
+          html+='</div>';
+        }
+        if(weaknesses.length){
+          html+='<div>';
+          html+='<h3 style="margin:0 0 10px;font-size:.95em;color:var(--danger);">&#9660; Category Weaknesses</h3>';
+          weaknesses.forEach(c=>{html+='<div class="stat-row"><span class="stat-label">'+c.name+'</span><span class="stat-value" style="color:var(--danger)">'+c.pts+' Pts</span></div>';});
+          html+='</div>';
+        }
+        html+='</div></div>';
       }
       if(!totalAns) html+='<p style="color:var(--text2)">No answers recorded yet. Start tracking to see your team overview!</p>';
       el.innerHTML=html;
@@ -2825,36 +2814,6 @@
           options: { ...barOpts, plugins: { ...barOpts.plugins, legend: { display: false } } }
         });
       }
-    }
-
-    function renderAnalyticsCategories(allAnswers, sessionCount) {
-      const el=document.getElementById('an-categories'); if(!el) return;
-      const catData={};
-      allAnswers.forEach(a=>{
-        if(!a.category||a.category==='—') return;
-        if(!catData[a.category]) catData[a.category]={total:0,points:0,players:{}};
-        catData[a.category].total++;
-        catData[a.category].points+=a.points||0;
-        if(!catData[a.category].players[a.player]) catData[a.category].players[a.player]={correct:0,neg:0};
-        if(a.points<0) catData[a.category].players[a.player].neg++;
-        else catData[a.category].players[a.player].correct++;
-      });
-      const sorted=Object.entries(catData).sort((a,b)=>b[1].total-a[1].total);
-      let html='';
-      if(!sorted.length){el.innerHTML='<p style="color:var(--text2)">No category data yet.</p>';return;}
-      html+=sorted.map(([cat,data])=>`
-        <div class="an-cat-card">
-          <div class="an-cat-title">${cat} <span style="font-weight:400;color:var(--text2);font-size:.88em;">${data.total} Answers &bull; ${data.points} Pts</span></div>
-          ${Object.entries(data.players).sort((a,b)=>(b[1].correct+b[1].neg)-(a[1].correct+a[1].neg)).map(([player,d])=>`
-            <div class="an-cat-row">
-              <span style="font-weight:600;">${player}</span>
-              <span style="display:flex;gap:8px;font-size:.82em;">
-                ${d.correct?`<span style="color:var(--success);font-weight:700;">+${d.correct}</span>`:''}
-                ${d.neg?`<span style="color:var(--danger);font-weight:700;">-${d.neg}</span>`:''}
-              </span>
-            </div>`).join('')}
-        </div>`).join('');
-      el.innerHTML=html;
     }
 
     function renderAnalyticsLeaderboard(globalPs, sessionCount) {
