@@ -323,6 +323,7 @@
     }
     .point-type-buttons, .category-buttons { display: grid; grid-template-columns: repeat(auto-fit,minmax(140px,1fr)); gap: 8px; padding: 2px; }
     .player-buttons { display: flex; flex-wrap: wrap; gap: 8px; padding: 2px; }
+
     .button-group { display: flex; gap: 10px; flex-wrap: wrap; }
 
     /* ── Player pool ── */
@@ -542,6 +543,17 @@
 <body>
   <div class="qb-container">
 
+    <!-- Sandbox warning — only shown when running inside Claude's iframe preview -->
+    <div id="sandboxWarning" style="display:none;background:#7c4dff;color:#fff;padding:8px 16px;font-size:.82em;font-weight:600;text-align:center;flex-shrink:0;z-index:300;line-height:1.4;">
+      ⚠ Running inside Claude's preview — Firebase sync is blocked by the sandbox.
+      <strong>Download the file and open it in your browser for live sync.</strong>
+      <button onclick="document.getElementById('sandboxWarning').style.display='none';" style="margin-left:12px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.5);color:#fff;padding:3px 10px;border-radius:6px;cursor:pointer;font-weight:700;font-family:inherit;font-size:.9em;">Dismiss</button>
+    </div>
+    <script>
+      // Detect if inside an iframe (Claude preview, codepen, etc.)
+      try { if (window.self !== window.top) document.getElementById('sandboxWarning').style.display = 'block'; } catch(e) { document.getElementById('sandboxWarning').style.display = 'block'; }
+    </script>
+
     <div class="qb-header" id="qbHeader">
       <button class="header-btn sidebar-open-btn" id="sidebarOpenBtn">&#9654; Menu</button>
       <div class="qb-header-center">
@@ -746,7 +758,7 @@
             <h2>Record Answer <span class="toggle-icon">&#9660;</span></h2>
             <div class="collapsible-content">
               <div class="input-group">
-                <label>Select Player:</label>
+                <label>Select Player: <span id="playerOptionalHint" style="font-weight:400;font-size:.85em;color:var(--text2);display:none;">(optional — skip to give bonus to team)</span></label>
                 <div id="playerButtonsContainer" class="player-buttons"></div>
               </div>
               <div class="input-group">
@@ -780,6 +792,12 @@
             <h2>Statistics <span class="toggle-icon">&#9660;</span></h2>
             <div class="collapsible-content">
               <div id="statisticsContainer"></div>
+            </div>
+          </div>
+          <div class="qb-section">
+            <h2>Substitutions <span class="toggle-icon">&#9660;</span></h2>
+            <div class="collapsible-content">
+              <div id="subPanelContent"></div>
             </div>
           </div>
           <div class="qb-section">
@@ -856,27 +874,26 @@
         </ul>
 
         <h3 style="color:var(--primary);margin:0 0 6px;">Player Metrics</h3>
-        <p style="margin-bottom:6px;">Expand any player in the Players tab to see their individual metrics. All metrics require toss-ups heard data to calculate.</p>
+        <p style="margin-bottom:6px;">Expand any player in the Players tab to see their individual metrics. The per-TU-heard stats require toss-ups heard data.</p>
         <ul style="margin:0 0 14px;padding-left:20px;">
-          <li><strong>Potential Points</strong> &mdash; total points if every toss-up win had earned a full bonus (15P + 40T &minus; 5N)</li>
-          <li><strong>Production Rate</strong> &mdash; potential points per toss-up heard; the primary measure of per-opportunity impact</li>
-          <li><strong>Buzz Volume</strong> &mdash; percentage of toss-ups the player buzzed on (optional — can be disabled in Skill Score Settings)</li>
-          <li><strong>Aggression</strong> &mdash; powers-vs-negs balance: <code>100 &times; (3P &minus; N) / (3P + N)</code>. +100% means all powers and no negs; negative means negs outweigh powers</li>
-          <li><strong>Skill Score</strong> &mdash; composite 0&ndash;100 score where 50 = exactly team average. See below.</li>
+          <li><strong>Points</strong> &mdash; total real points earned across all sessions</li>
+          <li><strong>Actual Pts / 20 TU</strong> &mdash; real earned points per 20 toss-ups heard</li>
+          <li><strong>Potential Points</strong> &mdash; bonus opportunity unlocked by wins: 30 &times; (P + T)</li>
+          <li><strong>Pot. Pts / 20 TU</strong> &mdash; bonus opportunity per 20 toss-ups heard</li>
+          <li><strong>Actualized Potential</strong> &mdash; Actual / Potential per 20 TU — how much of the opportunity was actually converted</li>
+          <li><strong>Confidence</strong> &mdash; buzz rate: how often the player buzzes in <code>100 &times; (P+T+N) / TU Heard</code>. Display only.</li>
+          <li><strong>Accuracy</strong> &mdash; correct buzz rate: of all buzzes, how many were right <code>(P+T) / (P+T+N) &times; 100</code>. Display only.</li>
+          <li><strong>Power Rate</strong> &mdash; of all risky buzzes (powers + negs), how many were powers <code>P / (P+N) &times; 100</code>. 50% = equal powers and negs. Goes into Skill Score.</li>
+          <li><strong>Skill Score</strong> &mdash; normalized average of Pot. Pts/20TU, Power Rate, and Accuracy. Team average = 100.</li>
         </ul>
 
         <h3 style="color:var(--primary);margin:0 0 6px;">Skill Score</h3>
-        <p style="margin-bottom:8px;">Skill Score compares each player to the team average across weighted metrics. A score of 50 means exactly average; 100 means twice the team average across all metrics.</p>
-        <p style="margin-bottom:6px;">Formula: each metric is normalized as <em>player value / team average</em>, then combined as a weighted sum and scaled so 1.0 (= average) maps to 50.</p>
-        <p style="margin-bottom:6px;">Default weights are mathematically derived from realistic IHSA match data:</p>
-        <ul style="margin:0 0 8px;padding-left:20px;">
-          <li><strong>Buzz on:</strong> Production Rate 50% · Buzz Volume 33% · Aggression 17%</li>
-          <li><strong>Buzz off:</strong> Production Rate 75% · Aggression 25%</li>
-        </ul>
-        <p style="margin-bottom:14px;">Players with fewer buzz answers than the low-data threshold are flagged and excluded from group averages by default. You can manually include or exclude flagged players in the <strong>Low-Data Players</strong> panel. Inclusion overrides sync globally across all devices and persist across sessions.</p>
+        <p style="margin-bottom:8px;">Each of the three skill metrics (Pot. Pts/20TU, Power Rate, Accuracy) is divided by the team average so all contribute equally. An exactly-average player scores 100; twice as good across the board scores ~200.</p>
+        <p style="margin-bottom:14px;font-family:monospace;font-size:.9em;background:var(--sec-bg);padding:8px 12px;border-radius:6px;border:1px solid var(--border);">Skill = (Prod/AvgProd + PowerRate/AvgPowerRate + Acc/AvgAcc) &times; 100/3</p>
+        <p style="margin-bottom:14px;">Players with fewer buzz answers than the low-data threshold are flagged and excluded from skill scoring by default. You can manually include or exclude flagged players in the <strong>Low-Data Players</strong> panel. Inclusions sync globally across all devices and persist across sessions.</p>
 
         <h3 style="color:var(--primary);margin:0 0 6px;">Leaderboard Sorting</h3>
-        <p style="margin-bottom:14px;">Use the sort pills above the player list to rank by <strong>Points</strong>, <strong>Skill Score</strong>, <strong>Production Rate</strong>, <strong>Aggression</strong>, <strong>Powers</strong>, or <strong>Negs</strong> (fewest first). <strong>Buzz Volume</strong> is also available as a sort option when buzz is enabled. Ties in Points are broken by most Powers, then fewest Negs.</p>
+        <p style="margin-bottom:14px;">Use the sort pills above the player list to rank by <strong>Points</strong>, <strong>Skill Score</strong>, <strong>Pot. Pts / 20 TU</strong>, <strong>Actual Pts / 20 TU</strong>, <strong>Power Rate</strong>, <strong>Confidence</strong>, <strong>Accuracy</strong>, <strong>Powers</strong>, or <strong>Negs</strong> (fewest first). Ties in Points are broken by most Powers, then fewest Negs.</p>
 
         <h3 style="color:var(--primary);margin:0 0 6px;">Export &amp; Import</h3>
         <p style="margin-bottom:14px;">Export to <strong>CSV</strong> for spreadsheets or <strong>JSON</strong> to back up and re-import a full session. Both options are in the Data section of the sidebar.</p>
@@ -886,7 +903,7 @@
         <ul style="margin:0 0 8px;padding-left:20px;">
           <li>All session data (answers, scores, toss-ups heard)</li>
           <li>The global player pool</li>
-          <li>Skill Score settings (threshold, weights, buzz on/off, auto weights toggle)</li>
+          <li>Skill Score threshold setting</li>
           <li>Low-data player inclusion/exclusion overrides</li>
         </ul>
         <p style="margin-bottom:14px;">The following are stored <strong>on your device only</strong> and do not sync: Dark Mode, accent color, scrollbar visibility, and sidebar state.</p>
@@ -909,6 +926,9 @@
     </div>
   </div>
 
+  </div>
+
+  <!-- Substitution Modal -->
   <!-- Player Detail Modal -->
   <div id="playerDetailModal" class="qb-modal">
     <div class="modal-content" style="max-width:620px;">
@@ -958,11 +978,6 @@
         const s = snap.val(); if (!s) return;
         let changed = false;
         if (typeof s.skillThresholdPct === 'number' && s.skillThresholdPct !== skillThresholdPct) { skillThresholdPct = s.skillThresholdPct; changed = true; }
-        if (typeof s.skillWeightProd   === 'number' && s.skillWeightProd   !== skillWeightProd)   { skillWeightProd   = s.skillWeightProd;   changed = true; }
-        if (typeof s.skillWeightBuzz   === 'number' && s.skillWeightBuzz   !== skillWeightBuzz)   { skillWeightBuzz   = s.skillWeightBuzz;   changed = true; }
-        if (typeof s.skillWeightAggr   === 'number' && s.skillWeightAggr   !== skillWeightAggr)   { skillWeightAggr   = s.skillWeightAggr;   changed = true; }
-        if (typeof s.skillWeightsAuto  === 'boolean'&& s.skillWeightsAuto  !== skillWeightsAuto)  { skillWeightsAuto  = s.skillWeightsAuto;  changed = true; }
-        if (typeof s.skillBuzzEnabled  === 'boolean'&& s.skillBuzzEnabled  !== skillBuzzEnabled)  { skillBuzzEnabled  = s.skillBuzzEnabled;  changed = true; }
         if (Array.isArray(s.manuallyIncluded)) {
           const incoming = new Set(s.manuallyIncluded);
           const current  = manuallyIncluded;
@@ -994,7 +1009,7 @@
     }
     function saveGlobalSettings() {
       if (!globalSettingsRef) return;
-      globalSettingsRef.set({ skillThresholdPct, skillWeightProd, skillWeightBuzz, skillWeightAggr, skillWeightsAuto, skillBuzzEnabled, manuallyIncluded: [...manuallyIncluded] })
+      globalSettingsRef.set({ skillThresholdPct, manuallyIncluded: [...manuallyIncluded] })
         .catch(e => showFirebaseError('Settings save failed: ' + e.message));
     }
 
@@ -1056,11 +1071,6 @@
     var lowDataPanelCollapsed = false;   // low-data panel fold state
     var skillSettingsCollapsed = true;   // skill settings panel fold state
     var skillThresholdPct = 40;          // % of median buzz count for low-data threshold (default 40%)
-    var skillWeightProd = 3;             // rank weight for production rate
-    var skillWeightBuzz = 2;             // rank weight for buzz volume
-    var skillWeightAggr = 1;             // rank weight for aggression
-    var skillWeightsAuto = true;         // when true, weights are locked to defaults (3/2/1)
-    var skillBuzzEnabled = true;         // when false, buzz volume excluded from skill score
     var expandedPlayerCards = new Set(); // tracks which player cards are open
     var expandedTeamCards = new Set();   // tracks which team composition session cards are open
     var manuallyIncluded = new Set();    // low-data players manually forced into skill score averages
@@ -1113,7 +1123,7 @@
       });
       if(changed){
         sessionsRef.child(state.currentSessionId).set(s).catch(e=>showFirebaseError(e.message));
-        renderPlayerPool(); renderPlayerButtons(); renderTeams();
+        renderPlayerPool(); renderPlayerButtons(); renderSubPanel(); renderTeams();
       }
     }
     function saveGlobalPlayers(names) {
@@ -1175,11 +1185,13 @@
         Object.keys(snap.val()||{}).forEach(n=>{if(!session.players[n]) session.players[n]={name:n,points:0,answers:[]};});
         setSessionNonAtomic(id,session).catch(e=>showFirebaseError(e.message));
         localStorage.setItem(CURRENT_SESSION_KEY,id);
-        if(nameInput) nameInput.value=''; renderAll();
+        if(nameInput) nameInput.value='';
+        closeSessionsModal(); renderAll();
       }).catch(()=>{
         setSessionNonAtomic(id,session).catch(e=>showFirebaseError(e.message));
         localStorage.setItem(CURRENT_SESSION_KEY,id);
-        if(nameInput) nameInput.value=''; renderAll();
+        if(nameInput) nameInput.value='';
+        closeSessionsModal(); renderAll();
       });
     }
 
@@ -1266,28 +1278,6 @@
         const buzzes = p.powers + p.tossupsCorrect + p.negs;
         return (buzzes >= _MIN_BUZZ && (p.tHeard || 0) > 0) || manuallyIncluded.has(p.name);
       });
-      function _pm(p) {
-        const tH = p.tHeard || 0;
-        const uPts = 15 * p.powers + 40 * p.tossupsCorrect - 5 * p.negs;
-        const prodRate   = tH > 0 ? uPts / tH : 0;
-        const buzzVol    = tH > 0 ? (100 * (p.powers + p.tossupsCorrect + p.negs)) / tH : 0;
-        const _agD = 3 * p.powers + p.negs;
-        const aggression = _agD > 0 ? (100 * (3 * p.powers - p.negs)) / _agD : 0;
-        return { prodRate, buzzVol, aggression };
-      }
-      let _avgProd = 0, _avgBuzz = 0, _avgAggr = 0;
-      if (_qualified.length > 0) {
-        _qualified.forEach(p => { const m = _pm(p); _avgProd += m.prodRate; _avgBuzz += m.buzzVol; _avgAggr += m.aggression; });
-        _avgProd /= _qualified.length; _avgBuzz /= _qualified.length; _avgAggr /= _qualified.length;
-      }
-      // When auto: 3/2/1 (buzz on) or 3/1 (buzz off) — 3/1 derived from realistic IHSA match math (75/25)
-      const _mWProd = skillWeightsAuto ? 3 : skillWeightProd;
-      const _mWBuzz = skillBuzzEnabled ? (skillWeightsAuto ? 2 : skillWeightBuzz) : 0;
-      const _mWAggr = skillWeightsAuto ? 1 : skillWeightAggr;
-      const _rawWSum = _mWProd + _mWBuzz + _mWAggr;
-      const _wProd = _mWProd / _rawWSum;
-      const _wBuzz = _mWBuzz / _rawWSum;
-      const _wAggr = _mWAggr / _rawWSum;
       validSessions().forEach(sess => {
         const p = (sess.players || {})[playerName];
         if (!p) return;
@@ -1333,34 +1323,48 @@
       const ppa        = total ? (player.points / total).toFixed(1) : '0.0';
 
       // ── Player efficiency equations ──
-      // u_points = 15p + 10t + 30t − 5n  (15p + 40t - 5n)
-      const uPoints = 15 * powers + 10 * tossups + 30 * tossups - 5 * negs;
-      // u_rate = u_points / t_heard  (potential points / toss-ups heard)
-      const uRate = playerTHeard > 0 ? uPoints / playerTHeard : null;
-      // v_buzzed = 100 * (p + t + n) / t_heard  (buzzes / toss-ups heard)
-      const vBuzzed = playerTHeard > 0 ? (100 * (powers + tossups + negs)) / playerTHeard : null;
-      // e_aggression = 100 × (3p − n) / (3p + n)  [normalises 15pt powers vs 5pt negs]
-      // Range: −100% (all negs, no powers) to +100% (all powers, no negs). 0% = both zero.
-      const _aggrDenom = 3 * powers + negs;
-      const eAggressionValue  = _aggrDenom > 0 ? (100 * (3 * powers - negs)) / _aggrDenom : 0;
-      const eAggressionZero   = _aggrDenom === 0; // no powers, no negs
+      const uPoints    = 30 * (powers + tossups);
+      const uRate      = playerTHeard > 0 ? (uPoints / playerTHeard) * 20 : null;
+      const actualPts20 = playerTHeard > 0 ? (totalPoints / playerTHeard) * 20 : null;
+      const fmtPts20   = v => v === null ? null : (v % 1 === 0 ? v : parseFloat(v.toFixed(1)));
+      // Actualized Potential: how much of the bonus opportunity was converted (actual / potential)
+      const actualizedPot = (uRate !== null && uRate > 0 && actualPts20 !== null)
+        ? Math.min(100, (actualPts20 / uRate) * 100) : null;
+      // Confidence: total buzz rate (always positive, display only)
+      const totalBuzzesModal  = powers + tossups + negs;
+      const confValueModal    = playerTHeard > 0 ? (100 * totalBuzzesModal) / playerTHeard : null;
+      const confZeroModal     = playerTHeard === 0 && totalBuzzesModal === 0;
+      // Accuracy: correct buzz rate (display only)
+      const modalAccuracy     = totalBuzzesModal > 0 ? (100 * (powers + tossups)) / totalBuzzesModal : null;
+      // Power Rate: P / (P + N) × 100
+      const prDenomModal      = powers + negs;
+      const prValueModal      = prDenomModal > 0 ? (100 * powers) / prDenomModal : null;
 
-      // ── Skill Score ──
-      const _buzzes = powers + tossups + negs;
+      // ── Skill Score (power rate + prod rate + accuracy; normalized, avg = 100) ──
+      const _buzzes    = powers + tossups + negs;
       const _isLowData = (_buzzes < _MIN_BUZZ || playerTHeard === 0) && !manuallyIncluded.has(playerName);
-      let modalSkill = null;
+      let modalSkill   = null;
       if (!_isLowData && _qualified.length > 0) {
-        const _mProd = playerTHeard > 0 ? (15 * powers + 40 * tossups - 5 * negs) / playerTHeard : 0;
-        const _mBuzz = playerTHeard > 0 ? (100 * _buzzes) / playerTHeard : 0;
-        const _mAggr = _aggrDenom > 0 ? eAggressionValue : 0;
-        const rP = _avgProd  !== 0 ? _mProd / _avgProd : (_mProd > 0 ? 2 : 1);
-        const rB = _avgBuzz  !== 0 ? _mBuzz / _avgBuzz : (_mBuzz > 0 ? 2 : 1);
-        const rA = (_avgAggr + 100) !== 0 ? (_mAggr + 100) / (_avgAggr + 100) : ((_mAggr + 100) > 100 ? 2 : 1);
-        modalSkill = Math.min(100, Math.max(0, (_wProd * rP + _wBuzz * rB + _wAggr * rA) * 50));
+        let _avgProd2 = 0, _avgPR2 = 0, _avgAcc2 = 0, _prCount = 0;
+        _qualified.forEach(q => {
+          const qTH = q.tHeard || 0, qTB = q.powers + q.tossupsCorrect + q.negs;
+          const qU = 30 * (q.powers + q.tossupsCorrect);
+          _avgProd2 += qTH > 0 ? (qU / qTH) * 20 : 0;
+          _avgAcc2  += qTB > 0 ? (100 * (q.powers + q.tossupsCorrect)) / qTB : 0;
+          if ((q.powers + q.negs) > 0) { _avgPR2 += (100 * q.powers) / (q.powers + q.negs); _prCount++; }
+        });
+        _avgProd2 /= _qualified.length;
+        _avgAcc2  /= _qualified.length;
+        if (_prCount > 0) _avgPR2 /= _prCount;
+        const _mProd = playerTHeard > 0 ? (uPoints / playerTHeard) * 20 : 0;
+        const _mPR   = prValueModal ?? 0;
+        const _mAcc  = modalAccuracy ?? 0;
+        const nP = _avgProd2 > 0 ? _mProd / _avgProd2 : (_mProd > 0 ? 2 : 0);
+        const nR = _avgPR2   > 0 ? _mPR   / _avgPR2   : (_mPR   > 0 ? 2 : 0);
+        const nA = _avgAcc2  > 0 ? _mAcc  / _avgAcc2  : (_mAcc  > 0 ? 2 : 0);
+        modalSkill = prValueModal === null ? null : (nP + nR + nA) * (100 / 3);
       }
-      const modalSkillColor = modalSkill === null ? 'var(--text3)'
-                            : modalSkill >= 66 ? 'var(--success)'
-                            : modalSkill >= 34 ? '#f39c12' : 'var(--danger)';
+      const modalSkillColor = 'var(--primary)';
 
       function playerMetricBar(value, label, isRatio, isZero, isSigned) {
         if (value === null) {
@@ -1376,10 +1380,11 @@
           </div>`;
         }
         if (isRatio) {
-          const color = value >= 10 ? 'var(--success)' : value >= 5 ? '#f39c12' : 'var(--danger)';
+          // Per-20-TU scale: good ≥ 20, ok ≥ 10, poor < 10
+          const color = value >= 20 ? 'var(--success)' : value >= 10 ? '#f39c12' : 'var(--danger)';
           return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
             <span style="font-size:.82em;font-weight:700;color:var(--text2);">${label}</span>
-            <span style="font-size:.95em;font-weight:700;color:${color};">${value.toFixed(2)}</span>
+            <span style="font-size:.95em;font-weight:700;color:${color};">${value % 1 === 0 ? value : value.toFixed(1)}</span>
           </div>`;
         }
         if (isSigned) {
@@ -1466,21 +1471,35 @@
         <div class="pd-section-title">Performance Metrics</div>
         <div style="background:var(--sec-bg);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:var(--sp);">
           <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
-            <span style="font-size:.82em;font-weight:700;color:var(--text2);">Potential Points</span>
-            <span style="font-size:1.1em;font-weight:700;color:var(--primary);">${uPoints}</span>
+            <span style="font-size:.82em;font-weight:700;color:var(--text2);">Points</span>
+            <span style="font-size:1.1em;font-weight:700;color:var(--primary);">${player.points}</span>
           </div>
-          ${playerMetricBar(uRate, 'Point Production Rate', true, false, false)}
-          ${skillBuzzEnabled ? playerMetricBar(vBuzzed, 'Buzz Volume', false, false, false) : ''}
-          ${playerMetricBar(eAggressionValue, 'Aggression Effectiveness', false, eAggressionZero, true)}
+          ${playerMetricBar(fmtPts20(actualPts20), 'Actual Pts / 20 TU Heard', true, false, false)}
           <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
-            <span style="font-size:.82em;font-weight:700;color:var(--text2);">Skill Score</span>
+            <span style="font-size:.82em;font-weight:700;color:var(--text2);">Potential Points</span>
+            <span style="font-size:.95em;font-weight:700;color:var(--text2);">${uPoints}</span>
+          </div>
+          ${playerMetricBar(fmtPts20(uRate), 'Pot. Pts / 20 TU Heard', true, false, false)}
+          ${actualizedPot !== null ? `
+          <div style="padding:8px 0;border-bottom:1px solid var(--border);">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;">
+              <span style="font-size:.82em;font-weight:700;color:var(--text2);">Actualized Potential</span>
+              <span style="font-size:.9em;font-weight:700;color:${actualizedPot >= 60 ? 'var(--success)' : actualizedPot >= 30 ? '#f39c12' : 'var(--danger)'};">${actualizedPot.toFixed(1)}%</span>
+            </div>
+            <div style="height:7px;background:var(--border);border-radius:8px;overflow:hidden;">
+              <div style="height:100%;width:${actualizedPot.toFixed(1)}%;background:${actualizedPot >= 60 ? 'var(--success)' : actualizedPot >= 30 ? '#f39c12' : 'var(--danger)'};border-radius:8px;"></div>
+            </div>
+          </div>` : `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
+            <span style="font-size:.82em;font-weight:700;color:var(--text2);">Actualized Potential</span>
+            <span style="font-size:.85em;color:var(--text3);font-style:italic;">N/A</span>
+          </div>`}
+          ${playerMetricBar(confZeroModal ? null : confValueModal, 'Confidence (buzz rate)', false, false, false)}
+          ${playerMetricBar(modalAccuracy, 'Accuracy (correct buzz %)', false, false, false)}
+          ${playerMetricBar(prValueModal, 'Power Rate (powers / risky buzzes)', false, false, false)}
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
+            <span style="font-size:.82em;font-weight:700;color:var(--text2);">Skill Score <span style="font-weight:400;font-size:.9em;color:var(--text3);">(avg = 100)</span></span>
             ${modalSkill !== null
-              ? `<div style="display:flex;align-items:center;gap:10px;">
-                   <div style="width:80px;height:6px;background:var(--border);border-radius:8px;overflow:hidden;">
-                     <div style="height:100%;width:${modalSkill.toFixed(1)}%;background:${modalSkillColor};border-radius:8px;"></div>
-                   </div>
-                   <span style="font-size:.95em;font-weight:700;color:${modalSkillColor};">${modalSkill.toFixed(1)} / 100</span>
-                 </div>`
+              ? `<span style="font-size:.95em;font-weight:700;color:${modalSkillColor};">${modalSkill.toFixed(1)}</span>`
               : `<span style="font-size:.82em;color:#f39c12;font-weight:600;">⚠ Low data</span>`}
           </div>
         </div>
@@ -1507,6 +1526,36 @@
 
     function closePlayerDetailModal() {
       document.getElementById('playerDetailModal').classList.remove('open');
+    }
+
+    // ── Substitution ──
+
+    function executeSubstitution(outPlayer, inPlayer) {
+      const id = state.currentSessionId; if (!id) return;
+      const apply = s => {
+        (s.teams||[]).forEach(t => {
+          const members = t.playerMembers || [];
+          const idx = members.indexOf(outPlayer);
+          if (idx > -1) {
+            members.splice(idx, 1, inPlayer);
+            t.playerMembers = members;
+          }
+        });
+        // Ensure the incoming player exists in this session's player data
+        if (!s.players) s.players = {};
+        if (!s.players[inPlayer]) s.players[inPlayer] = { name: inPlayer, points: 0, answers: [] };
+      };
+      updateSessionAtomic(id, apply);
+      withWriteLock(id, () => { const s = getCurrentSession(); if (s) apply(s); });
+      if (state.selectedPlayer === outPlayer) state.selectedPlayer = null;
+      closeSubModal();
+      renderAll();
+      // Show brief confirmation
+      const notify = document.createElement('div');
+      notify.textContent = `✓ ${inPlayer} in for ${outPlayer}`;
+      notify.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--success);color:#fff;padding:10px 20px;border-radius:10px;font-weight:700;font-size:.92em;z-index:9999;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.25);';
+      document.body.appendChild(notify);
+      setTimeout(() => notify.remove(), 2800);
     }
     // ── Analytics ──
     function setToggleSwitchState(on) {
@@ -1654,6 +1703,7 @@
       validSessions().forEach(session => {
         const sessionTHeard = session.tHeard || 0;
         Object.values(session.players || {}).forEach(p => {
+          if (p.name === '— Team Bonus —') return; // skip team bonus sentinel
           const answers = toArray(p.answers);
           if (!answers.length) return;
           if (!playerMap[p.name]) playerMap[p.name] = {
@@ -1707,135 +1757,100 @@
         return buzzes < MIN_BUZZ || (p.tHeard || 0) === 0;
       }).map(p => p.name));
 
-      // Compute each qualified player's three metrics
+      // Compute each qualified player's three metrics (no buzz volume)
       function playerMetrics(p) {
         const tH = p.tHeard || 0;
-        const uPts = 15 * p.powers + 40 * p.tossupsCorrect - 5 * p.negs;
-        const prodRate   = tH > 0 ? uPts / tH : 0;
-        const buzzVol    = tH > 0 ? (100 * (p.powers + p.tossupsCorrect + p.negs)) / tH : 0;
-        const _agDenom   = 3 * p.powers + p.negs;
-        const aggression = _agDenom > 0 ? (100 * (3 * p.powers - p.negs)) / _agDenom : 0;
-        return { prodRate, buzzVol, aggression };
+        const totalBuzzes = p.powers + p.tossupsCorrect + p.negs;
+        const uPts = 30 * (p.powers + p.tossupsCorrect);
+        // Pot. Pts / 20 TU heard
+        const prodRate   = tH > 0 ? (uPts / tH) * 20 : 0;
+        // Confidence: buzz rate (always positive) — display only
+        const confidence = tH > 0 ? (100 * totalBuzzes) / tH : 0;
+        // Accuracy: correct buzz rate — display only
+        const accuracy   = totalBuzzes > 0 ? (100 * (p.powers + p.tossupsCorrect)) / totalBuzzes : 0;
+        // Power Rate: P / (P + N) × 100 — of risky buzzes, how many were powers
+        const powerRate  = (p.powers + p.negs) > 0 ? (100 * p.powers) / (p.powers + p.negs) : null;
+        return { prodRate, confidence, accuracy, powerRate };
       }
 
-      let avgProd = 0, avgBuzz = 0, avgAggr = 0;
+      // Skill score: normalized equal weighting across prodRate, powerRate, accuracy
+      // powerRate is 0–100 so no shift needed
+      function calcSkill(p) {
+        if (lowData.has(p.name) && !manuallyIncluded.has(p.name)) return null;
+        const m = playerMetrics(p);
+        if (m.powerRate === null) return null; // need at least one power or neg
+        const nProd = avgProd     > 0 ? m.prodRate  / avgProd     : (m.prodRate  > 0 ? 2 : 0);
+        const nPR   = avgPowerRate > 0 ? m.powerRate / avgPowerRate : (m.powerRate > 0 ? 2 : 0);
+        const nAcc  = avgAcc       > 0 ? m.accuracy  / avgAcc      : (m.accuracy  > 0 ? 2 : 0);
+        return (nProd + nPR + nAcc) * (100 / 3);
+      }
+
+      // Team averages from qualified players
+      let avgProd = 0, avgConf = 0, avgPowerRate = 0, avgAcc = 0;
+      const qualifiedWithPR = qualified.filter(p => (p.powers + p.negs) > 0);
       if (qualified.length > 0) {
         qualified.forEach(p => {
           const m = playerMetrics(p);
           avgProd += m.prodRate;
-          avgBuzz += m.buzzVol;
-          avgAggr += m.aggression;
+          avgConf += m.confidence;
+          avgAcc  += m.accuracy;
         });
         avgProd /= qualified.length;
-        avgBuzz /= qualified.length;
-        avgAggr /= qualified.length;
+        avgConf /= qualified.length;
+        avgAcc  /= qualified.length;
       }
-
-      // When auto: 3/2/1 (buzz on) or 3/1 (buzz off) — 3/1 derived from realistic IHSA match math (75/25)
-      const _wProdRaw = skillWeightsAuto ? 3 : skillWeightProd;
-      const _wBuzzRaw = skillBuzzEnabled ? (skillWeightsAuto ? 2 : skillWeightBuzz) : 0;
-      const _wAggrRaw = skillWeightsAuto ? 1 : skillWeightAggr;
-      const rawWSum  = _wProdRaw + _wBuzzRaw + _wAggrRaw;
-      const wProd = _wProdRaw / rawWSum;
-      const wBuzz = _wBuzzRaw / rawWSum;
-      const wAggr = _wAggrRaw / rawWSum;
-
-      // Skill score: weighted ratio vs group average, anchored so avg player = 50
-      // For aggression, shift to 0–200 range before ratio (since it can be negative)
-      function calcSkill(p) {
-        if (lowData.has(p.name) && !manuallyIncluded.has(p.name)) return null;
-        const m = playerMetrics(p);
-        const rProd = avgProd  !== 0 ? m.prodRate   / avgProd  : (m.prodRate   > 0 ? 2 : 1);
-        const rBuzz = avgBuzz  !== 0 ? m.buzzVol    / avgBuzz  : (m.buzzVol    > 0 ? 2 : 1);
-        // Aggression: shift both to +100 offset so negatives don't break division
-        const aggrShifted    = m.aggression + 100;
-        const avgAggrShifted = avgAggr      + 100;
-        const rAggr = avgAggrShifted !== 0 ? aggrShifted / avgAggrShifted : (aggrShifted > 100 ? 2 : 1);
-        const composite = wProd * rProd + wBuzz * rBuzz + wAggr * rAggr;
-        // Anchor: composite of 1.0 = average = 50. Scale so 2.0 = 100, 0 = 0.
-        return Math.min(100, Math.max(0, composite * 50));
+      if (qualifiedWithPR.length > 0) {
+        qualifiedWithPR.forEach(p => { avgPowerRate += playerMetrics(p).powerRate; });
+        avgPowerRate /= qualifiedWithPR.length;
       }
 
       // Build team averages panel
       const hasQualified = qualified.length > 0;
       const lowDataList  = [...lowData].filter(n => active.find(p => p.name === n));
 
-      // ── Skill Settings panel (collapsible) ──
+      // ── Skill Settings panel (collapsible) — threshold only ──
       const ssCollapsed = skillSettingsCollapsed;
-      const effWProd = skillWeightsAuto ? 3 : skillWeightProd;
-      const effWBuzz = (skillBuzzEnabled && !skillWeightsAuto) ? skillWeightBuzz : (skillBuzzEnabled ? 2 : 0);
-      const effWAggr = skillWeightsAuto ? 1 : skillWeightAggr;
-      const totalW = effWProd + effWBuzz + effWAggr;
-      // stepper helper
-      const stepper = (varName, val, min, max, step, label, sublabel, accentColor, pct) => `
-        <div style="background:var(--sec-bg);border:1px solid var(--border);border-radius:10px;padding:12px 14px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-            <div>
-              <div style="font-size:.78em;font-weight:700;color:var(--text);">${label}</div>
-              ${sublabel ? `<div style="font-size:.7em;color:var(--text3);margin-top:1px;">${sublabel}</div>` : ''}
-            </div>
-            <span style="font-size:.75em;font-weight:600;color:var(--text3);">${pct}</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;">
-            <button onclick="${varName}=Math.max(${min},${varName}-${step});saveGlobalSettings();renderAnalyticsPlayersUniversal();"
-              style="width:32px;height:32px;border-radius:8px;border:2px solid var(--border);background:var(--card);color:var(--text2);font-size:1.1em;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit;transition:border-color .15s,color .15s;"
-              onmouseover="this.style.borderColor='${accentColor}';this.style.color='${accentColor}';"
-              onmouseout="this.style.borderColor='';this.style.color='';">−</button>
-            <div style="flex:1;display:flex;gap:3px;align-items:flex-end;height:28px;">
-              ${Array.from({length:max-min+1},(_,i)=>{
-                const v=min+i, filled=v<=val;
-                return `<div style="flex:1;border-radius:3px 3px 0 0;background:${filled ? accentColor : 'var(--border)'};transition:background .15s;height:${Math.round(50+50*(i/(max-min)))}%;"></div>`;
-              }).join('')}
-            </div>
-            <button onclick="${varName}=Math.min(${max},${varName}+${step});saveGlobalSettings();renderAnalyticsPlayersUniversal();"
-              style="width:32px;height:32px;border-radius:8px;border:2px solid var(--border);background:var(--card);color:var(--text2);font-size:1.1em;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit;transition:border-color .15s,color .15s;"
-              onmouseover="this.style.borderColor='${accentColor}';this.style.color='${accentColor}';"
-              onmouseout="this.style.borderColor='';this.style.color='';">+</button>
-            <div style="min-width:24px;font-size:1.15em;font-weight:800;color:${accentColor};text-align:right;">${val}</div>
-          </div>
-        </div>`;
       html += `<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:var(--sp);overflow:hidden;box-shadow:var(--shadow-xs);">
         <div onclick="skillSettingsCollapsed=!skillSettingsCollapsed;renderAnalyticsPlayersUniversal();"
           style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;user-select:none;transition:background .15s;"
           onmouseover="this.style.background='var(--hover)';" onmouseout="this.style.background='';">
           <div style="display:flex;align-items:center;gap:10px;">
             <span style="font-size:.85em;font-weight:700;color:var(--text);">⚙ Skill Score Settings</span>
-            ${ssCollapsed ? `<span style="font-size:.72em;color:var(--text3);">threshold ≥${MIN_BUZZ} &nbsp;·&nbsp; ${skillBuzzEnabled ? '' : 'buzz off · '}${skillWeightsAuto ? (skillBuzzEnabled ? 'auto 50/33/17' : 'auto 75/25') : `prod ${(effWProd/totalW*100).toFixed(0)}% / aggr ${(effWAggr/totalW*100).toFixed(0)}%${skillBuzzEnabled ? ' / buzz '+((effWBuzz/totalW*100).toFixed(0))+'%' : ''}`}</span>` : ''}
+            ${ssCollapsed ? `<span style="font-size:.72em;color:var(--text3);">threshold ≥${MIN_BUZZ} &nbsp;·&nbsp; prod + power rate + acc</span>` : ''}
           </div>
           <span style="font-size:.75em;color:var(--text3);transition:transform .25s;display:inline-block;transform:${ssCollapsed?'':'rotate(180deg)'};">&#9660;</span>
         </div>
         ${ssCollapsed ? '' : `
         <div style="border-top:1px solid var(--border);padding:16px;display:grid;gap:10px;">
-          ${stepper('skillThresholdPct', skillThresholdPct, 10, 80, 5,
-            'Low-Data Threshold',
-            `Players flagged when buzz count &lt; <strong style="color:var(--primary);">${MIN_BUZZ}</strong> &nbsp;(${skillThresholdPct}% of team median ${medBuzz})`,
-            'var(--primary)', skillThresholdPct+'%')}
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--sec-bg);border:1px solid var(--border);border-radius:10px;">
-            <div>
-              <div style="font-size:.78em;font-weight:700;color:var(--text);">Include Buzz Volume</div>
-              <div style="font-size:.7em;color:var(--text3);margin-top:1px;">${skillBuzzEnabled ? 'Buzz rate counted in Skill Score, shown in player cards &amp; modal' : 'Excluded from Skill Score — Production Rate &amp; Aggression only'}</div>
+          <div style="background:var(--sec-bg);border:1px solid var(--border);border-radius:10px;padding:12px 14px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+              <div>
+                <div style="font-size:.78em;font-weight:700;color:var(--text);">Low-Data Threshold</div>
+                <div style="font-size:.7em;color:var(--text3);margin-top:1px;">Players flagged when buzz count &lt; <strong style="color:var(--primary);">${MIN_BUZZ}</strong> &nbsp;(${skillThresholdPct}% of team median ${medBuzz})</div>
+              </div>
+              <span style="font-size:.75em;font-weight:600;color:var(--text3);">${skillThresholdPct}%</span>
             </div>
-            <label class="switch" onclick="event.stopPropagation();">
-              <input type="checkbox" ${skillBuzzEnabled ? 'checked' : ''} onchange="skillBuzzEnabled=this.checked;saveGlobalSettings();renderAnalyticsPlayersUniversal();">
-              <span class="slider"></span>
-            </label>
-          </div>
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--sec-bg);border:1px solid var(--border);border-radius:10px;">
-            <div>
-              <div style="font-size:.78em;font-weight:700;color:var(--text);">Auto Weights</div>
-              <div style="font-size:.7em;color:var(--text3);margin-top:1px;">${skillWeightsAuto ? (skillBuzzEnabled ? `Using defaults: Production 50% · Buzz 33% · Aggression 17%` : `Using math-derived defaults: Production 75% · Aggression 25%`) : `Manual: prod ${(effWProd/totalW*100).toFixed(0)}%${skillBuzzEnabled?' · buzz '+(effWBuzz/totalW*100).toFixed(0)+'%':''} · aggr ${(effWAggr/totalW*100).toFixed(0)}%`}</div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <button onclick="skillThresholdPct=Math.max(10,skillThresholdPct-5);saveGlobalSettings();renderAnalyticsPlayersUniversal();"
+                style="width:32px;height:32px;border-radius:8px;border:2px solid var(--border);background:var(--card);color:var(--text2);font-size:1.1em;font-weight:700;cursor:pointer;font-family:inherit;">−</button>
+              <div style="flex:1;height:8px;background:var(--border);border-radius:8px;overflow:hidden;">
+                <div style="height:100%;width:${skillThresholdPct}%;background:var(--primary);border-radius:8px;transition:width .2s;"></div>
+              </div>
+              <button onclick="skillThresholdPct=Math.min(80,skillThresholdPct+5);saveGlobalSettings();renderAnalyticsPlayersUniversal();"
+                style="width:32px;height:32px;border-radius:8px;border:2px solid var(--border);background:var(--card);color:var(--text2);font-size:1.1em;font-weight:700;cursor:pointer;font-family:inherit;">+</button>
+              <div style="min-width:30px;font-size:1.05em;font-weight:800;color:var(--primary);text-align:right;">${skillThresholdPct}%</div>
             </div>
-            <label class="switch" onclick="event.stopPropagation();">
-              <input type="checkbox" ${skillWeightsAuto ? 'checked' : ''} onchange="skillWeightsAuto=this.checked;saveGlobalSettings();renderAnalyticsPlayersUniversal();">
-              <span class="slider"></span>
-            </label>
           </div>
-          ${skillWeightsAuto ? '' : `
-          <div style="font-size:.72em;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;">Manual Weights</div>
-          ${stepper('skillWeightProd', skillWeightProd, 1, 10, 1, 'Production Rate', 'Points generated per toss-up heard', 'var(--success)', (effWProd/totalW*100).toFixed(0)+'% influence')}
-          ${skillBuzzEnabled ? stepper('skillWeightBuzz', skillWeightBuzz, 1, 10, 1, 'Buzz Volume', '% of questions the player buzzed on', 'var(--primary)', (effWBuzz/totalW*100).toFixed(0)+'% influence') : ''}
-          ${stepper('skillWeightAggr', skillWeightAggr, 1, 10, 1, 'Aggression', 'Powers vs negs balance', '#f39c12', (effWAggr/totalW*100).toFixed(0)+'% influence')}
-          <div style="font-size:.7em;color:var(--text3);font-style:italic;padding-top:2px;">Weight % is the exact final proportion used. All changes sync to all devices instantly.</div>`}
+          <div style="background:var(--sec-bg);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:.8em;color:var(--text2);line-height:1.5;">
+            <strong style="color:var(--text);">Skill Score = normalized average of Pot. Pts/20TU + Power Rate + Accuracy</strong><br>
+            Each metric is divided by the team average before summing, so all three contribute equally. An exactly-average player scores 100.
+            <ul style="margin:6px 0 0 16px;padding:0;">
+              <li><strong>Pot. Pts / 20 TU</strong> — bonus opportunity value per 20 TU heard <span style="color:var(--text3);">30×(P+T) / TU Heard × 20</span></li>
+              <li><strong>Power Rate</strong> — of all risky buzzes (powers + negs), how many were powers <span style="color:var(--text3);">P/(P+N)×100</span></li>
+              <li><strong>Accuracy</strong> — correct buzz rate <span style="color:var(--text3);">(P+T)/(P+T+N)×100</span></li>
+              <li><strong>Confidence</strong> — total buzz rate, display only <span style="color:var(--text3);">100×(P+T+N)/TU Heard</span></li>
+            </ul>
+          </div>
         </div>`}
       </div>`;
       if (lowDataList.length > 0) {
@@ -1876,38 +1891,40 @@
           <span style="font-size:.72em;color:var(--text3);">${qualified.length} of ${active.length} players qualify</span>
         </div>
         ${!hasQualified ? `<p style="color:var(--text2);font-size:.85em;font-style:italic;margin:0;">Not enough data yet (threshold: ≥${MIN_BUZZ} buzz answers per player).</p>` : `
-        <div style="display:grid;grid-template-columns:repeat(${skillBuzzEnabled ? 3 : 2},1fr);gap:8px;margin-bottom:10px;">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px;">
           <div style="background:var(--sec-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;text-align:center;">
-            <div class="metric-lbl">Avg Production Rate</div>
-            <div style="font-size:1.15em;font-weight:700;color:var(--primary);">${avgProd.toFixed(2)}</div>
-            <div style="font-size:.68em;color:var(--text3);margin-top:2px;">${(wProd*100).toFixed(1)}% weight</div>
+            <div class="metric-lbl">Avg Pot. Pts / 20 TU</div>
+            <div style="font-size:1.15em;font-weight:700;color:var(--primary);">${avgProd.toFixed(1)}</div>
           </div>
-          ${skillBuzzEnabled ? `<div style="background:var(--sec-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;text-align:center;">
-            <div class="metric-lbl">Avg Buzz Volume</div>
-            <div style="font-size:1.15em;font-weight:700;color:var(--primary);">${avgBuzz.toFixed(1)}%</div>
-            <div style="font-size:.68em;color:var(--text3);margin-top:2px;">${(wBuzz*100).toFixed(1)}% weight</div>
-          </div>` : ''}
           <div style="background:var(--sec-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;text-align:center;">
-            <div class="metric-lbl">Avg Aggression</div>
-            <div style="font-size:1.15em;font-weight:700;color:${avgAggr < 0 ? 'var(--danger)' : avgAggr >= 66 ? 'var(--success)' : '#f39c12'};">${avgAggr >= 0 ? '+' : ''}${avgAggr.toFixed(1)}%</div>
-            <div style="font-size:.68em;color:var(--text3);margin-top:2px;">${(wAggr*100).toFixed(1)}% weight</div>
+            <div class="metric-lbl">Avg Confidence</div>
+            <div style="font-size:1.15em;font-weight:700;color:var(--primary);">${avgConf.toFixed(1)}%</div>
+          </div>
+          <div style="background:var(--sec-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;text-align:center;">
+            <div class="metric-lbl">Avg Power Rate</div>
+            <div style="font-size:1.15em;font-weight:700;color:${avgPowerRate >= 75 ? 'var(--success)' : avgPowerRate >= 50 ? '#f39c12' : 'var(--danger)'};">${qualifiedWithPR.length > 0 ? avgPowerRate.toFixed(1)+'%' : '—'}</div>
+          </div>
+          <div style="background:var(--sec-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;text-align:center;">
+            <div class="metric-lbl">Avg Accuracy</div>
+            <div style="font-size:1.15em;font-weight:700;color:${avgAcc >= 80 ? 'var(--success)' : avgAcc >= 50 ? '#f39c12' : 'var(--danger)'};">${avgAcc.toFixed(1)}%</div>
           </div>
         </div>
-        <div style="font-size:.7em;color:var(--text3);font-style:italic;">Skill = 50 means exactly average. ${skillWeightsAuto ? (skillBuzzEnabled ? 'Auto weights: 50% prod / 33% buzz / 17% aggr.' : 'Auto weights: 75% prod / 25% aggr (math-derived).') : `Manual weights (${(wProd*100).toFixed(0)}% / ${skillBuzzEnabled ? (wBuzz*100).toFixed(0)+'% / ' : ''}${(wAggr*100).toFixed(0)}%).`} Adjust in ⚙ Skill Score Settings above.</div>`}
+        <div style="font-size:.7em;color:var(--text3);font-style:italic;">Skill Score anchored at 100 = exactly team average. Each of the three metrics is normalized by team average before summing, so all three contribute equally.</div>`}
       </div>`;
 
       // ── Sort controls ──
       const sortOptions = [
         { key: 'points',     label: 'Points' },
         { key: 'skill',      label: 'Skill' },
-        { key: 'prodRate',   label: 'Production Rate' },
-        ...(skillBuzzEnabled ? [{ key: 'buzzVol', label: 'Buzz Volume' }] : []),
-        { key: 'aggression', label: 'Aggression' },
+        { key: 'prodRate',   label: 'Pot. Pts / 20 TU' },
+        { key: 'actualRate', label: 'Actual Pts / 20 TU' },
+        { key: 'powerRate',  label: 'Power Rate' },
+        { key: 'confidence', label: 'Confidence' },
+        { key: 'accuracy',   label: 'Accuracy' },
         { key: 'powers',     label: 'Powers' },
         { key: 'negs',       label: 'Negs' },
       ];
-      // If buzz was disabled and sort was on buzzVol, reset to points
-      if (!skillBuzzEnabled && playerSortKey === 'buzzVol') playerSortKey = 'points';
+      if (['buzzVol','aggression','precision'].includes(playerSortKey)) playerSortKey = 'points';
       html += `<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border);">
         <span style="font-size:.75em;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;flex-shrink:0;margin-right:2px;">Sort</span>
         ${sortOptions.map(o => `<button class="sort-pill${playerSortKey===o.key?' active':''}" onclick="playerSortKey='${o.key}';renderAnalyticsPlayersUniversal();">${o.label}</button>`).join('')}
@@ -1916,21 +1933,25 @@
       // Pre-compute sort values for each player, then sort
       const playersSorted = active.map(p => {
         const tH = p.tHeard || 0;
-        const uPts = 15 * p.powers + 40 * p.tossupsCorrect - 5 * p.negs;
-        const prodRate   = tH > 0 ? uPts / tH : 0;
-        const buzzVol    = tH > 0 ? (100 * (p.powers + p.tossupsCorrect + p.negs)) / tH : 0;
-        const _agD = 3 * p.powers + p.negs;
-        const aggression = _agD > 0 ? (100 * (3 * p.powers - p.negs)) / _agD : 0;
-        const skill = calcSkill(p) ?? -1;
-        return { ...p, _prodRate: prodRate, _buzzVol: buzzVol, _aggression: aggression, _skill: skill };
+        const totalBuzzes = p.powers + p.tossupsCorrect + p.negs;
+        const uPts = 30 * (p.powers + p.tossupsCorrect);
+        const prodRate   = tH > 0 ? (uPts / tH) * 20 : 0;
+        const actualRate = tH > 0 ? (p.points / tH) * 20 : 0;
+        const confidence = tH > 0 ? (100 * totalBuzzes) / tH : 0;
+        const powerRate  = (p.powers + p.negs) > 0 ? (100 * p.powers) / (p.powers + p.negs) : 0;
+        const accuracy   = totalBuzzes > 0 ? (100 * (p.powers + p.tossupsCorrect)) / totalBuzzes : 0;
+        const skill = calcSkill(p) ?? -Infinity;
+        return { ...p, _prodRate: prodRate, _actualRate: actualRate, _confidence: confidence, _powerRate: powerRate, _accuracy: accuracy, _skill: skill };
       }).sort((a, b) => {
         switch (playerSortKey) {
           case 'skill':      return b._skill      - a._skill;
           case 'prodRate':   return b._prodRate   - a._prodRate;
-          case 'buzzVol':    return b._buzzVol    - a._buzzVol;
-          case 'aggression': return b._aggression - a._aggression;
+          case 'actualRate': return b._actualRate - a._actualRate;
+          case 'powerRate':  return b._powerRate  - a._powerRate;
+          case 'confidence': return b._confidence - a._confidence;
+          case 'accuracy':   return b._accuracy   - a._accuracy;
           case 'powers':     return b.powers      - a.powers;
-          case 'negs':       return a.negs        - b.negs; // fewer negs = better
+          case 'negs':       return a.negs        - b.negs;
           default:           return b.points !== a.points ? b.points - a.points
                                   : b.powers !== a.powers ? b.powers - a.powers
                                   : a.negs - b.negs;
@@ -1945,8 +1966,10 @@
             ? (prev.points === p.points && prev.powers === p.powers && prev.negs === p.negs)
             : playerSortKey === 'skill'      ? prev._skill      === p._skill
             : playerSortKey === 'prodRate'   ? prev._prodRate   === p._prodRate
-            : playerSortKey === 'buzzVol'    ? prev._buzzVol    === p._buzzVol
-            : playerSortKey === 'aggression' ? prev._aggression === p._aggression
+            : playerSortKey === 'actualRate' ? prev._actualRate === p._actualRate
+            : playerSortKey === 'powerRate'  ? prev._powerRate  === p._powerRate
+            : playerSortKey === 'confidence' ? prev._confidence === p._confidence
+            : playerSortKey === 'accuracy'   ? prev._accuracy   === p._accuracy
             : playerSortKey === 'powers'     ? prev.powers      === p.powers
             : playerSortKey === 'negs'       ? prev.negs        === p.negs
             : false;
@@ -1957,22 +1980,26 @@
         const cardId = 'pcard_' + p.name.replace(/\W/g, '_');
         const tH = p.tHeard || 0;
         const bonuses = p.bonusPoints / 10;
-        const uPts = 15 * p.powers + 40 * p.tossupsCorrect - 5 * p.negs;
-        const uRate = tH > 0 ? (uPts / tH).toFixed(2) : null;
-        const vBuzzed = tH > 0 ? ((100 * (p.powers + p.tossupsCorrect + p.negs)) / tH).toFixed(1) : null;
-        // e_aggression = 100 × (3p − n) / (3p + n)
-        const _agDenom = 3 * p.powers + p.negs;
-        const eAggrZero    = _agDenom === 0;
-        const eAggrRaw     = _agDenom > 0 ? (100 * (3 * p.powers - p.negs)) / _agDenom : 0;
-        const eAggrDisplay = eAggrZero ? '0%' : (eAggrRaw >= 0 ? '+' : '') + eAggrRaw.toFixed(1) + '%';
-        const eAggrColor   = eAggrZero ? 'var(--text3)'
-                           : eAggrRaw < 0  ? 'var(--danger)'
-                           : eAggrRaw >= 66 ? 'var(--success)' : '#f39c12';
+        const totalBuzzes = p.powers + p.tossupsCorrect + p.negs;
+        const uPts = 30 * (p.powers + p.tossupsCorrect);
+        const uRate    = tH > 0 ? (uPts / tH) * 20 : null;
+        const actualRate = tH > 0 ? (p.points / tH) * 20 : null;
+        // Actualized potential: actual / potential (how much bonus opportunity was converted)
+        const actualizedPot = (uRate !== null && uRate > 0) ? Math.min(100, (actualRate / uRate) * 100) : null;
+        const fmtRate = v => v === null ? '—' : (v % 1 === 0 ? v : v.toFixed(1));
+        // Confidence: total buzz rate
+        const confRaw   = tH > 0 ? (100 * totalBuzzes) / tH : 0;
+        const confZero  = tH === 0 && totalBuzzes === 0;
+        // Power Rate: P / (P + N) × 100
+        const prDenom   = p.powers + p.negs;
+        const prRaw     = prDenom > 0 ? (100 * p.powers) / prDenom : null;
+        const prColor   = prRaw === null ? 'var(--text3)' : prRaw >= 75 ? 'var(--success)' : prRaw >= 50 ? '#f39c12' : 'var(--danger)';
+        // Accuracy: correct buzz rate
+        const accPct  = totalBuzzes > 0 ? (100 * (p.powers + p.tossupsCorrect)) / totalBuzzes : 0;
+        const accColor = accPct >= 80 ? 'var(--success)' : accPct >= 50 ? '#f39c12' : 'var(--danger)';
         const topCats = Object.entries(p.catMap).sort((a,b) => b[1]-a[1]).slice(0,3);
         const skillVal  = calcSkill(p);
-        const skillColor = skillVal === null ? 'var(--text3)'
-                         : skillVal >= 66 ? 'var(--success)'
-                         : skillVal >= 34 ? '#f39c12' : 'var(--danger)';
+        const skillColor = skillVal === null ? 'var(--text3)' : 'var(--primary)';
 
         return `
         <div class="player-card-wrap">
@@ -2000,28 +2027,50 @@
               </div>
               <div class="metric-grid">
                 <div class="metric-tile">
+                  <div class="metric-lbl">Points</div>
+                  <div class="metric-val" style="color:var(--primary);">${p.points}</div>
+                </div>
+                <div class="metric-tile">
+                  <div class="metric-lbl">Actual Pts / 20 TU</div>
+                  <div class="metric-val" style="color:var(--success);">${fmtRate(actualRate)}</div>
+                </div>
+                <div class="metric-tile">
                   <div class="metric-lbl">Potential Pts</div>
-                  <div class="metric-val" style="color:var(--primary);">${uPts}</div>
+                  <div class="metric-val" style="color:var(--text2);">${uPts}</div>
                 </div>
                 <div class="metric-tile">
-                  <div class="metric-lbl">Production Rate</div>
-                  <div class="metric-val" style="color:var(--primary);">${uRate !== null ? uRate : '—'}</div>
+                  <div class="metric-lbl">Pot. Pts / 20 TU</div>
+                  <div class="metric-val" style="color:var(--text2);">${fmtRate(uRate)}</div>
                 </div>
-                ${skillBuzzEnabled ? `<div class="metric-tile">
-                  <div class="metric-lbl">Buzz Volume</div>
-                  <div class="metric-val" style="color:var(--primary);">${vBuzzed !== null ? vBuzzed+'%' : '—'}</div>
-                </div>` : ''}
+                <div class="metric-tile span2" style="background:var(--sec-bg);">
+                  <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <div class="metric-lbl">Actualized Potential</div>
+                    <div class="metric-val" style="color:${actualizedPot === null ? 'var(--text3)' : actualizedPot >= 60 ? 'var(--success)' : actualizedPot >= 30 ? '#f39c12' : 'var(--danger)'};">${actualizedPot !== null ? actualizedPot.toFixed(1)+'%' : '—'}</div>
+                  </div>
+                  ${actualizedPot !== null ? `<div style="height:4px;background:var(--border);border-radius:4px;overflow:hidden;margin-top:5px;"><div style="height:100%;width:${actualizedPot.toFixed(1)}%;background:${actualizedPot >= 60 ? 'var(--success)' : actualizedPot >= 30 ? '#f39c12' : 'var(--danger)'};border-radius:4px;"></div></div>` : ''}
+                </div>
                 <div class="metric-tile">
-                  <div class="metric-lbl">Aggression</div>
-                  <div class="metric-val" style="color:${eAggrColor};margin-bottom:${!eAggrZero?'5px':'0'};">${eAggrDisplay}</div>
-                  ${!eAggrZero ? `<div style="height:4px;background:var(--border);border-radius:4px;overflow:hidden;"><div style="height:100%;width:${Math.min(Math.abs(eAggrRaw),100)}%;background:${eAggrColor};border-radius:4px;"></div></div>` : ''}
+                  <div class="metric-lbl">Confidence</div>
+                  <div class="metric-val" style="color:${confZero ? 'var(--text3)' : 'var(--primary)'};">${confZero ? '—' : confRaw.toFixed(1)+'%'}</div>
+                </div>
+                <div class="metric-tile">
+                  <div class="metric-lbl">Accuracy</div>
+                  <div class="metric-val" style="color:${accColor};margin-bottom:5px;">${totalBuzzes > 0 ? accPct.toFixed(1)+'%' : '—'}</div>
+                  ${totalBuzzes > 0 ? `<div style="height:4px;background:var(--border);border-radius:4px;overflow:hidden;"><div style="height:100%;width:${accPct.toFixed(1)}%;background:${accColor};border-radius:4px;"></div></div>` : ''}
+                </div>
+                <div class="metric-tile span2">
+                  <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <div class="metric-lbl">Power Rate</div>
+                    <div class="metric-val" style="color:${prColor};margin-bottom:${prRaw!==null?'5px':'0'};">${prRaw !== null ? prRaw.toFixed(1)+'%' : '—'}</div>
+                  </div>
+                  ${prRaw !== null ? `<div style="height:4px;background:var(--border);border-radius:4px;overflow:hidden;"><div style="height:100%;width:${prRaw.toFixed(1)}%;background:${prColor};border-radius:4px;"></div></div>` : ''}
                 </div>
                 <div class="metric-tile span2" style="border-color:${skillVal!==null?skillColor:'var(--border)'};">
-                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:${skillVal!==null?'6px':'0'};">
-                    <div class="metric-lbl">Skill Score</div>
-                    <div class="metric-val" style="color:${skillColor};">${skillVal!==null ? skillVal.toFixed(1)+' / 100' : '⚠ Low data'}</div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <div class="metric-lbl">Skill Score <span style="font-weight:400;font-size:.85em;color:var(--text3);">(avg = 100)</span></div>
+                    <div class="metric-val" style="color:${skillColor};">${skillVal!==null ? skillVal.toFixed(1) : '⚠ Low data'}</div>
                   </div>
-                  ${skillVal!==null ? `<div style="height:4px;background:var(--border);border-radius:4px;overflow:hidden;"><div style="height:100%;width:${skillVal.toFixed(1)}%;background:${skillColor};border-radius:4px;"></div></div>` : `<div style="font-size:.7em;color:var(--text3);font-style:italic;">Need ≥${MIN_BUZZ} buzz answers. Adjust threshold in Skill Settings above.</div>`}
+                  ${skillVal===null ? `<div style="font-size:.7em;color:var(--text3);font-style:italic;margin-top:4px;">Need ≥${MIN_BUZZ} buzz answers. Adjust threshold in Skill Settings above.</div>` : ''}
                 </div>
               </div>
               ${topCats.length ? `
@@ -2414,7 +2463,7 @@
 
     // ── Render ──
     function renderAll() {
-      renderSessionInfo(); renderPlayerPool(); renderPlayerButtons(); renderPointTypeButtons();
+      renderSessionInfo(); renderPlayerPool(); renderPlayerButtons(); renderSubPanel(); renderPointTypeButtons();
       renderTeams(); renderCategories(); renderAnswerLog(); renderStatistics(); renderTHeard();
       if(analyticsOpen) renderAnalytics();
       if(document.getElementById('sessionsModal')?.classList.contains('open')) renderSessionsList();
@@ -2438,7 +2487,7 @@
       const id=state.currentSessionId; if(!id) return;
       updateSessionAtomic(id,s=>{if(!s.players) s.players={};if(!s.players[player]) s.players[player]={name:player,points:0,answers:[]};}).then(()=>{input.value='';saveGlobalPlayers([player]);});
       withWriteLock(id,()=>{const s=getCurrentSession();if(!s.players) s.players={};if(!s.players[player]) s.players[player]={name:player,points:0,answers:[]};});
-      renderPlayerPool(); renderPlayerButtons(); renderTeams();
+      renderPlayerPool(); renderPlayerButtons(); renderSubPanel(); renderTeams();
     }
 
     function removeFromPlayerPool(player) {
@@ -2446,7 +2495,7 @@
       updateSessionAtomic(id,s=>{if(s.players) delete s.players[player];(s.teams||[]).forEach(t=>{t.playerMembers=(t.playerMembers||[]).filter(p=>p!==player);});});
       removeGlobalPlayer(player);
       withWriteLock(id,()=>{const s=getCurrentSession();if(!s) return;if(s.players) delete s.players[player];(s.teams||[]).forEach(t=>{t.playerMembers=(t.playerMembers||[]).filter(p=>p!==player);});});
-      renderPlayerPool(); renderPlayerButtons(); renderTeams();
+      renderPlayerPool(); renderPlayerButtons(); renderSubPanel(); renderTeams();
     }
 
     function clearPlayerPool() {
@@ -2455,7 +2504,7 @@
       const reset=s=>{s.players={};(s.teams||[]).forEach(t=>{t.playerMembers=[];});s.answerLog=[];s.answers=[];};
       updateSessionAtomic(id,reset);
       withWriteLock(id,()=>{const s=getCurrentSession();if(s) reset(s);});
-      renderPlayerPool(); renderPlayerButtons(); renderTeams(); renderAnswerLog(); renderStatistics(); renderSessionInfo();
+      renderPlayerPool(); renderPlayerButtons(); renderSubPanel(); renderTeams(); renderAnswerLog(); renderStatistics(); renderSessionInfo();
     }
 
     function renderPlayerPool() {
@@ -2477,9 +2526,70 @@
       const s=getCurrentSession(); const el=document.getElementById('playerButtonsContainer');
       if(!el||!s) return;
       const players=[...new Set((s.teams||[]).flatMap(t=>t.playerMembers||[]))];
-      el.innerHTML=players.length
-        ?players.map(p=>`<button class="button-player ${state.selectedPlayer===p?'selected':''}" onclick="selectPlayer('${p}')" title="${p}">${getDisplayName(p,players)}</button>`).join('')
-        :'<p style="color:var(--text2)">No players in any team yet.</p>';
+      if (!players.length) { el.innerHTML='<p style="color:var(--text2)">No players in any team yet.</p>'; return; }
+      el.innerHTML = players.map(p=>`
+        <button class="button-player ${state.selectedPlayer===p?'selected':''}" onclick="selectPlayer('${p.replace(/'/g,"\\'")}');" title="${p}">${getDisplayName(p,players)}</button>`).join('');
+    }
+
+    function renderSubPanel() {
+      const s = getCurrentSession();
+      const el = document.getElementById('subPanelContent');
+      if (!el || !s) return;
+      const activePlayers = [...new Set((s.teams||[]).flatMap(t=>t.playerMembers||[]))];
+      const poolPlayers   = Object.keys(s.players||{});
+      const bench         = poolPlayers.filter(p => !activePlayers.includes(p));
+
+      if (!activePlayers.length) {
+        el.innerHTML = '<p style="color:var(--text2);font-size:.88em;">No active players yet. Add players to a team first.</p>';
+        return;
+      }
+
+      const activeOpts = activePlayers.map(p =>
+        `<option value="${p.replace(/"/g,'&quot;')}">${p}</option>`
+      ).join('');
+
+      const benchOpts = bench.length
+        ? bench.map(b => `<option value="${b.replace(/"/g,'&quot;')}">${b}</option>`).join('')
+        : `<option value="" disabled>No bench players available</option>`;
+
+      el.innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="input-group" style="margin-bottom:0;">
+            <label>Sub Out</label>
+            <select id="subOutSelect">
+              <option value="">— active player —</option>
+              ${activeOpts}
+            </select>
+          </div>
+          <div class="input-group" style="margin-bottom:0;">
+            <label>Sub In</label>
+            <select id="subInSelect" ${!bench.length ? 'disabled style="opacity:.55;cursor:not-allowed;"' : ''}>
+              <option value="">— bench player —</option>
+              ${benchOpts}
+            </select>
+          </div>
+        </div>
+        <button onclick="executeSubFromPanel2();" class="button button-success" style="width:100%;margin-top:14px;">
+          ⇄ Make Substitution
+        </button>
+        ${!bench.length ? `<p style="color:var(--text2);font-size:.82em;margin-top:10px;margin-bottom:0;">All pool players are already active. Add more players in the Players section.</p>` : ''}
+      `;
+    }
+
+    function executeSubFromPanel(outPlayer) {
+      const sel = document.getElementById('subSelect_' + outPlayer);
+      if (!sel || !sel.value) { alert('Select a bench player to swap in.'); return; }
+      executeSubstitution(outPlayer, sel.value);
+      renderSubPanel();
+    }
+
+    function executeSubFromPanel2() {
+      const outSel = document.getElementById('subOutSelect');
+      const inSel  = document.getElementById('subInSelect');
+      if (!outSel || !outSel.value) { alert('Please select the active player to substitute out.'); return; }
+      if (!inSel  || !inSel.value)  { alert('Please select the bench player to substitute in.'); return; }
+      executeSubstitution(outSel.value, inSel.value);
+      renderSubPanel();
     }
 
     function selectPlayer(p){state.selectedPlayer=state.selectedPlayer===p?null:p;renderPlayerButtons();}
@@ -2492,7 +2602,7 @@
         const id=state.currentSessionId; if(!id) return;
         updateSessionAtomic(id,s=>{if(!s.players) s.players={};players.forEach(p=>{if(!s.players[p]) s.players[p]={name:p,points:0,answers:[]};});}).then(()=>saveGlobalPlayers(players));
         withWriteLock(id,()=>{const s=getCurrentSession();if(!s.players) s.players={};players.forEach(p=>{if(!s.players[p]) s.players[p]={name:p,points:0,answers:[]};});});
-        renderPlayerPool(); renderPlayerButtons(); renderTeams();
+        renderPlayerPool(); renderPlayerButtons(); renderSubPanel(); renderTeams();
       };
       reader.readAsText(file); event.target.value='';
     }
@@ -2513,7 +2623,7 @@
       const filter=s=>{s.teams=toArray(s.teams).filter(t=>t.id!==teamId);};
       updateSessionAtomic(id,filter);
       withWriteLock(id,()=>{const s=getCurrentSession();if(s) filter(s);});
-      renderTeams(); renderPlayerButtons();
+      renderTeams(); renderPlayerButtons(); renderSubPanel();
     }
 
     function updateTeamName(teamId,newName) {
@@ -2528,7 +2638,7 @@
       const toggle=s=>{const t=toArray(s.teams).find(t=>t.id===teamId);if(!t) return;t.playerMembers=toArray(t.playerMembers);const i=t.playerMembers.indexOf(player);if(i>-1) t.playerMembers.splice(i,1);else t.playerMembers.push(player);};
       updateSessionAtomic(id,toggle);
       withWriteLock(id,()=>{const s=getCurrentSession();if(s) toggle(s);});
-      renderTeams(); renderPlayerButtons();
+      renderTeams(); renderPlayerButtons(); renderSubPanel();
     }
 
     function renderTeams() {
@@ -2571,9 +2681,12 @@
     // ── Answers ──
     function selectPointType(type) {
       state.selectedPointType=state.selectedPointType===type?null:type;
+      // If switching away from Bonus and player was unset, that's fine
       renderPointTypeButtons();
-      const hint=document.getElementById('categoryOptionalHint');
-      if(hint) hint.style.display=state.selectedPointType==='Neg'?'inline':'none';
+      const catHint=document.getElementById('categoryOptionalHint');
+      if(catHint) catHint.style.display=state.selectedPointType==='Neg'?'inline':'none';
+      const playerHint=document.getElementById('playerOptionalHint');
+      if(playerHint) playerHint.style.display=state.selectedPointType==='Bonus'?'inline':'none';
     }
 
     function renderPointTypeButtons() {
@@ -2600,18 +2713,19 @@
 
     function recordAnswer() {
       const id=state.currentSessionId; if(!id) return;
-      if(!state.selectedPlayer)    {alert('Please select a player.');return;}
+      const isBonus = state.selectedPointType === 'Bonus';
+      if(!state.selectedPlayer && !isBonus) {alert('Please select a player.');return;}
       if(!state.selectedPointType) {alert('Please select a point type.');return;}
       if(!state.selectedCategory&&state.selectedPointType!=='Neg') {alert('Please select a category.');return;}
       const pointMap={'Toss-up':10,'Bonus':10,'Neg':-5,'Power':15};
       const points=pointMap[state.selectedPointType];
       const isBuzzIn = ['Toss-up','Power','Neg'].includes(state.selectedPointType);
-      const answer={id:Date.now().toString(),player:state.selectedPlayer,pointType:state.selectedPointType,category:state.selectedCategory||'—',points,timestamp:new Date().toISOString()};
+      // For team bonuses (no player selected), use sentinel value '— Team Bonus —'
+      const recordedPlayer = state.selectedPlayer || '— Team Bonus —';
+      const answer={id:Date.now().toString(),player:recordedPlayer,pointType:state.selectedPointType,category:state.selectedCategory||'—',points,timestamp:new Date().toISOString()};
 
       const applyAnswer=s=>{
         s.answerLog=toArray(s.answerLog);
-        // t_heard: increment on buzz-in types, but not if previous entry was a Neg
-        // (neg→tossup/power on same question = only 1 increment total)
         if (isBuzzIn) {
           const prev = s.answerLog.length > 0 ? s.answerLog[s.answerLog.length - 1] : null;
           const prevWasNeg = prev && prev.pointType === 'Neg';
@@ -2622,12 +2736,24 @@
         }
         s.answerLog.push(answer);
         if(!s.players) s.players={};
-        const p=s.players[answer.player]||(s.players[answer.player]={name:answer.player,points:0,answers:[]});
-        p.answers=toArray(p.answers); p.answers.push(answer); p.points=(p.points||0)+points;
+        // Only credit player if a real player was selected (not a team bonus)
+        if (state.selectedPlayer) {
+          const p=s.players[answer.player]||(s.players[answer.player]={name:answer.player,points:0,answers:[]});
+          p.answers=toArray(p.answers); p.answers.push(answer); p.points=(p.points||0)+points;
+        }
+        // Track team bonus points at session level
+        if (isBonus && !state.selectedPlayer) {
+          s.teamBonusPoints = (s.teamBonusPoints || 0) + points;
+        }
       };
       updateSessionAtomic(id,applyAnswer);
       withWriteLock(id,()=>{const s=getCurrentSession();if(s) applyAnswer(s);});
       state.selectedPlayer=null; state.selectedPointType=null; state.selectedCategory=null;
+      // Hide hints again
+      const playerHint=document.getElementById('playerOptionalHint');
+      if(playerHint) playerHint.style.display='none';
+      const catHint=document.getElementById('categoryOptionalHint');
+      if(catHint) catHint.style.display='none';
       renderAll();
     }
 
@@ -2649,7 +2775,12 @@
           }
         }
         s.answerLog = s.answerLog.filter(x=>x.id!==answerId);
-        if(s.players?.[a.player]){s.players[a.player].answers=toArray(s.players[a.player].answers).filter(x=>x.id!==answerId);s.players[a.player].points=(s.players[a.player].points||0)-(a.points||0);}
+        if (a.player === '— Team Bonus —') {
+          s.teamBonusPoints = Math.max(0, (s.teamBonusPoints || 0) - (a.points || 0));
+        } else if(s.players?.[a.player]){
+          s.players[a.player].answers=toArray(s.players[a.player].answers).filter(x=>x.id!==answerId);
+          s.players[a.player].points=(s.players[a.player].points||0)-(a.points||0);
+        }
       };
       updateSessionAtomic(id,del);
       withWriteLock(id,()=>{const s=getCurrentSession();if(s) del(s);});
@@ -2672,7 +2803,7 @@
       el.innerHTML=answers.length
         ?[...answers].reverse().map((a,i)=>`
             <div class="log-entry">
-              <span><strong>${answers.length-i}. ${a.player}</strong> &mdash; ${a.pointType} (${a.points>0?'+':''}${a.points} pts) &mdash; ${a.category}</span>
+              <span><strong>${answers.length-i}. ${a.player === '— Team Bonus —' ? '<span style="color:var(--warning);">Team Bonus</span>' : a.player}</strong> &mdash; ${a.pointType} (${a.points>0?'+':''}${a.points} pts) &mdash; ${a.category}</span>
               <button class="button button-danger" onclick="deleteAnswer('${a.id}')" style="padding:4px 8px;font-size:.8em;">Delete</button>
             </div>`).join('')
         :'<p style="color:var(--text2)">No answers recorded yet.</p>';
