@@ -3064,6 +3064,9 @@
         <button class="button-player ${state.selectedPlayer===p?'selected':''}" onclick="selectPlayer('${p.replace(/'/g,"\\'")}');" title="${p}">${getDisplayName(p,players)}</button>`).join('');
     }
 
+    // Sub panel selection state — lives outside render so re-renders can't reset it
+    let _subOut = null, _subIn = null;
+
     function renderSubPanel() {
       const s = getCurrentSession();
       const el = document.getElementById('subPanelContent');
@@ -3077,43 +3080,47 @@
         return;
       }
 
-      const activeOpts = activePlayers.map(p =>
-        `<option value="${p.replace(/"/g,'&quot;')}">${p}</option>`
-      ).join('');
+      // Clear stale selections if player no longer in the right list
+      if (_subOut && !activePlayers.includes(_subOut)) _subOut = null;
+      if (_subIn  && !bench.includes(_subIn))          _subIn  = null;
 
-      const benchOpts = bench.length
-        ? bench.map(b => `<option value="${b.replace(/"/g,'&quot;')}">${b}</option>`).join('')
-        : `<option value="" disabled>No Bench Players Available</option>`;
+      const chipStyle = (sel) =>
+        `display:inline-block;padding:5px 11px;border-radius:20px;cursor:pointer;font-size:.85em;font-weight:600;border:2px solid ${sel ? 'var(--primary)' : 'var(--border)'};background:${sel ? 'var(--primary)' : 'var(--sec-bg)'};color:${sel ? '#fff' : 'var(--text1)'};transition:all .15s;user-select:none;`;
 
-      const disabledAttr  = !bench.length ? 'disabled' : '';
-      const disabledStyle = !bench.length ? 'opacity:.5;cursor:not-allowed;' : '';
+      const outChips = activePlayers.map(p => {
+        const sel = _subOut === p;
+        return `<span style="${chipStyle(sel)}" onclick="subPickOut('${p.replace(/'/g,"\\'")}');return false;">${getDisplayName(p, Object.keys(s.players||{}))}</span>`;
+      }).join('');
+
+      const inChips = bench.length
+        ? bench.map(p => {
+            const sel = _subIn === p;
+            return `<span style="${chipStyle(sel)}" onclick="subPickIn('${p.replace(/'/g,"\\'")}');return false;">${getDisplayName(p, Object.keys(s.players||{}))}</span>`;
+          }).join('')
+        : '<span style="color:var(--text2);font-size:.82em;">No bench players available</span>';
+
+      const canSub = _subOut && _subIn;
+      const btnStyle = `width:100%;margin-top:4px;opacity:${canSub?1:.45};cursor:${canSub?'pointer':'not-allowed'};`;
 
       el.innerHTML = `
-        <div style="display:flex;flex-direction:column;gap:10px;">
-          <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:10px;">
-            <div class="input-group" style="margin-bottom:0;">
-              <label>Sub Out</label>
-              <select id="subOutSelect">
-                <option value="">— Active Player —</option>
-                ${activeOpts}
-              </select>
-            </div>
-            <div style="padding-bottom:12px;font-size:1.3em;color:var(--text3);font-weight:700;line-height:1;user-select:none;">⇄</div>
-            <div class="input-group" style="margin-bottom:0;">
-              <label>Sub In</label>
-              <select id="subInSelect" ${disabledAttr} style="${disabledStyle}">
-                <option value="">— Bench Player —</option>
-                ${benchOpts}
-              </select>
-            </div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:2px;">
+            <span style="font-size:.75em;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);min-width:52px;">Sub Out</span>
+            <div style="display:flex;flex-wrap:wrap;gap:5px;">${outChips}</div>
           </div>
-          <button onclick="executeSubFromPanel2();" class="button button-success" style="width:100%;">
-            Make Substitution
+          <div style="display:flex;align-items:baseline;gap:6px;">
+            <span style="font-size:.75em;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);min-width:52px;">Sub In</span>
+            <div style="display:flex;flex-wrap:wrap;gap:5px;">${inChips}</div>
+          </div>
+          <button onclick="executeSubFromPanel2();" class="button button-success" style="${btnStyle}" ${canSub?'':'disabled'}>
+            ${_subOut && _subIn ? `⇄ ${getDisplayName(_subOut, Object.keys(s.players||{}))} → ${getDisplayName(_subIn, Object.keys(s.players||{}))}` : '⇄ Make Substitution'}
           </button>
-          ${!bench.length ? '<p style="color:var(--text2);font-size:.82em;margin:0;">All pool players are already active. Add more players in the Players section.</p>' : ''}
         </div>
       `;
     }
+
+    function subPickOut(p) { _subOut = (_subOut === p) ? null : p; renderSubPanel(); }
+    function subPickIn(p)  { _subIn  = (_subIn  === p) ? null : p; renderSubPanel(); }
 
     function executeSubFromPanel(outPlayer) {
       const sel = document.getElementById('subSelect_' + outPlayer);
@@ -3123,11 +3130,10 @@
     }
 
     function executeSubFromPanel2() {
-      const outSel = document.getElementById('subOutSelect');
-      const inSel  = document.getElementById('subInSelect');
-      if (!outSel || !outSel.value) { alert('Please select the active player to substitute out.'); return; }
-      if (!inSel  || !inSel.value)  { alert('Please select the bench player to substitute in.'); return; }
-      executeSubstitution(outSel.value, inSel.value);
+      if (!_subOut) { alert('Please select the active player to substitute out.'); return; }
+      if (!_subIn)  { alert('Please select the bench player to substitute in.'); return; }
+      executeSubstitution(_subOut, _subIn);
+      _subOut = null; _subIn = null;
       renderSubPanel();
     }
 
