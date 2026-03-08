@@ -6,6 +6,7 @@
   <title>HSE Quiz Bowl Tracker</title>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <style>
     :root {
       --sp: 18px; --hsp: 14px;
@@ -764,10 +765,12 @@
               <div class="input-group">
                 <label>Point Type:</label>
                 <div class="point-type-buttons">
+                  <button class="button-point-type" onclick="selectPointType('Power')">Power (+15)</button>
                   <button class="button-point-type" onclick="selectPointType('Toss-up')">Toss-up (+10)</button>
                   <button class="button-point-type" onclick="selectPointType('Bonus')">Bonus (+10)</button>
+                  <button class="button-point-type" onclick="selectPointType('Miss')">Miss (0)</button>
                   <button class="button-point-type" onclick="selectPointType('Neg')">Neg (-5)</button>
-                  <button class="button-point-type" onclick="selectPointType('Power')">Power (+15)</button>
+                  <button class="button-point-type" onclick="selectPointType('Dead')">Dead (0)</button>
                 </div>
               </div>
               <div class="input-group">
@@ -818,6 +821,7 @@
           <div style="display:flex;gap:6px;flex-wrap:wrap;">
             <button class="analytics-tab active" onclick="switchAnalyticsTab('overview',this)">Overview</button>
             <button class="analytics-tab" onclick="switchAnalyticsTab('players',this)">Players</button>
+            <button class="analytics-tab" onclick="switchAnalyticsTab('charts',this)">Charts</button>
             <button class="analytics-tab" onclick="switchAnalyticsTab('categories',this)">Categories</button>
             <button class="analytics-tab" onclick="switchAnalyticsTab('teams',this)">Team Compositions</button>
           </div>
@@ -825,6 +829,7 @@
         <div class="analytics-scroll" id="analyticsScroll">
           <div id="an-overview" class="analytics-panel active"></div>
           <div id="an-players" class="analytics-panel"></div>
+          <div id="an-charts" class="analytics-panel"></div>
           <div id="an-categories" class="analytics-panel"></div>
           <div id="an-teams" class="analytics-panel"></div>
         </div>
@@ -988,7 +993,12 @@
           playerTHeardOverrides = s.playerTHeardOverrides;
           changed = true;
         }
-        if (changed && analyticsOpen && currentAnalyticsTab === 'players') renderAnalyticsPlayersUniversal();
+        if (s.sessionInvalidFlags && typeof s.sessionInvalidFlags === 'object') {
+          sessionInvalidFlags = s.sessionInvalidFlags;
+          changed = true;
+        }
+        if (changed && analyticsOpen) renderAnalytics();
+        if (changed && document.getElementById('sessionsModal')?.classList.contains('open')) renderSessionsList();
       });
       restoreVisualSettings();
       updateHeaderHeight();
@@ -996,12 +1006,50 @@
       document.getElementById('qbScroll')?.addEventListener('scroll',updateFadeMasks);
       document.getElementById('analyticsScroll')?.addEventListener('scroll',updateFadeMasks);
       document.querySelector('.sidebar-sections')?.addEventListener('scroll',updateFadeMasks);
+      // Restore tracker scroll
+      setTimeout(() => {
+        const qbs = document.getElementById('qbScroll');
+        if (qbs) {
+          const saved = parseInt(localStorage.getItem('trackerScroll')||'0', 10);
+          if (saved) qbs.scrollTop = saved;
+          qbs.addEventListener('scroll', () => localStorage.setItem('trackerScroll', qbs.scrollTop));
+        }
+      }, 400);
       loadAllData();
       setupGlobalPlayers();
       setInterval(()=>{saveAllData();updateAutoSave();},5000);
       setupSectionToggle();
       applySidebarState();
       const savedSection=localStorage.getItem('activeSidebarSection')||'sec-session';
+      showSection(savedSection);
+
+      // ── Restore analytics open state + tab + scroll ──
+      const _wasAnalyticsOpen = localStorage.getItem('analyticsOpen') === 'true';
+      const _savedAnalyticsTab = localStorage.getItem('analyticsTab') || 'overview';
+      if (_wasAnalyticsOpen) {
+        analyticsOpen = true;
+        document.getElementById('trackerView').style.display = 'none';
+        document.getElementById('analyticsView').style.display = 'flex';
+        setToggleSwitchState(true);
+        // Activate saved tab
+        currentAnalyticsTab = _savedAnalyticsTab;
+        document.querySelectorAll('.analytics-tab').forEach(b => {
+          const matches = b.getAttribute('onclick')?.includes("'"+_savedAnalyticsTab+"'");
+          b.classList.toggle('active', !!matches);
+        });
+        document.querySelectorAll('.analytics-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById('an-'+_savedAnalyticsTab)?.classList.add('active');
+        // Restore scroll after data loads (deferred to after loadAllData fires)
+        setTimeout(() => {
+          const scrollEl = document.getElementById('analyticsScroll');
+          if (scrollEl) scrollEl.scrollTop = parseInt(localStorage.getItem('analyticsScroll_'+_savedAnalyticsTab)||'0', 10);
+        }, 600);
+      }
+
+      // Save analytics scroll position on scroll
+      document.getElementById('analyticsScroll')?.addEventListener('scroll', function() {
+        localStorage.setItem('analyticsScroll_'+currentAnalyticsTab, this.scrollTop);
+      });
       showSection(savedSection);
       document.getElementById('sidebarOpenBtn').onclick=toggleSidebar;
       document.getElementById('sidebarOpenBtnMobile').onclick=toggleSidebar;
@@ -1013,7 +1061,7 @@
     }
     function saveGlobalSettings() {
       if (!globalSettingsRef) return;
-      globalSettingsRef.set({ skillThresholdPct, manuallyIncluded: [...manuallyIncluded], playerTHeardOverrides })
+      globalSettingsRef.set({ skillThresholdPct, manuallyIncluded: [...manuallyIncluded], playerTHeardOverrides, sessionInvalidFlags })
         .catch(e => showFirebaseError('Settings save failed: ' + e.message));
     }
 
@@ -1087,7 +1135,8 @@
     var expandedPlayerCards = new Set(); // tracks which player cards are open
     var expandedTeamCards = new Set();   // tracks which team composition session cards are open
     var manuallyIncluded = new Set();    // low-data players manually forced into skill score averages
-    var playerTHeardOverrides = {};         // per-player manual tHeard adjustments (delta), synced globally
+    var playerTHeardOverrides = {};      // per-player manual tHeard adjustments (delta), synced globally
+    var sessionInvalidFlags = {};        // { [sessionId]: true } — synced via globalSettings, not per-session
 
     // ── Indicators ──
     function setIndicators(text,color,title) {
@@ -1219,7 +1268,7 @@
       const sessions=Object.values(state.sessions).sort((a,b)=>new Date(b.created)-new Date(a.created));
       if(!sessions.length){list.innerHTML='<p style="color:var(--text2)">No sessions found.</p>';return;}
       list.innerHTML=sessions.map(s=>{
-        const isInvalid = s.invalid === true;
+        const isInvalid = !!sessionInvalidFlags[s.id];
         const isCurrent = s.id === state.currentSessionId;
         return `
         <div class="session-card" style="${isInvalid ? 'opacity:.6;border-color:var(--danger);' : ''}">
@@ -1250,10 +1299,13 @@
 
     function toggleSessionInvalid(id) {
       const s = state.sessions[id]; if (!s) return;
-      const nowInvalid = !(s.invalid === true);
-      const apply = sess => { sess.invalid = nowInvalid; };
-      updateSessionAtomic(id, apply);
-      withWriteLock(id, () => { const sess = state.sessions[id]; if (sess) apply(sess); });
+      if (sessionInvalidFlags[id]) {
+        delete sessionInvalidFlags[id];
+      } else {
+        sessionInvalidFlags[id] = true;
+      }
+      globalSettingsRef.child('sessionInvalidFlags').set(sessionInvalidFlags)
+        .catch(e => showFirebaseError('Analytics toggle failed: ' + e.message));
       renderSessionsList();
       if (analyticsOpen) renderAnalytics();
     }
@@ -1314,15 +1366,16 @@
       const catMap = {};
       answers.forEach(a => {
         const cat = a.category || '—';
-        if (!catMap[cat]) catMap[cat] = { pts: 0, correct: 0, neg: 0, tossup: 0, bonus: 0, power: 0 };
+        if (!catMap[cat]) catMap[cat] = { pts: 0, correct: 0, neg: 0, miss: 0, tossup: 0, bonus: 0, power: 0 };
         catMap[cat].pts += (a.points || 0);
         if (a.pointType === 'Neg')      catMap[cat].neg++;
+        else if (a.pointType === 'Miss') catMap[cat].miss++;
         else if (a.pointType === 'Power')  { catMap[cat].power++; catMap[cat].correct++; }
         else if (a.pointType === 'Toss-up'){ catMap[cat].tossup++; catMap[cat].correct++; }
         else if (a.pointType === 'Bonus')  { catMap[cat].bonus++; catMap[cat].correct++; }
       });
       const catArr = Object.entries(catMap)
-        .map(([name, d]) => ({ name, ...d, total: d.correct + d.neg }))
+        .map(([name, d]) => ({ name, ...d, total: d.correct + d.neg + d.miss }))
         .sort((a, b) => b.pts !== a.pts ? b.pts - a.pts : b.correct - a.correct);
 
       const maxPts = Math.max(...catArr.map(c => Math.abs(c.pts)), 1);
@@ -1331,6 +1384,7 @@
       const tossups    = answers.filter(a => a.pointType === 'Toss-up').length;
       const bonuses    = answers.filter(a => a.pointType === 'Bonus').length;
       const negs       = answers.filter(a => a.pointType === 'Neg').length;
+      const misses     = answers.filter(a => a.pointType === 'Miss').length;
       const correct    = powers + tossups + bonuses;
       const total      = answers.length;
       const acc        = total ? Math.round((correct / total) * 100) : 0;
@@ -1344,12 +1398,13 @@
       // Actualized Potential: how much of the bonus opportunity was converted (actual / potential)
       const actualizedPot = (uRate !== null && uRate > 0 && actualPts20 !== null)
         ? Math.min(100, (actualPts20 / uRate) * 100) : null;
-      // Confidence: total buzz rate (always positive, display only)
+      // Confidence: total buzz rate (always positive, display only) — misses excluded (not buzz-ins)
       const totalBuzzesModal  = powers + tossups + negs;
       const confValueModal    = playerTHeard > 0 ? (100 * totalBuzzesModal) / playerTHeard : null;
       const confZeroModal     = playerTHeard === 0 && totalBuzzesModal === 0;
-      // Accuracy: correct buzz rate (display only)
-      const modalAccuracy     = totalBuzzesModal > 0 ? (100 * (powers + tossups)) / totalBuzzesModal : null;
+      // Accuracy: correct / total answers (misses count as wrong)
+      const totalAnsweredModal = powers + tossups + negs + misses + bonuses;
+      const modalAccuracy     = totalAnsweredModal > 0 ? (100 * (powers + tossups + bonuses)) / totalAnsweredModal : null;
       // Power Rate: P / (P + N) × 100
       const prDenomModal      = powers + negs;
       const prValueModal      = prDenomModal > 0 ? (100 * powers) / prDenomModal : null;
@@ -1452,6 +1507,7 @@
               <td class="right">${c.total}</td>
               <td class="right" style="color:var(--success);font-weight:600;">${c.correct}</td>
               <td class="right" style="color:var(--danger);font-weight:600;">${c.neg || '—'}</td>
+              <td class="right" style="color:var(--warning);font-weight:600;">${c.miss || '—'}</td>
             </tr>
             <tr>
               <td colspan="6" style="padding:0 10px 10px;">
@@ -1480,6 +1536,7 @@
           <span class="pd-chip tossup">${tossups} Toss-up${tossups !== 1 ? 's' : ''}</span>
           <span class="pd-chip">&#43; ${bonuses} Bonus${bonuses !== 1 ? 'es' : ''}</span>
           <span class="pd-chip neg">&#8722; ${negs} Neg${negs !== 1 ? 's' : ''}</span>
+          <span class="pd-chip" style="background:rgba(243,156,18,.1);color:var(--warning);border:1px solid rgba(243,156,18,.35);">${misses} Miss${misses !== 1 ? 'es' : ''}</span>
           <span class="pd-chip" style="background:rgba(102,126,234,.1);color:var(--primary);">${tHeardLabel}</span>
         </div>
         <div class="pd-section-title">Performance Metrics</div>
@@ -1528,6 +1585,7 @@
                 <th class="right">Answers</th>
                 <th class="right" style="color:var(--success);">Correct</th>
                 <th class="right" style="color:var(--danger);">Negs</th>
+                <th class="right" style="color:var(--warning);">Misses</th>
               </tr>
             </thead>
             <tbody>${catRows}</tbody>
@@ -1591,6 +1649,7 @@
 
     function toggleAnalytics() {
       analyticsOpen=!analyticsOpen;
+      localStorage.setItem('analyticsOpen', analyticsOpen);
       const tv=document.getElementById('trackerView');
       const av=document.getElementById('analyticsView');
       if(analyticsOpen){
@@ -1605,16 +1664,27 @@
 
     function switchAnalyticsTab(tab, el) {
       currentAnalyticsTab=tab;
+      localStorage.setItem('analyticsTab', tab);
+      if (tab !== 'charts') {
+        Object.keys(_chartInstances).forEach(id => destroyChart(id));
+        _lastChartFingerprint = null;
+      }
       document.querySelectorAll('.analytics-tab').forEach(b=>b.classList.remove('active'));
       el.classList.add('active');
       document.querySelectorAll('.analytics-panel').forEach(p=>p.classList.remove('active'));
       document.getElementById('an-'+tab)?.classList.add('active');
-      renderAnalytics();
+      renderAnalytics(tab === 'charts');
+      // Restore scroll for this tab
+      const scrollEl = document.getElementById('analyticsScroll');
+      if (scrollEl) {
+        const saved = parseInt(localStorage.getItem('analyticsScroll_'+tab)||'0', 10);
+        scrollEl.scrollTop = saved;
+      }
     }
 
     // ── Global aggregation helpers ──
     function validSessions() {
-      return Object.values(state.sessions).filter(s => s.invalid !== true);
+      return Object.values(state.sessions).filter(s => !sessionInvalidFlags[s.id]);
     }
 
     function buildGlobalAnswerLog() {
@@ -1627,10 +1697,9 @@
       return validSessions().reduce((sum, s) => sum + (s.tHeard || 0), 0);
     }
 
-    function renderAnalytics() {
+    function renderAnalytics(forceCharts) {
       const s=getCurrentSession(); if(!s) return;
       const tab=currentAnalyticsTab;
-      // All tabs use global data
       const globalPs = buildUniversalPlayerStats();
       const globalLog = buildGlobalAnswerLog();
       const globalTHeard = buildGlobalTHeard();
@@ -1638,6 +1707,13 @@
 
       if(tab==='overview') renderAnalyticsOverview(globalLog, globalPs, globalTHeard, sessionCount);
       else if(tab==='players') renderAnalyticsPlayersUniversal();
+      else if(tab==='charts') {
+        const fp = buildChartFingerprint(globalLog, globalPs);
+        if (forceCharts || fp !== _lastChartFingerprint) {
+          _lastChartFingerprint = fp;
+          renderAnalyticsCharts(globalLog, globalPs, globalTHeard);
+        }
+      }
       else if(tab==='categories') renderAnalyticsCategories(globalLog, sessionCount);
       else if(tab==='teams') renderAnalyticsTeamCompositions();
     }
@@ -1647,62 +1723,172 @@
       const totalPts=ps.reduce((sum,p)=>sum+p.points,0);
       const totalAns=allAnswers.length;
       const totalNegs=allAnswers.filter(a=>a.pointType==='Neg').length;
+      const totalMisses=allAnswers.filter(a=>a.pointType==='Miss').length;
+      const totalDeads=allAnswers.filter(a=>a.pointType==='Dead').length;
       const totalPowers=allAnswers.filter(a=>a.pointType==='Power').length;
       const totalTossups=allAnswers.filter(a=>a.pointType==='Toss-up').length;
       const totalBonuses=allAnswers.filter(a=>a.pointType==='Bonus').length;
-      const correctAns=totalAns-totalNegs;
-      const accuracy=totalAns>0?((correctAns/totalAns)*100).toFixed(1):'0.0';
-      const ppa=totalAns>0?(totalPts/totalAns).toFixed(1):'0.0';
+      const wrongAns=totalNegs+totalMisses;
+      const correctAns=totalAns-wrongAns-totalDeads;
       const activePlayers=ps.filter(p=>p.totalAnswers>0);
 
       const catMap={};
       allAnswers.forEach(a=>{
         const cat=a.category||'—'; if(cat==='—') return;
-        if(!catMap[cat]) catMap[cat]={pts:0,count:0,negs:0};
+        if(!catMap[cat]) catMap[cat]={pts:0,count:0,negs:0,misses:0};
         catMap[cat].pts+=(a.points||0); catMap[cat].count++;
         if(a.pointType==='Neg') catMap[cat].negs++;
+        else if(a.pointType==='Miss') catMap[cat].misses++;
       });
-      const catArr=Object.keys(catMap).map(c=>({name:c,pts:catMap[c].pts,count:catMap[c].count,negs:catMap[c].negs}));
+      const catArr=Object.keys(catMap).map(c=>({name:c,pts:catMap[c].pts,count:catMap[c].count,negs:catMap[c].negs,misses:catMap[c].misses}));
       catArr.sort((a,b)=>b.pts-a.pts);
       const strengths=catArr.slice(0,5);
       const weaknesses=catArr.slice().reverse().slice(0,5);
 
-      let html='<div class="an-grid" style="margin-bottom:var(--sp);">';
-      [['Active Players',activePlayers.length],['Total Answers',totalAns],['Total Points',totalPts],['Accuracy',accuracy+'%'],['Powers',totalPowers],['Negs',totalNegs],['Toss-ups Heard',globalTHeard]].forEach(b=>{
-        html+='<div class="an-stat-box"><div class="an-val">'+b[1]+'</div><div class="an-lbl">'+b[0]+'</div></div>';
-      });
-      html+='</div>';
+      let html='';
 
-      // ── Derived team-level metrics ──
-      const teamUPoints = 30 * (totalPowers + totalTossups);
-      const teamActualPts20 = globalTHeard > 0 ? ((totalPts / globalTHeard) * 20).toFixed(1) : '—';
-      const teamPotPts20    = globalTHeard > 0 ? ((teamUPoints / globalTHeard) * 20).toFixed(1) : '—';
-      const teamActualizedPot = (teamUPoints > 0 && globalTHeard > 0)
-        ? ((totalPts / teamUPoints) * 100).toFixed(1) + '%' : '—';
-      const totalBuzzes = totalPowers + totalTossups + totalNegs;
-      const teamConf    = globalTHeard > 0 ? ((100 * totalBuzzes / globalTHeard)).toFixed(1) + '%' : '—';
-      const teamPowerRate = (totalPowers + totalNegs) > 0
+      // ── Per-player averages ──
+      const n = activePlayers.length || 1;
+
+      // ── Team-level rate metrics (inherently team stats, not per-player) ──
+      const teamUPoints       = 30 * (totalPowers + totalTossups);
+      const teamActualPts20   = globalTHeard > 0 ? ((totalPts / globalTHeard) * 20).toFixed(1) : '—';
+      const teamPotPts20      = globalTHeard > 0 ? ((teamUPoints / globalTHeard) * 20).toFixed(1) : '—';
+      const teamActualizedPot = teamUPoints > 0 ? ((totalPts / teamUPoints) * 100).toFixed(1) + '%' : '—';
+      const totalBuzzes       = totalPowers + totalTossups + totalNegs;
+      const teamConf          = globalTHeard > 0 ? ((100 * totalBuzzes / globalTHeard)).toFixed(1) + '%' : '—';
+      const teamPowerRate     = (totalPowers + totalNegs) > 0
         ? ((100 * totalPowers) / (totalPowers + totalNegs)).toFixed(1) + '%' : '—';
+      const teamAccuracy      = (() => {
+        const correct = totalPowers + totalTossups + totalBonuses;
+        const denom   = correct + totalNegs + totalMisses;
+        return denom > 0 ? ((correct / denom) * 100).toFixed(1) + '%' : '—';
+      })();
 
-      html+='<div style="background:var(--card);border:2px solid var(--border);border-radius:10px;padding:18px;margin-bottom:var(--sp);box-shadow:var(--shadow-sm);">';
-      html+='<h3 style="margin:0 0 12px;font-size:1.1em;color:var(--primary);">HSE Team Overview</h3>';
-      [
-        ['Powers',          totalPowers],
-        ['Toss-ups',        totalTossups],
-        ['Bonuses',         totalBonuses],
-        ['Negs',            totalNegs],
-        ['Toss-ups Heard',  globalTHeard],
-        ['Points Per Answer', ppa],
-        ['Accuracy',        accuracy + '%'],
-        ['Actual Pts / 20 TU', teamActualPts20],
-        ['Pot. Pts / 20 TU',   teamPotPts20],
-        ['Actualized Potential', teamActualizedPot],
-        ['Confidence (Buzz Rate)', teamConf],
-        ['Power Rate',      teamPowerRate],
-      ].forEach(r=>{
-        html+='<div class="stat-row"><span class="stat-label">'+r[0]+'</span><span class="stat-value">'+r[1]+'</span></div>';
+      // ── Per-player averages for count stats ──
+      function avg(total) { return (total / n).toFixed(1); }
+
+      // ── Per-player average rates (computed per player, then averaged) ──
+      function avgRate(fn, asPct) {
+        const vals = activePlayers.map(p => fn(p)).filter(v => v !== null);
+        if (!vals.length) return '—';
+        const mean = vals.reduce((s, v) => s + v, 0) / vals.length;
+        return asPct ? (mean * 100).toFixed(1) + '%' : mean.toFixed(1);
+      }
+      const avgAccuracy      = avgRate(p => {
+        const correct = (p.powers||0) + (p.tossupsCorrect||0) + (p.bonusPoints > 0 ? p.bonusPoints/10 : 0);
+        const denom   = correct + (p.negs||0) + (p.misses||0);
+        return denom > 0 ? correct / denom : null;
+      }, true);
+      const avgPowerRate     = avgRate(p => {
+        const d = (p.powers||0) + (p.negs||0);
+        return d > 0 ? (p.powers||0) / d : null;
+      }, true);
+      const avgConf          = avgRate(p => {
+        const tH = p.tHeard || 0;
+        const buzzes = (p.powers||0) + (p.tossupsCorrect||0) + (p.negs||0);
+        return tH > 0 ? buzzes / tH : null;
+      }, true);
+      const avgActualizedPot = avgRate(p => {
+        const pot = 30 * ((p.powers||0) + (p.tossupsCorrect||0));
+        return pot > 0 ? p.points / pot : null;
+      }, true);
+      const avgActualPts20 = avgRate(p => {
+        const tH = p.tHeard || 0;
+        return tH > 0 ? (p.points / tH) * 20 : null;
+      }, false);
+      const avgPotPts20 = avgRate(p => {
+        const tH = p.tHeard || 0;
+        const pot = 30 * ((p.powers||0) + (p.tossupsCorrect||0));
+        return tH > 0 ? (pot / tH) * 20 : null;
+      }, false);
+
+      const accColor = v => v === '—' ? 'var(--primary)' : parseFloat(v) >= 80 ? 'var(--success)' : parseFloat(v) >= 50 ? '#f39c12' : 'var(--danger)';
+
+      // ── Section structure: groups with rows of { label, total, avg, color, totalColor, avgColor } ──
+      // total/avg = null means "not applicable" (show —)
+      // If avg is undefined, the row spans both columns (no avg concept)
+      const _ovGroups = [
+        {
+          label: 'Team Totals',
+          twoCol: false,
+          rows: [
+            { label: 'Active Players', val: activePlayers.length, color: 'var(--primary)' },
+            { label: 'Toss-ups Heard', val: globalTHeard,         color: 'var(--primary)' },
+            { label: 'Total Points',   val: totalPts,             color: 'var(--primary)' },
+            { label: 'Total Answers',  val: totalAns,             color: 'var(--text2)'   },
+          ]
+        },
+        {
+          label: 'Answer Breakdown',
+          twoCol: true,
+          colHeaders: ['Total', 'Avg / Player'],
+          rows: [
+            { label: 'Powers',   total: totalPowers,  avg: avg(totalPowers),  totalColor: 'var(--primary)', avgColor: 'var(--primary)' },
+            { label: 'Toss-ups', total: totalTossups, avg: avg(totalTossups), totalColor: 'var(--success)', avgColor: 'var(--success)' },
+            { label: 'Bonuses',  total: totalBonuses, avg: avg(totalBonuses), totalColor: 'var(--primary)', avgColor: 'var(--primary)' },
+            { label: 'Points',   total: totalPts,     avg: avg(totalPts),     totalColor: 'var(--primary)', avgColor: 'var(--primary)' },
+            { label: 'Negs',     total: totalNegs,    avg: avg(totalNegs),    totalColor: 'var(--danger)',  avgColor: 'var(--danger)'  },
+            { label: 'Misses',   total: totalMisses,  avg: avg(totalMisses),  totalColor: 'var(--warning)', avgColor: 'var(--warning)' },
+            { label: 'Dead TUs', total: totalDeads,   avg: avg(totalDeads),   totalColor: 'var(--text3)',   avgColor: 'var(--text3)'   },
+          ]
+        },
+        {
+          label: 'Performance Rates',
+          twoCol: true,
+          colHeaders: ['Team', 'Avg / Player'],
+          rows: [
+            { label: 'Accuracy',               total: teamAccuracy,      avg: avgAccuracy,      totalColor: accColor(teamAccuracy),  avgColor: accColor(avgAccuracy)  },
+            { label: 'Actualized Potential',   total: teamActualizedPot, avg: avgActualizedPot, totalColor: 'var(--primary)',        avgColor: 'var(--primary)'       },
+            { label: 'Confidence (Buzz Rate)', total: teamConf,          avg: avgConf,          totalColor: 'var(--primary)',        avgColor: 'var(--primary)'       },
+            { label: 'Power Rate',             total: teamPowerRate,     avg: avgPowerRate,     totalColor: 'var(--primary)',        avgColor: 'var(--primary)'       },
+            { label: 'Actual Pts / 20 TU',     total: teamActualPts20,   avg: avgActualPts20,   totalColor: 'var(--primary)', avgColor: 'var(--primary)' },
+            { label: 'Pot. Pts / 20 TU',       total: teamPotPts20,      avg: avgPotPts20,      totalColor: 'var(--text2)',   avgColor: 'var(--text2)'  },
+          ]
+        },
+      ];
+
+      const _secHdr = `font-size:.65em;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--text3);padding:8px 0 4px;margin-bottom:4px;border-bottom:1px solid var(--border);`;
+
+      // Separate groups by type for layout purposes
+      const [_totalsGroup, _breakdownGroup, _ratesGroup] = _ovGroups;
+
+      html += `<div style="background:var(--card);border:2px solid var(--border);border-radius:10px;padding:16px 18px;margin-bottom:var(--sp);box-shadow:var(--shadow-sm);">
+        <h3 style="margin:0 0 12px;font-size:1.1em;color:var(--primary);">HSE Team Overview</h3>`;
+
+      // ── Team Totals: tight inline pill strip ──
+      html += `<div style="${_secHdr}">${_totalsGroup.label}</div>`;
+      html += `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">`;
+      _totalsGroup.rows.forEach(r => {
+        html += `<div style="display:flex;align-items:center;gap:6px;background:var(--sec-bg);border:1px solid var(--border);border-radius:20px;padding:5px 12px;white-space:nowrap;">
+          <span style="font-size:.72em;font-weight:600;color:var(--text2);">${r.label}</span>
+          <span style="font-size:.92em;font-weight:800;color:${r.color};">${r.val}</span>
+        </div>`;
       });
-      html+='</div>';
+      html += `</div>`;
+
+      // ── Answer Breakdown + Performance Rates side by side ──
+      html += `<div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;">`;
+      [_breakdownGroup, _ratesGroup].forEach(({label, colHeaders, rows}) => {
+        html += `<div style="flex:1;min-width:180px;">`;
+        html += `<div style="${_secHdr}">${label}</div>`;
+        html += `<div style="display:grid;grid-template-columns:1fr auto auto;gap:0;margin-bottom:3px;padding:0 2px;">
+          <div></div>
+          <div style="font-size:.58em;font-weight:700;color:var(--text3);width:56px;text-align:right;padding-right:10px;">${colHeaders[0]}</div>
+          <div style="font-size:.58em;font-weight:700;color:var(--text3);width:56px;text-align:right;">${colHeaders[1]}</div>
+        </div>`;
+        rows.forEach(r => {
+          html += `<div style="display:grid;grid-template-columns:1fr auto auto;align-items:center;padding:4px 2px;border-bottom:1px solid var(--border);">
+            <span style="font-size:.82em;color:var(--text2);">${r.label}</span>
+            <span style="width:56px;text-align:right;padding-right:10px;font-weight:700;font-size:.88em;color:${r.totalColor};">${r.total}</span>
+            <span style="width:56px;text-align:right;font-weight:700;font-size:.88em;color:${r.avg !== null ? r.avgColor : 'var(--text3)'};">${r.avg !== null ? r.avg : '—'}</span>
+          </div>`;
+        });
+        html += `</div>`;
+      });
+      html += `</div>`;
+
+      html += `</div>`; // end panel
 
       if(strengths.length){
         html+='<div style="background:var(--card);border:2px solid var(--border);border-radius:10px;padding:18px;margin-bottom:var(--sp);box-shadow:var(--shadow-sm);">';
@@ -1720,11 +1906,12 @@
         html+='<div style="background:var(--card);border:2px solid var(--border);border-radius:10px;padding:18px;margin-bottom:var(--sp);box-shadow:var(--shadow-sm);">';
         html+='<h3 style="margin:0 0 12px;font-size:1.1em;color:var(--primary);">Top Performers</h3>';
         activePlayers.slice(0,5).forEach(function(p,i){
-          var pw=p.powers, ng=p.negs;
+          var pw=p.powers, ng=p.negs, ms=p.misses||0;
           html+='<div class="stat-row"><span class="stat-label"><strong style="color:var(--primary);min-width:28px;display:inline-block;">#'+(i+1)+'</strong> '+p.name+'</span>';
           html+='<span style="display:flex;gap:8px;align-items:center;"><span class="stat-value">'+p.points+' Pts</span>';
           if(pw>0) html+='<span style="font-size:.75em;background:var(--success);color:white;padding:2px 8px;border-radius:10px;font-weight:700;">+'+pw+' Power</span>';
           if(ng>0) html+='<span style="font-size:.75em;background:var(--danger);color:white;padding:2px 8px;border-radius:10px;font-weight:700;">-'+ng+' Neg</span>';
+          if(ms>0) html+='<span style="font-size:.75em;background:var(--warning);color:white;padding:2px 8px;border-radius:10px;font-weight:700;">'+ms+' Miss</span>';
           html+='</span></div>';
         });
         html+='</div>';
@@ -1746,7 +1933,7 @@
           if (!answers.length) return;
           if (!playerMap[p.name]) playerMap[p.name] = {
             name: p.name, points: 0, totalAnswers: 0,
-            tossupsCorrect: 0, bonusPoints: 0, negs: 0, powers: 0,
+            tossupsCorrect: 0, bonusPoints: 0, negs: 0, misses: 0, powers: 0,
             sessions: 0, catMap: {}, tHeard: 0
           };
           const u = playerMap[p.name];
@@ -1755,6 +1942,7 @@
           u.tossupsCorrect += answers.filter(a => a.pointType === 'Toss-up').length;
           u.bonusPoints += answers.filter(a => a.pointType === 'Bonus').length * 10;
           u.negs += answers.filter(a => a.pointType === 'Neg').length;
+          u.misses += answers.filter(a => a.pointType === 'Miss').length;
           u.powers += answers.filter(a => a.pointType === 'Power').length;
           u.tHeard += sessionTHeard;
           u.sessions++;
@@ -1811,8 +1999,9 @@
         const prodRate   = tH > 0 ? (uPts / tH) * 20 : 0;
         // Confidence: buzz rate (always positive) — display only
         const confidence = tH > 0 ? (100 * totalBuzzes) / tH : 0;
-        // Accuracy: correct buzz rate — display only
-        const accuracy   = totalBuzzes > 0 ? (100 * (p.powers + p.tossupsCorrect)) / totalBuzzes : 0;
+        // Accuracy: correct / all answers (misses count as wrong)
+        const totalAnswered = p.powers + p.tossupsCorrect + p.negs + (p.misses || 0) + (p.bonusPoints / 10);
+        const accuracy   = totalAnswered > 0 ? (100 * (p.powers + p.tossupsCorrect + (p.bonusPoints / 10))) / totalAnswered : 0;
         // Power Rate: P / (P + N) × 100 — of risky buzzes, how many were powers
         const powerRate  = (p.powers + p.negs) > 0 ? (100 * p.powers) / (p.powers + p.negs) : null;
         return { prodRate, confidence, accuracy, powerRate };
@@ -1984,7 +2173,8 @@
         const actualRate = tH > 0 ? (p.points / tH) * 20 : 0;
         const confidence = tH > 0 ? (100 * totalBuzzes) / tH : 0;
         const powerRate  = (p.powers + p.negs) > 0 ? (100 * p.powers) / (p.powers + p.negs) : 0;
-        const accuracy   = totalBuzzes > 0 ? (100 * (p.powers + p.tossupsCorrect)) / totalBuzzes : 0;
+        const _totalAnswered = p.powers + p.tossupsCorrect + p.negs + (p.misses||0) + (p.bonusPoints/10);
+        const accuracy   = _totalAnswered > 0 ? (100 * (p.powers + p.tossupsCorrect + (p.bonusPoints/10))) / _totalAnswered : 0;
         const skill = calcSkill(p) ?? -Infinity;
         return { ...p, _prodRate: prodRate, _actualRate: actualRate, _confidence: confidence, _powerRate: powerRate, _accuracy: accuracy, _skill: skill };
       }).sort((a, b) => {
@@ -2021,7 +2211,7 @@
           if (!sameRank) rank = i + 1;
         }
         const sfx = ['st','nd','rd'][rank-1] || 'th';
-        const acc = p.totalAnswers ? Math.round(((p.totalAnswers - p.negs) / p.totalAnswers) * 100) : 0;
+        const acc = p.totalAnswers ? Math.round(((p.totalAnswers - p.negs - (p.misses||0)) / p.totalAnswers) * 100) : 0;
         const cardId = 'pcard_' + p.name.replace(/\W/g, '_');
         const safeName = p.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
         const tH = p.tHeard || 0;
@@ -2040,8 +2230,9 @@
         const prDenom   = p.powers + p.negs;
         const prRaw     = prDenom > 0 ? (100 * p.powers) / prDenom : null;
         const prColor   = prRaw === null ? 'var(--text3)' : prRaw >= 75 ? 'var(--success)' : prRaw >= 50 ? '#f39c12' : 'var(--danger)';
-        // Accuracy: correct buzz rate
-        const accPct  = totalBuzzes > 0 ? (100 * (p.powers + p.tossupsCorrect)) / totalBuzzes : 0;
+        // Accuracy: correct / all answers (misses count as wrong)
+        const totalAnswered = p.powers + p.tossupsCorrect + p.negs + (p.misses||0) + bonuses;
+        const accPct  = totalAnswered > 0 ? (100 * (p.powers + p.tossupsCorrect + bonuses)) / totalAnswered : 0;
         const accColor = accPct >= 80 ? 'var(--success)' : accPct >= 50 ? '#f39c12' : 'var(--danger)';
         const topCats = Object.entries(p.catMap).sort((a,b) => b[1]-a[1]).slice(0,3);
         const skillVal  = calcSkill(p);
@@ -2070,6 +2261,7 @@
                   <span style="background:rgba(102,126,234,.08);border:1px solid rgba(102,126,234,.3);color:var(--primary);border-radius:6px;padding:3px 9px;font-size:.77em;font-weight:600;">${p.powers} Power${p.powers!==1?'s':''}</span>
                   <span style="background:var(--sec-bg);border:1px solid var(--border);border-radius:6px;padding:3px 9px;font-size:.77em;font-weight:600;">${bonuses} Bonus${bonuses!==1?'es':''}</span>
                   <span style="background:rgba(220,53,69,.08);border:1px solid rgba(220,53,69,.3);color:var(--danger);border-radius:6px;padding:3px 9px;font-size:.77em;font-weight:600;">${p.negs} Neg${p.negs!==1?'s':''}</span>
+                  ${(p.misses||0) > 0 ? `<span style="background:rgba(243,156,18,.08);border:1px solid rgba(243,156,18,.35);color:var(--warning);border-radius:6px;padding:3px 9px;font-size:.77em;font-weight:600;">${p.misses} Miss${p.misses!==1?'es':''}</span>` : ''}
                 </div>
                 <div style="display:flex;align-items:center;gap:5px;flex-shrink:0;background:var(--sec-bg);border:1.5px solid var(--border);border-radius:8px;padding:4px 8px;" title="Manually adjust Toss-Ups Heard for this player">
                   <button onclick="event.stopPropagation();adjustPlayerTHeard('${safeName}',-1);" style="width:20px;height:20px;border-radius:5px;border:1.5px solid var(--border);background:var(--card);color:var(--text2);font-size:.85em;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;">−</button>
@@ -2235,7 +2427,7 @@
         const teams = toArray(session.teams).filter(t => toArray(t.playerMembers).length > 0);
         teams.forEach(team => {
           const members = toArray(team.playerMembers);
-          let pts = 0, answers = 0, powers = 0, negs = 0, tossups = 0, bonuses = 0;
+          let pts = 0, answers = 0, powers = 0, negs = 0, misses = 0, tossups = 0, bonuses = 0;
           members.forEach(name => {
             const p = (session.players || {})[name];
             if (!p) return;
@@ -2244,6 +2436,7 @@
             answers += a.length;
             powers  += a.filter(x => x.pointType === 'Power').length;
             negs    += a.filter(x => x.pointType === 'Neg').length;
+            misses  += a.filter(x => x.pointType === 'Miss').length;
             tossups += a.filter(x => x.pointType === 'Toss-up').length;
             bonuses += a.filter(x => x.pointType === 'Bonus').length;
           });
@@ -2255,7 +2448,7 @@
             sessionDate: session.created,
             sessionId: session.id,
             isCurrent: session.id === state.currentSessionId,
-            pts, answers, powers, negs, tossups, bonuses, ...eff
+            pts, answers, powers, negs, misses, tossups, bonuses, ...eff
           });
         });
       });
@@ -2278,7 +2471,7 @@
       allTeamCards.forEach((team, ti) => {
         const color = accentColors[ti % accentColors.length];
         const cardId = 'tcomp_' + team.sessionId + '_' + team.teamName.replace(/\W/g, '_');
-        const acc = team.answers ? Math.round(((team.answers - team.negs) / team.answers) * 100) : 0;
+        const acc = team.answers ? Math.round(((team.answers - team.negs - (team.misses||0)) / team.answers) * 100) : 0;
         const memberTitle = team.members.join(' / ');
         const eBonusTooltip = `Capitalization = 100 × (10 × bonuses) / (30 × (toss-ups + powers)). How well the team capitalized on the bonuses available after winning toss-ups.`;
         const eTotalTooltip = `Point Control = 100 × (15P + 10T + 10B − 5N) / (45 × questions heard). Questions heard = ${team.tHeard} (${team.tHeardIsReal ? 'From Session Counter' : 'Estimated'}).`;
@@ -2289,6 +2482,7 @@
           ['Bonuses',  team.bonuses,  'var(--primary)'],
           ['Powers',   team.powers,   '#9b59b6'],
           ['Negs',     team.negs,     'var(--danger)'],
+          ['Misses',   team.misses,   'var(--warning)'],
           ['Accuracy', acc + '%',     'var(--text2)'],
         ].filter(([, v]) => v !== 0 && v !== '0%').map(([label, val, c]) =>
           `<div style="text-align:center;background:var(--sec-bg);border:1px solid var(--border);border-radius:8px;padding:8px 12px;flex:1;min-width:64px;">
@@ -2347,6 +2541,290 @@
       panel.style.display = open ? 'block' : 'none';
       if (arrow) arrow.style.transform = open ? 'rotate(180deg)' : '';
       if (open) expandedTeamCards.add(id); else expandedTeamCards.delete(id);
+    }
+
+    // ── Charts tab ──
+    var _chartInstances = {};
+    var _lastChartFingerprint = null; // re-render charts only when this changes
+
+    function destroyChart(id) {
+      if (_chartInstances[id]) { _chartInstances[id].destroy(); delete _chartInstances[id]; }
+    }
+    function makeChart(id, config) {
+      destroyChart(id);
+      const canvas = document.getElementById(id);
+      if (!canvas) return;
+      _chartInstances[id] = new Chart(canvas.getContext('2d'), config);
+    }
+    function buildChartFingerprint(log, ps) {
+      // Capture everything that would change a chart: answer count, total points, player list, category list
+      const totalPts = ps.reduce((s, p) => s + p.points, 0);
+      const players  = ps.filter(p => p.totalAnswers > 0).map(p => p.name).sort().join('|');
+      const cats     = [...new Set(log.map(a => a.category).filter(Boolean))].sort().join('|');
+      return log.length + '|' + totalPts + '|' + players + '|' + cats;
+    }
+
+    function renderAnalyticsCharts(allAnswers, ps, globalTHeard) {
+      const el = document.getElementById('an-charts'); if (!el) return;
+      Object.keys(_chartInstances).forEach(id => destroyChart(id));
+
+      if (!allAnswers.length) {
+        el.innerHTML = '<p style="color:var(--text2);padding:20px;">No data recorded yet.</p>';
+        return;
+      }
+
+      // ── Compute data ──
+      const powers  = allAnswers.filter(a => a.pointType === 'Power').length;
+      const tossups = allAnswers.filter(a => a.pointType === 'Toss-up').length;
+      const bonuses = allAnswers.filter(a => a.pointType === 'Bonus').length;
+      const negs    = allAnswers.filter(a => a.pointType === 'Neg').length;
+      const misses  = allAnswers.filter(a => a.pointType === 'Miss').length;
+      const deads   = allAnswers.filter(a => a.pointType === 'Dead').length;
+
+      // Category data
+      const catAnswers = {}, catByType = {};
+      allAnswers.forEach(a => {
+        if (!a.category || a.category === '—') return;
+        catAnswers[a.category] = (catAnswers[a.category] || 0) + 1;
+        if (!catByType[a.category]) catByType[a.category] = { Power: 0, 'Toss-up': 0, Bonus: 0, Neg: 0, Miss: 0, Dead: 0 };
+        if (catByType[a.category][a.pointType] !== undefined) catByType[a.category][a.pointType]++;
+      });
+      const allCatsByVol = Object.keys(catAnswers).sort((a, b) => catAnswers[b] - catAnswers[a]);
+      const allCatsByAnswers = Object.keys(catAnswers).sort((a, b) => catAnswers[b] - catAnswers[a]);
+
+      // Player data — all active players, sorted by points descending
+      const activePlayers = ps.filter(p => p.totalAnswers > 0);
+
+      // Player × category points map
+      // For each player, sum their points per category from the answer log
+      const playerCatPts = {}; // { playerName: { cat: pts } }
+      const allCatsSet = new Set();
+      allAnswers.forEach(a => {
+        if (!a.category || a.category === '—' || a.player === '— Team Bonus —') return;
+        allCatsSet.add(a.category);
+        if (!playerCatPts[a.player]) playerCatPts[a.player] = {};
+        playerCatPts[a.player][a.category] = (playerCatPts[a.player][a.category] || 0) + (a.points || 0);
+      });
+      // Sort categories by total points across all players for consistent ordering
+      const allCatsList = [...allCatsSet].sort((a, b) => {
+        const aTotal = activePlayers.reduce((s, p) => s + (playerCatPts[p.name]?.[a] || 0), 0);
+        const bTotal = activePlayers.reduce((s, p) => s + (playerCatPts[p.name]?.[b] || 0), 0);
+        return bTotal - aTotal;
+      });
+
+      // Theme
+      const PALETTE = [
+        '#667eea','#764ba2','#11998e','#f39c12','#e74c5c',
+        '#3498db','#2ecc71','#e67e22','#9b59b6','#1abc9c',
+        '#e91e63','#00bcd4','#ff5722','#8bc34a','#ffc107',
+        '#607d8b','#795548','#ff9800','#4caf50','#2196f3'
+      ];
+      const isDark     = document.body.classList.contains('dark-mode');
+      const gridColor  = isDark ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.07)';
+      const labelColor = isDark ? '#9ba3c0' : '#5a6178';
+      const tooltipBg  = isDark ? '#1c2128' : '#fff';
+      const tooltipTxt = isDark ? '#e6eaf4' : '#1a1a2e';
+      const baseFont   = { family: "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif", size: 12 };
+      const pluginDefaults = {
+        legend: { labels: { color: labelColor, font: baseFont, boxWidth: 14, padding: 12 } },
+        tooltip: {
+          backgroundColor: tooltipBg, titleColor: tooltipTxt, bodyColor: labelColor,
+          borderColor: isDark ? '#2d3340' : '#dde1ea', borderWidth: 1, padding: 10, cornerRadius: 8
+        }
+      };
+      const pieOpts = { responsive: true, maintainAspectRatio: false, plugins: { ...pluginDefaults, legend: { ...pluginDefaults.legend, position: allCatsByVol.length > 8 ? 'bottom' : 'right' } } };
+      const barScales = {
+        x: { ticks: { color: labelColor, font: { ...baseFont, size: 11 }, maxRotation: 40 }, grid: { color: gridColor } },
+        y: { ticks: { color: labelColor, font: baseFont }, grid: { color: gridColor }, beginAtZero: true }
+      };
+      const barOpts = { responsive: true, maintainAspectRatio: false, plugins: pluginDefaults, scales: barScales };
+
+      const catBarH    = Math.max(260, allCatsByAnswers.length * 24 + 60);
+      const playerBarH = Math.max(280, activePlayers.length * 24 + 80);
+
+      // Chart sizing thresholds
+      // Pie/doughnut charts: fixed compact size, pair side-by-side
+      // Bar charts: width scales with item count — narrow = share row, wide = full row
+      const PIE_H = 300;
+      // Bar chart heights
+      const catBarH_actual = catBarH;
+      const playerBarH_actual = playerBarH;
+      // How many items before a bar chart needs the full row width
+      const CAT_COUNT   = allCatsByAnswers.length;
+      const PLR_COUNT   = activePlayers.length;
+      // Min widths: ≤6 items fits in half row, ≤12 in 2/3, else full
+      function barMinW(count) {
+        if (count <= 5)  return '280px';
+        if (count <= 10) return '420px';
+        return '100%';
+      }
+
+      // chart card: span controls CSS grid column spanning via min-width on the card
+      // We use a responsive CSS grid on the container with auto-fill cols of minmax(280px,1fr)
+      // Cards with min-width set wider will naturally wrap to their own row
+      function chartCard(id, title, height, minWidth) {
+        const mw = minWidth || '280px';
+        return `<div class="ch-card" style="min-width:${mw};">
+          <div class="ch-title">${title}</div>
+          <div style="position:relative;height:${height}px;overflow-x:auto;"><canvas id="${id}"></canvas></div>
+        </div>`;
+      }
+
+      let html = `<style>
+        .ch-grid {
+          display: flex;
+          flex-wrap: wrap;
+          gap: var(--sp);
+          align-items: flex-start;
+        }
+        .ch-card {
+          background: var(--card);
+          border: 2px solid var(--border);
+          border-radius: 10px;
+          padding: 18px;
+          box-shadow: var(--shadow-sm);
+          flex: 1 1 280px;
+          box-sizing: border-box;
+          overflow: hidden;
+        }
+        .ch-title {
+          font-size: .95em;
+          font-weight: 700;
+          color: var(--primary);
+          margin-bottom: 14px;
+        }
+        .ch-section {
+          width: 100%;
+          font-size: .75em;
+          font-weight: 700;
+          letter-spacing: .08em;
+          text-transform: uppercase;
+          color: var(--text3);
+          padding: 4px 0 2px;
+          border-bottom: 1px solid var(--border);
+          margin-bottom: 2px;
+        }
+      </style>`;
+
+      html += `<div class="ch-grid">`;
+
+      // ── Row group: Circle charts (compact, pair naturally) ──
+      html += `<div class="ch-section">Answer Breakdown</div>`;
+      html += chartCard('chart-type-pie', 'Answer Type Breakdown', PIE_H, '260px');
+      if (allCatsByVol.length) html += chartCard('chart-cat-vol', 'Category Volume', PIE_H, '260px');
+
+      // ── Category bar charts ──
+      if (allCatsByAnswers.length) {
+        html += `<div class="ch-section">Categories</div>`;
+        html += chartCard('chart-cat-breakdown', 'Category Answer Breakdown by Type', catBarH_actual, barMinW(CAT_COUNT));
+      }
+
+      // ── Player charts ──
+      if (activePlayers.length >= 1) {
+        html += `<div class="ch-section">Players</div>`;
+        if (activePlayers.length > 1)
+          html += chartCard('chart-player-pts', 'Total Points by Player', playerBarH_actual, barMinW(PLR_COUNT));
+        if (activePlayers.length > 1)
+          html += chartCard('chart-player-breakdown', 'Player Answer Breakdown by Type', playerBarH_actual, barMinW(PLR_COUNT));
+        if (allCatsList.length)
+          html += chartCard('chart-player-cat', 'Player Points by Category', playerBarH_actual, barMinW(PLR_COUNT));
+      }
+
+      html += `</div>`;
+      el.innerHTML = html;
+
+      // ── Draw: Answer type doughnut ──
+      if (powers + tossups + bonuses + negs + misses + deads > 0) {
+        const typeLabels = [], typeData = [], typeColors = [];
+        if (powers)  { typeLabels.push('Power');   typeData.push(powers);  typeColors.push('#11998e'); }
+        if (tossups) { typeLabels.push('Toss-up'); typeData.push(tossups); typeColors.push('#667eea'); }
+        if (bonuses) { typeLabels.push('Bonus');   typeData.push(bonuses); typeColors.push('#764ba2'); }
+        if (negs)    { typeLabels.push('Neg');     typeData.push(negs);    typeColors.push('#e74c5c'); }
+        if (misses)  { typeLabels.push('Miss');    typeData.push(misses);  typeColors.push('#f39c12'); }
+        if (deads)   { typeLabels.push('Dead');    typeData.push(deads);   typeColors.push('#9ba3b8'); }
+        makeChart('chart-type-pie', { type: 'doughnut',
+          data: { labels: typeLabels, datasets: [{ data: typeData, backgroundColor: typeColors, borderWidth: 2, borderColor: isDark ? '#1c2128' : '#fff' }] },
+          options: { ...pieOpts, plugins: { ...pieOpts.plugins, legend: { ...pieOpts.plugins.legend, position: 'right' } } }
+        });
+      }
+
+      // ── Draw: Category volume doughnut ──
+      if (allCatsByVol.length) {
+        makeChart('chart-cat-vol', { type: 'doughnut',
+          data: { labels: allCatsByVol, datasets: [{ data: allCatsByVol.map(c => catAnswers[c]), backgroundColor: allCatsByVol.map((_, i) => PALETTE[i % PALETTE.length] + 'dd'), borderWidth: 2, borderColor: isDark ? '#1c2128' : '#fff' }] },
+          options: pieOpts
+        });
+      }
+
+      // ── Draw: Category breakdown stacked bar (category × type) ──
+      if (allCatsByAnswers.length) {
+        makeChart('chart-cat-breakdown', { type: 'bar',
+          data: {
+            labels: allCatsByAnswers,
+            datasets: [
+              { label: 'Powers',   data: allCatsByAnswers.map(c => catByType[c]?.Power         || 0), backgroundColor: '#11998ecc', borderRadius: 3 },
+              { label: 'Toss-ups', data: allCatsByAnswers.map(c => catByType[c]?.['Toss-up']   || 0), backgroundColor: '#667eeacc', borderRadius: 3 },
+              { label: 'Bonuses',  data: allCatsByAnswers.map(c => catByType[c]?.Bonus         || 0), backgroundColor: '#764ba2cc', borderRadius: 3 },
+              { label: 'Negs',     data: allCatsByAnswers.map(c => catByType[c]?.Neg           || 0), backgroundColor: '#e74c5ccc', borderRadius: 3 },
+              { label: 'Misses',   data: allCatsByAnswers.map(c => catByType[c]?.Miss          || 0), backgroundColor: '#f39c12cc', borderRadius: 3 },
+            ]
+          },
+          options: { ...barOpts, scales: { ...barScales, x: { ...barScales.x, stacked: true }, y: { ...barScales.y, stacked: true } } }
+        });
+      }
+
+      // ── Draw: Player points stacked by category ──
+      if (activePlayers.length > 0 && allCatsList.length) {
+        const pNames = activePlayers.map(p => p.name.split(' ')[0]);
+        makeChart('chart-player-cat', { type: 'bar',
+          data: {
+            labels: pNames,
+            datasets: allCatsList.map((cat, i) => ({
+              label: cat,
+              data: activePlayers.map(p => playerCatPts[p.name]?.[cat] || 0),
+              backgroundColor: PALETTE[i % PALETTE.length] + 'cc',
+              borderColor: PALETTE[i % PALETTE.length],
+              borderWidth: 1,
+              borderRadius: 3,
+            }))
+          },
+          options: {
+            ...barOpts,
+            scales: { ...barScales, x: { ...barScales.x, stacked: true }, y: { ...barScales.y, stacked: true } },
+            plugins: { ...pluginDefaults,
+              tooltip: { ...pluginDefaults.tooltip, mode: 'index', intersect: false },
+              legend: { ...pluginDefaults.legend, position: 'bottom', labels: { ...pluginDefaults.legend.labels, padding: 10, boxWidth: 12 } }
+            }
+          }
+        });
+      }
+
+      // ── Draw: Player answer breakdown stacked by type ──
+      if (activePlayers.length > 1) {
+        const pNames = activePlayers.map(p => p.name.split(' ')[0]);
+        makeChart('chart-player-breakdown', { type: 'bar',
+          data: {
+            labels: pNames,
+            datasets: [
+              { label: 'Powers',   data: activePlayers.map(p => p.powers),           backgroundColor: '#11998ecc', borderRadius: 3 },
+              { label: 'Toss-ups', data: activePlayers.map(p => p.tossupsCorrect),   backgroundColor: '#667eeacc', borderRadius: 3 },
+              { label: 'Bonuses',  data: activePlayers.map(p => p.bonusPoints / 10), backgroundColor: '#764ba2cc', borderRadius: 3 },
+              { label: 'Negs',     data: activePlayers.map(p => p.negs),             backgroundColor: '#e74c5ccc', borderRadius: 3 },
+              { label: 'Misses',   data: activePlayers.map(p => p.misses || 0),      backgroundColor: '#f39c12cc', borderRadius: 3 },
+            ]
+          },
+          options: { ...barOpts, scales: { ...barScales, x: { ...barScales.x, stacked: true }, y: { ...barScales.y, stacked: true } } }
+        });
+      }
+
+      // ── Draw: Total points by player bar ──
+      if (activePlayers.length > 1) {
+        const pNames = activePlayers.map(p => p.name.split(' ')[0]);
+        makeChart('chart-player-pts', { type: 'bar',
+          data: { labels: pNames, datasets: [{ label: 'Points', data: activePlayers.map(p => p.points), backgroundColor: activePlayers.map((_, i) => PALETTE[i % PALETTE.length] + 'cc'), borderColor: activePlayers.map((_, i) => PALETTE[i % PALETTE.length]), borderWidth: 2, borderRadius: 4 }] },
+          options: { ...barOpts, plugins: { ...barOpts.plugins, legend: { display: false } } }
+        });
+      }
     }
 
     function renderAnalyticsCategories(allAnswers, sessionCount) {
@@ -2745,9 +3223,9 @@
       // If switching away from Bonus and player was unset, that's fine
       renderPointTypeButtons();
       const catHint=document.getElementById('categoryOptionalHint');
-      if(catHint) catHint.style.display=state.selectedPointType==='Neg'?'inline':'none';
+      if(catHint) catHint.style.display=(state.selectedPointType==='Neg'||state.selectedPointType==='Miss'||state.selectedPointType==='Dead')?'inline':'none';
       const playerHint=document.getElementById('playerOptionalHint');
-      if(playerHint) playerHint.style.display=state.selectedPointType==='Bonus'?'inline':'none';
+      if(playerHint) playerHint.style.display=(state.selectedPointType==='Bonus'||state.selectedPointType==='Dead')?'inline':'none';
     }
 
     function renderPointTypeButtons() {
@@ -2775,13 +3253,14 @@
     function recordAnswer() {
       const id=state.currentSessionId; if(!id) return;
       const isBonus = state.selectedPointType === 'Bonus';
-      if(!state.selectedPlayer && !isBonus) {alert('Please select a player.');return;}
+      const isDead  = state.selectedPointType === 'Dead';
+      if(!state.selectedPlayer && !isBonus && !isDead) {alert('Please select a player.');return;}
       if(!state.selectedPointType) {alert('Please select a point type.');return;}
-      if(!state.selectedCategory&&state.selectedPointType!=='Neg') {alert('Please select a category.');return;}
-      const pointMap={'Toss-up':10,'Bonus':10,'Neg':-5,'Power':15};
+      if(!state.selectedCategory&&state.selectedPointType!=='Neg'&&state.selectedPointType!=='Miss'&&state.selectedPointType!=='Dead') {alert('Please select a category.');return;}
+      const pointMap={'Toss-up':10,'Bonus':10,'Neg':-5,'Power':15,'Miss':0,'Dead':0};
       const points=pointMap[state.selectedPointType];
-      const isBuzzIn = ['Toss-up','Power','Neg'].includes(state.selectedPointType);
-      // For team bonuses (no player selected), use sentinel value '— Team Bonus —'
+      const isBuzzIn = ['Toss-up','Power','Neg','Miss','Dead'].includes(state.selectedPointType);
+      // For team bonuses / dead toss-ups (no player selected), use sentinel value '— Team Bonus —'
       const recordedPlayer = state.selectedPlayer || '— Team Bonus —';
       const answer={id:Date.now().toString(),player:recordedPlayer,pointType:state.selectedPointType,category:state.selectedCategory||'—',points,timestamp:new Date().toISOString()};
 
@@ -2789,8 +3268,8 @@
         s.answerLog=toArray(s.answerLog);
         if (isBuzzIn) {
           const prev = s.answerLog.length > 0 ? s.answerLog[s.answerLog.length - 1] : null;
-          const prevWasNeg = prev && prev.pointType === 'Neg';
-          const thisIsFollowup = prevWasNeg && (state.selectedPointType === 'Toss-up' || state.selectedPointType === 'Power');
+          const prevWasWrong = prev && (prev.pointType === 'Neg' || prev.pointType === 'Miss');
+          const thisIsFollowup = prevWasWrong && (state.selectedPointType === 'Toss-up' || state.selectedPointType === 'Power');
           if (!thisIsFollowup) {
             s.tHeard = (s.tHeard || 0) + 1;
           }
@@ -2826,11 +3305,11 @@
         if(idx === -1) return;
         const a = s.answerLog[idx];
         // Undo t_heard: reverse the increment logic
-        const isBuzzIn = ['Toss-up','Power','Neg'].includes(a.pointType);
+        const isBuzzIn = ['Toss-up','Power','Neg','Miss','Dead'].includes(a.pointType);
         if (isBuzzIn) {
           const prev = idx > 0 ? s.answerLog[idx - 1] : null;
-          const prevWasNeg = prev && prev.pointType === 'Neg';
-          const wasFollowup = prevWasNeg && (a.pointType === 'Toss-up' || a.pointType === 'Power');
+          const prevWasWrong = prev && (prev.pointType === 'Neg' || prev.pointType === 'Miss');
+          const wasFollowup = prevWasWrong && (a.pointType === 'Toss-up' || a.pointType === 'Power');
           if (!wasFollowup) {
             s.tHeard = Math.max(0, (s.tHeard || 0) - 1);
           }
@@ -2864,7 +3343,7 @@
       el.innerHTML=answers.length
         ?[...answers].reverse().map((a,i)=>`
             <div class="log-entry">
-              <span><strong>${answers.length-i}. ${a.player === '— Team Bonus —' ? '<span style="color:var(--warning);">Team Bonus</span>' : a.player}</strong> &mdash; ${a.pointType} (${a.points>0?'+':''}${a.points} Pts) &mdash; ${a.category}</span>
+              <span><strong>${answers.length-i}. ${a.player === '— Team Bonus —' ? (a.pointType === 'Dead' ? '<span style="color:var(--text3);">Dead TU</span>' : '<span style="color:var(--warning);">Team Bonus</span>') : a.player}</strong> &mdash; ${a.pointType} (${a.points>0?'+':''}${a.points} Pts) &mdash; ${a.category}</span>
               <button class="button button-danger" onclick="deleteAnswer('${a.id}')" style="padding:4px 8px;font-size:.8em;">Delete</button>
             </div>`).join('')
         :'<p style="color:var(--text2)">No answers recorded yet.</p>';
@@ -2876,7 +3355,7 @@
     function calculatePlayerStats() {
       return Object.values(getCurrentSession()?.players||{}).map(p=>{
         const a=p.answers||[];
-        return {name:p.name,points:p.points,totalAnswers:a.length,tossupsCorrect:a.filter(x=>x.pointType==='Toss-up').length,bonusPoints:a.filter(x=>x.pointType==='Bonus').length*10,negs:a.filter(x=>x.pointType==='Neg').length,powers:a.filter(x=>x.pointType==='Power').length};
+        return {name:p.name,points:p.points,totalAnswers:a.length,tossupsCorrect:a.filter(x=>x.pointType==='Toss-up').length,bonusPoints:a.filter(x=>x.pointType==='Bonus').length*10,negs:a.filter(x=>x.pointType==='Neg').length,misses:a.filter(x=>x.pointType==='Miss').length,powers:a.filter(x=>x.pointType==='Power').length};
       }).sort((a,b)=>b.points!==a.points?b.points-a.points:b.powers!==a.powers?b.powers-a.powers:a.negs-b.negs);
     }
 
@@ -2896,7 +3375,7 @@
         const tied=prev&&prev.points===s.points&&prev.powers===s.powers&&prev.negs===s.negs;
         if(i>0&&!tied) rank=i+1;
         const sfx=['st','nd','rd'][rank-1]||'th';
-        html+=`<li style="padding:6px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;"><span><strong style="color:var(--primary);min-width:42px;display:inline-block;">${rank}${sfx}</strong> ${s.name}</span><span style="color:var(--text2);font-size:.92em;">${s.points} Pts${s.powers?' &middot; '+'+'+s.powers+' Power':''}${s.negs?' &middot; '+'-'+s.negs+' Neg':''}</span></li>`;
+        html+=`<li style="padding:6px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;"><span><strong style="color:var(--primary);min-width:42px;display:inline-block;">${rank}${sfx}</strong> ${s.name}</span><span style="color:var(--text2);font-size:.92em;">${s.points} Pts${s.powers?' &middot; '+'+'+s.powers+' Power':''}${s.negs?' &middot; '+'-'+s.negs+' Neg':''}${s.misses?' &middot; '+s.misses+' Miss':''}</span></li>`;
       });
       return html;
     }
@@ -2909,7 +3388,7 @@
       let html='<div class="stats-grid">';
       ts.forEach(t=>{html+=`<div class="team-stat-card collapsed"><h3 onclick="toggleStatCard(event)"><span class="team-name">${t.name}</span><span class="team-score">${t.totalPoints} Pts</span></h3><div class="stat-details"><div class="stat-row"><span class="stat-label">Total Points:</span><span class="stat-value">${t.totalPoints}</span></div><div class="stat-row"><span class="stat-label">Total Answers:</span><span class="stat-value">${t.totalAnswers}</span></div><div class="stat-row"><span class="stat-label">Avg per Member:</span><span class="stat-value">${t.averagePerMember}</span></div><div class="stat-row"><span class="stat-label">Members:</span><span>${t.members.join(', ')||'None'}</span></div></div></div>`;});
       if(active.length){
-        active.forEach(s=>{html+=`<div class="stat-card collapsed"><h3 onclick="toggleStatCard(event)"><span class="player-name">${s.name}</span><span class="player-score">${s.points} Pts</span></h3><div class="stat-details"><div class="stat-row"><span class="stat-label">Total Points:</span><span class="stat-value">${s.points}</span></div><div class="stat-row"><span class="stat-label">Answers:</span><span class="stat-value">${s.totalAnswers}</span></div><div class="stat-row"><span class="stat-label">Toss-ups:</span><span class="stat-value">${s.tossupsCorrect}</span></div><div class="stat-row"><span class="stat-label">Bonus Pts:</span><span class="stat-value">${s.bonusPoints}</span></div><div class="stat-row"><span class="stat-label">Negs:</span><span class="stat-value">${s.negs}</span></div><div class="stat-row"><span class="stat-label">Powers:</span><span class="stat-value">${s.powers}</span></div></div></div>`;});
+        active.forEach(s=>{html+=`<div class="stat-card collapsed"><h3 onclick="toggleStatCard(event)"><span class="player-name">${s.name}</span><span class="player-score">${s.points} Pts</span></h3><div class="stat-details"><div class="stat-row"><span class="stat-label">Total Points:</span><span class="stat-value">${s.points}</span></div><div class="stat-row"><span class="stat-label">Answers:</span><span class="stat-value">${s.totalAnswers}</span></div><div class="stat-row"><span class="stat-label">Toss-ups:</span><span class="stat-value">${s.tossupsCorrect}</span></div><div class="stat-row"><span class="stat-label">Bonus Pts:</span><span class="stat-value">${s.bonusPoints}</span></div><div class="stat-row"><span class="stat-label">Negs:</span><span class="stat-value">${s.negs}</span></div><div class="stat-row"><span class="stat-label">Misses:</span><span class="stat-value">${s.misses}</span></div><div class="stat-row"><span class="stat-label">Powers:</span><span class="stat-value">${s.powers}</span></div></div></div>`;});
         html+=`<div class="overall-ranking"><h3 style="margin-top:0;">Player Rankings</h3><ol style="list-style:none;margin:12px 0 0;padding:0;">${buildRankingList(active)}</ol></div>`;
       } else {html+='<p style="color:var(--text2)">No statistics available yet.</p>';}
       html+='</div>';
@@ -2947,7 +3426,7 @@
     function exportToExcel() {
       const s=getCurrentSession(); if(!s) return;
       const ps=calculatePlayerStats(),ts=calculateTeamStats(),csv=[];
-      if(document.getElementById('exportPlayers').classList.contains('selected')){csv.push('Player Statistics','Player Name,Total Points,Total Answers,Toss-ups,Bonuses,Negs,Powers');ps.forEach(p=>csv.push([p.name,p.points,p.totalAnswers,p.tossupsCorrect,p.bonusPoints/10,p.negs,p.powers].join(',')));csv.push('');}
+      if(document.getElementById('exportPlayers').classList.contains('selected')){csv.push('Player Statistics','Player Name,Total Points,Total Answers,Toss-ups,Bonuses,Negs,Misses,Powers');ps.forEach(p=>csv.push([p.name,p.points,p.totalAnswers,p.tossupsCorrect,p.bonusPoints/10,p.negs,p.misses,p.powers].join(',')));csv.push('');}
       if(document.getElementById('exportTeamStats').classList.contains('selected')&&ts.length){csv.push('Team Statistics','Team Name,Total Points,Total Answers,Members');ts.forEach(t=>csv.push([t.name,t.totalPoints,t.totalAnswers,'"'+t.members.join(', ')+'"'].join(',')));csv.push('');}
       if(document.getElementById('exportAnswerLog').classList.contains('selected')){csv.push('Answer Log','Player,Point Type,Category,Points,Timestamp');(s.answerLog||[]).forEach(a=>csv.push([a.player,a.pointType,a.category,a.points,new Date(a.timestamp).toLocaleString()].join(',')));}
       downloadFile(csv.join('\n'),'quiz-bowl-'+s.name+'-'+new Date().toISOString().split('T')[0]+'.csv','text/csv');
