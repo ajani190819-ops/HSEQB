@@ -646,8 +646,98 @@
     .pd-no-data { color: var(--text2); font-style: italic; font-size: .88em; padding: 10px 0; }
 
     /* ── Autosave indicator ── */
-    .auto-save-indicator { font-size: .73em; font-weight: 600; padding: 3px 9px; border-radius: 20px; background: rgba(255,255,255,.14); color: rgba(255,255,255,.88); border: 1px solid rgba(255,255,255,.25); animation: pulse 2.5s infinite; white-space: nowrap; }
-    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .65; } }
+    /*
+     * Fixed-width pill — the bubble never resizes between states.
+     * Only the dot color + badge tint change, all via slow CSS transitions
+     * so it's never distracting while the user is recording answers.
+     */
+    .auto-save-indicator {
+      width: 30px; height: 30px;
+      padding: 0;
+      border-radius: 50%; flex-shrink: 0;
+      background: rgba(255,255,255,.14);
+      border: 1px solid rgba(255,255,255,.28);
+      display: inline-flex; align-items: center; justify-content: center;
+      overflow: hidden;
+      /* Slow, gentle transitions on everything visual */
+      transition: background 1.4s ease, border-color 1.4s ease, box-shadow 1.4s ease;
+    }
+
+    /* Label text — hidden */
+    .save-label {
+      display: none;
+    }
+
+    /* Spinning arc ring */
+    .save-ring {
+      position: relative; flex-shrink: 0;
+      width: 20px; height: 20px;
+    }
+    .save-ring svg {
+      width: 20px; height: 20px; display: block;
+      animation: save-spin 2.8s linear infinite;
+      transition: opacity 1.4s ease;
+    }
+
+    /* Centre status dot */
+    .save-ring-dot {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      pointer-events: none;
+    }
+    .save-ring-dot::after {
+      content: '';
+      width: 7px; height: 7px; border-radius: 50%;
+      background: rgba(255,255,255,.35);
+      /* Long transitions — colour fades in/out slowly and imperceptibly */
+      transition: background 1.4s ease, box-shadow 1.4s ease, transform 1s ease;
+    }
+
+    /* ── connecting: yellow dot, dim ring ── */
+    .state-connecting .save-ring svg        { opacity: .4; }
+    .state-connecting .save-ring-dot::after {
+      background: #ffd43b;
+      box-shadow: 0 0 4px 1px rgba(255,212,59,.55);
+    }
+
+    /* ── idle: quiet white dot, dim ring ── */
+    .state-idle .save-ring svg        { opacity: .45; }
+    .state-idle .save-ring-dot::after {
+      background: rgba(255,255,255,.3);
+      box-shadow: none;
+      transform: scale(1);
+    }
+
+    /* ── flash: green dot + subtle badge glow, then transitions back to idle ── */
+    .state-flash {
+      background: rgba(56,239,125,.14);
+      border-color: rgba(56,239,125,.3);
+      box-shadow: 0 0 7px rgba(56,239,125,.18);
+    }
+    .state-flash .save-ring svg        { opacity: .9; }
+    .state-flash .save-ring-dot::after {
+      background: #38ef7d;
+      box-shadow: 0 0 5px 2px rgba(56,239,125,.6);
+      transform: scale(1.2);
+    }
+
+    /* ── error: red dot, ring stops ── */
+    .state-error {
+      background: rgba(255,90,90,.1);
+      border-color: rgba(255,90,90,.28);
+      cursor: help;
+    }
+    .state-error .save-ring svg {
+      animation: none;
+      opacity: .45;
+    }
+    .state-error .save-ring-dot::after {
+      background: #ff6b6b;
+      box-shadow: 0 0 4px 1px rgba(255,107,107,.55);
+    }
+    .state-error .save-label { color: rgba(255,180,180,.85); }
+
+    @keyframes save-spin { to { transform: rotate(360deg); } }
 
     /* ── Sidebar nav ── */
     .sidebar-nav {
@@ -736,7 +826,7 @@
           <span id="toggleLabelAnalytics" style="font-size:.82em;font-weight:700;color:rgba(255,255,255,.55);">Stats</span>
         </div>
         <button class="header-btn round" onclick="openHelpModal()" title="Help / Tutorial">?</button>
-        <span id="autosaveStatus" class="auto-save-indicator">✓ Saved</span>
+        <span id="autosaveStatus" class="auto-save-indicator state-connecting"><span class="save-ring"><svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="8" r="6" stroke="rgba(255,255,255,0.25)" stroke-width="2"/><path d="M8 2 A6 6 0 0 1 14 8" stroke="white" stroke-width="2" stroke-linecap="round"/></svg><span class="save-ring-dot"></span></span><span class="save-label">Connecting…</span></span>
       </div>
       <div class="mobile-subrow" id="mobileSubrow">
         <button class="header-btn" id="sidebarOpenBtnMobile">&#9654; Menu</button>
@@ -748,7 +838,7 @@
           </div>
         </div>
         <button class="header-btn round" onclick="openHelpModal()" title="Help">?</button>
-        <span id="autosaveStatusMobile" class="auto-save-indicator" style="flex-shrink:0;">✓ Saved</span>
+        <span id="autosaveStatusMobile" class="auto-save-indicator state-connecting" style="flex-shrink:0;"><span class="save-ring"><svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="8" r="6" stroke="rgba(255,255,255,0.25)" stroke-width="2"/><path d="M8 2 A6 6 0 0 1 14 8" stroke="white" stroke-width="2" stroke-linecap="round"/></svg><span class="save-ring-dot"></span></span><span class="save-label">Connecting…</span></span>
       </div>
     </div>
 
@@ -1243,7 +1333,7 @@
       }, 400);
       loadAllData();
       setupGlobalPlayers();
-      setInterval(()=>{saveAllData();updateAutoSave();},5000);
+      setInterval(() => { saveAllData(); }, 5000);
       setupSectionToggle();
       applySidebarState();
       const savedSection=localStorage.getItem('activeSidebarSection')||'sec-session';
@@ -1464,30 +1554,63 @@
     })();
 
     const writeInFlight = new Set();
-    function withWriteLock(id,fn) { writeInFlight.add(id); try{return fn();}finally{setTimeout(()=>writeInFlight.delete(id),300);} }
-    function updateSessionAtomic(id,mutator) {
+
+    function withWriteLock(id, fn) {
       writeInFlight.add(id);
-      return sessionsRef.child(id).transaction(cur=>{
-        if(!cur) return cur;
-        const n=normalizeSession(cur); mutator(n);
-        n.lastUpdated=new Date().toISOString(); n.updatedBy=clientId; return n;
-      },err=>{setTimeout(()=>writeInFlight.delete(id),300); if(err) showFirebaseError('Save failed: '+err.message);},false);
+      try {
+        return fn();
+      } finally {
+        setTimeout(() => writeInFlight.delete(id), 300);
+      }
     }
-    function setSessionNonAtomic(id,value) {
+    function updateSessionAtomic(id, mutator) {
       writeInFlight.add(id);
-      return sessionsRef.child(id).set(value).finally(()=>setTimeout(()=>writeInFlight.delete(id),300));
+      notifySaveStart();
+      return sessionsRef.child(id).transaction(
+        cur => {
+          if (!cur) return cur;
+          const n = normalizeSession(cur);
+          mutator(n);
+          n.lastUpdated = new Date().toISOString();
+          n.updatedBy = clientId;
+          return n;
+        },
+        err => {
+          setTimeout(() => writeInFlight.delete(id), 300);
+          notifySaveComplete(); // decrement counter; error already shown by caller
+          if (err) showFirebaseError('Save failed: ' + err.message);
+        },
+        false
+      ).then(() => {
+        setTimeout(() => writeInFlight.delete(id), 300);
+        notifySaveComplete();
+      });
+    }
+    function setSessionNonAtomic(id, value) {
+      writeInFlight.add(id);
+      notifySaveStart();
+      return sessionsRef.child(id).set(value)
+        .then(() => notifySaveComplete())
+        .catch(e => { notifySaveComplete(); throw e; })
+        .finally(() => setTimeout(() => writeInFlight.delete(id), 300));
     }
     function toArray(val) {
-      if(!val) return []; if(Array.isArray(val)) return val;
-      return Object.keys(val).sort((a,b)=>+a-+b).map(k=>val[k]);
+      if (!val) return [];
+      if (Array.isArray(val)) return val;
+      // Firebase sometimes stores arrays as objects with numeric string keys
+      return Object.keys(val).sort((a, b) => +a - +b).map(k => val[k]);
     }
     function normalizeSession(s) {
-      if(!s) return s;
-      s.teams=toArray(s.teams); s.answerLog=toArray(s.answerLog);
-      s.answers=toArray(s.answers); s.categories=toArray(s.categories);
-      if(s.players) Object.values(s.players).forEach(p=>{p.answers=toArray(p.answers);});
-      s.teams.forEach(t=>{t.playerMembers=toArray(t.playerMembers);});
-      if(typeof s.tHeard !== 'number') s.tHeard = 0;
+      if (!s) return s;
+      s.teams      = toArray(s.teams);
+      s.answerLog  = toArray(s.answerLog);
+      s.answers    = toArray(s.answers);
+      s.categories = toArray(s.categories);
+      if (s.players) {
+        Object.values(s.players).forEach(p => { p.answers = toArray(p.answers); });
+      }
+      s.teams.forEach(t => { t.playerMembers = toArray(t.playerMembers); });
+      if (typeof s.tHeard !== 'number') s.tHeard = 0;
       return s;
     }
 
@@ -1532,18 +1655,72 @@
     var playerTHeardOverrides = {};      // per-player manual tHeard adjustments (delta), synced globally
     var sessionInvalidFlags = {};        // { [sessionId]: true } — synced via globalSettings, not per-session
 
-    // ── Indicators ──
-    function setIndicators(text,color,title) {
-      ['autosaveStatus','autosaveStatusMobile'].forEach(id=>{
-        const el=document.getElementById(id); if(!el) return;
-        el.textContent=text;
-        if(color) el.style.color=color; else el.style.removeProperty('color');
-        if(title) el.title=title; else el.removeAttribute('title');
+    // ── Save Indicator ──
+    // The pill is fixed-width and always visible. Dot colour is the only signal:
+    //   yellow  = connecting to Firebase
+    //   white   = connected & idle
+    //   green   = just saved (fades back to white over ~2s)
+    //   red     = offline / error
+    // All colour transitions are 1.4 s so they never distract mid-session.
+    let _flashTimer  = null;
+    let _connected   = false;
+
+    const SAVE_INDICATOR_IDS    = ['autosaveStatus', 'autosaveStatusMobile'];
+    const ALL_INDICATOR_STATES  = ['state-connecting', 'state-idle', 'state-flash', 'state-error'];
+
+    function _setIndicatorState(stateName, labelText, title) {
+      SAVE_INDICATOR_IDS.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.classList.remove(...ALL_INDICATOR_STATES);
+        el.classList.add('state-' + stateName);
+        const label = el.querySelector('.save-label');
+        if (label) label.textContent = labelText;
+        if (title) el.title = title; else el.removeAttribute('title');
       });
     }
-    const setLoadingState  = ()=>setIndicators('Connecting...','rgba(255,255,255,0.7)');
-    const updateAutoSave   = ()=>setIndicators('Saved',null);
-    const showFirebaseError = msg=>setIndicators('Offline','#ffcc00',msg);
+
+    // Page load — before Firebase connects
+    const setLoadingState = () => {
+      _connected = false;
+      _setIndicatorState('connecting', 'Connecting…');
+    };
+
+    // Firebase ready — move to quiet idle
+    const updateAutoSave = () => {
+      _connected = true;
+      if (!_flashTimer) _setIndicatorState('idle', 'Synced');
+    };
+
+    // Firebase / network error
+    const showFirebaseError = msg => {
+      _connected = false;
+      clearTimeout(_flashTimer);
+      _flashTimer = null;
+      _setIndicatorState('error', 'Offline', msg || 'Connection issue — changes may not be saved');
+    };
+
+    // Saves are silent — no intermediate "Saving…" state shown
+    function notifySaveStart() {}
+
+    // Save completed — briefly glow green, then fade back to idle
+    function notifySaveComplete() {
+      if (!_connected) return;
+      clearTimeout(_flashTimer);
+      _setIndicatorState('flash', 'Synced');
+      // Flash lasts 2 s; the 1.4 s CSS transition handles the fade-out visually
+      _flashTimer = setTimeout(() => {
+        _flashTimer = null;
+        _setIndicatorState('idle', 'Synced');
+      }, 2000);
+    }
+
+    // Error during a save
+    function notifySaveError(msg) {
+      clearTimeout(_flashTimer);
+      _flashTimer = null;
+      showFirebaseError(msg);
+    }
     const getCurrentSession = ()=>state.sessions[state.currentSessionId]||null;
 
     // ── Fade masks ──
@@ -1566,57 +1743,93 @@
 
     // ── Global players ──
     function setupGlobalPlayers() {
-      if(playersUnsubscribe) playersUnsubscribe();
-      playersUnsubscribe=globalPlayersRef.on('value',snap=>{
-        if(!state.currentSessionId) return;
-        applyGlobalPlayersToSession(snap.val()||{});
+      if (playersUnsubscribe) playersUnsubscribe();
+      playersUnsubscribe = globalPlayersRef.on('value', snap => {
+        if (!state.currentSessionId) return;
+        applyGlobalPlayersToSession(snap.val() || {});
       });
       // Keep user identities (names + photos) in sync
       userIdentitiesRef.on('value', snap => {
         userIdentitiesCache = snap.val() || {};
       });
     }
+
     function applyGlobalPlayersToSession(data) {
-      const s=getCurrentSession(); if(!s) return;
-      let changed=false;
-      Object.keys(data).forEach(name=>{
-        if(!s.players[name]){s.players[name]={name,points:0,answers:[]};changed=true;}
+      const s = getCurrentSession();
+      if (!s) return;
+      let changed = false;
+      Object.keys(data).forEach(name => {
+        if (!s.players[name]) {
+          s.players[name] = { name, points: 0, answers: [] };
+          changed = true;
+        }
       });
-      if(changed){
-        sessionsRef.child(state.currentSessionId).set(s).catch(e=>showFirebaseError(e.message));
-        renderPlayerPool(); renderPlayerButtons(); renderSubPanel(); renderTeams();
+      if (changed) {
+        sessionsRef.child(state.currentSessionId).set(s)
+          .catch(e => showFirebaseError(e.message));
+        renderPlayerPool();
+        renderPlayerButtons();
+        renderSubPanel();
+        renderTeams();
       }
     }
+
     function saveGlobalPlayers(names) {
-      const updates={};
-      names.forEach(n=>{if(n) updates[n]=true;});
-      if(Object.keys(updates).length) globalPlayersRef.update(updates).catch(e=>showFirebaseError(e.message));
+      const updates = {};
+      names.forEach(n => { if (n) updates[n] = true; });
+      if (Object.keys(updates).length) {
+        globalPlayersRef.update(updates).catch(e => showFirebaseError(e.message));
+      }
     }
-    function removeGlobalPlayer(name) { globalPlayersRef.child(name).remove().catch(e=>showFirebaseError(e.message)); }
+
+    function removeGlobalPlayer(name) {
+      globalPlayersRef.child(name).remove().catch(e => showFirebaseError(e.message));
+    }
 
     // ── Data loading ──
     function loadAllData() {
       setLoadingState();
-      if(firebaseUnsubscribe) firebaseUnsubscribe();
-      firebaseUnsubscribe=sessionsRef.on('value',snap=>{
-        const incoming=snap.val()||{};
-        if(state.currentSessionId&&writeInFlight.has(state.currentSessionId)){
-          Object.keys(incoming).forEach(id=>{if(id!==state.currentSessionId) state.sessions[id]=normalizeSession(incoming[id]);});
+      if (firebaseUnsubscribe) firebaseUnsubscribe();
+
+      firebaseUnsubscribe = sessionsRef.on('value', snap => {
+        const incoming = snap.val() || {};
+
+        // If we have a write in-flight for the current session, don't overwrite it
+        // with potentially stale server data — update all *other* sessions instead.
+        if (state.currentSessionId && writeInFlight.has(state.currentSessionId)) {
+          Object.keys(incoming).forEach(id => {
+            if (id !== state.currentSessionId) {
+              state.sessions[id] = normalizeSession(incoming[id]);
+            }
+          });
         } else {
-          state.sessions=incoming;
-          Object.keys(state.sessions).forEach(id=>{state.sessions[id]=normalizeSession(state.sessions[id]);});
+          state.sessions = incoming;
+          Object.keys(state.sessions).forEach(id => {
+            state.sessions[id] = normalizeSession(state.sessions[id]);
+          });
         }
-        const savedId=localStorage.getItem(CURRENT_SESSION_KEY);
-        if(savedId&&state.sessions[savedId]) state.currentSessionId=savedId;
-        else if(Object.keys(state.sessions).length){
-          state.currentSessionId=Object.keys(state.sessions)[0];
-          localStorage.setItem(CURRENT_SESSION_KEY,state.currentSessionId);
-        } else { updateAutoSave(); createNewSession(); return; }
+
+        // Restore or pick the active session
+        const savedId = localStorage.getItem(CURRENT_SESSION_KEY);
+        if (savedId && state.sessions[savedId]) {
+          state.currentSessionId = savedId;
+        } else if (Object.keys(state.sessions).length) {
+          state.currentSessionId = Object.keys(state.sessions)[0];
+          localStorage.setItem(CURRENT_SESSION_KEY, state.currentSessionId);
+        } else {
+          updateAutoSave();
+          createNewSession();
+          return;
+        }
+
         loadSessionData();
-        globalPlayersRef.once('value').then(s=>applyGlobalPlayersToSession(s.val()||{}));
-        updateAutoSave(); renderAll();
-        if(document.getElementById('sessionsModal')?.classList.contains('open')) renderSessionsList();
-      },err=>showFirebaseError('Connection failed: '+err.message));
+        globalPlayersRef.once('value').then(s => applyGlobalPlayersToSession(s.val() || {}));
+        updateAutoSave();
+        renderAll();
+        if (document.getElementById('sessionsModal')?.classList.contains('open')) {
+          renderSessionsList();
+        }
+      }, err => showFirebaseError('Connection failed: ' + err.message));
     }
 
     function loadSessionData() {
@@ -1628,10 +1841,17 @@
     }
 
     function saveAllData() {
-      const s=getCurrentSession();
-      if(s){s.categories=state.categories;s.lastUpdated=new Date().toISOString();s.updatedBy=clientId;}
-      localStorage.setItem(CURRENT_SESSION_KEY,state.currentSessionId);
-      if(s) setSessionNonAtomic(state.currentSessionId,s).catch(e=>showFirebaseError(e.message));
+      const s = getCurrentSession();
+      if (s) {
+        s.categories   = state.categories;
+        s.lastUpdated  = new Date().toISOString();
+        s.updatedBy    = clientId;
+      }
+      localStorage.setItem(CURRENT_SESSION_KEY, state.currentSessionId);
+      if (s) {
+        setSessionNonAtomic(state.currentSessionId, s)
+          .catch(e => showFirebaseError(e.message));
+      }
     }
 
     // ── Sessions ──
@@ -3169,9 +3389,9 @@
         return '100%';
       }
 
-      const playerPtsH_raw      = Math.max(260, activePlayers.length * 28 + 80);
-      const playerBreakdownH_raw = Math.max(300, activePlayers.length * 36 + 100);
-      const playerCatH_raw      = Math.max(320, activePlayers.length * 44 + 120);
+      const playerPtsH_raw      = Math.max(380, activePlayers.length * 48 + 120);
+      const playerBreakdownH_raw = Math.max(420, activePlayers.length * 56 + 140);
+      const playerCatH_raw      = Math.max(460, activePlayers.length * 64 + 160);
       // If charts share a row (small player count), unify to the tallest so they align
       const playerSharedRow = barMinW(PLR_COUNT) !== '100%';
       const playerUnifiedH  = Math.max(playerPtsH_raw, playerBreakdownH_raw, playerCatH_raw);
@@ -3606,59 +3826,122 @@
 
     // ── Render ──
     function renderAll() {
-      renderSessionInfo(); renderPlayerPool(); renderPlayerButtons(); renderSubPanel(); renderPointTypeButtons();
-      renderTeams(); renderCategories(); renderAnswerLog(); renderStatistics(); renderTHeard();
-      if(analyticsOpen) renderAnalytics();
-      if(document.getElementById('sessionsModal')?.classList.contains('open')) renderSessionsList();
-      setTimeout(updateFadeMasks,50);
+      renderSessionInfo();
+      renderPlayerPool();
+      renderPlayerButtons();
+      renderSubPanel();
+      renderPointTypeButtons();
+      renderTeams();
+      renderCategories();
+      renderAnswerLog();
+      renderStatistics();
+      renderTHeard();
+      if (analyticsOpen) renderAnalytics();
+      if (document.getElementById('sessionsModal')?.classList.contains('open')) renderSessionsList();
+      setTimeout(updateFadeMasks, 50);
     }
 
     function renderSessionInfo() {
-      const s=getCurrentSession(); if(!s) return;
-      const set=(id,val)=>{const el=document.getElementById(id);if(el) el.textContent=val;};
-      set('sessionName',s.name); set('headerSessionName',s.name); set('headerSessionNameMobile',s.name);
-      set('sessionCreated',new Date(s.created).toLocaleString());
-      set('sessionLastUpdated',new Date(s.lastUpdated).toLocaleString());
-      set('sessionAnswerCount',(s.answerLog||[]).length);
+      const s = getCurrentSession();
+      if (!s) return;
+      const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+      set('sessionName',        s.name);
+      set('headerSessionName',  s.name);
+      set('headerSessionNameMobile', s.name);
+      set('sessionCreated',     new Date(s.created).toLocaleString());
+      set('sessionLastUpdated', new Date(s.lastUpdated).toLocaleString());
+      set('sessionAnswerCount', (s.answerLog || []).length);
     }
 
     // ── Players ──
     function addToPlayerPool() {
-      const input=document.getElementById('playerInput');
-      const player=input.value.trim();
-      if(!player){showToast('Please enter a player name.');return;}
-      const id=state.currentSessionId; if(!id) return;
-      updateSessionAtomic(id,s=>{if(!s.players) s.players={};if(!s.players[player]) s.players[player]={name:player,points:0,answers:[]};}).then(()=>{input.value='';saveGlobalPlayers([player]);});
-      withWriteLock(id,()=>{const s=getCurrentSession();if(!s.players) s.players={};if(!s.players[player]) s.players[player]={name:player,points:0,answers:[]};});
-      renderPlayerPool(); renderPlayerButtons(); renderSubPanel(); renderTeams();
+      const input  = document.getElementById('playerInput');
+      const player = input.value.trim();
+      if (!player) { showToast('Please enter a player name.'); return; }
+      const id = state.currentSessionId;
+      if (!id) return;
+
+      updateSessionAtomic(id, s => {
+        if (!s.players) s.players = {};
+        if (!s.players[player]) s.players[player] = { name: player, points: 0, answers: [] };
+      }).then(() => {
+        input.value = '';
+        saveGlobalPlayers([player]);
+      });
+
+      withWriteLock(id, () => {
+        const s = getCurrentSession();
+        if (!s.players) s.players = {};
+        if (!s.players[player]) s.players[player] = { name: player, points: 0, answers: [] };
+      });
+
+      renderPlayerPool();
+      renderPlayerButtons();
+      renderSubPanel();
+      renderTeams();
     }
 
     function removeFromPlayerPool(player) {
-      const id=state.currentSessionId; if(!id) return;
-      updateSessionAtomic(id,s=>{if(s.players) delete s.players[player];(s.teams||[]).forEach(t=>{t.playerMembers=(t.playerMembers||[]).filter(p=>p!==player);});});
+      const id = state.currentSessionId;
+      if (!id) return;
+
+      updateSessionAtomic(id, s => {
+        if (s.players) delete s.players[player];
+        (s.teams || []).forEach(t => {
+          t.playerMembers = (t.playerMembers || []).filter(p => p !== player);
+        });
+      });
+
       removeGlobalPlayer(player);
-      withWriteLock(id,()=>{const s=getCurrentSession();if(!s) return;if(s.players) delete s.players[player];(s.teams||[]).forEach(t=>{t.playerMembers=(t.playerMembers||[]).filter(p=>p!==player);});});
-      renderPlayerPool(); renderPlayerButtons(); renderSubPanel(); renderTeams();
+
+      withWriteLock(id, () => {
+        const s = getCurrentSession();
+        if (!s) return;
+        if (s.players) delete s.players[player];
+        (s.teams || []).forEach(t => {
+          t.playerMembers = (t.playerMembers || []).filter(p => p !== player);
+        });
+      });
+
+      renderPlayerPool();
+      renderPlayerButtons();
+      renderSubPanel();
+      renderTeams();
     }
 
     function clearPlayerPool() {
       showConfirm('Clear all players?', 'Clear').then(ok => {
         if (!ok) return;
-        const id=state.currentSessionId; if(!id) return;
-        const reset=s=>{s.players={};(s.teams||[]).forEach(t=>{t.playerMembers=[];});s.answerLog=[];s.answers=[];};
-        updateSessionAtomic(id,reset);
-        withWriteLock(id,()=>{const s=getCurrentSession();if(s) reset(s);});
-        renderPlayerPool(); renderPlayerButtons(); renderSubPanel(); renderTeams(); renderAnswerLog(); renderStatistics(); renderSessionInfo();
+        const id = state.currentSessionId;
+        if (!id) return;
+        const reset = s => {
+          s.players  = {};
+          (s.teams || []).forEach(t => { t.playerMembers = []; });
+          s.answerLog = [];
+          s.answers   = [];
+        };
+        updateSessionAtomic(id, reset);
+        withWriteLock(id, () => { const s = getCurrentSession(); if (s) reset(s); });
+        renderPlayerPool();
+        renderPlayerButtons();
+        renderSubPanel();
+        renderTeams();
+        renderAnswerLog();
+        renderStatistics();
+        renderSessionInfo();
       });
     }
 
     function renderPlayerPool() {
-      const s=getCurrentSession(); const el=document.getElementById('playerPoolDisplay');
-      if(!el||!s) return;
-      const players=Object.keys(s.players||{});
-      el.innerHTML=players.length
-        ?players.map(p=>`<span class="player-pool-item">${p}<span class="remove" onclick="removeFromPlayerPool('${p}')">&#215;</span></span>`).join('')
-        :'<p style="color:var(--text2)">No players added yet.</p>';
+      const s  = getCurrentSession();
+      const el = document.getElementById('playerPoolDisplay');
+      if (!el || !s) return;
+      const players = Object.keys(s.players || {});
+      el.innerHTML = players.length
+        ? players.map(p =>
+            `<span class="player-pool-item">${p}<span class="remove" onclick="removeFromPlayerPool('${p}')">&#215;</span></span>`
+          ).join('')
+        : '<p style="color:var(--text2)">No players added yet.</p>';
     }
 
     function getDisplayName(full,all) {
@@ -3855,17 +4138,17 @@
       const t = document.getElementById('appToast');
       if (!t) { alert(msg); return; }
       t.textContent = msg;
-      t.className = 'show' + (type ? ' toast-'+type : '');
+      t.className   = 'show' + (type ? ' toast-' + type : '');
       clearTimeout(t._timer);
       t._timer = setTimeout(() => { t.className = ''; }, duration || 2800);
     }
 
-    // Promise-based confirm toast (replaces confirm())
+    // Promise-based confirm toast (replaces browser confirm())
     var _confirmResolve = null;
     function showConfirm(msg, okLabel, warnStyle) {
       return new Promise(resolve => {
         _confirmResolve = resolve;
-        const el  = document.getElementById('confirmToast');
+        const el    = document.getElementById('confirmToast');
         const msgEl = document.getElementById('confirmToastMsg');
         const okEl  = document.getElementById('confirmToastOk');
         if (!el) { resolve(confirm(msg)); return; }
