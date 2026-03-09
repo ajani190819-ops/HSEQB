@@ -667,11 +667,11 @@
           <div class="qb-section" id="sec-categories">
             <h2>Categories <span class="toggle-icon">&#9660;</span></h2>
             <div class="collapsible-content">
-              <div class="input-group">
-                <label>Categories (comma-separated):</label>
-                <textarea id="categoriesInput" placeholder="e.g., Science, History, Literature..." rows="3"></textarea>
+              <p style="font-size:.85em;color:var(--text2);margin-bottom:10px;">Categories and subcategories are fixed. Select a parent category when recording answers to reveal its subcategories.</p>
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <script>/* category tree display rendered below */</script>
               </div>
-              <button class="button" onclick="saveCategories()">Save Categories</button>
+              <div id="categoryTreeDisplay"></div>
             </div>
           </div>
 
@@ -774,7 +774,7 @@
                 </div>
               </div>
               <div class="input-group">
-                <label>Category: <span id="categoryOptionalHint" style="font-weight:400;font-size:.85em;color:var(--text2);display:none;">(Optional for Neg)</span></label>
+                <label>Category: <span style="font-weight:400;font-size:.85em;color:var(--text2);">(Optional)</span></label>
                 <div id="categoryButtonsContainer" class="category-buttons"></div>
               </div>
               <!-- t_heard counter -->
@@ -1122,7 +1122,22 @@
     }
 
     const CURRENT_SESSION_KEY='currentSession';
-    const DEFAULT_CATEGORIES=['Art','Current Events','Geography','History','Literature','Math','Misc','Mythology','Music','Pop Culture','Religion','Science','Soc. Stu.','Sports'];
+    const CATEGORY_TREE = {
+      'Literature':     ['Poetry','Theater','Fiction','Nonfiction'],
+      'History':        ['Ancient History','American History','European History','World History'],
+      'Fine Arts':      ['Visual Arts','Music','Musicals','Opera'],
+      'Social Studies': ['Philosophy','Geography','Religion','Mythology','Social Sciences'],
+      'Science':        ['Biology','Chemistry','Physics','Math','Astronomy','Computer Science','Earth Science'],
+      'Pop Culture':    ['Popular Media','Sports','Current Events'],
+    };
+    const DEFAULT_CATEGORIES = Object.values(CATEGORY_TREE).flat();
+    // Build reverse lookup: subcategory → parent
+    const CAT_PARENT = {};
+    Object.entries(CATEGORY_TREE).forEach(([parent, subs]) => subs.forEach(s => CAT_PARENT[s] = parent));
+    // Return parent name for a category (or the category itself if it's already a parent or unknown)
+    function getParentCat(cat) { return CAT_PARENT[cat] || cat; }
+    // Return display label "Parent › Sub" for a subcategory, or just parent name
+    function catLabel(cat) { const p = CAT_PARENT[cat]; return p ? `${p} › ${cat}` : cat; }
     const state={sessions:{},currentSessionId:null,selectedPlayer:null,selectedPointType:null,selectedCategory:null,categories:[]};
     let firebaseUnsubscribe=null, playersUnsubscribe=null;
     var analyticsOpen=false, currentAnalyticsTab='overview';
@@ -1221,11 +1236,10 @@
 
     function loadSessionData() {
       const s=getCurrentSession(); if(!s){createNewSession();return;}
-      if(!s.categories?.length) s.categories=[...DEFAULT_CATEGORIES];
-      s.categories.sort((a,b)=>a.localeCompare(b));
-      state.categories=s.categories;
-      const ta=document.getElementById('categoriesInput');
-      if(ta) ta.value=state.categories.join(', ');
+      // Always use the fixed category tree
+      state.categories = DEFAULT_CATEGORIES;
+      s.categories = [...DEFAULT_CATEGORIES];
+      setTimeout(renderCategoryTreeDisplay, 0);
     }
 
     function saveAllData() {
@@ -1494,26 +1508,63 @@
       if (catArr.length === 0) {
         catRows = '<tr><td colspan="6" style="color:var(--text2);font-style:italic;padding:12px 10px;">No category data yet.</td></tr>';
       } else {
-        catArr.forEach((c, i) => {
-          const barWidth = Math.max(2, (Math.abs(c.pts) / maxPts) * 100);
-          const isNeg = c.pts < 0;
-          catRows += `
-            <tr>
-              <td>${rankBadge(i)}</td>
-              <td style="font-weight:600;">${c.name}</td>
-              <td class="right" style="color:${isNeg ? 'var(--danger)' : 'var(--primary)'};font-weight:700;">${c.pts > 0 ? '+' : ''}${c.pts}</td>
-              <td class="right">${c.total}</td>
-              <td class="right" style="color:var(--success);font-weight:600;">${c.correct}</td>
-              <td class="right" style="color:var(--danger);font-weight:600;">${c.neg || '—'}</td>
-              <td class="right" style="color:var(--warning);font-weight:600;">${c.miss || '—'}</td>
-            </tr>
-            <tr>
-              <td colspan="6" style="padding:0 10px 10px;">
-                <div style="background:var(--sec-bg);border-radius:6px;height:6px;overflow:hidden;border:1px solid var(--border);">
-                  <div class="pd-bar-mini ${isNeg ? 'neg-bar' : ''}" style="width:${barWidth}%;"></div>
-                </div>
-              </td>
-            </tr>`;
+        // Group by parent category
+        const parentGroups = {};
+        catArr.forEach(c => {
+          const parent = getParentCat(c.name);
+          if (!parentGroups[parent]) parentGroups[parent] = [];
+          parentGroups[parent].push(c);
+        });
+        // Sort parents by total pts descending
+        const sortedParents = Object.entries(parentGroups).sort((a, b) => {
+          const aSum = a[1].reduce((s, c) => s + c.pts, 0);
+          const bSum = b[1].reduce((s, c) => s + c.pts, 0);
+          return bSum - aSum;
+        });
+        let rowIdx = 0;
+        sortedParents.forEach(([parent, cats]) => {
+          const parentPts = cats.reduce((s, c) => s + c.pts, 0);
+          const parentTotal = cats.reduce((s, c) => s + c.total, 0);
+          const parentCorrect = cats.reduce((s, c) => s + c.correct, 0);
+          const parentNeg = cats.reduce((s, c) => s + c.neg, 0);
+          const parentMiss = cats.reduce((s, c) => s + c.miss, 0);
+          const isParentNeg = parentPts < 0;
+          // Parent header row
+          catRows += `<tr style="background:var(--sec-bg);">
+            <td colspan="2" style="font-weight:700;font-size:.88em;color:var(--text2);padding:6px 10px;">${parent}</td>
+            <td class="right" style="color:${isParentNeg?'var(--danger)':'var(--primary)'};font-weight:700;font-size:.88em;">${parentPts>0?'+':''}${parentPts}</td>
+            <td class="right" style="font-size:.88em;color:var(--text2);">${parentTotal}</td>
+            <td class="right" style="color:var(--success);font-weight:600;font-size:.88em;">${parentCorrect||'—'}</td>
+            <td class="right" style="color:var(--danger);font-weight:600;font-size:.88em;">${parentNeg||'—'}</td>
+            <td class="right" style="color:var(--warning);font-weight:600;font-size:.88em;">${parentMiss||'—'}</td>
+          </tr>`;
+          // Only show sub-rows if the parent has multiple entries or the name differs from parent
+          const showSubs = cats.length > 1 || cats[0].name !== parent;
+          if (showSubs) {
+            cats.forEach((c) => {
+              const barWidth = Math.max(2, (Math.abs(c.pts) / maxPts) * 100);
+              const isNeg = c.pts < 0;
+              const isSubcat = CAT_PARENT[c.name];
+              catRows += `
+                <tr>
+                  <td style="padding-left:18px;color:var(--text3);font-size:.8em;">${isSubcat ? '↳' : rankBadge(rowIdx)}</td>
+                  <td style="font-weight:600;font-size:.9em;color:var(--text1);">${c.name}</td>
+                  <td class="right" style="color:${isNeg ? 'var(--danger)' : 'var(--primary)'};font-weight:700;">${c.pts > 0 ? '+' : ''}${c.pts}</td>
+                  <td class="right">${c.total}</td>
+                  <td class="right" style="color:var(--success);font-weight:600;">${c.correct||'—'}</td>
+                  <td class="right" style="color:var(--danger);font-weight:600;">${c.neg || '—'}</td>
+                  <td class="right" style="color:var(--warning);font-weight:600;">${c.miss || '—'}</td>
+                </tr>
+                <tr>
+                  <td colspan="6" style="padding:0 10px 6px 28px;">
+                    <div style="background:var(--sec-bg);border-radius:6px;height:5px;overflow:hidden;border:1px solid var(--border);">
+                      <div class="pd-bar-mini ${isNeg ? 'neg-bar' : ''}" style="width:${barWidth}%;"></div>
+                    </div>
+                  </td>
+                </tr>`;
+              rowIdx++;
+            });
+          }
         });
       }
 
@@ -1731,7 +1782,8 @@
 
       const catMap={};
       allAnswers.forEach(a=>{
-        const cat=a.category||'—'; if(cat==='—') return;
+        const raw=a.category||'—'; if(raw==='—') return;
+        const cat=getParentCat(raw); // roll up to parent
         if(!catMap[cat]) catMap[cat]={pts:0,count:0,negs:0,misses:0};
         catMap[cat].pts+=(a.points||0); catMap[cat].count++;
         if(a.pointType==='Neg') catMap[cat].negs++;
@@ -1937,7 +1989,7 @@
           u.sessions++;
           u._tHeardBase = (u._tHeardBase || 0) + sessionTHeard;
           answers.forEach(a => {
-            if (a.category && a.category !== '—') u.catMap[a.category] = (u.catMap[a.category] || 0) + 1;
+            if (a.category && a.category !== '—') { const pc = getParentCat(a.category); u.catMap[pc] = (u.catMap[pc] || 0) + 1; }
           });
         });
       });
@@ -2146,6 +2198,7 @@
         { key: 'accuracy',   label: 'Accuracy' },
         { key: 'powers',     label: 'Powers' },
         { key: 'negs',       label: 'Negs' },
+        { key: 'alpha',      label: 'A–Z' },
       ];
       if (['buzzVol','aggression','precision'].includes(playerSortKey)) playerSortKey = 'points';
       html += `<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border);">
@@ -2176,6 +2229,7 @@
           case 'accuracy':   return b._accuracy   - a._accuracy;
           case 'powers':     return b.powers      - a.powers;
           case 'negs':       return a.negs        - b.negs;
+          case 'alpha':      return a.name.localeCompare(b.name);
           default:           return b.points !== a.points ? b.points - a.points
                                   : b.powers !== a.powers ? b.powers - a.powers
                                   : a.negs - b.negs;
@@ -2186,7 +2240,8 @@
       html += playersSorted.map((p, i) => {
         if (i > 0) {
           const prev = playersSorted[i-1];
-          const sameRank = playerSortKey === 'points'
+          const sameRank = playerSortKey === 'alpha' ? false
+            : playerSortKey === 'points'
             ? (prev.points === p.points && prev.powers === p.powers && prev.negs === p.negs)
             : playerSortKey === 'skill'      ? prev._skill      === p._skill
             : playerSortKey === 'prodRate'   ? prev._prodRate   === p._prodRate
@@ -2200,6 +2255,7 @@
           if (!sameRank) rank = i + 1;
         }
         const sfx = ['st','nd','rd'][rank-1] || 'th';
+        const rankLabel = playerSortKey === 'alpha' ? '' : `${rank}${sfx}`;
         const acc = p.totalAnswers ? Math.round(((p.totalAnswers - p.negs - (p.misses||0)) / p.totalAnswers) * 100) : 0;
         const cardId = 'pcard_' + p.name.replace(/\W/g, '_');
         const safeName = p.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
@@ -2230,7 +2286,7 @@
         return `
         <div class="player-card-wrap">
           <div class="player-card-header" onclick="togglePlayerCard('${cardId}')">
-            <div class="player-card-rank">${rank}${sfx}</div>
+            <div class="player-card-rank">${rankLabel}</div>
             <div style="flex:1;min-width:0;">
               <div style="font-weight:700;font-size:.95em;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.name}</div>
               <div style="font-size:.75em;color:var(--text3);margin-top:1px;">${p.sessions} Session${p.sessions!==1?'s':''} &bull; ${p.totalAnswers} Answers &bull; ${acc}% Acc</div>
@@ -2312,7 +2368,7 @@
               ${topCats.length ? `
               <div style="border-top:1px solid var(--border);padding-top:10px;">
                 <div style="font-size:.7em;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;">Top Categories</div>
-                ${topCats.map(([cat, cnt]) => `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:.82em;border-bottom:1px solid var(--border);"><span style="color:var(--text2);font-weight:500;">${cat}</span><span style="font-weight:700;color:var(--primary);">${cnt}</span></div>`).join('')}
+                ${topCats.map(([cat, cnt]) => `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:.82em;border-bottom:1px solid var(--border);"><span style="color:var(--text2);font-weight:500;">${catLabel(cat)}</span><span style="font-weight:700;color:var(--primary);">${cnt}</span></div>`).join('')}
               </div>` : ''}
             </div>
           </div>
@@ -2570,29 +2626,30 @@
       const misses  = allAnswers.filter(a => a.pointType === 'Miss').length;
       const deads   = allAnswers.filter(a => a.pointType === 'Dead').length;
 
-      // Category data
+      // Category data — aggregate subcategories up to their parent
       const catAnswers = {}, catByType = {};
       allAnswers.forEach(a => {
         if (!a.category || a.category === '—') return;
-        catAnswers[a.category] = (catAnswers[a.category] || 0) + 1;
-        if (!catByType[a.category]) catByType[a.category] = { Power: 0, 'Toss-up': 0, Bonus: 0, Neg: 0, Miss: 0, Dead: 0 };
-        if (catByType[a.category][a.pointType] !== undefined) catByType[a.category][a.pointType]++;
+        const cat = getParentCat(a.category); // roll up to parent
+        catAnswers[cat] = (catAnswers[cat] || 0) + 1;
+        if (!catByType[cat]) catByType[cat] = { Power: 0, 'Toss-up': 0, Bonus: 0, Neg: 0, Miss: 0, Dead: 0 };
+        if (catByType[cat][a.pointType] !== undefined) catByType[cat][a.pointType]++;
       });
       const allCatsByVol = Object.keys(catAnswers).sort((a, b) => catAnswers[b] - catAnswers[a]);
-      const allCatsByAnswers = Object.keys(catAnswers).sort((a, b) => catAnswers[b] - catAnswers[a]);
+      const allCatsByAnswers = allCatsByVol;
 
       // Player data — all active players, sorted by points descending
       const activePlayers = ps.filter(p => p.totalAnswers > 0);
 
-      // Player × category points map
-      // For each player, sum their points per category from the answer log
-      const playerCatPts = {}; // { playerName: { cat: pts } }
+      // Player × category points map — aggregate to parent category
+      const playerCatPts = {}; // { playerName: { parentCat: pts } }
       const allCatsSet = new Set();
       allAnswers.forEach(a => {
         if (!a.category || a.category === '—' || a.player === '— Team Bonus —') return;
-        allCatsSet.add(a.category);
+        const cat = getParentCat(a.category);
+        allCatsSet.add(cat);
         if (!playerCatPts[a.player]) playerCatPts[a.player] = {};
-        playerCatPts[a.player][a.category] = (playerCatPts[a.player][a.category] || 0) + (a.points || 0);
+        playerCatPts[a.player][cat] = (playerCatPts[a.player][cat] || 0) + (a.points || 0);
       });
       // Sort categories by total points across all players for consistent ordering
       const allCatsList = [...allCatsSet].sort((a, b) => {
@@ -3161,34 +3218,71 @@
         </div>`).join('');
     }
 
-    // ── Categories ──
+    // ── Categories (fixed tree) ──
     function saveCategories() {
-      state.categories=document.getElementById('categoriesInput').value.split(',').map(c=>c.trim()).filter(Boolean).sort((a,b)=>a.localeCompare(b));
-      const id=state.currentSessionId; if(!id) return;
-      updateSessionAtomic(id,s=>{s.categories=[...state.categories];});
-      withWriteLock(id,()=>{const s=getCurrentSession();if(s) s.categories=[...state.categories];});
+      // Categories are now fixed — nothing to save manually
+    }
+
+    function renderCategoryTreeDisplay() {
+      const el = document.getElementById('categoryTreeDisplay'); if (!el) return;
+      el.innerHTML = Object.entries(CATEGORY_TREE).map(([parent, subs]) =>
+        `<div style="margin-bottom:8px;">
+          <div style="font-size:.78em;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);margin-bottom:4px;">${parent}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;">${subs.map(s=>`<span style="font-size:.8em;padding:2px 8px;border-radius:10px;background:var(--sec-bg);border:1px solid var(--border);color:var(--text1);">${s}</span>`).join('')}</div>
+        </div>`
+      ).join('');
+    }
+
+    var _selectedParentCat = null;
+
+    function renderCategories() {
+      const el = document.getElementById('categoryButtonsContainer'); if (!el) return;
+      // Parent buttons
+      const parents = Object.keys(CATEGORY_TREE);
+      let html = '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px;">';
+      parents.forEach(p => {
+        const active = _selectedParentCat === p;
+        html += `<button class="button-category${active?' selected':''}" data-parent="${p}" onclick="selectParentCat('${p.replace(/'/g,"\\'")}');">${p}</button>`;
+      });
+      html += '</div>';
+      // Subcategory row
+      if (_selectedParentCat && CATEGORY_TREE[_selectedParentCat]) {
+        html += '<div style="display:flex;flex-wrap:wrap;gap:6px;padding:8px 10px;background:var(--sec-bg);border-radius:8px;border:1px solid var(--border);">';
+        CATEGORY_TREE[_selectedParentCat].forEach(sub => {
+          const sel = state.selectedCategory === sub;
+          html += `<button class="button-category${sel?' selected':''}" data-category="${sub}" onclick="selectCategory('${sub.replace(/'/g,"\\'")}');">${sub}</button>`;
+        });
+        html += '</div>';
+      }
+      el.innerHTML = html;
+    }
+
+    function selectParentCat(p) {
+      if (_selectedParentCat === p) {
+        _selectedParentCat = null;
+        // only clear sub if it belonged to this parent
+        if (state.selectedCategory && CATEGORY_TREE[p]?.includes(state.selectedCategory)) {
+          state.selectedCategory = null;
+        }
+      } else {
+        _selectedParentCat = p;
+        // clear sub selection if it doesn't belong to new parent
+        if (state.selectedCategory && !CATEGORY_TREE[p]?.includes(state.selectedCategory)) {
+          state.selectedCategory = null;
+        }
+      }
       renderCategories();
     }
 
-    function renderCategories() {
-      const el=document.getElementById('categoryButtonsContainer'); if(!el) return;
-      el.innerHTML=state.categories.length
-        ?state.categories.map(c=>`<button class="button-category ${state.selectedCategory===c?'selected':''}" data-category="${c}" onclick="selectCategory('${c}')">${c}</button>`).join('')
-        :'<p style="color:var(--text2);grid-column:1/-1">No categories added yet.</p>';
-    }
-
     function selectCategory(c) {
-      state.selectedCategory=state.selectedCategory===c?null:c;
-      document.querySelectorAll('#categoryButtonsContainer .button-category').forEach(btn=>btn.classList.toggle('selected',btn.dataset.category===state.selectedCategory));
+      state.selectedCategory = state.selectedCategory === c ? null : c;
+      renderCategories();
     }
 
     // ── Answers ──
     function selectPointType(type) {
       state.selectedPointType=state.selectedPointType===type?null:type;
-      // If switching away from Bonus and player was unset, that's fine
       renderPointTypeButtons();
-      const catHint=document.getElementById('categoryOptionalHint');
-      if(catHint) catHint.style.display=(state.selectedPointType==='Neg'||state.selectedPointType==='Miss'||state.selectedPointType==='Dead')?'inline':'none';
       const playerHint=document.getElementById('playerOptionalHint');
       if(playerHint) playerHint.style.display=(state.selectedPointType==='Bonus'||state.selectedPointType==='Dead')?'inline':'none';
     }
@@ -3221,13 +3315,13 @@
       const isDead  = state.selectedPointType === 'Dead';
       if(!state.selectedPlayer && !isBonus && !isDead) {alert('Please select a player.');return;}
       if(!state.selectedPointType) {alert('Please select a point type.');return;}
-      if(!state.selectedCategory&&state.selectedPointType!=='Neg'&&state.selectedPointType!=='Miss'&&state.selectedPointType!=='Dead') {alert('Please select a category.');return;}
       const pointMap={'Toss-up':10,'Bonus':10,'Neg':-5,'Power':15,'Miss':0,'Dead':0};
       const points=pointMap[state.selectedPointType];
       const isBuzzIn = ['Toss-up','Power','Neg','Miss','Dead'].includes(state.selectedPointType);
       // For team bonuses / dead toss-ups (no player selected), use sentinel value '— Team Bonus —'
       const recordedPlayer = state.selectedPlayer || '— Team Bonus —';
-      const answer={id:Date.now().toString(),player:recordedPlayer,pointType:state.selectedPointType,category:state.selectedCategory||'—',points,timestamp:new Date().toISOString()};
+      const effectiveCategory = state.selectedCategory || _selectedParentCat || '—';
+      const answer={id:Date.now().toString(),player:recordedPlayer,pointType:state.selectedPointType,category:effectiveCategory,points,timestamp:new Date().toISOString()};
 
       const applyAnswer=s=>{
         s.answerLog=toArray(s.answerLog);
@@ -3253,12 +3347,10 @@
       };
       updateSessionAtomic(id,applyAnswer);
       withWriteLock(id,()=>{const s=getCurrentSession();if(s) applyAnswer(s);});
-      state.selectedPlayer=null; state.selectedPointType=null; state.selectedCategory=null;
+      state.selectedPlayer=null; state.selectedPointType=null; state.selectedCategory=null; _selectedParentCat=null;
       // Hide hints again
       const playerHint=document.getElementById('playerOptionalHint');
       if(playerHint) playerHint.style.display='none';
-      const catHint=document.getElementById('categoryOptionalHint');
-      if(catHint) catHint.style.display='none';
       renderAll();
     }
 
