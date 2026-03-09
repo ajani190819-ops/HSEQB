@@ -18,7 +18,7 @@
       --bg: #f4f6fb; --text: #1a1a2e; --text2: #5a6178; --text3: #9ba3b8;
       --sec-bg: #eef1f8; --card: #ffffff;
       --input-bg: #fff; --input-border: #dde1ea; --input-text: #1a1a2e;
-      --hover: #edf0f8; --border: #dde1ea;
+      --hover: #edf0f8; --border: #b8bfd0;
       --shadow-xs: 0 1px 3px rgba(60,70,100,.07);
       --shadow-sm: 0 2px 8px rgba(60,70,100,.1);
       --shadow-md: 0 6px 18px rgba(60,70,100,.14);
@@ -30,7 +30,7 @@
       --bg: #0d1117; --text: #e6eaf4; --text2: #9ba3c0; --text3: #606880;
       --sec-bg: #161b22; --card: #1c2128;
       --input-bg: #0d1117; --input-border: #2d3340; --input-text: #e6eaf4;
-      --hover: #1e2530; --border: #2d3340;
+      --hover: #1e2530; --border: #444e63;
       --shadow-xs: 0 1px 3px rgba(0,0,0,.3); --shadow-sm: 0 2px 8px rgba(0,0,0,.35);
       --shadow-md: 0 6px 18px rgba(0,0,0,.45); --shadow-xl: 0 20px 48px rgba(0,0,0,.65);
     }
@@ -70,6 +70,7 @@
       color: #fff; padding: 0 12px;
       display: flex; align-items: center; gap: 8px;
       box-shadow: 0 2px 16px rgba(102,126,234,.28);
+      border-bottom: 2px solid rgba(0,0,0,0.25);
       position: relative; z-index: 200; flex-shrink: 0;
       transition: filter .3s ease; min-height: 54px;
       flex-wrap: nowrap; overflow: hidden;
@@ -137,7 +138,7 @@
     .qb-sidebar {
       width: 300px; flex-shrink: 0; display: flex; flex-direction: column;
       padding: var(--sp) var(--hsp);
-      background: var(--card); border-right: 1px solid var(--border);
+      background: var(--card); border-right: 1.5px solid var(--border);
       overflow: visible; position: relative; z-index: 100;
       transition: width .3s ease, padding .3s ease;
     }
@@ -151,12 +152,12 @@
 
     /* ── Analytics ── */
     .analytics-header {
-      padding: 12px var(--hsp); border-bottom: 1px solid var(--border);
+      padding: 12px var(--hsp); border-bottom: 1.5px solid var(--border);
       background: var(--card); flex-shrink: 0;
     }
     .analytics-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
     .analytics-tab {
-      background: var(--sec-bg); color: var(--text2); border: 1px solid var(--border);
+      background: var(--sec-bg); color: var(--text2); border: 2px solid var(--border);
       border-radius: 20px; padding: 6px 16px; font-size: .82em; font-weight: 600;
       cursor: pointer; font-family: inherit;
       transition: border-color .15s, color .15s, background .15s, box-shadow .15s;
@@ -195,7 +196,7 @@
 
     .an-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: .85em; }
     .an-bar-label { width: 110px; flex-shrink: 0; color: var(--text2); font-weight: 600; }
-    .an-bar-track { flex: 1; height: 10px; background: var(--sec-bg); border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
+    .an-bar-track { flex: 1; height: 10px; background: var(--sec-bg); border-radius: 10px; overflow: hidden; border: 2px solid var(--border); }
     .an-bar-fill { height: 100%; border-radius: 10px; background: linear-gradient(90deg, var(--primary), var(--secondary)); transition: width .4s ease; }
     .an-bar-fill.neg { background: linear-gradient(90deg, var(--danger), var(--danger2)); }
     .an-bar-val { width: 36px; text-align: right; font-weight: 700; color: var(--text); flex-shrink: 0; }
@@ -205,7 +206,7 @@
       padding: 16px; margin-bottom: var(--sp); box-shadow: var(--shadow-sm);
     }
     .an-cat-title { font-weight: 700; font-size: 1em; color: var(--primary); margin-bottom: 10px; }
-    .an-cat-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: .88em; align-items: center; }
+    .an-cat-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1.5px solid var(--border); font-size: .88em; align-items: center; }
     .an-cat-row:last-child { border-bottom: none; }
 
     .an-lb-row {
@@ -218,7 +219,7 @@
     .an-lb-pts { font-weight: 700; color: var(--primary); margin-right: 8px; }
     .an-lb-chip {
       font-size: .75em; padding: 2px 8px; border-radius: 10px; font-weight: 700;
-      background: var(--sec-bg); color: var(--text2); border: 1px solid var(--border);
+      background: var(--sec-bg); color: var(--text2); border: 2px solid var(--border);
     }
     .an-lb-chip.power { background: rgba(102,126,234,.12); color: var(--primary); border-color: var(--primary); }
     .an-lb-chip.neg   { background: rgba(220,53,69,.1); color: var(--danger); border-color: var(--danger); }
@@ -282,7 +283,7 @@
     /* ── Sections ── */
     .qb-section {
       margin-bottom: 14px; padding: clamp(16px,4vw,20px);
-      background: var(--card); border-radius: var(--radius); border: 1px solid var(--border);
+      background: var(--card); border-radius: var(--radius); border: 2px solid var(--border);
       overflow: visible;
       box-shadow: var(--shadow-xs);
     }
@@ -302,7 +303,7 @@
     .input-group { margin-bottom: var(--sp); }
     .input-group label { display: block; margin-bottom: 6px; font-weight: 600; font-size: clamp(.85em,2vw,.95em); color: var(--text2); }
     .input-group input, .input-group textarea, .input-group select {
-      width: 100%; padding: 10px 13px; border: 1.5px solid var(--input-border);
+      width: 100%; padding: 10px 13px; border: 2px solid var(--input-border);
       border-radius: var(--radius-sm); font-size: .95em; font-family: inherit;
       background: var(--input-bg); color: var(--input-text); transition: border-color .2s, box-shadow .2s;
     }
@@ -311,7 +312,7 @@
       border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(102,126,234,.12);
     }
     input[type="file"] {
-      width: 100%; padding: 9px 12px; border-radius: var(--radius-sm); border: 1.5px solid var(--input-border);
+      width: 100%; padding: 9px 12px; border-radius: var(--radius-sm); border: 2px solid var(--input-border);
       background: var(--card); color: var(--input-text); cursor: pointer; font-family: inherit; font-size: .9em;
     }
     input[type="file"]::file-selector-button {
@@ -336,7 +337,7 @@
     .button-danger { background: linear-gradient(135deg, var(--danger), var(--danger2)); box-shadow: 0 2px 8px rgba(220,53,69,.25); }
     .button-success { background: linear-gradient(135deg, var(--success), var(--success2)); box-shadow: 0 2px 8px rgba(17,153,142,.25); }
     .button-point-type, .button-category, .button-player {
-      background: var(--card); color: var(--text2); border: 1.5px solid var(--border);
+      background: var(--card); color: var(--text2); border: 2px solid var(--border);
       padding: clamp(9px,2vw,12px) clamp(12px,2.5vw,18px);
       border-radius: var(--radius-sm); font-size: clamp(.82em,1.8vw,.95em); font-family: inherit;
       cursor: pointer; font-weight: 600;
@@ -349,7 +350,8 @@
     }
     .button-point-type.selected, .button-category.selected, .button-player.selected {
       background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      color: #fff; border-color: var(--primary-dark); box-shadow: 0 4px 12px rgba(102,126,234,.35);
+      color: #fff; border: 2px solid rgba(255,255,255,0.55);
+      box-shadow: 0 4px 12px rgba(102,126,234,.35), 0 0 0 2px var(--primary-dark);
     }
     .point-type-buttons, .category-buttons { display: grid; grid-template-columns: repeat(auto-fit,minmax(140px,1fr)); gap: 8px; padding: 2px; }
     .player-buttons { display: flex; flex-wrap: wrap; gap: 8px; padding: 2px; }
@@ -360,24 +362,24 @@
     .player-pool-item {
       display: inline-flex; align-items: center; margin: 4px; padding: 7px 12px;
       background: var(--sec-bg); border-radius: 20px; font-size: .88em;
-      border: 1px solid var(--border); box-shadow: var(--shadow-xs); transition: border-color .15s;
+      border: 2px solid var(--border); box-shadow: var(--shadow-xs); transition: border-color .15s;
     }
     .player-pool-item:hover { border-color: var(--primary); }
     .player-pool-item .remove {
       cursor: pointer; margin-left: 8px; color: var(--text3); font-weight: bold;
-      padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border);
+      padding: 2px 6px; border-radius: 4px; border: 2px solid var(--border);
       transition: border-color .15s, background .15s, color .15s; font-size: 1em;
     }
     .player-pool-item .remove:hover { background: var(--danger); color: #fff; border-color: var(--danger); }
-    #playerPoolDisplay { padding: 10px; min-height: 40px; background: var(--sec-bg); border: 1.5px solid var(--border); border-radius: var(--radius-sm); }
+    #playerPoolDisplay { padding: 10px; min-height: 40px; background: var(--sec-bg); border: 2px solid var(--border); border-radius: var(--radius-sm); }
 
     /* ── Teams ── */
     .team-section {
       margin-bottom: 12px; padding: 14px 16px; background: var(--sec-bg);
-      border-radius: var(--radius-sm); border: 1px solid var(--border); box-shadow: var(--shadow-xs);
+      border-radius: var(--radius-sm); border: 2px solid var(--border); box-shadow: var(--shadow-xs);
     }
     .team-section input[type="text"] {
-      padding: 9px 12px; border: 1.5px solid var(--input-border); border-radius: 6px;
+      padding: 9px 12px; border: 2px solid var(--input-border); border-radius: 6px;
       width: 100%; background: var(--input-bg); color: var(--input-text); font-weight: 600; font-family: inherit;
     }
     .team-section input[type="text"]:focus { border-color: var(--primary); outline: none; }
@@ -385,7 +387,7 @@
     /* ── Stats ── */
     .stats-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(280px,1fr)); gap: 12px; margin-top: 12px; }
     .stat-card, .team-stat-card {
-      background: var(--card); padding: 16px; border-radius: var(--radius-sm); border: 1px solid var(--border);
+      background: var(--card); padding: 16px; border-radius: var(--radius-sm); border: 2px solid var(--border);
       box-shadow: var(--shadow-xs); transition: border-color .15s, box-shadow .15s, transform .15s; cursor: pointer;
       font-size: clamp(.85em,2vw,1em);
     }
@@ -395,11 +397,11 @@
     .stat-details { max-height: 1000px; overflow: hidden; transition: max-height .3s ease-out, opacity .3s ease-out; opacity: 1; }
     .stat-card.collapsed .stat-details, .team-stat-card.collapsed .stat-details { max-height: 0; opacity: 0; pointer-events: none; }
     .player-score, .team-score { color: var(--primary); font-weight: 700; }
-    .stat-row { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--border); align-items: center; }
+    .stat-row { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1.5px solid var(--border); align-items: center; }
     .stat-row:last-child { border-bottom: none; }
     .stat-label { font-weight: 500; color: var(--text2); font-size: .9em; }
     .stat-value { color: var(--primary); font-weight: 700; font-size: 1em; }
-    .overall-ranking { grid-column: 1/-1; background: var(--card); padding: 16px; border-radius: var(--radius-sm); border: 1px solid var(--border); box-shadow: var(--shadow-xs); margin-top: 12px; }
+    .overall-ranking { grid-column: 1/-1; background: var(--card); padding: 16px; border-radius: var(--radius-sm); border: 2px solid var(--border); box-shadow: var(--shadow-xs); margin-top: 12px; }
 
     /* ── Log ── */
     .log-entry {
@@ -408,7 +410,7 @@
       display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;
       gap: 8px; font-size: clamp(.8em,2vw,.9em); box-shadow: var(--shadow-xs);
     }
-    .log-container { max-height: 420px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px; background: var(--card); }
+    .log-container { max-height: 420px; overflow-y: auto; border: 2px solid var(--border); border-radius: var(--radius-sm); padding: 10px; background: var(--card); }
     .log-container-wrap { position: relative; margin-top: 12px; }
 
     /* ── Toggle switch ── */
@@ -427,7 +429,7 @@
     /* ── Welcome toast ── */
     #welcomeToast {
       position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(30px);
-      background: var(--card); color: var(--text); border: 1px solid var(--border);
+      background: var(--card); color: var(--text); border: 2px solid var(--border);
       border-radius: 14px; padding: 16px 20px; box-shadow: var(--shadow-xl);
       z-index: 99998; opacity: 0; transition: opacity .3s, transform .3s;
       pointer-events: none; min-width: 280px; max-width: 380px; text-align: center;
@@ -442,7 +444,7 @@
       font-size: .88em; font-weight: 700; cursor: pointer; font-family: inherit;
     }
     #welcomeToast .wt-btn-dismiss {
-      background: var(--sec-bg); color: var(--text2); border: 1px solid var(--border);
+      background: var(--sec-bg); color: var(--text2); border: 2px solid var(--border);
       border-radius: 8px; padding: 8px 14px; font-size: .88em; font-weight: 600;
       cursor: pointer; font-family: inherit;
     }
@@ -454,13 +456,13 @@
       font-weight: 700; font-size: 1.1em; color: #fff; flex-shrink: 0;
     }
     .user-id-status { display: flex; align-items: center; gap: 10px; padding: 10px 12px;
-      background: var(--sec-bg); border-radius: var(--radius-sm); border: 1px solid var(--border);
+      background: var(--sec-bg); border-radius: var(--radius-sm); border: 2px solid var(--border);
       margin-bottom: 12px;
     }
     /* ── Category selector — Option A (inline rows) ── */
     .cat-row {
       display: flex; align-items: stretch; gap: 0;
-      border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+      border: 2px solid var(--border); border-radius: var(--radius-sm);
       margin-bottom: 5px; background: var(--card);
       box-shadow: var(--shadow-xs); transition: border-color .15s;
     }
@@ -477,7 +479,8 @@
     .cat-row-label:hover { color: var(--primary); background: rgba(102,126,234,.06); }
     .cat-row-label.selected {
       background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      color: #fff;
+      color: #fff; border: 2px solid rgba(255,255,255,0.55);
+      box-shadow: 0 0 0 2px var(--primary-dark);
     }
     .cat-row-subs {
       flex: 1; display: flex; flex-wrap: wrap; gap: 4px;
@@ -488,7 +491,7 @@
     .cat-row-chip {
       padding: 3px 10px;
       border-radius: 5px; font-size: .78em; font-weight: 600;
-      border: 1.5px solid var(--border); background: var(--card); color: var(--text2);
+      border: 2px solid var(--border); background: var(--card); color: var(--text2);
       cursor: pointer; font-family: inherit;
       transition: border-color .15s, color .15s, background .15s, box-shadow .15s;
     }
@@ -498,8 +501,8 @@
     }
     .cat-row-chip.selected {
       background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      color: #fff; border-color: var(--primary-dark);
-      box-shadow: 0 2px 8px rgba(102,126,234,.28);
+      color: #fff; border: 2px solid rgba(255,255,255,0.55);
+      box-shadow: 0 2px 8px rgba(102,126,234,.28), 0 0 0 2px var(--primary-dark);
     }
     @media (max-width: 768px) {
       .cat-row-label { flex: 0 0 68px; font-size: .6em; padding: 6px 5px; }
@@ -552,7 +555,7 @@
     /* ── Quick-log rows ── */
     .ql-row {
       display:flex;align-items:center;gap:0;
-      background:var(--card);border:1px solid var(--border);border-radius:10px;
+      background:var(--card);border:1.5px solid var(--border);border-radius:10px;
       overflow:hidden;margin-bottom:6px;
       transition:border-color .12s;
     }
@@ -561,13 +564,13 @@
       flex:0 0 auto;min-width:80px;max-width:120px;padding:0 12px;
       font-size:.82em;font-weight:700;color:var(--text);
       white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-      border-right:1px solid var(--border);
+      border-right:1.5px solid var(--border);
       height:44px;display:flex;align-items:center;
       background:var(--sec-bg);
     }
     .ql-btns { display:flex;flex:1; }
     .ql-btn {
-      flex:1;height:44px;border:none;border-right:1px solid var(--border);
+      flex:1;height:44px;border:none;border-right:1.5px solid var(--border);
       background:transparent;cursor:pointer;font-size:.75em;font-weight:700;
       color:var(--text2);transition:background .12s,color .12s;
       display:flex;align-items:center;justify-content:center;gap:3px;
@@ -581,13 +584,13 @@
     .ql-btn.ql-neg:hover    { background:rgba(220,53,69,.08); color:var(--danger); }
     .ql-btn.ql-miss:hover   { background:rgba(200,200,200,.1); color:var(--text3); }
     .ql-cat-row {
-      display:none;padding:8px 12px;border-top:1px solid var(--border);
+      display:none;padding:8px 12px;border-top:1.5px solid var(--border);
       background:var(--sec-bg);border-radius:0 0 10px 10px;
     }
     .ql-cat-row.open { display:flex;flex-wrap:wrap;gap:5px;align-items:center; }
     .ql-cat-chip {
       padding:3px 10px;border-radius:16px;font-size:.74em;font-weight:600;
-      border:1px solid var(--border);background:var(--card);color:var(--text2);
+      border:1.5px solid var(--border);background:var(--card);color:var(--text2);
       cursor:pointer;transition:all .1s;
     }
     .ql-cat-chip:hover { border-color:var(--primary);color:var(--primary); }
@@ -598,12 +601,12 @@
     }
     .ql-cancel-btn {
       padding:3px 10px;border-radius:16px;font-size:.74em;font-weight:600;
-      background:transparent;color:var(--text3);border:1px solid var(--border);cursor:pointer;
+      background:transparent;color:var(--text3);border:1.5px solid var(--border);cursor:pointer;
     }
 
         /* ── Session info ── */
-    .session-info { background: var(--sec-bg); padding: 14px 16px; border-radius: var(--radius-sm); border: 1px solid var(--border); margin-bottom: var(--sp); font-size: clamp(.82em,2vw,.95em); }
-    .session-info-row { display: flex; justify-content: space-between; align-items: center; margin: 10px 0; flex-wrap: wrap; gap: 6px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+    .session-info { background: var(--sec-bg); padding: 14px 16px; border-radius: var(--radius-sm); border: 2px solid var(--border); margin-bottom: var(--sp); font-size: clamp(.82em,2vw,.95em); }
+    .session-info-row { display: flex; justify-content: space-between; align-items: center; margin: 10px 0; flex-wrap: wrap; gap: 6px; padding-bottom: 8px; border-bottom: 1.5px solid var(--border); }
     .session-info-row:last-child { border-bottom: none; margin-bottom: 0; }
     .session-info-row span:first-child { font-weight: 500; color: var(--text2); font-size: .9em; }
     .session-info-row strong { color: var(--primary); font-weight: 700; }
@@ -612,13 +615,13 @@
     /* ── Modal ── */
     .qb-modal { display: none; position: fixed; z-index: 9999; inset: 0; background: rgba(15,20,40,.55); backdrop-filter: blur(6px); }
     .qb-modal.open { display: block; }
-    .modal-content { background: var(--card); margin: 50px auto; padding: 24px 28px; border-radius: var(--radius); width: 90%; max-width: 550px; max-height: 80vh; overflow-y: auto; box-shadow: var(--shadow-xl); border: 1px solid var(--border); }
-    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
+    .modal-content { background: var(--card); margin: 50px auto; padding: 24px 28px; border-radius: var(--radius); width: 90%; max-width: 550px; max-height: 80vh; overflow-y: auto; box-shadow: var(--shadow-xl); border: 2px solid var(--border); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1.5px solid var(--border); }
     .modal-header h2 { color: var(--text); margin: 0; font-weight: 700; font-size: 1.3em; }
     .close-modal { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text3); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 6px; transition: background .15s, color .15s; }
     .close-modal:hover { background: var(--sec-bg); color: var(--primary); }
     .sessions-list { display: grid; grid-template-columns: repeat(auto-fill,minmax(220px,1fr)); gap: 12px; margin-top: 14px; }
-    .session-card { background: var(--sec-bg); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border); transition: transform .15s, box-shadow .15s, border-color .15s; box-shadow: var(--shadow-xs); }
+    .session-card { background: var(--sec-bg); padding: 14px; border-radius: var(--radius-sm); border: 2px solid var(--border); transition: transform .15s, box-shadow .15s, border-color .15s; box-shadow: var(--shadow-xs); }
     .session-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: var(--primary); }
     .session-card-title { color: var(--primary); font-weight: 700; margin-bottom: 8px; font-size: clamp(.95em,2vw,1.05em); }
     .session-card-details { font-size: .8em; color: var(--text2); margin-bottom: 10px; line-height: 1.5; }
@@ -630,13 +633,13 @@
     .skill-panel-header:hover { background:var(--hover); }
     .sort-pill {
       font-size:.75em;font-weight:600;padding:5px 12px;border-radius:20px;cursor:pointer;
-      border:1px solid var(--border);background:var(--card);color:var(--text2);
+      border:1.5px solid var(--border);background:var(--card);color:var(--text2);
       transition:all .15s;white-space:nowrap;
     }
     .sort-pill:hover { border-color:var(--primary);color:var(--primary); }
     .sort-pill.active { border-color:transparent;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;box-shadow:0 2px 6px rgba(102,126,234,.3); }
     .player-card-wrap {
-      background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);
+      background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-sm);
       margin-bottom:6px;overflow:hidden;box-shadow:var(--shadow-xs);
       transition:border-color .15s,box-shadow .15s;
     }
@@ -646,9 +649,9 @@
       cursor:pointer;user-select:none;
     }
     .player-card-rank { font-size:.9em;font-weight:800;color:var(--primary);min-width:30px;text-align:center; }
-    .player-card-body { padding:13px 15px;border-top:1px solid var(--border);background:var(--sec-bg); }
+    .player-card-body { padding:13px 15px;border-top:1.5px solid var(--border);background:var(--sec-bg); }
     .metric-grid { display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px; }
-    .metric-tile { background:var(--card);border:1px solid var(--border);border-radius:7px;padding:9px 11px; }
+    .metric-tile { background:var(--card);border:1.5px solid var(--border);border-radius:7px;padding:9px 11px; }
     .metric-tile.span2 { grid-column:span 2; }
     .metric-lbl { font-size:.67em;font-weight:700;color:var(--text3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px; }
     .metric-val { font-size:1.05em;font-weight:700; }
@@ -667,25 +670,25 @@
     .pd-stat-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 14px; }
     .pd-chip {
       padding: 5px 13px; border-radius: 20px; font-size: .82em; font-weight: 600;
-      background: var(--sec-bg); color: var(--text2); border: 1px solid var(--border);
+      background: var(--sec-bg); color: var(--text2); border: 2px solid var(--border);
     }
     .pd-chip.power { background: rgba(102,126,234,.1); color: var(--primary); border-color: rgba(102,126,234,.35); }
     .pd-chip.neg   { background: rgba(220,53,69,.08); color: var(--danger); border-color: rgba(220,53,69,.3); }
     .pd-chip.tossup { background: rgba(17,153,142,.08); color: var(--success); border-color: rgba(17,153,142,.3); }
     .pd-cat-table { width: 100%; border-collapse: collapse; font-size: .88em; }
-    .pd-cat-table th { text-align: left; padding: 7px 10px; background: var(--sec-bg); border-bottom: 1px solid var(--border); color: var(--text3); font-weight: 700; font-size: .78em; text-transform: uppercase; letter-spacing: .4px; }
+    .pd-cat-table th { text-align: left; padding: 7px 10px; background: var(--sec-bg); border-bottom: 1.5px solid var(--border); color: var(--text3); font-weight: 700; font-size: .78em; text-transform: uppercase; letter-spacing: .4px; }
     .pd-cat-table th.right, .pd-cat-table td.right { text-align: right; }
-    .pd-cat-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); }
+    .pd-cat-table td { padding: 8px 10px; border-bottom: 1.5px solid var(--border); }
     .pd-cat-table tr:last-child td { border-bottom: none; }
     .pd-cat-table tr:hover td { background: var(--hover); }
-    .pd-rank-badge { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; font-size: .76em; font-weight: 700; background: var(--sec-bg); color: var(--text3); border: 1px solid var(--border); }
+    .pd-rank-badge { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; font-size: .76em; font-weight: 700; background: var(--sec-bg); color: var(--text3); border: 2px solid var(--border); }
     .pd-rank-badge.gold   { background: #ffd700; color: #7a5800; border-color: #c8a600; }
     .pd-rank-badge.silver { background: #c0c0c0; color: #5a5a5a; border-color: #a0a0a0; }
     .pd-rank-badge.bronze { background: #cd7f32; color: #fff; border-color: #a06020; }
     .pd-bar-mini { height: 5px; border-radius: 5px; background: linear-gradient(90deg, var(--primary), var(--secondary)); min-width: 4px; }
     .pd-bar-mini.neg-bar { background: linear-gradient(90deg, var(--danger), var(--danger2)); }
-    .pd-recent-log { max-height: 200px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); }
-    .pd-log-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 12px; border-bottom: 1px solid var(--border); font-size: .83em; }
+    .pd-recent-log { max-height: 200px; overflow-y: auto; border: 2px solid var(--border); border-radius: var(--radius-sm); }
+    .pd-log-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 12px; border-bottom: 1.5px solid var(--border); font-size: .83em; }
     .pd-log-row:last-child { border-bottom: none; }
     .pd-log-row:hover { background: var(--hover); }
     .pd-pts-pos { color: var(--primary); font-weight: 700; }
@@ -804,13 +807,13 @@
     .sidebar-jump-wrapper.open .sidebar-jump-arrow { transform: rotate(180deg); }
     .sidebar-jump-menu {
       display: none; position: absolute; top: calc(100% + 5px); left: 0; right: 0;
-      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm);
+      background: var(--card); border: 2.5px solid var(--border); border-radius: var(--radius-sm);
       box-shadow: 0 8px 24px rgba(0,0,0,.15); z-index: 9999; overflow: hidden;
     }
     .sidebar-jump-wrapper.open .sidebar-jump-menu { display: block; }
     .sidebar-jump-menu button {
       display: block; width: 100%; padding: 9px 14px; text-align: left;
-      background: none; border: none; border-bottom: 1px solid var(--border);
+      background: none; border: none; border-bottom: 1.5px solid var(--border);
       color: var(--text); font-size: .86em; font-weight: 500; cursor: pointer; font-family: inherit; transition: background .12s;
     }
     .sidebar-jump-menu button:last-child { border-bottom: none; }
@@ -996,7 +999,7 @@
                 <button class="button button-success" onclick="exportToExcel()">Export to Excel</button>
                 <button class="button button-secondary" onclick="exportToJSON()">Export as JSON</button>
               </div>
-              <div style="margin-top:22px;padding-top:18px;border-top:1px solid var(--border);">
+              <div style="margin-top:22px;padding-top:18px;border-top:1.5px solid var(--border);">
                 <p style="font-weight:600;margin-bottom:6px;">Import Session</p>
                 <p style="font-size:.85em;color:var(--text2);margin-bottom:12px;">Load a previously exported JSON file.</p>
                 <div class="input-group">
@@ -1041,18 +1044,18 @@
               <div id="userIdLoadStatus" style="font-size:.8em;min-height:1.2em;margin-bottom:6px;color:var(--text2);"></div>
               <div class="button-group">
                 <button class="button button-success" onclick="saveUserId()" title="Save name to this device and sync to Firebase">Save</button>
-                <button class="button" style="background:var(--sec-bg);color:var(--text);border:1px solid var(--border);" onclick="loadExistingAccount()" title="Load your photo and data from an existing account with this name">Load Existing</button>
-                <button class="button" style="background:var(--sec-bg);color:var(--text);border:1px solid var(--border);" onclick="newAccount()" title="Generate a fresh client ID for a brand-new account">New Account</button>
+                <button class="button" style="background:var(--sec-bg);color:var(--text);border:1.5px solid var(--border);" onclick="loadExistingAccount()" title="Load your photo and data from an existing account with this name">Load Existing</button>
+                <button class="button" style="background:var(--sec-bg);color:var(--text);border:1.5px solid var(--border);" onclick="newAccount()" title="Generate a fresh client ID for a brand-new account">New Account</button>
                 <button class="button button-secondary" onclick="clearUserId()">Clear</button>
               </div>
-              <p style="font-size:.75em;color:var(--text3);margin-top:12px;padding-top:10px;border-top:1px solid var(--border);">Your client ID: <span id="userClientIdDisplay" style="font-family:monospace;font-size:.95em;word-break:break-all;"></span></p>
+              <p style="font-size:.75em;color:var(--text3);margin-top:12px;padding-top:10px;border-top:1.5px solid var(--border);">Your client ID: <span id="userClientIdDisplay" style="font-family:monospace;font-size:.95em;word-break:break-all;"></span></p>
             </div>
           </div>
 
           <div class="qb-section" id="sec-visual">
             <h2>Visual Settings <span class="toggle-icon">&#9660;</span></h2>
             <div class="collapsible-content">
-              <p style="font-size:.78em;color:var(--text2);margin-bottom:14px;padding:8px 10px;background:var(--hover);border-radius:6px;border:1px solid var(--border);">
+              <p style="font-size:.78em;color:var(--text2);margin-bottom:14px;padding:8px 10px;background:var(--hover);border-radius:6px;border:1.5px solid var(--border);">
                 <strong>Local settings</strong> &#8212; Saved to this device only, do not sync.
               </p>
               <div class="input-group">
@@ -1079,7 +1082,7 @@
                 </select>
               </div>
               <!-- Category Colors — admin only, synced globally -->
-              <div id="catColorSection" style="display:none;padding-top:14px;border-top:1px solid var(--border);">
+              <div id="catColorSection" style="display:none;padding-top:14px;border-top:1.5px solid var(--border);">
                 <div style="font-weight:600;font-size:.85em;margin-bottom:8px;color:var(--text);">
                   Category Colors
                   <span style="font-weight:400;font-size:.82em;color:var(--text2);margin-left:6px;">Admin only &mdash; synced for all users</span>
@@ -1087,12 +1090,12 @@
                 <div id="catColorPickers" style="display:flex;flex-direction:column;gap:7px;margin-bottom:10px;"></div>
                 <div class="button-group">
                   <button class="button" onclick="saveCatColors()">Save Colors</button>
-                  <button class="button" style="background:var(--sec-bg);color:var(--text2);border:1px solid var(--border);" onclick="resetCatColors()">Reset Defaults</button>
+                  <button class="button" style="background:var(--sec-bg);color:var(--text2);border:1.5px solid var(--border);" onclick="resetCatColors()">Reset Defaults</button>
                 </div>
                 <div id="catColorStatus" style="font-size:.8em;color:var(--success);margin-top:6px;min-height:1.2em;"></div>
               </div>
 
-              <div class="input-group" style="padding-top:14px;border-top:1px solid var(--border);">
+              <div class="input-group" style="padding-top:14px;border-top:1.5px solid var(--border);">
                 <label>Version Number <span style="font-size:.75em;font-weight:400;color:var(--text2);">(Syncs for all users)</span></label>
                 <div style="display:flex;gap:8px;align-items:center;">
                   <input type="text" id="versionInput" placeholder="e.g. v30" style="flex:1;" />
@@ -1106,7 +1109,7 @@
             <h2 style="color:var(--primary);">Admin Panel <span class="toggle-icon">&#9660;</span></h2>
             <div class="collapsible-content">
               <p style="font-size:.82em;color:var(--text2);margin-bottom:12px;line-height:1.5;">Admins can access Data Management and control low-data player flagging. Add by exact full name.</p>
-              <div id="adminListDisplay" style="border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:12px;background:var(--card);"></div>
+              <div id="adminListDisplay" style="border:1.5px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:12px;background:var(--card);"></div>
               <div class="input-group" style="margin-bottom:0;">
                 <label>Add Admin (exact full name):</label>
                 <input type="text" id="adminAddInput" placeholder="e.g. Jane Smith" maxlength="61"
@@ -1213,7 +1216,7 @@
 
       <!-- Analytics view -->
       <div id="analyticsView" style="flex:1;display:none;flex-direction:column;overflow:hidden;">
-        <div style="padding:10px var(--hsp);border-bottom:1px solid var(--border);background:var(--card);flex-shrink:0;">
+        <div style="padding:10px var(--hsp);border-bottom:1.5px solid var(--border);background:var(--card);flex-shrink:0;">
           <div style="display:flex;gap:6px;flex-wrap:wrap;">
             <button class="analytics-tab active" onclick="switchAnalyticsTab('overview',this)">Overview</button>
             <button class="analytics-tab" onclick="switchAnalyticsTab('players',this)">Players</button>
@@ -1253,11 +1256,11 @@
         <h3 style="color:var(--primary);margin:0 0 6px;">Recording Answers</h3>
         <p style="margin-bottom:8px;">Select a <strong>Player</strong>, then a <strong>Point Type</strong>, then a <strong>Category</strong> (optional for Neg), then press <strong>Record Answer</strong>. Use the answer log to delete mistakes.</p>
         <table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:.9em;">
-          <tr style="background:var(--sec-bg);"><th style="padding:6px 10px;text-align:left;border:1px solid var(--border);">Type</th><th style="padding:6px 10px;text-align:left;border:1px solid var(--border);">Points</th><th style="padding:6px 10px;text-align:left;border:1px solid var(--border);">Notes</th></tr>
-          <tr><td style="padding:6px 10px;border:1px solid var(--border);">Power</td><td style="padding:6px 10px;border:1px solid var(--border);">+15</td><td style="padding:6px 10px;border:1px solid var(--border);">Correct answer before the power mark</td></tr>
-          <tr style="background:var(--sec-bg);"><td style="padding:6px 10px;border:1px solid var(--border);">Toss-up</td><td style="padding:6px 10px;border:1px solid var(--border);">+10</td><td style="padding:6px 10px;border:1px solid var(--border);">Standard correct answer on a toss-up</td></tr>
-          <tr><td style="padding:6px 10px;border:1px solid var(--border);">Bonus</td><td style="padding:6px 10px;border:1px solid var(--border);">+10</td><td style="padding:6px 10px;border:1px solid var(--border);">Follow-up bonus after a toss-up win</td></tr>
-          <tr style="background:var(--sec-bg);"><td style="padding:6px 10px;border:1px solid var(--border);">Neg</td><td style="padding:6px 10px;border:1px solid var(--border);">&minus;5</td><td style="padding:6px 10px;border:1px solid var(--border);">Incorrect interrupt &mdash; category is optional</td></tr>
+          <tr style="background:var(--sec-bg);"><th style="padding:6px 10px;text-align:left;border:1.5px solid var(--border);">Type</th><th style="padding:6px 10px;text-align:left;border:1.5px solid var(--border);">Points</th><th style="padding:6px 10px;text-align:left;border:1.5px solid var(--border);">Notes</th></tr>
+          <tr><td style="padding:6px 10px;border:1.5px solid var(--border);">Power</td><td style="padding:6px 10px;border:1.5px solid var(--border);">+15</td><td style="padding:6px 10px;border:1.5px solid var(--border);">Correct answer before the power mark</td></tr>
+          <tr style="background:var(--sec-bg);"><td style="padding:6px 10px;border:1.5px solid var(--border);">Toss-up</td><td style="padding:6px 10px;border:1.5px solid var(--border);">+10</td><td style="padding:6px 10px;border:1.5px solid var(--border);">Standard correct answer on a toss-up</td></tr>
+          <tr><td style="padding:6px 10px;border:1.5px solid var(--border);">Bonus</td><td style="padding:6px 10px;border:1.5px solid var(--border);">+10</td><td style="padding:6px 10px;border:1.5px solid var(--border);">Follow-up bonus after a toss-up win</td></tr>
+          <tr style="background:var(--sec-bg);"><td style="padding:6px 10px;border:1.5px solid var(--border);">Neg</td><td style="padding:6px 10px;border:1.5px solid var(--border);">&minus;5</td><td style="padding:6px 10px;border:1.5px solid var(--border);">Incorrect interrupt &mdash; category is optional</td></tr>
         </table>
 
         <h3 style="color:var(--primary);margin:0 0 6px;">Toss-Ups Heard Counter</h3>
@@ -1287,7 +1290,7 @@
 
         <h3 style="color:var(--primary);margin:0 0 6px;">Skill Score</h3>
         <p style="margin-bottom:8px;">Skill Score is <strong>relative to the team</strong> — the team average always equals 100. Each of the three components (Pot. Pts/20TU, Risk Payoff, Accuracy) is divided by the team average before summing, so all contribute equally. A player at 150 is 50% above average; a player at 50 is half the team average.</p>
-        <p style="margin-bottom:14px;font-family:monospace;font-size:.9em;background:var(--sec-bg);padding:8px 12px;border-radius:6px;border:1px solid var(--border);">Skill = (PotPts/AvgPotPts + RiskPayoff/AvgRiskPayoff + Acc/AvgAcc) &times; 100/3</p>
+        <p style="margin-bottom:14px;font-family:monospace;font-size:.9em;background:var(--sec-bg);padding:8px 12px;border-radius:6px;border:1.5px solid var(--border);">Skill = (PotPts/AvgPotPts + RiskPayoff/AvgRiskPayoff + Acc/AvgAcc) &times; 100/3</p>
         <p style="margin-bottom:14px;">Players with fewer buzz answers than the low-data threshold are flagged and excluded from skill scoring by default. You can manually include or exclude flagged players in the <strong>Low-Data Players</strong> panel. Inclusions sync globally across all devices and persist across sessions.</p>
 
         <h3 style="color:var(--primary);margin:0 0 6px;">Leaderboard Sorting</h3>
@@ -2325,12 +2328,12 @@
       //   type='pts20' → no bar, X.X (green ≥20, yellow ≥10, red <10)
       function metricRow(value, label, type) {
         const ROW_PLAIN = (valStr, color) =>
-          `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
+          `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1.5px solid var(--border);">
             <span style="font-size:.82em;font-weight:600;color:var(--text2);">${label}</span>
             <span style="font-size:.92em;font-weight:700;color:${color};">${valStr}</span>
           </div>`;
         const ROW_BAR = (valStr, color, barPct) =>
-          `<div style="padding:7px 0;border-bottom:1px solid var(--border);">
+          `<div style="padding:7px 0;border-bottom:1.5px solid var(--border);">
             <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;">
               <span style="font-size:.82em;font-weight:600;color:var(--text2);">${label}</span>
               <span style="font-size:.92em;font-weight:700;color:${color};">${valStr}</span>
@@ -2430,7 +2433,7 @@
                 </tr>
                 <tr>
                   <td colspan="6" style="padding:0 10px 6px 28px;">
-                    <div style="background:var(--sec-bg);border-radius:6px;height:5px;overflow:hidden;border:1px solid var(--border);">
+                    <div style="background:var(--sec-bg);border-radius:6px;height:5px;overflow:hidden;border:1.5px solid var(--border);">
                       <div class="pd-bar-mini ${isNeg ? 'neg-bar' : ''}" style="width:${barWidth}%;"></div>
                     </div>
                   </td>
@@ -2485,7 +2488,7 @@
           <span class="pd-chip" style="background:rgba(102,126,234,.1);color:var(--primary);">${tHeardLabel}</span>
         </div>
         <div class="pd-section-title">Performance Metrics</div>
-        <div style="background:var(--sec-bg);border:1px solid var(--border);border-radius:10px;padding:6px 16px;margin-bottom:var(--sp);">
+        <div style="background:var(--sec-bg);border:1.5px solid var(--border);border-radius:10px;padding:6px 16px;margin-bottom:var(--sp);">
           ${metricRow(player.points, 'Total Points', 'raw')}
           ${actualPts20 !== null ? metricRow(fmtPts20(actualPts20), 'Actual Pts / 20 TU Heard', 'pts20') : ''}
           ${uRate !== null ? metricRow(fmtPts20(uRate), 'Potential Pts / 20 TU Heard', 'pts20') : ''}
@@ -2495,7 +2498,7 @@
           ${metricRow(prValueModal, 'Risk Payoff (net pts / risky buzz)', 'pts')}
         </div>
         <div class="pd-section-title">Category Rankings &mdash; All ${catArr.length} Categor${catArr.length !== 1 ? 'ies' : 'y'}</div>
-        <div style="overflow-x:auto;border-radius:8px;border:1px solid var(--border);">
+        <div style="overflow-x:auto;border-radius:8px;border:1.5px solid var(--border);">
           <table class="pd-cat-table">
             <thead>
               <tr>
@@ -2530,7 +2533,7 @@
         const action = isOwner
           ? '<span style="font-size:.75em;color:var(--text3);">Owner</span>'
           : '<button onclick="removeAdmin(\'' + name.replace(/\\/g,'\\\\').replace(/'/g,"\\'") + '\')" style="background:none;border:1px solid var(--danger);color:var(--danger);border-radius:5px;padding:2px 9px;font-size:.8em;cursor:pointer;font-family:inherit;">Remove</button>';
-        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-bottom:1px solid var(--border);font-size:.88em;">'
+        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:.88em;">'
           + '<span style="font-weight:600;">' + name + '</span>'
           + action + '</div>';
       }).join('');
@@ -2570,10 +2573,10 @@
         const color = catColors[cat] || CAT_COLOR_DEFAULTS[cat] || '#667eea';
         return `<div style="display:flex;align-items:center;gap:10px;">
           <input type="color" value="${color}" id="catColorInput_${cat.replace(/\s+/g,'_')}"
-            style="width:36px;height:28px;border:1px solid var(--border);border-radius:5px;padding:1px;cursor:pointer;background:none;">
+            style="width:36px;height:28px;border:1.5px solid var(--border);border-radius:5px;padding:1px;cursor:pointer;background:none;">
           <span style="font-size:.88em;font-weight:600;color:var(--text);flex:1;">${cat}</span>
           <button onclick="resetOneCatColor('${cat}')" title="Reset to default"
-            style="font-size:.75em;background:none;border:1px solid var(--border);color:var(--text2);border-radius:5px;padding:2px 8px;cursor:pointer;">Reset</button>
+            style="font-size:.75em;background:none;border:1.5px solid var(--border);color:var(--text2);border-radius:5px;padding:2px 8px;cursor:pointer;">Reset</button>
         </div>`;
       }).join('');
     }
@@ -2889,7 +2892,7 @@
         },
       ];
 
-      const _secHdr = `font-size:.65em;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--text3);padding:8px 0 4px;margin-bottom:4px;border-bottom:1px solid var(--border);`;
+      const _secHdr = `font-size:.65em;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--text3);padding:8px 0 4px;margin-bottom:4px;border-bottom:1.5px solid var(--border);`;
 
       // Separate groups by type for layout purposes
       const [_totalsGroup, _breakdownGroup, _ratesGroup] = _ovGroups;
@@ -2901,7 +2904,7 @@
       html += `<div style="${_secHdr}">${_totalsGroup.label}</div>`;
       html += `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">`;
       _totalsGroup.rows.forEach(r => {
-        html += `<div style="display:flex;align-items:center;gap:6px;background:var(--sec-bg);border:1px solid var(--border);border-radius:20px;padding:5px 12px;white-space:nowrap;">
+        html += `<div style="display:flex;align-items:center;gap:6px;background:var(--sec-bg);border:1.5px solid var(--border);border-radius:20px;padding:5px 12px;white-space:nowrap;">
           <span style="font-size:.72em;font-weight:600;color:var(--text2);">${r.label}</span>
           <span style="font-size:.92em;font-weight:800;color:${r.color};">${r.val}</span>
         </div>`;
@@ -2919,7 +2922,7 @@
           <div style="font-size:.58em;font-weight:700;color:var(--text3);width:56px;text-align:right;">${colHeaders[1]}</div>
         </div>`;
         rows.forEach(r => {
-          html += `<div style="display:grid;grid-template-columns:1fr auto auto;align-items:center;padding:4px 2px;border-bottom:1px solid var(--border);">
+          html += `<div style="display:grid;grid-template-columns:1fr auto auto;align-items:center;padding:4px 2px;border-bottom:1.5px solid var(--border);">
             <span style="font-size:.82em;color:var(--text2);">${r.label}</span>
             <span style="width:56px;text-align:right;padding-right:10px;font-weight:700;font-size:.88em;color:${r.totalColor};">${r.total}</span>
             <span style="width:56px;text-align:right;font-weight:700;font-size:.88em;color:${r.avg !== null ? r.avgColor : 'var(--text3)'};">${r.avg !== null ? r.avg : '—'}</span>
@@ -3099,7 +3102,7 @@
 
       // ── Skill Settings panel (collapsible) — threshold only ──
       const ssCollapsed = skillSettingsCollapsed;
-      html += `<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:var(--sp);overflow:hidden;box-shadow:var(--shadow-xs);">
+      html += `<div style="background:var(--card);border:1.5px solid var(--border);border-radius:10px;margin-bottom:var(--sp);overflow:hidden;box-shadow:var(--shadow-xs);">
         <div onclick="skillSettingsCollapsed=!skillSettingsCollapsed;localStorage.setItem('skillSettingsCollapsed',skillSettingsCollapsed);renderAnalyticsPlayersUniversal();"
           style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;user-select:none;transition:background .15s;"
           onmouseover="this.style.background='var(--hover)';" onmouseout="this.style.background='';">
@@ -3110,8 +3113,8 @@
           <span style="font-size:.75em;color:var(--text3);transition:transform .25s;display:inline-block;transform:${ssCollapsed?'':'rotate(180deg)'};">&#9660;</span>
         </div>
         ${ssCollapsed ? '' : `
-        <div style="border-top:1px solid var(--border);padding:16px;display:grid;gap:10px;">
-          <div style="background:var(--sec-bg);border:1px solid var(--border);border-radius:10px;padding:12px 14px;">
+        <div style="border-top:1.5px solid var(--border);padding:16px;display:grid;gap:10px;">
+          <div style="background:var(--sec-bg);border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
               <div>
                 <div style="font-size:.78em;font-weight:700;color:var(--text);">Low-Data Threshold</div>
@@ -3130,7 +3133,7 @@
               <div style="min-width:30px;font-size:1.05em;font-weight:800;color:var(--primary);text-align:right;">${skillThresholdPct}%</div>
             </div>
           </div>
-          <div style="background:var(--sec-bg);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:.8em;color:var(--text2);line-height:1.5;">
+          <div style="background:var(--sec-bg);border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;font-size:.8em;color:var(--text2);line-height:1.5;">
             <strong style="color:var(--text);">Skill Score = relative rating anchored to team average (100)</strong><br>
             Each metric is divided by the team average, so 100 = exactly average, 150 = 50% above average, 50 = half the team average. All three components contribute equally.
             <ul style="margin:6px 0 0 16px;padding:0;">
@@ -3187,7 +3190,7 @@
         { key: 'alpha',      label: 'A–Z' },
       ];
       if (['buzzVol','aggression','precision','netRisk'].includes(playerSortKey)) playerSortKey = 'points';
-      html += `<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border);">
+      html += `<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:14px;padding-bottom:14px;border-bottom:1.5px solid var(--border);">
         <span style="font-size:.75em;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;flex-shrink:0;margin-right:2px;">Sort</span>
         ${sortOptions.map(o => `<button class="sort-pill${playerSortKey===o.key?' active':''}" onclick="playerSortKey='${o.key}';renderAnalyticsPlayersUniversal();">${o.label}</button>`).join('')}
       </div>`;
@@ -3290,7 +3293,7 @@
                 <div style="display:flex;flex-wrap:wrap;gap:5px;">
                   <span style="background:rgba(17,153,142,.08);border:1px solid rgba(17,153,142,.3);color:var(--success);border-radius:6px;padding:3px 9px;font-size:.77em;font-weight:600;">${p.tossupsCorrect} TU${p.tossupsCorrect!==1?'s':''}</span>
                   <span style="background:rgba(102,126,234,.08);border:1px solid rgba(102,126,234,.3);color:var(--primary);border-radius:6px;padding:3px 9px;font-size:.77em;font-weight:600;">${p.powers} Power${p.powers!==1?'s':''}</span>
-                  <span style="background:var(--sec-bg);border:1px solid var(--border);border-radius:6px;padding:3px 9px;font-size:.77em;font-weight:600;">${bonuses} Bonus${bonuses!==1?'es':''}</span>
+                  <span style="background:var(--sec-bg);border:1.5px solid var(--border);border-radius:6px;padding:3px 9px;font-size:.77em;font-weight:600;">${bonuses} Bonus${bonuses!==1?'es':''}</span>
                   <span style="background:rgba(220,53,69,.08);border:1px solid rgba(220,53,69,.3);color:var(--danger);border-radius:6px;padding:3px 9px;font-size:.77em;font-weight:600;">${p.negs} Neg${p.negs!==1?'s':''}</span>
                   ${(p.misses||0) > 0 ? `<span style="background:rgba(243,156,18,.08);border:1px solid rgba(243,156,18,.35);color:var(--warning);border-radius:6px;padding:3px 9px;font-size:.77em;font-weight:600;">${p.misses} Miss${p.misses!==1?'es':''}</span>` : ''}
                 </div>
@@ -3349,9 +3352,9 @@
                 </div>
               </div>
               ${topCats.length ? `
-              <div style="border-top:1px solid var(--border);padding-top:10px;">
+              <div style="border-top:1.5px solid var(--border);padding-top:10px;">
                 <div style="font-size:.7em;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;">Top Categories</div>
-                ${topCats.map(([cat, cnt]) => `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:.82em;border-bottom:1px solid var(--border);"><span style="color:var(--text2);font-weight:500;">${catLabel(cat)}</span><span style="font-weight:700;color:var(--primary);">${cnt}</span></div>`).join('')}
+                ${topCats.map(([cat, cnt]) => `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:.82em;border-bottom:1.5px solid var(--border);"><span style="color:var(--text2);font-weight:500;">${catLabel(cat)}</span><span style="font-weight:700;color:var(--primary);">${cnt}</span></div>`).join('')}
               </div>` : ''}
             </div>
           </div>
@@ -3359,7 +3362,7 @@
       }).join('');
 
       // ── Formulas Reference Panel ──
-      html += `<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;margin-top:var(--sp);overflow:hidden;box-shadow:var(--shadow-xs);">
+      html += `<div style="background:var(--card);border:1.5px solid var(--border);border-radius:10px;margin-top:var(--sp);overflow:hidden;box-shadow:var(--shadow-xs);">
         <div onclick="formulasPanelCollapsed=!formulasPanelCollapsed;localStorage.setItem('formulasPanelCollapsed',formulasPanelCollapsed);renderAnalyticsPlayersUniversal();"
           style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;user-select:none;"
           onmouseover="this.style.background='var(--hover)';" onmouseout="this.style.background='';">
@@ -3367,7 +3370,7 @@
           <span style="font-size:.75em;color:var(--text3);transition:transform .25s;display:inline-block;transform:${formulasPanelCollapsed?'':'rotate(180deg)'};">&#9660;</span>
         </div>
         ${formulasPanelCollapsed ? '' : `
-        <div style="border-top:1px solid var(--border);padding:16px;display:grid;gap:10px;">
+        <div style="border-top:1.5px solid var(--border);padding:16px;display:grid;gap:10px;">
           ${[
             ['Actual Pts / 20 TU', '(Total Points ÷ TU Heard) × 20', 'How many points a player scores per 20 toss-ups heard. Primary output metric.'],
             ['Potential Pts / 20 TU', '(30 × (Powers + Toss-ups)) ÷ TU Heard × 20', 'Maximum possible pts if every buzz-in converted, assuming 30 pts per correct TU (10 TU + 20 bonus). Shows ceiling.'],
@@ -3377,7 +3380,7 @@
             ['Risk Payoff', '(15 × Powers − 5 × Negs) ÷ (Powers + Negs)', 'Net point value per risky buzz. Range −5 (all negs) to +15 (all powers). Break-even ≈ 5.'],
             ['Skill Score', 'Average of (Pot. Pts/20TU ÷ team avg) + (Risk Payoff ÷ team avg) + (Accuracy ÷ team avg), × 100', 'Composite relative rating. 100 = exactly team average. Each component weighted equally.'],
           ].map(([name, formula, desc]) => `
-            <div style="background:var(--sec-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;">
+            <div style="background:var(--sec-bg);border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;">
               <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
                 <span style="font-size:.82em;font-weight:800;color:var(--primary);">${name}</span>
                 <code style="font-size:.72em;color:var(--text2);background:var(--hover);border-radius:4px;padding:2px 6px;white-space:nowrap;">${formula}</code>
@@ -3541,7 +3544,7 @@
           ['Misses',   team.misses,   'var(--warning)'],
           ['Accuracy', acc + '%',     'var(--text2)'],
         ].filter(([, v]) => v !== 0 && v !== '0%').map(([label, val, c]) =>
-          `<div style="text-align:center;background:var(--sec-bg);border:1px solid var(--border);border-radius:8px;padding:8px 12px;flex:1;min-width:64px;">
+          `<div style="text-align:center;background:var(--sec-bg);border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;flex:1;min-width:64px;">
             <div style="font-size:.72em;color:var(--text2);font-weight:600;margin-bottom:3px;">${label}</div>
             <div style="font-size:.95em;font-weight:700;color:${c};">${val}</div>
           </div>`
@@ -3563,12 +3566,12 @@
               <span id="${cardId}_arrow" style="font-size:.8em;color:var(--text2);transition:transform .2s;">&#9660;</span>
             </div>
           </div>
-          <div id="${cardId}" style="display:none;border-top:1px solid var(--border);">
+          <div id="${cardId}" style="display:none;border-top:1.5px solid var(--border);">
             <div style="padding:14px 16px;">
               <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
                 ${statChips}
               </div>
-              <div style="border-top:1px solid var(--border);padding-top:12px;">
+              <div style="border-top:1.5px solid var(--border);padding-top:12px;">
                 ${effBar(team.eBonus, color, 'Capitalization', eBonusTooltip)}
                 ${effBar(team.eTotal, color, 'Point Control', eTotalTooltip)}
                 ${(team.eBonus === null && team.eTotal === null) ? '<div style="font-size:.8em;color:var(--text2);font-style:italic;">No Toss-Up Answers Recorded Yet.</div>' : ''}
@@ -3606,6 +3609,72 @@
     function destroyChart(id) {
       if (_chartInstances[id]) { _chartInstances[id].destroy(); delete _chartInstances[id]; }
     }
+
+
+    // Plugin: fills canvas bg + draws gap lines + outlines for doughnuts
+    Chart.register({
+      id: 'doughnutGaps',
+      afterDatasetsDraw(chart) {
+        if (chart.config.type !== 'doughnut') return;
+        const meta0 = chart.getDatasetMeta(0);
+        if (!meta0?.data?.length) return;
+        const { ctx } = chart;
+        const isDark = document.body.classList.contains('dark-mode');
+        const _isDarkNow = document.body.classList.contains('dark-mode');
+        const gapCol     = _isDarkNow ? '#1c2128' : '#ffffff';
+        const outlineCol = _isDarkNow ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.38)';
+        const gapW    = 3;   // gap line width
+        const borderW = 2;   // outline width
+
+        meta0.data.forEach(arc => {
+          if (!arc || arc.hidden) return;
+          const cx = arc.x, cy = arc.y;
+          const inner = arc.innerRadius, outer = arc.outerRadius;
+          const start = arc.startAngle, end = arc.endAngle;
+
+          // Angular inset so outline arc doesn't touch the gap lines
+          // gap half-width in radians at the outer radius
+          const angularInset = (gapW / 2 + borderW) / outer;
+          const arcStart = start + angularInset;
+          const arcEnd   = end   - angularInset;
+
+          // 1. Draw gap lines (on top of everything)
+          ctx.save();
+          ctx.strokeStyle = gapCol;
+          ctx.lineWidth = gapW;
+          [start, end].forEach(angle => {
+            ctx.beginPath();
+            ctx.moveTo(cx + inner * Math.cos(angle), cy + inner * Math.sin(angle));
+            ctx.lineTo(cx + outer * Math.cos(angle), cy + outer * Math.sin(angle));
+            ctx.stroke();
+          });
+          ctx.restore();
+
+          // 2. Draw full slice outline (outer arc + radial sides + inner arc) inset from gaps
+          if (arcEnd > arcStart) {
+            const innerInset = inner > 4 ? inner + borderW / 2 : 0;
+            const outerInset = outer - borderW / 2;
+            ctx.save();
+            ctx.beginPath();
+            // Outer arc
+            ctx.arc(cx, cy, outerInset, arcStart, arcEnd);
+            // Radial line to inner
+            if (innerInset > 0) {
+              ctx.lineTo(cx + innerInset * Math.cos(arcEnd), cy + innerInset * Math.sin(arcEnd));
+              // Inner arc (counter-clockwise)
+              ctx.arc(cx, cy, innerInset, arcEnd, arcStart, true);
+              // Close back to outer
+              ctx.closePath();
+            }
+            ctx.strokeStyle = outlineCol;
+            ctx.lineWidth = borderW;
+            ctx.stroke();
+            ctx.restore();
+          }
+        });
+      }
+    });
+
     function makeChart(id, config) {
       destroyChart(id);
       const canvas = document.getElementById(id);
@@ -3708,8 +3777,12 @@
       const pluginDefaults = {
         legend: { labels: { color: labelColor, font: baseFont, boxWidth: 14, padding: 12 } },
         tooltip: {
-          backgroundColor: tooltipBg, titleColor: tooltipTxt, bodyColor: labelColor,
-          borderColor: isDark ? '#2d3340' : '#dde1ea', borderWidth: 1, padding: 10, cornerRadius: 8
+          backgroundColor(ctx) { return document.body.classList.contains('dark-mode') ? '#1c2128' : '#fff'; },
+          titleColor(ctx)      { return document.body.classList.contains('dark-mode') ? '#e6eaf4' : '#1a1a2e'; },
+          bodyColor(ctx)       { return document.body.classList.contains('dark-mode') ? '#9ba3c0' : '#5a6178'; },
+          borderColor(ctx)     { return document.body.classList.contains('dark-mode') ? '#2d3340' : '#dde1ea'; },
+          borderWidth: 1, padding: 10, cornerRadius: 8,
+          position: 'nearest', caretSize: 6
         }
       };
       const pieOpts = { responsive: true, maintainAspectRatio: false, plugins: { ...pluginDefaults, legend: { ...pluginDefaults.legend, position: allCatsByVol.length > 8 ? 'bottom' : 'right' } } };
@@ -3800,7 +3873,7 @@
           text-transform: uppercase;
           color: var(--text3);
           padding: 4px 0 2px;
-          border-bottom: 1px solid var(--border);
+          border-bottom: 1.5px solid var(--border);
           margin-bottom: 2px;
         }
         /* Subcat doughnuts: JS sets grid-template-columns inline; cards fill columns evenly */
@@ -3886,7 +3959,7 @@
         if (misses)  { typeLabels.push('Miss');    typeData.push(misses);  typeColors.push('#f39c12'); }
         if (deads)   { typeLabels.push('Dead');    typeData.push(deads);   typeColors.push('#9ba3b8'); }
         makeChart('chart-type-pie', { type: 'doughnut',
-          data: { labels: typeLabels, datasets: [{ data: typeData, backgroundColor: typeColors, borderWidth: 2, borderColor: isDark ? '#1c2128' : '#fff' }] },
+          data: { labels: typeLabels, datasets: [{ data: typeData, backgroundColor: typeColors, borderColor: 'transparent', borderWidth: 0 }] },
           options: { ...pieOpts, plugins: { ...pieOpts.plugins, legend: { ...pieOpts.plugins.legend, position: 'right' } } }
         });
       }
@@ -3894,7 +3967,7 @@
       // ── Draw: Category volume doughnut ──
       if (allCatsByVol.length) {
         makeChart('chart-cat-vol', { type: 'doughnut',
-          data: { labels: allCatsByVol, datasets: [{ data: allCatsByVol.map(c => catAnswers[c]), backgroundColor: allCatsByVol.map(c => catColor(getParentCat(c)) + 'dd'), borderWidth: 2, borderColor: isDark ? '#1c2128' : '#fff' }] },
+          data: { labels: allCatsByVol, datasets: [{ data: allCatsByVol.map(c => catAnswers[c]), backgroundColor: allCatsByVol.map(c => catColor(getParentCat(c)) + 'cc'), borderColor: 'transparent', borderWidth: 0 }] },
           options: pieOpts
         });
       }
@@ -3905,11 +3978,11 @@
           data: {
             labels: allCatsByAnswers,
             datasets: [
-              { label: 'Powers',   data: allCatsByAnswers.map(c => catByType[c]?.Power         || 0), backgroundColor: '#11998ecc', borderRadius: 3 },
-              { label: 'Toss-ups', data: allCatsByAnswers.map(c => catByType[c]?.['Toss-up']   || 0), backgroundColor: '#667eeacc', borderRadius: 3 },
-              { label: 'Bonuses',  data: allCatsByAnswers.map(c => catByType[c]?.Bonus         || 0), backgroundColor: '#764ba2cc', borderRadius: 3 },
-              { label: 'Negs',     data: allCatsByAnswers.map(c => catByType[c]?.Neg           || 0), backgroundColor: '#e74c5ccc', borderRadius: 3 },
-              { label: 'Misses',   data: allCatsByAnswers.map(c => catByType[c]?.Miss          || 0), backgroundColor: '#f39c12cc', borderRadius: 3 },
+              { label: 'Powers',   data: allCatsByAnswers.map(c => catByType[c]?.Power         || 0), backgroundColor: '#11998ecc', borderColor: '#11998e', borderWidth: 3, borderRadius: 3 },
+              { label: 'Toss-ups', data: allCatsByAnswers.map(c => catByType[c]?.['Toss-up']   || 0), backgroundColor: '#667eeacc', borderColor: '#667eea', borderWidth: 3, borderRadius: 3 },
+              { label: 'Bonuses',  data: allCatsByAnswers.map(c => catByType[c]?.Bonus         || 0), backgroundColor: '#764ba2cc', borderColor: '#764ba2', borderWidth: 3, borderRadius: 3 },
+              { label: 'Negs',     data: allCatsByAnswers.map(c => catByType[c]?.Neg           || 0), backgroundColor: '#e74c5ccc', borderColor: '#e74c5c', borderWidth: 3, borderRadius: 3 },
+              { label: 'Misses',   data: allCatsByAnswers.map(c => catByType[c]?.Miss          || 0), backgroundColor: '#f39c12cc', borderColor: '#f39c12', borderWidth: 3, borderRadius: 3 },
             ]
           },
           options: { ...barOpts, scales: { ...barScales, x: { ...barScales.x, stacked: true }, y: { ...barScales.y, stacked: true } } }
@@ -4004,7 +4077,7 @@
                   data: activePlayers.map(p => playerSubPts[p.name]?.[parent]?.[sub] || 0),
                   backgroundColor: bgFill,
                   borderColor: pColor,
-                  borderWidth: 2,
+                  borderWidth: 3,
                   borderRadius: 2,
                   _parent: parent,
                   _expanded: true,
@@ -4017,7 +4090,7 @@
                 data: activePlayers.map(p => playerParentPts[p.name]?.[parent] || 0),
                 backgroundColor: pColor + 'cc',
                 borderColor: pColor,
-                borderWidth: 1,
+                borderWidth: 3,
                 borderRadius: 3,
                 _parent: parent,
                 _expanded: false,
@@ -4051,7 +4124,7 @@
             scales: { ...barScales, x: { ...barScales.x, stacked: true }, y: { ...barScales.y, stacked: true } },
             plugins: {
               ...pluginDefaults,
-              tooltip: { ...pluginDefaults.tooltip, mode: 'index', intersect: false },
+              tooltip: { ...pluginDefaults.tooltip, mode: 'index', intersect: false, itemSort: (a, b) => b.datasetIndex - a.datasetIndex, filter: item => item.raw > 0 },
               legend: { ...pluginDefaults.legend, position: 'bottom', labels: { ...pluginDefaults.legend.labels, padding: 10, boxWidth: 12 } }
             },
             onClick(evt, elements) {
@@ -4081,11 +4154,11 @@
           data: {
             labels: pNames,
             datasets: [
-              { label: 'Powers',   data: activePlayers.map(p => p.powers),           backgroundColor: '#11998ecc', borderRadius: 3 },
-              { label: 'Toss-ups', data: activePlayers.map(p => p.tossupsCorrect),   backgroundColor: '#667eeacc', borderRadius: 3 },
-              { label: 'Bonuses',  data: activePlayers.map(p => p.bonusPoints / 10), backgroundColor: '#764ba2cc', borderRadius: 3 },
-              { label: 'Negs',     data: activePlayers.map(p => p.negs),             backgroundColor: '#e74c5ccc', borderRadius: 3 },
-              { label: 'Misses',   data: activePlayers.map(p => p.misses || 0),      backgroundColor: '#f39c12cc', borderRadius: 3 },
+              { label: 'Powers',   data: activePlayers.map(p => p.powers),           backgroundColor: '#11998ecc', borderColor: '#11998e', borderWidth: 3, borderRadius: 3 },
+              { label: 'Toss-ups', data: activePlayers.map(p => p.tossupsCorrect),   backgroundColor: '#667eeacc', borderColor: '#667eea', borderWidth: 3, borderRadius: 3 },
+              { label: 'Bonuses',  data: activePlayers.map(p => p.bonusPoints / 10), backgroundColor: '#764ba2cc', borderColor: '#764ba2', borderWidth: 3, borderRadius: 3 },
+              { label: 'Negs',     data: activePlayers.map(p => p.negs),             backgroundColor: '#e74c5ccc', borderColor: '#e74c5c', borderWidth: 3, borderRadius: 3 },
+              { label: 'Misses',   data: activePlayers.map(p => p.misses || 0),      backgroundColor: '#f39c12cc', borderColor: '#f39c12', borderWidth: 3, borderRadius: 3 },
             ]
           },
           options: { ...barOpts, scales: { ...barScales, x: { ...barScales.x, stacked: true }, y: { ...barScales.y, stacked: true } } }
@@ -4096,7 +4169,7 @@
       if (activePlayers.length > 1) {
         const pNames = activePlayers.map(p => p.name.split(' ')[0]);
         makeChart('chart-player-pts', { type: 'bar',
-          data: { labels: pNames, datasets: [{ label: 'Points', data: activePlayers.map(p => p.points), backgroundColor: activePlayers.map((_, i) => PALETTE[i % PALETTE.length] + 'cc'), borderColor: activePlayers.map((_, i) => PALETTE[i % PALETTE.length]), borderWidth: 2, borderRadius: 4 }] },
+          data: { labels: pNames, datasets: [{ label: 'Points', data: activePlayers.map(p => p.points), backgroundColor: activePlayers.map((_, i) => PALETTE[i % PALETTE.length] + 'cc'), borderColor: activePlayers.map((_, i) => PALETTE[i % PALETTE.length]), borderWidth: 3, borderRadius: 4 }] },
           options: { ...barOpts, plugins: { ...barOpts.plugins, legend: { display: false } } }
         });
       }
@@ -4124,7 +4197,7 @@
         });
         makeChart('chart-subcat-' + parent.replace(/\s+/g,'_'), {
           type: 'doughnut',
-          data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 2, borderColor: isDark ? '#1c2128' : '#fff' }] },
+          data: { labels, datasets: [{ data, backgroundColor: colors, borderColor: 'transparent', borderWidth: 0 }] },
           options: { ...pieOpts, maintainAspectRatio: false, plugins: { ...pieOpts.plugins, legend: {
             position: 'bottom',
             labels: { color: labelColor, font: { ...baseFont, size: 10 }, boxWidth: 10, boxHeight: 10, padding: 6 }
@@ -4240,6 +4313,8 @@
       const on=document.body.classList.toggle('dark-mode');
       localStorage.setItem('darkMode',on);
       const el=document.getElementById('darkModeToggle2'); if(el) el.checked=on;
+      // Redraw charts so gap colors and tooltips pick up the new theme
+      Object.values(_chartInstances).forEach(c => c.update());
     }
     function setAccentColor(color) {
       document.documentElement.style.setProperty('--primary',color);
@@ -4755,7 +4830,7 @@
       el.innerHTML = Object.entries(CATEGORY_TREE).map(([parent, subs]) =>
         `<div style="margin-bottom:8px;">
           <div style="font-size:.78em;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);margin-bottom:4px;">${parent}</div>
-          <div style="display:flex;flex-wrap:wrap;gap:4px;">${subs.map(s=>`<span style="font-size:.8em;padding:2px 8px;border-radius:10px;background:var(--sec-bg);border:1px solid var(--border);color:var(--text1);">${s}</span>`).join('')}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;">${subs.map(s=>`<span style="font-size:.8em;padding:2px 8px;border-radius:10px;background:var(--sec-bg);border:1.5px solid var(--border);color:var(--text1);">${s}</span>`).join('')}</div>
         </div>`
       ).join('');
     }
@@ -5008,7 +5083,7 @@
         const tied=prev&&prev.points===s.points&&prev.powers===s.powers&&prev.negs===s.negs;
         if(i>0&&!tied) rank=i+1;
         const sfx=['st','nd','rd'][rank-1]||'th';
-        html+=`<li style="padding:6px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;"><span><strong style="color:var(--primary);min-width:42px;display:inline-block;">${rank}${sfx}</strong> ${s.name}</span><span style="color:var(--text2);font-size:.92em;">${s.points} Pts${s.powers?' &middot; '+'+'+s.powers+' Power':''}${s.negs?' &middot; '+'-'+s.negs+' Neg':''}${s.misses?' &middot; '+s.misses+' Miss':''}</span></li>`;
+        html+=`<li style="padding:6px 0;border-bottom:1.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;"><span><strong style="color:var(--primary);min-width:42px;display:inline-block;">${rank}${sfx}</strong> ${s.name}</span><span style="color:var(--text2);font-size:.92em;">${s.points} Pts${s.powers?' &middot; '+'+'+s.powers+' Power':''}${s.negs?' &middot; '+'-'+s.negs+' Neg':''}${s.misses?' &middot; '+s.misses+' Miss':''}</span></li>`;
       });
       return html;
     }
