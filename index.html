@@ -149,9 +149,8 @@
     .an-player-card {
       background: var(--card); border: 2px solid var(--border); border-radius: 10px;
       padding: 18px; margin-bottom: var(--sp); box-shadow: var(--shadow-sm);
-      transition: border-color .2s, box-shadow .2s;
     }
-    .an-player-card:hover { border-color: var(--primary-light); box-shadow: var(--shadow-md); }
+    .an-player-card:hover { border-color: var(--primary-light); }
     .an-player-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
     .an-player-name {
       font-size: 1.1em; font-weight: 700; color: var(--primary);
@@ -251,10 +250,10 @@
     .qb-section {
       margin-bottom: 14px; padding: clamp(16px,4vw,20px);
       background: var(--card); border-radius: var(--radius); border: 1px solid var(--border);
-      transition: border-color .2s, box-shadow .2s; overflow: visible;
+      overflow: visible;
       box-shadow: var(--shadow-xs);
     }
-    .qb-section:hover { border-color: var(--primary-light); box-shadow: var(--shadow-sm); }
+    .qb-section:hover { border-color: var(--primary-light); }
     .qb-section h2 {
       color: var(--text); margin-bottom: var(--sp); font-size: clamp(1.05em,3vw,1.25em);
       cursor: pointer; display: flex; align-items: center; justify-content: space-between;
@@ -389,7 +388,78 @@
     input:checked + .slider { background: linear-gradient(135deg, var(--primary), var(--secondary)); }
     input:checked + .slider:before { transform: translateX(26px); }
 
-    /* ── Session info ── */
+    .button-point-type kbd, #recordAnswerBtn kbd {
+      display:inline-block;font-family:inherit;font-size:.72em;font-weight:600;
+      padding:1px 5px;border-radius:4px;border:1px solid currentColor;opacity:.6;
+      margin-left:4px;vertical-align:middle;line-height:1.4;
+    }
+    /* ── Record-answer toast flash ── */
+    #recordToast {
+      position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+      background:var(--success);color:#fff;
+      padding:10px 22px;border-radius:28px;font-size:.92em;font-weight:700;
+      box-shadow:0 4px 18px rgba(0,0,0,.22);pointer-events:none;
+      opacity:0;transition:opacity .18s,transform .18s;z-index:99999;
+      white-space:nowrap;letter-spacing:.01em;
+    }
+    #recordToast.show { opacity:1;transform:translateX(-50%) translateY(0); }
+    #recordToast.neg  { background:var(--danger); }
+    #recordToast.miss { background:#888; }
+    #recordToast.pts  { background:var(--primary); }
+
+    /* ── Quick-log rows ── */
+    .ql-row {
+      display:flex;align-items:center;gap:0;
+      background:var(--card);border:1px solid var(--border);border-radius:10px;
+      overflow:hidden;margin-bottom:6px;
+      transition:border-color .12s;
+    }
+    .ql-row:hover { border-color:var(--primary-light); }
+    .ql-name {
+      flex:0 0 auto;min-width:80px;max-width:120px;padding:0 12px;
+      font-size:.82em;font-weight:700;color:var(--text);
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+      border-right:1px solid var(--border);
+      height:44px;display:flex;align-items:center;
+      background:var(--sec-bg);
+    }
+    .ql-btns { display:flex;flex:1; }
+    .ql-btn {
+      flex:1;height:44px;border:none;border-right:1px solid var(--border);
+      background:transparent;cursor:pointer;font-size:.75em;font-weight:700;
+      color:var(--text2);transition:background .12s,color .12s;
+      display:flex;align-items:center;justify-content:center;gap:3px;
+      line-height:1.1;text-align:center;padding:0 4px;
+    }
+    .ql-btn:last-child { border-right:none; }
+    .ql-btn:hover { background:var(--hover); color:var(--text); }
+    .ql-btn.ql-power:hover  { background:rgba(17,153,142,.12); color:var(--success); }
+    .ql-btn.ql-tu:hover     { background:rgba(102,126,234,.1); color:var(--primary); }
+    .ql-btn.ql-bonus:hover  { background:rgba(102,126,234,.06); color:var(--primary); }
+    .ql-btn.ql-neg:hover    { background:rgba(220,53,69,.08); color:var(--danger); }
+    .ql-btn.ql-miss:hover   { background:rgba(200,200,200,.1); color:var(--text3); }
+    .ql-cat-row {
+      display:none;padding:8px 12px;border-top:1px solid var(--border);
+      background:var(--sec-bg);border-radius:0 0 10px 10px;
+    }
+    .ql-cat-row.open { display:flex;flex-wrap:wrap;gap:5px;align-items:center; }
+    .ql-cat-chip {
+      padding:3px 10px;border-radius:16px;font-size:.74em;font-weight:600;
+      border:1px solid var(--border);background:var(--card);color:var(--text2);
+      cursor:pointer;transition:all .1s;
+    }
+    .ql-cat-chip:hover { border-color:var(--primary);color:var(--primary); }
+    .ql-cat-chip.selected { background:var(--primary);border-color:var(--primary);color:#fff; }
+    .ql-confirm-btn {
+      padding:3px 12px;border-radius:16px;font-size:.74em;font-weight:700;
+      background:var(--success);color:#fff;border:none;cursor:pointer;margin-left:4px;
+    }
+    .ql-cancel-btn {
+      padding:3px 10px;border-radius:16px;font-size:.74em;font-weight:600;
+      background:transparent;color:var(--text3);border:1px solid var(--border);cursor:pointer;
+    }
+
+        /* ── Session info ── */
     .session-info { background: var(--sec-bg); padding: 14px 16px; border-radius: var(--radius-sm); border: 1px solid var(--border); margin-bottom: var(--sp); font-size: clamp(.82em,2vw,.95em); }
     .session-info-row { display: flex; justify-content: space-between; align-items: center; margin: 10px 0; flex-wrap: wrap; gap: 6px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
     .session-info-row:last-child { border-bottom: none; margin-bottom: 0; }
@@ -531,6 +601,9 @@
       .qb-scroll, .analytics-scroll { padding: 16px; }
       .qb-section { padding: 16px; }
       .point-type-buttons, .category-buttons { grid-template-columns: repeat(2,1fr); gap: 8px; }
+      /* Mobile category: each parent group stacks — label full width, subcats in 2-col grid */
+      #categoryButtonsContainer > div { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 5px !important; }
+      #categoryButtonsContainer > div > button:first-child { grid-column: 1 / -1; font-size:.78em !important; }
       .stats-grid { grid-template-columns: 1fr; }
       .button-group { flex-direction: column; }
       .button-group button, .button { width: 100%; }
@@ -558,7 +631,7 @@
     <div class="qb-header" id="qbHeader">
       <button class="header-btn sidebar-open-btn" id="sidebarOpenBtn">&#9654; Menu</button>
       <div class="qb-header-center">
-        <h1>HSE Quiz Bowl Tracker <span class="version-badge" id="versionBadge">v29</span></h1>
+        <h1>HSE Quiz Bowl Tracker <span class="version-badge" id="versionBadge" style="display:none;"></span></h1>
         <div class="header-session-name" id="headerSessionName"></div>
       </div>
       <div class="header-controls">
@@ -759,21 +832,21 @@
             <h2>Record Answer <span class="toggle-icon">&#9660;</span></h2>
             <div class="collapsible-content">
               <div class="input-group">
-                <label>Select Player: <span id="playerOptionalHint" style="font-weight:400;font-size:.85em;color:var(--text2);display:none;">(Optional — skip to give bonus to team)</span></label>
+                <label>Select Player: <span id="playerOptionalHint" style="font-weight:400;font-size:.85em;color:var(--text2);display:none;">(Optional for Miss — click a team name for bonus)</span></label>
                 <div id="playerButtonsContainer" class="player-buttons"></div>
               </div>
               <div class="input-group">
-                <label>Point Type:</label>
+                <label>Point Type: <span style="font-weight:400;font-size:.8em;color:var(--text3);">1–6 keys</span></label>
                 <div class="point-type-buttons">
-                  <button class="button-point-type" onclick="selectPointType('Power')">Power (+15)</button>
-                  <button class="button-point-type" onclick="selectPointType('Toss-up')">Toss-up (+10)</button>
-                  <button class="button-point-type" onclick="selectPointType('Bonus')">Bonus (+10)</button>
-                  <button class="button-point-type" onclick="selectPointType('Miss')">Miss (0)</button>
-                  <button class="button-point-type" onclick="selectPointType('Neg')">Neg (-5)</button>
-                  <button class="button-point-type" onclick="selectPointType('Dead')">Dead (0)</button>
+                  <button class="button-point-type" onclick="selectPointType('Power')"   data-key="1">Power (+15) <kbd>1</kbd></button>
+                  <button class="button-point-type" onclick="selectPointType('Toss-up')" data-key="2">Toss-up (+10) <kbd>2</kbd></button>
+                  <button class="button-point-type" onclick="selectPointType('Bonus')"   data-key="3">Bonus (+10) <kbd>3</kbd></button>
+                  <button class="button-point-type" onclick="selectPointType('Miss')"    data-key="4">Miss (0) <kbd>4</kbd></button>
+                  <button class="button-point-type" onclick="selectPointType('Neg')"     data-key="5">Neg (-5) <kbd>5</kbd></button>
+                  <button class="button-point-type" onclick="selectPointType('Dead')"    data-key="6">Dead (0) <kbd>6</kbd></button>
                 </div>
               </div>
-              <div class="input-group">
+              <div class="input-group" id="categoryInputGroup">
                 <label>Category: <span style="font-weight:400;font-size:.85em;color:var(--text2);">(Optional)</span></label>
                 <div id="categoryButtonsContainer" class="category-buttons"></div>
               </div>
@@ -788,7 +861,7 @@
                   <button onclick="adjustTHeard(1)"  style="width:34px;height:34px;border-radius:8px;border:2px solid var(--success);background:var(--card);color:var(--success);font-size:1.2em;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;">+</button>
                 </div>
               </div>
-              <button class="button button-success" onclick="recordAnswer()" style="width:100%;margin-top:10px;padding:16px;font-size:1.05em;">Record Answer</button>
+              <button class="button button-success" id="recordAnswerBtn" onclick="recordAnswer()" style="width:100%;margin-top:10px;padding:16px;font-size:1.05em;">Record Answer <kbd style="font-size:.75em;opacity:.7;margin-left:6px;">Enter</kbd></button>
             </div>
           </div>
           <div class="qb-section">
@@ -884,19 +957,18 @@
           <li><strong>Potential Points</strong> &mdash; bonus opportunity unlocked by wins: 30 &times; (P + T)</li>
           <li><strong>Pot. Pts / 20 TU</strong> &mdash; bonus opportunity per 20 toss-ups heard</li>
           <li><strong>Player Potential</strong> &mdash; Actual / Potential per 20 TU — how much of the opportunity was actually converted</li>
-          <li><strong>Buzz Volume</strong> &mdash; buzz rate: how often the player buzzes in <code>100 &times; (P+T+N) / TU Heard</code>. Display only.</li>
-          <li><strong>Accuracy</strong> &mdash; correct buzz rate: of all buzzes, how many were right <code>(P+T) / (P+T+N) &times; 100</code>. Display only.</li>
-          <li><strong>Confidence</strong> &mdash; of all risky buzzes (powers + negs), how many were powers <code>P / (P+N) &times; 100</code>. 50% = equal powers and negs. Goes into Skill Score.</li>
-          <li><strong>Skill Score</strong> &mdash; normalized average of Pot. Pts/20TU, Confidence, and Accuracy. Team average = 100.</li>
+          <li><strong>Accuracy</strong> &mdash; correct buzz rate: of all buzzes, how many were right <code>(P+T) / (P+T+N) &times; 100</code>. Goes into Skill Score.</li>
+          <li><strong>Risk Payoff</strong> &mdash; net point value per risky buzz: powers add 15 pts, negs cost 5 pts, scaled by total risky buzzes <code>(15P &minus; 5N) / (P+N)</code>. Max = 15 (all powers), Min = &minus;5 (all negs). Goes into Skill Score.</li>
+          <li><strong>Skill Score</strong> &mdash; relative rating anchored to team average (100). Combines Pot. Pts/20TU, Risk Payoff, and Accuracy.</li>
         </ul>
 
         <h3 style="color:var(--primary);margin:0 0 6px;">Skill Score</h3>
-        <p style="margin-bottom:8px;">Each of the three skill metrics (Pot. Pts/20TU, Confidence, Accuracy) is divided by the team average so all contribute equally. An exactly-average player scores 100; twice as good across the board scores ~200.</p>
-        <p style="margin-bottom:14px;font-family:monospace;font-size:.9em;background:var(--sec-bg);padding:8px 12px;border-radius:6px;border:1px solid var(--border);">Skill = (Prod/AvgProd + PowerRate/AvgPowerRate + Acc/AvgAcc) &times; 100/3</p>
+        <p style="margin-bottom:8px;">Skill Score is <strong>relative to the team</strong> — the team average always equals 100. Each of the three components (Pot. Pts/20TU, Risk Payoff, Accuracy) is divided by the team average before summing, so all contribute equally. A player at 150 is 50% above average; a player at 50 is half the team average.</p>
+        <p style="margin-bottom:14px;font-family:monospace;font-size:.9em;background:var(--sec-bg);padding:8px 12px;border-radius:6px;border:1px solid var(--border);">Skill = (PotPts/AvgPotPts + RiskPayoff/AvgRiskPayoff + Acc/AvgAcc) &times; 100/3</p>
         <p style="margin-bottom:14px;">Players with fewer buzz answers than the low-data threshold are flagged and excluded from skill scoring by default. You can manually include or exclude flagged players in the <strong>Low-Data Players</strong> panel. Inclusions sync globally across all devices and persist across sessions.</p>
 
         <h3 style="color:var(--primary);margin:0 0 6px;">Leaderboard Sorting</h3>
-        <p style="margin-bottom:14px;">Use the sort pills above the player list to rank by <strong>Points</strong>, <strong>Skill Score</strong>, <strong>Pot. Pts / 20 TU</strong>, <strong>Actual Pts / 20 TU</strong>, <strong>Confidence</strong>, <strong>Buzz Volume</strong>, <strong>Accuracy</strong>, <strong>Powers</strong>, or <strong>Negs</strong> (fewest first). Ties in Points are broken by most Powers, then fewest Negs.</p>
+        <p style="margin-bottom:14px;">Use the sort pills above the player list to rank by <strong>Points</strong>, <strong>Skill Score</strong>, <strong>Pot. Pts / 20 TU</strong>, <strong>Actual Pts / 20 TU</strong>, <strong>Risk Payoff</strong>, <strong>Accuracy</strong>, <strong>Powers</strong>, <strong>Negs</strong> (fewest first), or <strong>A–Z</strong>. Ties in Points are broken by most Powers, then fewest Negs.</p>
 
         <h3 style="color:var(--primary);margin:0 0 6px;">Export &amp; Import</h3>
         <p style="margin-bottom:14px;">Export to <strong>CSV</strong> for spreadsheets or <strong>JSON</strong> to back up and re-import a full session. Both options are in the Data section of the sidebar.</p>
@@ -1135,15 +1207,25 @@
     const CAT_PARENT = {};
     Object.entries(CATEGORY_TREE).forEach(([parent, subs]) => subs.forEach(s => CAT_PARENT[s] = parent));
     // Return parent name for a category (or the category itself if it's already a parent or unknown)
-    function getParentCat(cat) { return CAT_PARENT[cat] || cat; }
+    function getParentCat(cat) {
+      if (CAT_PARENT[cat]) return CAT_PARENT[cat];  // subcategory → its parent
+      if (CATEGORY_TREE[cat]) return cat;            // already a parent (general)
+      return cat;                                    // unknown
+    }
     // Return display label "Parent › Sub" for a subcategory, or just parent name
-    function catLabel(cat) { const p = CAT_PARENT[cat]; return p ? `${p} › ${cat}` : cat; }
+    function catLabel(cat) {
+      const p = CAT_PARENT[cat];
+      if (p) return `${p} › ${cat}`;          // subcategory: "Science › Biology"
+      if (CATEGORY_TREE[cat]) return cat;      // parent used as general: just "Science"
+      return cat;                              // unknown / legacy
+    }
     const state={sessions:{},currentSessionId:null,selectedPlayer:null,selectedPointType:null,selectedCategory:null,categories:[]};
     let firebaseUnsubscribe=null, playersUnsubscribe=null;
     var analyticsOpen=false, currentAnalyticsTab='overview';
     var playerSortKey = 'points';       // default sort: points
-    var lowDataPanelCollapsed = false;   // low-data panel fold state
-    var skillSettingsCollapsed = true;   // skill settings panel fold state
+    var lowDataPanelCollapsed = localStorage.getItem('lowDataPanelCollapsed') !== 'false' ? true : false;
+    var skillSettingsCollapsed = localStorage.getItem('skillSettingsCollapsed') !== 'false' ? true : false;
+    var formulasPanelCollapsed = localStorage.getItem('formulasPanelCollapsed') !== 'false' ? true : false;
     var skillThresholdPct = 40;          // % of median buzz count for low-data threshold (default 40%)
     var expandedPlayerCards = new Set(); // tracks which player cards are open
     var expandedTeamCards = new Set();   // tracks which team composition session cards are open
@@ -1417,9 +1499,12 @@
       // Accuracy: correct / total answers (misses count as wrong)
       const totalAnsweredModal = powers + tossups + negs + misses + bonuses;
       const modalAccuracy     = totalAnsweredModal > 0 ? (100 * (powers + tossups + bonuses)) / totalAnsweredModal : null;
-      // Confidence: P / (P + N) × 100
+      // Risk Payoff: P / (P + N) × 100 — reward rate on risky buzzes
       const prDenomModal      = powers + negs;
-      const prValueModal      = prDenomModal > 0 ? (100 * powers) / prDenomModal : null;
+      const prValueModal      = prDenomModal > 0 ? (15 * powers - 5 * negs) / prDenomModal : null;
+      // Confidence: P / (P + T) × 100 — how often correct buzzes were early (before power mark)
+      const confNewDenomModal = powers + tossups;
+      const confNewModal      = confNewDenomModal > 0 ? (100 * powers) / confNewDenomModal : null;
 
       // ── Skill Score (power rate + prod rate + accuracy; normalized, avg = 100) ──
       const _buzzes    = powers + tossups + negs;
@@ -1443,58 +1528,60 @@
         const nP = _avgProd2 > 0 ? _mProd / _avgProd2 : (_mProd > 0 ? 2 : 0);
         const nR = _avgPR2   > 0 ? _mPR   / _avgPR2   : (_mPR   > 0 ? 2 : 0);
         const nA = _avgAcc2  > 0 ? _mAcc  / _avgAcc2  : (_mAcc  > 0 ? 2 : 0);
-        modalSkill = prValueModal === null ? null : (nP + nR + nA) * (100 / 3);
+        modalSkill = prValueModal === null ? null : (nP + nR + nA) * (100 / 3);  // prValueModal now pt-value based
       }
       const modalSkillColor = 'var(--primary)';
 
-      function playerMetricBar(value, label, isRatio, isZero, isSigned) {
-        if (value === null) {
-          return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
-            <span style="font-size:.82em;font-weight:700;color:var(--text2);">${label}</span>
-            <span style="font-size:.85em;color:var(--text3);font-style:italic;">N/A</span>
+      // metricRow(value, label, type)
+      //   type='pct'  → bar + X.X% (green/yellow/red by value)
+      //   type='pts'  → no bar, X.XX pts (green/yellow/red by sign/magnitude)
+      //   type='raw'  → no bar, plain grey value (for counts like Points, Pot. Pts)
+      //   type='pts20' → no bar, X.X (green ≥20, yellow ≥10, red <10)
+      function metricRow(value, label, type) {
+        const ROW_PLAIN = (valStr, color) =>
+          `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
+            <span style="font-size:.82em;font-weight:600;color:var(--text2);">${label}</span>
+            <span style="font-size:.92em;font-weight:700;color:${color};">${valStr}</span>
           </div>`;
-        }
-        if (isZero) {
-          return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
-            <span style="font-size:.82em;font-weight:700;color:var(--text2);">${label}</span>
-            <span style="font-size:.85em;color:var(--text3);">0%</span>
+        const ROW_BAR = (valStr, color, barPct) =>
+          `<div style="padding:7px 0;border-bottom:1px solid var(--border);">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;">
+              <span style="font-size:.82em;font-weight:600;color:var(--text2);">${label}</span>
+              <span style="font-size:.92em;font-weight:700;color:${color};">${valStr}</span>
+            </div>
+            <div style="height:5px;background:var(--border);border-radius:4px;overflow:hidden;">
+              <div style="height:100%;width:${Math.min(100,Math.max(0,barPct))}%;background:${color};border-radius:4px;transition:width .3s;"></div>
+            </div>
           </div>`;
-        }
-        if (isRatio) {
-          // Per-20-TU scale: good ≥ 20, ok ≥ 10, poor < 10
+
+        if (value === null || value === undefined)
+          return ROW_PLAIN('N/A', 'var(--text3)');
+
+        if (type === 'raw')
+          return ROW_PLAIN(typeof value === 'number' ? (value % 1 === 0 ? value : value.toFixed(1)) : value, 'var(--text2)');
+
+        if (type === 'pts20') {
           const color = value >= 20 ? 'var(--success)' : value >= 10 ? '#f39c12' : 'var(--danger)';
-          return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
-            <span style="font-size:.82em;font-weight:700;color:var(--text2);">${label}</span>
-            <span style="font-size:.95em;font-weight:700;color:${color};">${value % 1 === 0 ? value : value.toFixed(1)}</span>
-          </div>`;
+          return ROW_PLAIN(value % 1 === 0 ? value : value.toFixed(1), color);
         }
-        if (isSigned) {
-          // Signed −100% to +100% bar. Negative = hurting (red), positive = helping (green).
-          const isNeg = value < 0;
-          const barColor = isNeg ? 'var(--danger)' : value >= 66 ? 'var(--success)' : '#f39c12';
-          const barPct   = Math.min(Math.abs(value), 100);
-          const sign     = isNeg ? '' : '+';
-          return `<div style="padding:8px 0;border-bottom:1px solid var(--border);">
-            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;">
-              <span style="font-size:.82em;font-weight:700;color:var(--text2);">${label}</span>
-              <span style="font-size:.9em;font-weight:700;color:${barColor};">${sign}${value.toFixed(1)}%</span>
-            </div>
-            <div style="height:7px;background:var(--border);border-radius:8px;overflow:hidden;">
-              <div style="height:100%;width:${barPct}%;background:${barColor};border-radius:8px;"></div>
-            </div>
-          </div>`;
+
+        if (type === 'pts') {
+          // net-point value: green ≥ 8, yellow ≥ 2, red below
+          const color = value >= 8 ? 'var(--success)' : value >= 2 ? '#f39c12' : 'var(--danger)';
+          return ROW_PLAIN(value.toFixed(2) + ' pts', color);
         }
+
+        // type === 'pct' — percentage with bar
         const pct = Math.min(Math.max(value, 0), 100);
-        const barColor = pct >= 66 ? 'var(--success)' : pct >= 33 ? '#f39c12' : 'var(--danger)';
-        return `<div style="padding:8px 0;border-bottom:1px solid var(--border);">
-          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;">
-            <span style="font-size:.82em;font-weight:700;color:var(--text2);">${label}</span>
-            <span style="font-size:.9em;font-weight:700;color:${barColor};">${value.toFixed(1)}%</span>
-          </div>
-          <div style="height:7px;background:var(--border);border-radius:8px;overflow:hidden;">
-            <div style="height:100%;width:${pct}%;background:${barColor};border-radius:8px;"></div>
-          </div>
-        </div>`;
+        const color = pct >= 66 ? 'var(--success)' : pct >= 33 ? '#f39c12' : 'var(--danger)';
+        return ROW_BAR(value.toFixed(1) + '%', color, pct);
+      }
+
+      // Legacy wrapper kept so old call-sites still work
+      function playerMetricBar(value, label, isRatio, isZero, isSigned) {
+        if (value === null) return metricRow(null, label, 'raw');
+        if (isRatio)  return metricRow(value, label, 'pts20');
+        return metricRow(value, label, 'pct');
       }
 
       function rankBadge(i) {
@@ -1569,6 +1656,9 @@
       }
 
       const tHeardLabel = playerTHeard > 0 ? `${playerTHeard} Toss-Ups Heard` : 'No Toss-Ups-Heard Data';
+      const skillHeroColor = modalSkill === null ? 'var(--text3)' : modalSkill >= 120 ? 'var(--success)' : modalSkill >= 80 ? 'var(--primary)' : 'var(--danger)';
+      const skillHeroVal   = modalSkill !== null ? modalSkill.toFixed(1) : '⚠ Low data';
+      const skillAvgNote   = modalSkill !== null ? '<div style="font-size:.68em;color:var(--text3);">avg = 100</div>' : '';
 
       document.getElementById('pdModalTitle').textContent = playerName;
       document.getElementById('pdModalBody').innerHTML = `
@@ -1577,7 +1667,12 @@
             <div class="pd-hero-name">${playerName}</div>
             <div class="pd-hero-sub">${sessionLabel} &bull; ${total} Answers &bull; ${acc}% Accuracy &bull; ${ppa} Pts/Answer</div>
           </div>
-          <div class="pd-hero-pts">${player.points} Pts</div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+            <div class="pd-hero-pts">${player.points} Pts</div>
+            <div style="font-size:.75em;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;">Skill Score</div>
+            <div style="font-size:1.1em;font-weight:800;color:${skillHeroColor};">${skillHeroVal}</div>
+            ${skillAvgNote}
+          </div>
         </div>
         <div class="pd-section-title">Answer Breakdown</div>
         <div class="pd-stat-chips">
@@ -1589,39 +1684,14 @@
           <span class="pd-chip" style="background:rgba(102,126,234,.1);color:var(--primary);">${tHeardLabel}</span>
         </div>
         <div class="pd-section-title">Performance Metrics</div>
-        <div style="background:var(--sec-bg);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:var(--sp);">
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
-            <span style="font-size:.82em;font-weight:700;color:var(--text2);">Points</span>
-            <span style="font-size:1.1em;font-weight:700;color:var(--primary);">${player.points}</span>
-          </div>
-          ${playerMetricBar(fmtPts20(actualPts20), 'Actual Pts / 20 TU Heard', true, false, false)}
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
-            <span style="font-size:.82em;font-weight:700;color:var(--text2);">Potential Points</span>
-            <span style="font-size:.95em;font-weight:700;color:var(--text2);">${uPoints}</span>
-          </div>
-          ${playerMetricBar(fmtPts20(uRate), 'Pot. Pts / 20 TU Heard', true, false, false)}
-          ${actualizedPot !== null ? `
-          <div style="padding:8px 0;border-bottom:1px solid var(--border);">
-            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;">
-              <span style="font-size:.82em;font-weight:700;color:var(--text2);">Player Potential</span>
-              <span style="font-size:.9em;font-weight:700;color:${actualizedPot >= 60 ? 'var(--success)' : actualizedPot >= 30 ? '#f39c12' : 'var(--danger)'};">${actualizedPot.toFixed(1)}%</span>
-            </div>
-            <div style="height:7px;background:var(--border);border-radius:8px;overflow:hidden;">
-              <div style="height:100%;width:${actualizedPot.toFixed(1)}%;background:${actualizedPot >= 60 ? 'var(--success)' : actualizedPot >= 30 ? '#f39c12' : 'var(--danger)'};border-radius:8px;"></div>
-            </div>
-          </div>` : `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
-            <span style="font-size:.82em;font-weight:700;color:var(--text2);">Player Potential</span>
-            <span style="font-size:.85em;color:var(--text3);font-style:italic;">N/A</span>
-          </div>`}
-          ${playerMetricBar(confZeroModal ? null : confValueModal, 'Buzz Volume (buzz rate)', false, false, false)}
-          ${playerMetricBar(modalAccuracy, 'Accuracy (correct buzz %)', false, false, false)}
-          ${playerMetricBar(prValueModal, 'Confidence (powers / risky buzzes)', false, false, false)}
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
-            <span style="font-size:.82em;font-weight:700;color:var(--text2);">Skill Score <span style="font-weight:400;font-size:.9em;color:var(--text3);">(avg = 100)</span></span>
-            ${modalSkill !== null
-              ? `<span style="font-size:.95em;font-weight:700;color:${modalSkillColor};">${modalSkill.toFixed(1)}</span>`
-              : `<span style="font-size:.82em;color:#f39c12;font-weight:600;">⚠ Low data</span>`}
-          </div>
+        <div style="background:var(--sec-bg);border:1px solid var(--border);border-radius:10px;padding:6px 16px;margin-bottom:var(--sp);">
+          ${metricRow(player.points, 'Total Points', 'raw')}
+          ${actualPts20 !== null ? metricRow(fmtPts20(actualPts20), 'Actual Pts / 20 TU Heard', 'pts20') : ''}
+          ${uRate !== null ? metricRow(fmtPts20(uRate), 'Potential Pts / 20 TU Heard', 'pts20') : ''}
+          ${actualizedPot !== null ? metricRow(actualizedPot, 'Player Potential (actual / possible)', 'pct') : ''}
+          ${metricRow(modalAccuracy, 'Accuracy', 'pct')}
+          ${metricRow(!confZeroModal ? confValueModal : null, 'Buzz Volume (buzz rate)', 'pct')}
+          ${metricRow(prValueModal, 'Risk Payoff (net pts / risky buzz)', 'pts')}
         </div>
         <div class="pd-section-title">Category Rankings &mdash; All ${catArr.length} Categor${catArr.length !== 1 ? 'ies' : 'y'}</div>
         <div style="overflow-x:auto;border-radius:8px;border:1px solid var(--border);">
@@ -1808,6 +1878,8 @@
       const teamConf          = globalTHeard > 0 ? ((100 * totalBuzzes / globalTHeard)).toFixed(1) + '%' : '—';
       const teamPowerRate     = (totalPowers + totalNegs) > 0
         ? ((100 * totalPowers) / (totalPowers + totalNegs)).toFixed(1) + '%' : '—';
+      const teamConfNew       = (totalPowers + totalTossups) > 0
+        ? ((100 * totalPowers) / (totalPowers + totalTossups)).toFixed(1) + '%' : '—';
       const teamAccuracy      = (() => {
         const correct = totalPowers + totalTossups + totalBonuses;
         const denom   = correct + totalNegs + totalMisses;
@@ -1837,6 +1909,10 @@
         const tH = p.tHeard || 0;
         const buzzes = (p.powers||0) + (p.tossupsCorrect||0) + (p.negs||0);
         return tH > 0 ? buzzes / tH : null;
+      }, true);
+      const avgNetRiskHSE    = avgRate(p => {
+        const d = (p.powers||0) + (p.tossupsCorrect||0);
+        return d > 0 ? (100 * (p.powers||0)) / d : null;
       }, true);
       const avgActualizedPot = avgRate(p => {
         const pot = 30 * ((p.powers||0) + (p.tossupsCorrect||0));
@@ -1889,8 +1965,7 @@
           rows: [
             { label: 'Accuracy',               total: teamAccuracy,      avg: avgAccuracy,      totalColor: accColor(teamAccuracy),  avgColor: accColor(avgAccuracy)  },
             { label: 'Player Potential',   total: teamActualizedPot, avg: avgActualizedPot, totalColor: 'var(--primary)',        avgColor: 'var(--primary)'       },
-            { label: 'Buzz Volume (Buzz Rate)', total: teamConf,          avg: avgConf,          totalColor: 'var(--primary)',        avgColor: 'var(--primary)'       },
-            { label: 'Confidence',              total: teamPowerRate,     avg: avgPowerRate,     totalColor: 'var(--primary)',        avgColor: 'var(--primary)'       },
+            { label: 'Risk Payoff',             total: teamPowerRate,     avg: avgPowerRate,     totalColor: 'var(--primary)',        avgColor: 'var(--primary)'       },
             { label: 'Actual Pts / 20 TU',     total: teamActualPts20,   avg: avgActualPts20,   totalColor: 'var(--primary)', avgColor: 'var(--primary)' },
             { label: 'Pot. Pts / 20 TU',       total: teamPotPts20,      avg: avgPotPts20,      totalColor: 'var(--text2)',   avgColor: 'var(--text2)'  },
           ]
@@ -2043,9 +2118,11 @@
         // Accuracy: correct / all answers (misses count as wrong)
         const totalAnswered = p.powers + p.tossupsCorrect + p.negs + (p.misses || 0) + (p.bonusPoints / 10);
         const accuracy   = totalAnswered > 0 ? (100 * (p.powers + p.tossupsCorrect + (p.bonusPoints / 10))) / totalAnswered : 0;
-        // Confidence: P / (P + N) × 100 — of risky buzzes, how many were powers
+        // Risk Payoff: P / (P + N) × 100 — of risky buzzes, how many were powers
         const powerRate  = (p.powers + p.negs) > 0 ? (100 * p.powers) / (p.powers + p.negs) : null;
-        return { prodRate, confidence, accuracy, powerRate };
+        // Confidence: P / (P + T) × 100 — how often correct buzzes were before the power mark
+        const confNew    = (p.powers + p.tossupsCorrect) > 0 ? (100 * p.powers) / (p.powers + p.tossupsCorrect) : null;
+        return { prodRate, confidence, accuracy, powerRate, confNew };
       }
 
       // Skill score: normalized equal weighting across prodRate, powerRate, accuracy
@@ -2079,19 +2156,46 @@
         avgPowerRate /= qualifiedWithPR.length;
       }
 
-      // Build team averages panel
+      // Avg Actual Pts / 20 TU across qualified players
+      let avgActualRate = 0;
+      if (qualified.length > 0) {
+        qualified.forEach(p => { const tH = p.tHeard || 0; avgActualRate += tH > 0 ? (p.points / tH) * 20 : 0; });
+        avgActualRate /= qualified.length;
+      }
+
+      // Avg Confidence (early buzz rate: P / P+T) across players with at least one correct toss-up
+      const qualifiedWithConf = qualified.filter(p => (p.powers + p.tossupsCorrect) > 0);
+      let avgConfNew = null;
+      if (qualifiedWithConf.length > 0) {
+        avgConfNew = qualifiedWithConf.reduce((s, p) => s + (100 * p.powers) / (p.powers + p.tossupsCorrect), 0) / qualifiedWithConf.length;
+      }
+
+      // Avg Skill Score across qualified players who have a skill score
+      const qualifiedSkills = qualified.map(p => calcSkill(p)).filter(v => v !== null);
+      const avgSkillScore = qualifiedSkills.length > 0
+        ? qualifiedSkills.reduce((s, v) => s + v, 0) / qualifiedSkills.length
+        : null;
       const hasQualified = qualified.length > 0;
       const lowDataList  = [...lowData].filter(n => active.find(p => p.name === n));
+
+      // Pre-compute color strings to avoid nested backticks in template literals
+      const _avgSkillCol = avgSkillScore === null ? 'var(--text3)' : avgSkillScore >= 110 ? 'var(--success)' : 'var(--primary)';
+      const _avgSkillVal = avgSkillScore !== null ? avgSkillScore.toFixed(1) : '—';
+      const _avgPRCol    = avgPowerRate === null || !qualifiedWithPR.length ? 'var(--text3)' : avgPowerRate >= 8 ? 'var(--success)' : avgPowerRate >= 2 ? '#f39c12' : 'var(--danger)';
+      const _avgPRVal    = qualifiedWithPR.length > 0 ? avgPowerRate.toFixed(2)+' pts' : '—';
+      const _avgCNCol    = avgConfNew === null ? 'var(--text3)' : avgConfNew >= 60 ? 'var(--success)' : avgConfNew >= 30 ? '#f39c12' : 'var(--danger)';
+      const _avgCNVal    = avgConfNew !== null ? avgConfNew.toFixed(1)+'%' : '—';
+      const _avgAccCol   = avgAcc >= 80 ? 'var(--success)' : avgAcc >= 50 ? '#f39c12' : 'var(--danger)';
 
       // ── Skill Settings panel (collapsible) — threshold only ──
       const ssCollapsed = skillSettingsCollapsed;
       html += `<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:var(--sp);overflow:hidden;box-shadow:var(--shadow-xs);">
-        <div onclick="skillSettingsCollapsed=!skillSettingsCollapsed;renderAnalyticsPlayersUniversal();"
+        <div onclick="skillSettingsCollapsed=!skillSettingsCollapsed;localStorage.setItem('skillSettingsCollapsed',skillSettingsCollapsed);renderAnalyticsPlayersUniversal();"
           style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;user-select:none;transition:background .15s;"
           onmouseover="this.style.background='var(--hover)';" onmouseout="this.style.background='';">
           <div style="display:flex;align-items:center;gap:10px;">
             <span style="font-size:.85em;font-weight:700;color:var(--text);">⚙ Skill Score Settings</span>
-            ${ssCollapsed ? `<span style="font-size:.72em;color:var(--text3);">Threshold ≥${MIN_BUZZ} &nbsp;·&nbsp; Pot. Pts + Confidence + Accuracy</span>` : ''}
+            ${ssCollapsed ? `<span style="font-size:.72em;color:var(--text3);">Threshold ≥${MIN_BUZZ} &nbsp;·&nbsp; Pot. Pts + Risk Payoff + Accuracy</span>` : ''}
           </div>
           <span style="font-size:.75em;color:var(--text3);transition:transform .25s;display:inline-block;transform:${ssCollapsed?'':'rotate(180deg)'};">&#9660;</span>
         </div>
@@ -2117,13 +2221,12 @@
             </div>
           </div>
           <div style="background:var(--sec-bg);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:.8em;color:var(--text2);line-height:1.5;">
-            <strong style="color:var(--text);">Skill Score = normalized average of Pot. Pts/20TU + Confidence + Accuracy</strong><br>
-            Each metric is divided by the team average before summing, so all three contribute equally. An exactly-average player scores 100.
+            <strong style="color:var(--text);">Skill Score = relative rating anchored to team average (100)</strong><br>
+            Each metric is divided by the team average, so 100 = exactly average, 150 = 50% above average, 50 = half the team average. All three components contribute equally.
             <ul style="margin:6px 0 0 16px;padding:0;">
               <li><strong>Pot. Pts / 20 TU</strong> — bonus opportunity value per 20 TU heard <span style="color:var(--text3);">30×(P+T) / TU Heard × 20</span></li>
-              <li><strong>Confidence</strong> — of all risky buzzes (powers + negs), how many were powers <span style="color:var(--text3);">P/(P+N)×100</span></li>
+              <li><strong>Risk Payoff</strong> — net pts per risky buzz <span style="color:var(--text3);">(15P−5N)/(P+N)</span> where powers earn +15, negs cost −5</li>
               <li><strong>Accuracy</strong> — correct buzz rate <span style="color:var(--text3);">(P+T)/(P+T+N)×100</span></li>
-              <li><strong>Buzz Volume</strong> — total buzz rate, display only <span style="color:var(--text3);">100×(P+T+N)/TU Heard</span></li>
             </ul>
           </div>
         </div>`}
@@ -2131,7 +2234,7 @@
       if (lowDataList.length > 0) {
         const isCollapsed = lowDataPanelCollapsed;
         html += `<div style="background:var(--card);border:2px solid rgba(243,156,18,.4);border-radius:10px;margin-bottom:var(--sp);box-shadow:var(--shadow-sm);overflow:hidden;">
-          <div onclick="lowDataPanelCollapsed=!lowDataPanelCollapsed;renderAnalyticsPlayersUniversal();" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;user-select:none;">
+          <div onclick="lowDataPanelCollapsed=!lowDataPanelCollapsed;localStorage.setItem('lowDataPanelCollapsed',lowDataPanelCollapsed);renderAnalyticsPlayersUniversal();" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;user-select:none;">
             <span style="font-size:.9em;font-weight:700;color:#f39c12;">⚠ Low-Data Players (${lowDataList.length})</span>
             <div style="display:flex;align-items:center;gap:8px;">
               <div style="display:flex;gap:6px;" onclick="event.stopPropagation();">
@@ -2160,31 +2263,21 @@
         </div>`;
       }
 
+      const _teamAvgInner = !hasQualified
+        ? '<p style="color:var(--text2);font-size:.85em;font-style:italic;margin:0;">Not enough data yet — threshold: ≥' + MIN_BUZZ + ' buzz answers per player.</p>'
+        : '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;">'
+          + '<div style="background:var(--sec-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;text-align:center;"><div class="metric-lbl">Avg Actual Pts / 20 TU</div><div style="font-size:1.15em;font-weight:700;color:var(--primary);">' + avgActualRate.toFixed(1) + '</div></div>'
+          + '<div style="background:var(--sec-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;text-align:center;"><div class="metric-lbl">Avg Risk Payoff</div><div style="font-size:1.15em;font-weight:700;color:' + _avgPRCol + ';">' + _avgPRVal + '</div></div>'
+          + '<div style="background:var(--sec-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;text-align:center;"><div class="metric-lbl">Avg Accuracy</div><div style="font-size:1.15em;font-weight:700;color:' + _avgAccCol + ';">' + avgAcc.toFixed(1) + '%</div></div>'
+          + '</div>'
+          + '<div style="font-size:.7em;color:var(--text3);font-style:italic;">Skill Score is relative — 100 = exactly team average. A player at 150 is 50% above average across Actual Pts/20TU, Risk Payoff, and Accuracy.</div>';
+
       html += `<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 18px;margin-bottom:var(--sp);box-shadow:var(--shadow-xs);">
         <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px;">
           <span style="font-size:.9em;font-weight:700;color:var(--text);">Team Averages</span>
           <span style="font-size:.72em;color:var(--text3);">${qualified.length} of ${active.length} Players Qualify</span>
         </div>
-        ${!hasQualified ? `<p style="color:var(--text2);font-size:.85em;font-style:italic;margin:0;">Not enough data yet — threshold: ≥${MIN_BUZZ} buzz answers per player.</p>` : `
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px;">
-          <div style="background:var(--sec-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;text-align:center;">
-            <div class="metric-lbl">Avg Pot. Pts / 20 TU</div>
-            <div style="font-size:1.15em;font-weight:700;color:var(--primary);">${avgProd.toFixed(1)}</div>
-          </div>
-          <div style="background:var(--sec-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;text-align:center;">
-            <div class="metric-lbl">Avg Buzz Volume</div>
-            <div style="font-size:1.15em;font-weight:700;color:var(--primary);">${avgConf.toFixed(1)}%</div>
-          </div>
-          <div style="background:var(--sec-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;text-align:center;">
-            <div class="metric-lbl">Avg Confidence</div>
-            <div style="font-size:1.15em;font-weight:700;color:${avgPowerRate >= 75 ? 'var(--success)' : avgPowerRate >= 50 ? '#f39c12' : 'var(--danger)'};">${qualifiedWithPR.length > 0 ? avgPowerRate.toFixed(1)+'%' : '—'}</div>
-          </div>
-          <div style="background:var(--sec-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;text-align:center;">
-            <div class="metric-lbl">Avg Accuracy</div>
-            <div style="font-size:1.15em;font-weight:700;color:${avgAcc >= 80 ? 'var(--success)' : avgAcc >= 50 ? '#f39c12' : 'var(--danger)'};">${avgAcc.toFixed(1)}%</div>
-          </div>
-        </div>
-        <div style="font-size:.7em;color:var(--text3);font-style:italic;">Skill Score anchored at 100 = exactly team average. Each of the three metrics is normalized by the team average before summing, so all three contribute equally.</div>`}
+        ${_teamAvgInner}
       </div>`;
 
       // ── Sort controls ──
@@ -2193,14 +2286,13 @@
         { key: 'skill',      label: 'Skill' },
         { key: 'prodRate',   label: 'Pot. Pts / 20 TU' },
         { key: 'actualRate', label: 'Actual Pts / 20 TU' },
-        { key: 'powerRate',  label: 'Confidence' },
-        { key: 'confidence', label: 'Buzz Volume' },
+        { key: 'powerRate',  label: 'Risk Payoff' },
         { key: 'accuracy',   label: 'Accuracy' },
         { key: 'powers',     label: 'Powers' },
         { key: 'negs',       label: 'Negs' },
         { key: 'alpha',      label: 'A–Z' },
       ];
-      if (['buzzVol','aggression','precision'].includes(playerSortKey)) playerSortKey = 'points';
+      if (['buzzVol','aggression','precision','netRisk'].includes(playerSortKey)) playerSortKey = 'points';
       html += `<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border);">
         <span style="font-size:.75em;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;flex-shrink:0;margin-right:2px;">Sort</span>
         ${sortOptions.map(o => `<button class="sort-pill${playerSortKey===o.key?' active':''}" onclick="playerSortKey='${o.key}';renderAnalyticsPlayersUniversal();">${o.label}</button>`).join('')}
@@ -2215,17 +2307,17 @@
         const actualRate = tH > 0 ? (p.points / tH) * 20 : 0;
         const confidence = tH > 0 ? (100 * totalBuzzes) / tH : 0;
         const powerRate  = (p.powers + p.negs) > 0 ? (100 * p.powers) / (p.powers + p.negs) : 0;
+        const confNew    = (p.powers + p.tossupsCorrect) > 0 ? (100 * p.powers) / (p.powers + p.tossupsCorrect) : 0;
         const _totalAnswered = p.powers + p.tossupsCorrect + p.negs + (p.misses||0) + (p.bonusPoints/10);
         const accuracy   = _totalAnswered > 0 ? (100 * (p.powers + p.tossupsCorrect + (p.bonusPoints/10))) / _totalAnswered : 0;
         const skill = calcSkill(p) ?? -Infinity;
-        return { ...p, _prodRate: prodRate, _actualRate: actualRate, _confidence: confidence, _powerRate: powerRate, _accuracy: accuracy, _skill: skill };
+        return { ...p, _prodRate: prodRate, _actualRate: actualRate, _powerRate: powerRate, _confNew: confNew, _accuracy: accuracy, _skill: skill };
       }).sort((a, b) => {
         switch (playerSortKey) {
           case 'skill':      return b._skill      - a._skill;
           case 'prodRate':   return b._prodRate   - a._prodRate;
           case 'actualRate': return b._actualRate - a._actualRate;
           case 'powerRate':  return b._powerRate  - a._powerRate;
-          case 'confidence': return b._confidence - a._confidence;
           case 'accuracy':   return b._accuracy   - a._accuracy;
           case 'powers':     return b.powers      - a.powers;
           case 'negs':       return a.negs        - b.negs;
@@ -2247,7 +2339,6 @@
             : playerSortKey === 'prodRate'   ? prev._prodRate   === p._prodRate
             : playerSortKey === 'actualRate' ? prev._actualRate === p._actualRate
             : playerSortKey === 'powerRate'  ? prev._powerRate  === p._powerRate
-            : playerSortKey === 'confidence' ? prev._confidence === p._confidence
             : playerSortKey === 'accuracy'   ? prev._accuracy   === p._accuracy
             : playerSortKey === 'powers'     ? prev.powers      === p.powers
             : playerSortKey === 'negs'       ? prev.negs        === p.negs
@@ -2271,10 +2362,11 @@
         // Buzz Volume: total buzz rate
         const confRaw   = tH > 0 ? (100 * totalBuzzes) / tH : 0;
         const confZero  = tH === 0 && totalBuzzes === 0;
-        // Confidence: P / (P + N) × 100
+        // Risk Payoff: P / (P + N) × 100
         const prDenom   = p.powers + p.negs;
-        const prRaw     = prDenom > 0 ? (100 * p.powers) / prDenom : null;
-        const prColor   = prRaw === null ? 'var(--text3)' : prRaw >= 75 ? 'var(--success)' : prRaw >= 50 ? '#f39c12' : 'var(--danger)';
+        const prRaw     = prDenom > 0 ? (15 * p.powers - 5 * p.negs) / prDenom : null;
+        const prColor   = prRaw === null ? 'var(--text3)' : prRaw >= 8 ? 'var(--success)' : prRaw >= 2 ? '#f39c12' : 'var(--danger)';
+        // Confidence: net points per risky buzz = (15P − 5N) / (P + N)
         // Accuracy: correct / all answers (misses count as wrong)
         const totalAnswered = p.powers + p.tossupsCorrect + p.negs + (p.misses||0) + bonuses;
         const accPct  = totalAnswered > 0 ? (100 * (p.powers + p.tossupsCorrect + bonuses)) / totalAnswered : 0;
@@ -2342,21 +2434,18 @@
                   ${actualizedPot !== null ? `<div style="height:4px;background:var(--border);border-radius:4px;overflow:hidden;margin-top:5px;"><div style="height:100%;width:${actualizedPot.toFixed(1)}%;background:${actualizedPot >= 60 ? 'var(--success)' : actualizedPot >= 30 ? '#f39c12' : 'var(--danger)'};border-radius:4px;"></div></div>` : ''}
                 </div>
                 <div class="metric-tile">
-                  <div class="metric-lbl">Buzz Volume</div>
-                  <div class="metric-val" style="color:${confZero ? 'var(--text3)' : 'var(--primary)'};">${confZero ? '—' : confRaw.toFixed(1)+'%'}</div>
-                </div>
-                <div class="metric-tile">
                   <div class="metric-lbl">Accuracy</div>
                   <div class="metric-val" style="color:${accColor};margin-bottom:5px;">${totalBuzzes > 0 ? accPct.toFixed(1)+'%' : '—'}</div>
                   ${totalBuzzes > 0 ? `<div style="height:4px;background:var(--border);border-radius:4px;overflow:hidden;"><div style="height:100%;width:${accPct.toFixed(1)}%;background:${accColor};border-radius:4px;"></div></div>` : ''}
                 </div>
-                <div class="metric-tile span2">
+                <div class="metric-tile">
                   <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <div class="metric-lbl">Confidence</div>
-                    <div class="metric-val" style="color:${prColor};margin-bottom:${prRaw!==null?'5px':'0'};">${prRaw !== null ? prRaw.toFixed(1)+'%' : '—'}</div>
+                    <div class="metric-lbl">Risk Payoff</div>
+                    <div class="metric-val" style="color:${prColor};margin-bottom:${prRaw!==null?'5px':'0'};">${prRaw !== null ? prRaw.toFixed(2)+' pts' : '—'}</div>
                   </div>
                   ${prRaw !== null ? `<div style="height:4px;background:var(--border);border-radius:4px;overflow:hidden;"><div style="height:100%;width:${prRaw.toFixed(1)}%;background:${prColor};border-radius:4px;"></div></div>` : ''}
                 </div>
+
                 <div class="metric-tile span2" style="border-color:${skillVal!==null?skillColor:'var(--border)'};">
                   <div style="display:flex;justify-content:space-between;align-items:center;">
                     <div class="metric-lbl">Skill Score <span style="font-weight:400;font-size:.85em;color:var(--text3);">(avg = 100)</span></div>
@@ -2375,8 +2464,36 @@
         </div>`;
       }).join('');
 
+      // ── Formulas Reference Panel ──
+      html += `<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;margin-top:var(--sp);overflow:hidden;box-shadow:var(--shadow-xs);">
+        <div onclick="formulasPanelCollapsed=!formulasPanelCollapsed;localStorage.setItem('formulasPanelCollapsed',formulasPanelCollapsed);renderAnalyticsPlayersUniversal();"
+          style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;user-select:none;"
+          onmouseover="this.style.background='var(--hover)';" onmouseout="this.style.background='';">
+          <span style="font-size:.85em;font-weight:700;color:var(--text);">📐 Metric Formulas</span>
+          <span style="font-size:.75em;color:var(--text3);transition:transform .25s;display:inline-block;transform:${formulasPanelCollapsed?'':'rotate(180deg)'};">&#9660;</span>
+        </div>
+        ${formulasPanelCollapsed ? '' : `
+        <div style="border-top:1px solid var(--border);padding:16px;display:grid;gap:10px;">
+          ${[
+            ['Actual Pts / 20 TU', '(Total Points ÷ TU Heard) × 20', 'How many points a player scores per 20 toss-ups heard. Primary output metric.'],
+            ['Potential Pts / 20 TU', '(30 × (Powers + Toss-ups)) ÷ TU Heard × 20', 'Maximum possible pts if every buzz-in converted, assuming 30 pts per correct TU (10 TU + 20 bonus). Shows ceiling.'],
+            ['Player Potential', '(Actual Pts/20TU ÷ Pot. Pts/20TU) × 100', 'What % of the player\'s ceiling they\'re actualizing. Low = leaving pts on the table.'],
+            ['Accuracy', '(Powers + Toss-ups + Bonuses) ÷ Total Answers × 100', 'Correct answer rate across all answer types including bonuses.'],
+            ['Buzz Volume', '(Powers + Toss-ups + Negs) ÷ TU Heard × 100', 'How often the player buzzes in per TU heard. High = aggressive, low = selective.'],
+            ['Risk Payoff', '(15 × Powers − 5 × Negs) ÷ (Powers + Negs)', 'Net point value per risky buzz. Range −5 (all negs) to +15 (all powers). Break-even ≈ 5.'],
+            ['Skill Score', 'Average of (Pot. Pts/20TU ÷ team avg) + (Risk Payoff ÷ team avg) + (Accuracy ÷ team avg), × 100', 'Composite relative rating. 100 = exactly team average. Each component weighted equally.'],
+          ].map(([name, formula, desc]) => `
+            <div style="background:var(--sec-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;">
+              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
+                <span style="font-size:.82em;font-weight:800;color:var(--primary);">${name}</span>
+                <code style="font-size:.72em;color:var(--text2);background:var(--hover);border-radius:4px;padding:2px 6px;white-space:nowrap;">${formula}</code>
+              </div>
+              <div style="font-size:.76em;color:var(--text3);line-height:1.45;">${desc}</div>
+            </div>`).join('')}
+        </div>`}
+      </div>`;
+
       el.innerHTML = html;
-      // Restore any previously expanded cards
       expandedPlayerCards.forEach(id => {
         const panel = document.getElementById(id);
         const arrow = document.getElementById(id + '_arrow');
@@ -2765,6 +2882,17 @@
         html += chartCard('chart-cat-breakdown', 'Category Answer Breakdown by Type', catBarH_actual, barMinW(CAT_COUNT));
       }
 
+      // ── Subcategory breakdown pies (one per parent with data) ──
+      const parentsWithSubData = Object.entries(CATEGORY_TREE).filter(([parent, subs]) => {
+        return subs.some(sub => allAnswers.some(a => a.category === sub));
+      });
+      if (parentsWithSubData.length) {
+        html += `<div class="ch-section">Subcategory Breakdown</div>`;
+        parentsWithSubData.forEach(([parent]) => {
+          html += chartCard('chart-subcat-' + parent.replace(/\s+/g,'_'), parent, PIE_H, '240px');
+        });
+      }
+
       // ── Player charts ──
       if (activePlayers.length >= 1) {
         html += `<div class="ch-section">Players</div>`;
@@ -2871,6 +2999,27 @@
           options: { ...barOpts, plugins: { ...barOpts.plugins, legend: { display: false } } }
         });
       }
+
+      // ── Draw: Subcategory breakdown doughnuts ──
+      Object.entries(CATEGORY_TREE).forEach(([parent, subs]) => {
+        const subCounts = {};
+        let hasData = false;
+        subs.forEach(sub => {
+          const cnt = allAnswers.filter(a => a.category === sub).length;
+          if (cnt > 0) { subCounts[sub] = cnt; hasData = true; }
+        });
+        const generalCnt = allAnswers.filter(a => a.category === parent).length;
+        if (generalCnt > 0) { subCounts['General'] = generalCnt; hasData = true; }
+        if (!hasData) return;
+        const labels = Object.keys(subCounts);
+        const data   = Object.values(subCounts);
+        const colors = labels.map((_, i) => PALETTE[i % PALETTE.length] + 'dd');
+        makeChart('chart-subcat-' + parent.replace(/\s+/g,'_'), {
+          type: 'doughnut',
+          data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 2, borderColor: isDark ? '#1c2128' : '#fff' }] },
+          options: { ...pieOpts, plugins: { ...pieOpts.plugins, legend: { ...pieOpts.plugins.legend, position: labels.length > 5 ? 'bottom' : 'right' } } }
+        });
+      });
     }
 
     function renderAnalyticsLeaderboard(globalPs, sessionCount) {
@@ -3072,16 +3221,162 @@
     }
 
     function renderPlayerButtons() {
-      const s=getCurrentSession(); const el=document.getElementById('playerButtonsContainer');
-      if(!el||!s) return;
-      const players=[...new Set((s.teams||[]).flatMap(t=>t.playerMembers||[]))];
-      if (!players.length) { el.innerHTML='<p style="color:var(--text2)">No players in any team yet.</p>'; return; }
-      el.innerHTML = players.map(p=>`
-        <button class="button-player ${state.selectedPlayer===p?'selected':''}" onclick="selectPlayer('${p.replace(/'/g,"\\'")}');" title="${p}">${getDisplayName(p,players)}</button>`).join('');
+      const s = getCurrentSession();
+      const el = document.getElementById('playerButtonsContainer');
+      if (!el || !s) return;
+      const teams = (s.teams || []).filter(t => (t.playerMembers||[]).length > 0);
+      if (!teams.length) { el.innerHTML = '<p style="color:var(--text2)">No players in any team yet.</p>'; return; }
+      const allPlayers = Object.keys(s.players || {});
+      const isBonus = state.selectedPointType === 'Bonus';
+
+      let html = '';
+      teams.forEach(team => {
+        const teamSentinel = '__team__' + team.id;
+        const teamSel = state.selectedPlayer === teamSentinel;
+        // Team name — always shown, clickable only when Bonus selected
+        if (isBonus) {
+          html += `<button class="button-player${teamSel ? ' selected' : ''}" onclick="selectPlayer('${teamSentinel.replace(/'/g,"\\'")}');" style="font-weight:800;width:100%;text-align:left;opacity:1;border-style:dashed;" title="Bonus for ${team.name}">${team.name}</button>`;
+        } else {
+          html += `<div style="font-size:.7em;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin:8px 0 4px;width:100%;">${team.name}</div>`;
+        }
+        // Player buttons
+        (team.playerMembers || []).forEach(p => {
+          const disp = getDisplayName(p, allPlayers);
+          const sel  = state.selectedPlayer === p ? ' selected' : '';
+          html += `<button class="button-player${sel}" onclick="selectPlayer('${p.replace(/'/g,"\\'")}');" title="${p}">${disp}</button>`;
+        });
+      });
+      el.innerHTML = html;
     }
 
     // Sub panel selection state — lives outside render so re-renders can't reset it
     let _subOut = null, _subIn = null;
+
+    // ── Quick-Log state ──
+    let _qlPending = null; // { player, type, cat } waiting for optional category
+
+    function renderQuickLog() {
+      const el = document.getElementById('quickLogContainer');
+      const s  = getCurrentSession();
+      if (!el || !s) return;
+      const players = [...new Set((s.teams||[]).flatMap(t=>t.playerMembers||[]))];
+      if (!players.length) {
+        el.innerHTML = '<p style="color:var(--text2);font-size:.85em;margin-bottom:10px;">Add players to a team to use quick-log.</p>';
+        return;
+      }
+      const allPlayers = Object.keys(s.players||{});
+      const cats = (s.categories||[]);
+      const hasCats = cats.length > 0;
+
+      el.innerHTML = players.map(p => {
+        const disp = getDisplayName(p, allPlayers);
+        const safe = p.replace(/'/g,"\\'");
+        const pid  = 'ql_' + p.replace(/[^a-zA-Z0-9]/g,'_');
+        const pending = _qlPending && _qlPending.player === p;
+        const catRowOpen = pending && hasCats ? 'open' : '';
+
+        const catChips = hasCats
+          ? cats.slice(0,16).map(c => {
+              const cSafe = c.replace(/'/g,"\\'");
+              const sel = pending && _qlPending.cat === c ? 'selected' : '';
+              return `<span class="ql-cat-chip ${sel}" onclick="qlSelectCat('${safe}','${cSafe}')">${c}</span>`;
+            }).join('')
+            + `<button class="ql-confirm-btn" onclick="qlConfirm('${safe}')">✓ Log</button>`
+            + `<button class="ql-cancel-btn" onclick="qlCancel()">✕</button>`
+          : '';
+
+        const pendingTag = pending
+          ? `<span style="font-size:.68em;font-weight:700;color:var(--primary);margin-left:3px;white-space:nowrap;">${_qlPending.type}</span>`
+          : '';
+
+        return `<div class="ql-row" id="${pid}_row">
+          <div class="ql-name" title="${p}">${disp}${pendingTag}</div>
+          <div class="ql-btns">
+            <button class="ql-btn ql-power"  onclick="qlTap('${safe}','Power')"   title="Power (+15)">⚡<br>+15</button>
+            <button class="ql-btn ql-tu"     onclick="qlTap('${safe}','Toss-up')" title="Toss-up (+10)">✓<br>+10</button>
+            <button class="ql-btn ql-bonus"  onclick="qlTap('${safe}','Bonus')"   title="Bonus (+10)">★<br>+10</button>
+            <button class="ql-btn ql-miss"   onclick="qlTap('${safe}','Miss')"    title="Miss (0)">○<br>0</button>
+            <button class="ql-btn ql-neg"    onclick="qlTap('${safe}','Neg')"     title="Neg (−5)">✗<br>−5</button>
+          </div>
+        </div>
+        <div class="ql-cat-row ${catRowOpen}" id="${pid}_cats">${catChips}</div>`;
+      }).join('');
+    }
+
+    function qlTap(player, type) {
+      const s = getCurrentSession();
+      const hasCats = s && (s.categories||[]).length > 0;
+      if (hasCats) {
+        _qlPending = { player, type, cat: null };
+        renderQuickLog();
+      } else {
+        qlQuickRecord(player, type, null);
+      }
+    }
+
+    function qlSelectCat(player, cat) {
+      if (_qlPending && _qlPending.player === player) {
+        _qlPending.cat = (_qlPending.cat === cat) ? null : cat;
+        renderQuickLog();
+      }
+    }
+
+    function qlConfirm(player) {
+      if (!_qlPending || _qlPending.player !== player) return;
+      qlQuickRecord(_qlPending.player, _qlPending.type, _qlPending.cat);
+    }
+
+    function qlCancel() { _qlPending = null; renderQuickLog(); }
+
+    function qlQuickRecord(player, type, cat) {
+      _qlPending = null;
+      const id = state.currentSessionId; if (!id) return;
+      const pointMap = {'Toss-up':10,'Bonus':10,'Neg':-5,'Power':15,'Miss':0,'Dead':0};
+      const points   = pointMap[type];
+      const isBuzzIn = ['Toss-up','Power','Neg','Miss','Dead'].includes(type);
+      const recordedPlayer = player || '— Team Bonus —';
+      const effectiveCategory = cat || '—';
+      const answer = {id:Date.now().toString(),player:recordedPlayer,pointType:type,category:effectiveCategory,points,timestamp:new Date().toISOString()};
+
+      const applyAnswer = s => {
+        s.answerLog = toArray(s.answerLog);
+        if (isBuzzIn) {
+          const prev = s.answerLog.length > 0 ? s.answerLog[s.answerLog.length-1] : null;
+          const prevWasWrong = prev && (prev.pointType === 'Neg' || prev.pointType === 'Miss');
+          const thisIsFollowup = prevWasWrong && (type === 'Toss-up' || type === 'Power');
+          if (!thisIsFollowup) s.tHeard = (s.tHeard||0) + 1;
+        }
+        s.answerLog.push(answer);
+        if (!s.players) s.players = {};
+        if (player) {
+          const pl = s.players[player]||(s.players[player]={name:player,points:0,answers:[]});
+          pl.answers = toArray(pl.answers); pl.answers.push(answer); pl.points = (pl.points||0)+points;
+        }
+        if (type === 'Bonus' && !player) s.teamBonusPoints = (s.teamBonusPoints||0)+points;
+      };
+      updateSessionAtomic(id, applyAnswer);
+      withWriteLock(id, ()=>{ const s=getCurrentSession(); if(s) applyAnswer(s); });
+
+      // Toast notification
+      const s2 = getCurrentSession();
+      const allP = s2 ? Object.keys(s2.players||{}) : [];
+      const dispName = player ? getDisplayName(player, allP) : 'Team';
+      const ptSign   = points > 0 ? '+'+points : (points < 0 ? ''+points : '0');
+      const toastCls = type === 'Neg' ? 'neg' : (type === 'Miss' || type === 'Dead' ? 'miss' : (points >= 15 ? 'pts' : ''));
+      showRecordToast(dispName + ' — ' + type + ' (' + ptSign + ' pts)', toastCls);
+
+      renderAll();
+    }
+
+    function showRecordToast(msg, cls) {
+      const t = document.getElementById('recordToast');
+      if (!t) return;
+      t.textContent = msg;
+      t.className = 'show' + (cls ? ' '+cls : '');
+      clearTimeout(t._timer);
+      t._timer = setTimeout(() => { t.className = ''; }, 1700);
+    }
+
 
     function renderSubPanel() {
       const s = getCurrentSession();
@@ -3233,58 +3528,66 @@
       ).join('');
     }
 
+    // _selectedParentCat kept for effectiveCategory fallback compatibility
     var _selectedParentCat = null;
 
     function renderCategories() {
-      const el = document.getElementById('categoryButtonsContainer'); if (!el) return;
-      // Parent buttons
-      const parents = Object.keys(CATEGORY_TREE);
-      let html = '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px;">';
-      parents.forEach(p => {
-        const active = _selectedParentCat === p;
-        html += `<button class="button-category${active?' selected':''}" data-parent="${p}" onclick="selectParentCat('${p.replace(/'/g,"\\'")}');">${p}</button>`;
+      const el = document.getElementById('categoryButtonsContainer');
+      const group = document.getElementById('categoryInputGroup');
+      if (!el) return;
+      const noCategory = state.selectedPointType === 'Neg' || state.selectedPointType === 'Dead';
+      if (group) group.style.display = noCategory ? 'none' : '';
+      if (noCategory) { el.innerHTML = ''; return; }
+
+      // Uniform grid: all buttons same size, grouped by parent with a tappable divider
+      // Grid uses fixed column width so positions stay consistent regardless of label length
+      let html = '<div style="display:flex;flex-direction:column;gap:8px;">';
+      Object.entries(CATEGORY_TREE).forEach(([parent, subs]) => {
+        const parentSel = state.selectedCategory === parent;
+        // One row per parent: [PARENT DIVIDER] [sub] [sub] [sub] ...
+        // Using CSS grid with fixed min column size so all chips are equal-width
+        html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:5px;">`;
+        // Parent chip — dashed border, acts as "General <Parent>"
+        html += `<button class="button-category cat-parent-btn${parentSel ? ' selected' : ''}" `
+              + `onclick="selectCategory('${parent.replace(/'/g,"\\'")}');" `
+              + `title="General ${parent}" `
+              + `style="font-weight:800;font-size:.7em;text-transform:uppercase;letter-spacing:.04em;`
+              + `border-style:dashed;box-sizing:border-box;text-align:center;">`
+              + `${parent}</button>`;
+        subs.forEach(sub => {
+          const sel = state.selectedCategory === sub;
+          html += `<button class="button-category${sel ? ' selected' : ''}" `
+                + `onclick="selectCategory('${sub.replace(/'/g,"\\'")}');" `
+                + `style="box-sizing:border-box;text-align:center;font-size:.78em;">`
+                + `${sub}</button>`;
+        });
+        html += `</div>`;
       });
       html += '</div>';
-      // Subcategory row
-      if (_selectedParentCat && CATEGORY_TREE[_selectedParentCat]) {
-        html += '<div style="display:flex;flex-wrap:wrap;gap:6px;padding:8px 10px;background:var(--sec-bg);border-radius:8px;border:1px solid var(--border);">';
-        CATEGORY_TREE[_selectedParentCat].forEach(sub => {
-          const sel = state.selectedCategory === sub;
-          html += `<button class="button-category${sel?' selected':''}" data-category="${sub}" onclick="selectCategory('${sub.replace(/'/g,"\\'")}');">${sub}</button>`;
-        });
-        html += '</div>';
-      }
       el.innerHTML = html;
     }
 
-    function selectParentCat(p) {
-      if (_selectedParentCat === p) {
-        _selectedParentCat = null;
-        // only clear sub if it belonged to this parent
-        if (state.selectedCategory && CATEGORY_TREE[p]?.includes(state.selectedCategory)) {
-          state.selectedCategory = null;
-        }
-      } else {
-        _selectedParentCat = p;
-        // clear sub selection if it doesn't belong to new parent
-        if (state.selectedCategory && !CATEGORY_TREE[p]?.includes(state.selectedCategory)) {
-          state.selectedCategory = null;
-        }
-      }
-      renderCategories();
-    }
-
     function selectCategory(c) {
+      // c might be a parent (general) or a subcategory
       state.selectedCategory = state.selectedCategory === c ? null : c;
+      // Keep _selectedParentCat in sync for effectiveCategory fallback
+      _selectedParentCat = state.selectedCategory ? (CAT_PARENT[state.selectedCategory] || state.selectedCategory) : null;
       renderCategories();
     }
 
     // ── Answers ──
     function selectPointType(type) {
-      state.selectedPointType=state.selectedPointType===type?null:type;
+      state.selectedPointType = state.selectedPointType === type ? null : type;
+      // Clear category if switching to Neg or Dead
+      if (state.selectedPointType === 'Neg' || state.selectedPointType === 'Dead') {
+        state.selectedCategory = null; _selectedParentCat = null;
+      }
       renderPointTypeButtons();
-      const playerHint=document.getElementById('playerOptionalHint');
-      if(playerHint) playerHint.style.display=(state.selectedPointType==='Bonus'||state.selectedPointType==='Dead')?'inline':'none';
+      renderPlayerButtons();
+      renderCategories();
+      const playerHint = document.getElementById('playerOptionalHint');
+      if (playerHint) playerHint.style.display =
+        (state.selectedPointType === 'Bonus' || state.selectedPointType === 'Dead' || state.selectedPointType === 'Miss') ? 'inline' : 'none';
     }
 
     function renderPointTypeButtons() {
@@ -3310,47 +3613,124 @@
     }
 
     function recordAnswer() {
-      const id=state.currentSessionId; if(!id) return;
+      const id = state.currentSessionId; if (!id) return;
       const isBonus = state.selectedPointType === 'Bonus';
       const isDead  = state.selectedPointType === 'Dead';
-      if(!state.selectedPlayer && !isBonus && !isDead) {alert('Please select a player.');return;}
-      if(!state.selectedPointType) {alert('Please select a point type.');return;}
-      const pointMap={'Toss-up':10,'Bonus':10,'Neg':-5,'Power':15,'Miss':0,'Dead':0};
-      const points=pointMap[state.selectedPointType];
-      const isBuzzIn = ['Toss-up','Power','Neg','Miss','Dead'].includes(state.selectedPointType);
-      // For team bonuses / dead toss-ups (no player selected), use sentinel value '— Team Bonus —'
-      const recordedPlayer = state.selectedPlayer || '— Team Bonus —';
-      const effectiveCategory = state.selectedCategory || _selectedParentCat || '—';
-      const answer={id:Date.now().toString(),player:recordedPlayer,pointType:state.selectedPointType,category:effectiveCategory,points,timestamp:new Date().toISOString()};
+      const isMiss = state.selectedPointType === 'Miss';
+      if (!state.selectedPlayer && !isBonus && !isDead && !isMiss) { alert('Please select a player.'); return; }
+      if (!state.selectedPointType) { alert('Please select a point type.'); return; }
 
-      const applyAnswer=s=>{
-        s.answerLog=toArray(s.answerLog);
+      // Resolve team bonus: __team__<id> sentinel → look up team name
+      const isTeamBonus = isBonus && state.selectedPlayer && state.selectedPlayer.startsWith('__team__');
+      const teamBonusId = isTeamBonus ? state.selectedPlayer.replace('__team__','') : null;
+      const s0 = getCurrentSession();
+      const bonusTeam = teamBonusId ? (s0.teams||[]).find(t => t.id === teamBonusId) : null;
+      const recordedPlayer = isTeamBonus
+        ? ('— ' + (bonusTeam ? bonusTeam.name : 'Team') + ' Bonus —')
+        : (state.selectedPlayer || (isMiss ? '— Miss —' : '— Team Bonus —'));
+
+      const pointMap = {'Toss-up':10,'Bonus':10,'Neg':-5,'Power':15,'Miss':0,'Dead':0};
+      const points   = pointMap[state.selectedPointType];
+      const isBuzzIn = ['Toss-up','Power','Neg','Miss','Dead'].includes(state.selectedPointType);
+      const effectiveCategory = state.selectedCategory || _selectedParentCat || '—';
+      const answer = {id:Date.now().toString(),player:recordedPlayer,pointType:state.selectedPointType,category:effectiveCategory,points,timestamp:new Date().toISOString()};
+
+      const applyAnswer = s => {
+        s.answerLog = toArray(s.answerLog);
         if (isBuzzIn) {
           const prev = s.answerLog.length > 0 ? s.answerLog[s.answerLog.length - 1] : null;
           const prevWasWrong = prev && (prev.pointType === 'Neg' || prev.pointType === 'Miss');
           const thisIsFollowup = prevWasWrong && (state.selectedPointType === 'Toss-up' || state.selectedPointType === 'Power');
-          if (!thisIsFollowup) {
-            s.tHeard = (s.tHeard || 0) + 1;
-          }
+          if (!thisIsFollowup) s.tHeard = (s.tHeard || 0) + 1;
         }
         s.answerLog.push(answer);
-        if(!s.players) s.players={};
-        // Only credit player if a real player was selected (not a team bonus)
-        if (state.selectedPlayer) {
-          const p=s.players[answer.player]||(s.players[answer.player]={name:answer.player,points:0,answers:[]});
-          p.answers=toArray(p.answers); p.answers.push(answer); p.points=(p.points||0)+points;
+        if (!s.players) s.players = {};
+      const realPlayer = !isTeamBonus && state.selectedPlayer && !state.selectedPlayer.startsWith('— ');
+        if (realPlayer) {
+          const p = s.players[answer.player] || (s.players[answer.player] = {name:answer.player,points:0,answers:[]});
+          p.answers = toArray(p.answers); p.answers.push(answer); p.points = (p.points||0) + points;
         }
-        // Track team bonus points at session level
-        if (isBonus && !state.selectedPlayer) {
+        if (isBonus && !realPlayer) {
           s.teamBonusPoints = (s.teamBonusPoints || 0) + points;
         }
       };
-      updateSessionAtomic(id,applyAnswer);
-      withWriteLock(id,()=>{const s=getCurrentSession();if(s) applyAnswer(s);});
-      state.selectedPlayer=null; state.selectedPointType=null; state.selectedCategory=null; _selectedParentCat=null;
-      // Hide hints again
-      const playerHint=document.getElementById('playerOptionalHint');
-      if(playerHint) playerHint.style.display='none';
+      updateSessionAtomic(id, applyAnswer);
+      withWriteLock(id, () => { const s = getCurrentSession(); if (s) applyAnswer(s); });
+
+      // Toast
+      const allP = Object.keys((s0||{}).players || {});
+      const dispName = isTeamBonus
+        ? (bonusTeam ? bonusTeam.name + ' Bonus' : 'Team Bonus')
+        : (state.selectedPlayer ? getDisplayName(state.selectedPlayer, allP) : 'Team');
+      const ptSign   = points > 0 ? '+'+points : (points < 0 ? ''+points : '0');
+      const toastCls = state.selectedPointType === 'Neg' ? 'neg'
+                     : (state.selectedPointType === 'Miss' || state.selectedPointType === 'Dead') ? 'miss'
+                     : points >= 15 ? 'pts' : '';
+      showRecordToast(dispName + ' — ' + state.selectedPointType + ' (' + ptSign + ' pts)', toastCls);
+
+      state.selectedPlayer = null; state.selectedPointType = null; state.selectedCategory = null; _selectedParentCat = null;
+      const playerHint = document.getElementById('playerOptionalHint');
+      if (playerHint) playerHint.style.display = 'none';
+      renderAll();
+    }
+
+    // ── Keyboard shortcuts ──
+    // 1=Power 2=Toss-up 3=Bonus 4=Miss 5=Neg 6=Dead   Enter=Record
+    document.addEventListener('keydown', e => {
+      const tag = document.activeElement && document.activeElement.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      if (document.activeElement && document.activeElement.isContentEditable) return;
+      const keyMap = {'1':'Power','2':'Toss-up','3':'Bonus','4':'Miss','5':'Neg','6':'Dead'};
+      if (keyMap[e.key]) {
+        e.preventDefault();
+        selectPointType(keyMap[e.key]);
+      } else if (e.key === 'Enter') {
+        const btn = document.getElementById('recordAnswerBtn');
+        if (btn && btn.offsetParent !== null) { e.preventDefault(); recordAnswer(); }
+      }
+    });
+
+    function renderTeamBonusButtons() {
+      const el = document.getElementById('teamBonusButtonsContainer');
+      const s  = getCurrentSession();
+      if (!el || !s) return;
+      const teams = (s.teams || []).filter(t => (t.playerMembers||[]).length > 0);
+      if (!teams.length) { el.innerHTML = ''; return; }
+      el.innerHTML = '<div style="display:flex;gap:8px;margin-top:10px;margin-bottom:0;flex-wrap:wrap;">'
+        + teams.map(t => {
+            const safe = t.id.replace(/'/g,"\\'");
+            return `<button class="button" onclick="recordTeamBonus('${safe}')" style="flex:1;min-width:120px;padding:10px;font-size:.88em;">★ ${t.name} Bonus</button>`;
+          }).join('')
+        + '</div>';
+    }
+
+    function recordTeamBonus(teamId) {
+      const id = state.currentSessionId; if (!id) return;
+      const s0 = getCurrentSession(); if (!s0) return;
+      const team = (s0.teams||[]).find(t => t.id === teamId);
+      const label = '— ' + (team ? team.name : 'Team') + ' Bonus —';
+      const answer = {id:Date.now().toString(),player:label,pointType:'Bonus',category:'—',points:10,timestamp:new Date().toISOString()};
+      const apply = s => {
+        s.answerLog = toArray(s.answerLog); s.answerLog.push(answer);
+        s.teamBonusPoints = (s.teamBonusPoints||0) + 10;
+      };
+      updateSessionAtomic(id, apply);
+      withWriteLock(id, () => { const s = getCurrentSession(); if (s) apply(s); });
+      showRecordToast((team ? team.name : 'Team') + ' Bonus (+10 pts)', '');
+      renderAll();
+    }
+
+    function recordDead() {
+      const id = state.currentSessionId; if (!id) return;
+      const answer = {id:Date.now().toString(),player:'— Dead —',pointType:'Dead',category:'—',points:0,timestamp:new Date().toISOString()};
+      const apply = s => {
+        s.answerLog = toArray(s.answerLog);
+        s.tHeard = (s.tHeard||0) + 1;
+        s.answerLog.push(answer);
+      };
+      updateSessionAtomic(id, apply);
+      withWriteLock(id, () => { const s = getCurrentSession(); if (s) apply(s); });
+      showRecordToast('Dead TU (0 pts)', 'miss');
       renderAll();
     }
 
@@ -3516,5 +3896,6 @@
     // Boot: call initFirebase which waits for SDK then calls startApp
     document.addEventListener('DOMContentLoaded', initFirebase);
   </script>
+  <div id="recordToast"></div>
 </body>
 </html>
