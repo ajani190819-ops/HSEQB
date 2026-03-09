@@ -1095,6 +1095,21 @@
                 <div id="catColorStatus" style="font-size:.8em;color:var(--success);margin-top:6px;min-height:1.2em;"></div>
               </div>
 
+              <!-- Expected Subcategory Frequency — admin only, synced globally -->
+              <div id="catFreqSection" style="display:none;padding-top:14px;border-top:1.5px solid var(--border);">
+                <div style="font-weight:600;font-size:.85em;margin-bottom:4px;color:var(--text);">
+                  Expected Subcategory Frequencies
+                  <span style="font-weight:400;font-size:.82em;color:var(--text2);margin-left:6px;">Admin only &mdash; synced for all users</span>
+                </div>
+                <p style="font-size:.76em;color:var(--text3);margin-bottom:10px;line-height:1.5;">Enter the expected % of tossups for each subcategory at a typical tournament. Shown under each subcategory breakdown chart.</p>
+                <div id="catFreqPickers" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;"></div>
+                <div class="button-group">
+                  <button class="button" onclick="saveCatFreqs()">Save Frequencies</button>
+                  <button class="button" style="background:var(--sec-bg);color:var(--text2);border:1.5px solid var(--border);" onclick="resetCatFreqs()">Reset Defaults</button>
+                </div>
+                <div id="catFreqStatus" style="font-size:.8em;color:var(--success);margin-top:6px;min-height:1.2em;"></div>
+              </div>
+
               <div class="input-group" style="padding-top:14px;border-top:1.5px solid var(--border);">
                 <label>Version Number <span style="font-size:.75em;font-weight:400;color:var(--text2);">(Syncs for all users)</span></label>
                 <div style="display:flex;gap:8px;align-items:center;">
@@ -1461,6 +1476,11 @@
           renderCatColorPickers();
           changed = true;
         }
+        if (s.catFreqs && typeof s.catFreqs === 'object') {
+          catFreqs = { ...CAT_FREQ_DEFAULTS, ...s.catFreqs };
+          renderCatFreqPickers();
+          changed = true;
+        }
         if (changed && analyticsOpen) renderAnalytics();
         if (changed && document.getElementById('sessionsModal')?.classList.contains('open')) renderSessionsList();
       });
@@ -1556,7 +1576,7 @@
     function saveGlobalSettings() {
       if (isIframe) return;
       if (!globalSettingsRef) return;
-      globalSettingsRef.set({ skillThresholdPct, manuallyIncluded: [...manuallyIncluded], playerTHeardOverrides, sessionInvalidFlags, catColors })
+      globalSettingsRef.set({ skillThresholdPct, manuallyIncluded: [...manuallyIncluded], playerTHeardOverrides, sessionInvalidFlags, catColors, catFreqs })
         .catch(e => showFirebaseError('Settings save failed: ' + e.message));
     }
 
@@ -2566,6 +2586,88 @@
     };
     const CAT_ORDER = ['Literature', 'Science', 'History', 'Social Studies', 'Fine Arts', 'Pop Culture'];
 
+    // ── Expected subcategory frequency defaults (% of tossups at a standard tournament) ──
+    const CAT_FREQ_DEFAULTS = {
+      // Literature
+      'Poetry':           4.5,
+      'Theater':          1.5,
+      'Fiction':          4.0,
+      'Nonfiction':       1.5,
+      // Science
+      'Biology':          4.0,
+      'Chemistry':        3.0,
+      'Physics':          3.5,
+      'Math':             1.5,
+      'Astronomy':        1.0,
+      'Computer Science': 0.5,
+      'Earth Science':    1.0,
+      // History
+      'Ancient History':  2.0,
+      'American History': 4.0,
+      'European History': 4.0,
+      'World History':    2.0,
+      // Social Studies
+      'Philosophy':       2.0,
+      'Geography':        1.0,
+      'Religion':         2.0,
+      'Mythology':        2.0,
+      'Social Sciences':  1.0,
+      // Fine Arts
+      'Visual Arts':      3.5,
+      'Music':            2.5,
+      'Musicals':         0.5,
+      'Opera':            1.0,
+      // Pop Culture
+      'Popular Media':    1.5,
+      'Sports':           1.0,
+      'Current Events':   0.5,
+    };
+    var catFreqs = { ...CAT_FREQ_DEFAULTS };
+
+    function renderCatFreqPickers() {
+      const container = document.getElementById('catFreqPickers');
+      if (!container) return;
+      let html = '';
+      Object.entries(CATEGORY_TREE).forEach(([parent, subs]) => {
+        html += `<div style="font-size:.78em;font-weight:700;color:var(--text2);margin-top:8px;margin-bottom:2px;text-transform:uppercase;letter-spacing:.05em;">${parent}</div>`;
+        subs.forEach(sub => {
+          const val = catFreqs[sub] ?? CAT_FREQ_DEFAULTS[sub] ?? 0;
+          html += `<div style="display:flex;align-items:center;gap:8px;">
+            <label style="flex:1;font-size:.82em;color:var(--text);">${sub}</label>
+            <div style="display:flex;align-items:center;gap:4px;">
+              <input type="number" id="catfreq_${sub.replace(/\s+/g,'_')}" value="${val}" min="0" max="100" step="0.5"
+                style="width:64px;padding:4px 6px;border:1.5px solid var(--input-border);border-radius:var(--radius-sm);font-size:.85em;font-family:inherit;background:var(--input-bg);color:var(--input-text);text-align:right;" />
+              <span style="font-size:.8em;color:var(--text3);">%</span>
+            </div>
+          </div>`;
+        });
+      });
+      container.innerHTML = html;
+    }
+
+    function saveCatFreqs() {
+      const statusEl = document.getElementById('catFreqStatus');
+      Object.entries(CATEGORY_TREE).forEach(([, subs]) => {
+        subs.forEach(sub => {
+          const input = document.getElementById('catfreq_' + sub.replace(/\s+/g,'_'));
+          if (input) catFreqs[sub] = parseFloat(input.value) || 0;
+        });
+      });
+      if (!isIframe && globalSettingsRef) {
+        globalSettingsRef.child('catFreqs').set(catFreqs)
+          .catch(e => showFirebaseError('Frequency save failed: ' + e.message));
+      }
+      if (statusEl) { statusEl.textContent = '✓ Saved'; setTimeout(() => { statusEl.textContent = ''; }, 2000); }
+      // Re-render charts so the frequency display updates
+      if (analyticsOpen) renderAnalytics();
+    }
+
+    function resetCatFreqs() {
+      catFreqs = { ...CAT_FREQ_DEFAULTS };
+      renderCatFreqPickers();
+      saveCatFreqs();
+    }
+
     function renderCatColorPickers() {
       const el = document.getElementById('catColorPickers');
       if (!el) return;
@@ -2782,7 +2884,7 @@
       const catArr=Object.keys(catMap).map(c=>({name:c,pts:catMap[c].pts,count:catMap[c].count,negs:catMap[c].negs,misses:catMap[c].misses}));
       catArr.sort((a,b)=>b.pts-a.pts);
       const strengths=catArr.slice(0,5);
-      const weaknesses=catArr.slice().reverse().slice(0,5);
+
 
       let html='';
 
@@ -2934,23 +3036,67 @@
 
       html += `</div>`; // end panel
 
-      if(strengths.length || weaknesses.length){
-        const both = strengths.length && weaknesses.length;
-        html+='<div style="background:var(--card);border:2px solid var(--border);border-radius:10px;padding:16px;margin-bottom:var(--sp);box-shadow:var(--shadow-sm);">';
-        html+='<div style="display:'+(both?'grid':'block')+';grid-template-columns:1fr 1fr;gap:16px;">';
-        if(strengths.length){
-          html+='<div>';
-          html+='<h3 style="margin:0 0 10px;font-size:.95em;color:var(--success);">&#9650; Category Strengths</h3>';
-          strengths.forEach(c=>{html+='<div class="stat-row"><span class="stat-label">'+c.name+'</span><span class="stat-value" style="color:var(--success)">'+c.pts+' Pts</span></div>';});
-          html+='</div>';
-        }
-        if(weaknesses.length){
-          html+='<div>';
-          html+='<h3 style="margin:0 0 10px;font-size:.95em;color:var(--danger);">&#9660; Category Weaknesses</h3>';
-          weaknesses.forEach(c=>{html+='<div class="stat-row"><span class="stat-label">'+c.name+'</span><span class="stat-value" style="color:var(--danger)">'+c.pts+' Pts</span></div>';});
-          html+='</div>';
-        }
-        html+='</div></div>';
+      // ── Categories to work on: compare actual subcat volume % vs expected frequency ──
+      if (strengths.length) {
+        html += '<div style="background:var(--card);border:2px solid var(--border);border-radius:10px;padding:16px;margin-bottom:var(--sp);box-shadow:var(--shadow-sm);">';
+        html += '<h3 style="margin:0 0 10px;font-size:.95em;color:var(--success);">&#9650; Category Strengths</h3>';
+        strengths.forEach(c => { html += '<div class="stat-row"><span class="stat-label">'+c.name+'</span><span class="stat-value" style="color:var(--success)">'+c.pts+' Pts</span></div>'; });
+        html += '</div>';
+      }
+
+      // Build subcat volume map: sub -> count of heard answers
+      const subcatVolMap = {};
+      allAnswers.forEach(a => {
+        const raw = a.category || ''; if (!raw) return;
+        // Only count non-neg, non-miss answers for "volume heard"
+        subcatVolMap[raw] = (subcatVolMap[raw] || 0) + 1;
+      });
+      const totalSubcatVol = Object.values(subcatVolMap).reduce((s, v) => s + v, 0);
+
+      // For each subcat that has a frequency target, compute gap = expected% - actual%
+      // A positive gap means we heard fewer than expected (needs work)
+      const subcatGaps = [];
+      Object.entries(CATEGORY_TREE).forEach(([parent, subs]) => {
+        subs.forEach(sub => {
+          const expected = catFreqs[sub];
+          if (expected == null || expected <= 0) return;
+          const actual = totalSubcatVol > 0 ? (subcatVolMap[sub] || 0) / totalSubcatVol * 100 : 0;
+          const gap = expected - actual; // positive = under-covered
+          subcatGaps.push({ sub, parent, expected, actual, gap });
+        });
+      });
+
+      // Sort: biggest gap first, but group by parent category order
+      const parentOrder = Object.keys(CATEGORY_TREE);
+      const needsWork = subcatGaps
+        .filter(x => x.gap > 0.5) // only show meaningful gaps
+        .sort((a, b) => {
+          const pi = parentOrder.indexOf(a.parent) - parentOrder.indexOf(b.parent);
+          if (pi !== 0) return pi;
+          return b.gap - a.gap; // within parent: biggest gap first
+        });
+
+      if (needsWork.length) {
+        html += '<div style="background:var(--card);border:2px solid var(--border);border-radius:10px;padding:16px;margin-bottom:var(--sp);box-shadow:var(--shadow-sm);">';
+        html += '<h3 style="margin:0 0 4px;font-size:.95em;color:var(--danger);">&#9660; Categories to Work On</h3>';
+        html += '<p style="font-size:.76em;color:var(--text3);margin:0 0 12px;line-height:1.5;">Subcategories where your heard volume is below the expected tournament frequency, grouped by category.</p>';
+        let lastParent = null;
+        needsWork.forEach(({ sub, parent, expected, actual, gap }) => {
+          if (parent !== lastParent) {
+            if (lastParent !== null) html += '<div style="height:6px;"></div>';
+            html += '<div style="font-size:.72em;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);padding:4px 0 2px;border-bottom:1.5px solid var(--border);margin-bottom:4px;">' + parent + '</div>';
+            lastParent = parent;
+          }
+          const gapColor = gap > 3 ? 'var(--danger)' : gap > 1.5 ? '#f39c12' : 'var(--text2)';
+          html += '<div class="stat-row">'
+            + '<span class="stat-label">' + sub + '</span>'
+            + '<span style="font-size:.8em;color:var(--text3);flex:1;padding:0 8px;">'
+            + actual.toFixed(1) + '% heard vs ' + expected.toFixed(1) + '% expected'
+            + '</span>'
+            + '<span class="stat-value" style="color:' + gapColor + ';">&minus;' + gap.toFixed(1) + '%</span>'
+            + '</div>';
+        });
+        html += '</div>';
       }
       if(!totalAns) html+='<p style="color:var(--text2)">No answers recorded yet. Start tracking to see your team overview!</p>';
       el.innerHTML=html;
@@ -3922,12 +4068,26 @@
           return Math.max(max, Math.min(360, Math.max(220, 220 + (sliceCount - 3) * 22)));
         }, 220);
         html += `<div class="ch-subcat-row" style="grid-template-columns:repeat(${subcatCols},1fr);">`;
-        parentsWithSubData.forEach(([parent]) => {
-          // Use a custom card so the canvas stretches to fill the column width
+        parentsWithSubData.forEach(([parent, subs]) => {
           const id = 'chart-subcat-' + parent.replace(/\s+/g,'_');
+          // Build frequency reference rows for this parent's subs
+          const activeSubs = subs.filter(s => allAnswers.some(a => a.category === s));
+          const freqRows = activeSubs.map(sub => {
+            const pct = catFreqs[sub] ?? null;
+            if (pct === null) return '';
+            return `<div style="display:flex;align-items:center;gap:6px;font-size:.74em;line-height:1.6;">
+              <span style="flex:1;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${sub}</span>
+              <span style="color:var(--text3);font-variant-numeric:tabular-nums;">${pct.toFixed(1)}%</span>
+            </div>`;
+          }).join('');
+          const freqBlock = freqRows ? `<div style="margin-top:10px;padding-top:8px;border-top:1.5px solid var(--border);">
+              <div style="font-size:.7em;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:4px;">Expected Freq.</div>
+              ${freqRows}
+            </div>` : '';
           html += `<div class="ch-card ch-subcat-card">
             <div class="ch-title">${parent}</div>
             <div style="position:relative;height:${maxSubcatH}px;width:100%;"><canvas id="${id}"></canvas></div>
+            ${freqBlock}
           </div>`;
         });
         html += `</div>`;
@@ -4634,7 +4794,9 @@
       // Show category color section in Visual Settings only to admins
       const ccs = document.getElementById('catColorSection');
       if (ccs) ccs.style.display = isAdmin ? '' : 'none';
-      if (isAdmin) renderCatColorPickers();
+      const cfs = document.getElementById('catFreqSection');
+      if (cfs) cfs.style.display = isAdmin ? '' : 'none';
+      if (isAdmin) { renderCatColorPickers(); renderCatFreqPickers(); }
       // Show/hide danger section and admin section
       const dangerEl = document.getElementById('sec-danger');
       const adminEl  = document.getElementById('sec-admin');
