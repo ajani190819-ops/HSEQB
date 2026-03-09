@@ -828,8 +828,7 @@
 
     /* ── Mobile header ── */
     @media (max-width: 768px) {
-      .qb-header { padding: 12px 16px 10px; flex-direction: column; align-items: center; gap: 0; }
-      .qb-header h1 { position: static; transform: none; white-space: normal; text-align: center; width: 100%; font-size: clamp(1.3em,6vw,1.8em); margin-bottom: 6px; }
+      .qb-header { padding: 0 10px; } /* keep single row — no column override */
       .qb-scroll, .analytics-scroll { padding: 16px; }
       .qb-section { padding: 16px; }
       .point-type-buttons, .category-buttons { grid-template-columns: repeat(2,1fr); gap: 8px; }
@@ -1841,10 +1840,10 @@
     const CURRENT_SESSION_KEY='currentSession';
     const CATEGORY_TREE = {
       'Literature':     ['Poetry','Theater','Fiction','Nonfiction'],
-      'History':        ['Ancient History','American History','European History','World History'],
-      'Fine Arts':      ['Visual Arts','Music','Musicals','Opera'],
-      'Social Studies': ['Philosophy','Geography','Religion','Mythology','Social Sciences'],
       'Science':        ['Biology','Chemistry','Physics','Math','Astronomy','Computer Science','Earth Science'],
+      'History':        ['Ancient History','American History','European History','World History'],
+      'Social Studies': ['Philosophy','Geography','Religion','Mythology','Social Sciences'],
+      'Fine Arts':      ['Visual Arts','Music','Musicals','Opera'],
       'Pop Culture':    ['Popular Media','Sports','Current Events'],
     };
     const DEFAULT_CATEGORIES = Object.values(CATEGORY_TREE).flat();
@@ -2562,7 +2561,7 @@
       'Pop Culture':    '#a855f7',
       'Fine Arts':      '#06b6d4',
     };
-    const CAT_ORDER = ['Literature', 'Science', 'History', 'Social Studies', 'Pop Culture', 'Fine Arts'];
+    const CAT_ORDER = ['Literature', 'Science', 'History', 'Social Studies', 'Fine Arts', 'Pop Culture'];
 
     function renderCatColorPickers() {
       const el = document.getElementById('catColorPickers');
@@ -3760,6 +3759,8 @@
           flex-wrap: wrap;
           gap: var(--sp);
           align-items: flex-start;
+          width: 100%;
+          box-sizing: border-box;
         }
         .ch-player-row {
           display: flex;
@@ -3802,6 +3803,20 @@
           border-bottom: 1px solid var(--border);
           margin-bottom: 2px;
         }
+        /* Subcat doughnuts: JS sets grid-template-columns inline; cards fill columns evenly */
+        .ch-subcat-row {
+          width: 100%;
+          box-sizing: border-box;
+          display: grid;
+          gap: var(--sp);
+          align-items: start;
+        }
+        .ch-subcat-row .ch-card {
+          flex: none;
+          width: 100%;
+          min-width: 0;
+          box-sizing: border-box;
+        }
       </style>`;
 
       html += `<div class="ch-grid">`;
@@ -3823,9 +3838,26 @@
       });
       if (parentsWithSubData.length) {
         html += `<div class="ch-section">Subcategory Breakdown</div>`;
+        // Compute a sensible column count so cards fill the width equally.
+        // Cap at 4 columns so cards don't get too narrow; floor at 1.
+        const subcatCount = parentsWithSubData.length;
+        const subcatCols = subcatCount; // always one row — all charts same size
+        // Compute uniform height from the chart that needs the most space
+        const maxSubcatH = parentsWithSubData.reduce((max, [parent, subs]) => {
+          const sliceCount = subs.filter(s => allAnswers.some(a => a.category === s)).length
+            + (allAnswers.some(a => a.category === parent) ? 1 : 0);
+          return Math.max(max, Math.min(360, Math.max(220, 220 + (sliceCount - 3) * 22)));
+        }, 220);
+        html += `<div class="ch-subcat-row" style="grid-template-columns:repeat(${subcatCols},1fr);">`;
         parentsWithSubData.forEach(([parent]) => {
-          html += chartCard('chart-subcat-' + parent.replace(/\s+/g,'_'), parent, PIE_H, '240px');
+          // Use a custom card so the canvas stretches to fill the column width
+          const id = 'chart-subcat-' + parent.replace(/\s+/g,'_');
+          html += `<div class="ch-card ch-subcat-card">
+            <div class="ch-title">${parent}</div>
+            <div style="position:relative;height:${maxSubcatH}px;width:100%;"><canvas id="${id}"></canvas></div>
+          </div>`;
         });
+        html += `</div>`;
       }
 
       // ── Player charts ──
@@ -4093,7 +4125,10 @@
         makeChart('chart-subcat-' + parent.replace(/\s+/g,'_'), {
           type: 'doughnut',
           data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 2, borderColor: isDark ? '#1c2128' : '#fff' }] },
-          options: { ...pieOpts, plugins: { ...pieOpts.plugins, legend: { ...pieOpts.plugins.legend, position: labels.length > 5 ? 'bottom' : 'right' } } }
+          options: { ...pieOpts, maintainAspectRatio: false, plugins: { ...pieOpts.plugins, legend: {
+            position: 'bottom',
+            labels: { color: labelColor, font: { ...baseFont, size: 10 }, boxWidth: 10, boxHeight: 10, padding: 6 }
+          } } }
         });
       });
     }
