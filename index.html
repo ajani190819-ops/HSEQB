@@ -127,12 +127,13 @@
     .analytics-tab {
       background: var(--sec-bg); color: var(--text2); border: 1px solid var(--border);
       border-radius: 20px; padding: 6px 16px; font-size: .82em; font-weight: 600;
-      cursor: pointer; font-family: inherit; transition: all .18s;
+      cursor: pointer; font-family: inherit;
+      transition: border-color .15s, color .15s, background .15s, box-shadow .15s;
     }
     .analytics-tab:hover { background: var(--hover); color: var(--primary); border-color: var(--primary-light); }
     .analytics-tab.active {
       background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      color: #fff; border-color: transparent; box-shadow: 0 2px 8px rgba(102,126,234,.3);
+      color: #fff; border-color: var(--primary-dark); box-shadow: 0 2px 8px rgba(102,126,234,.3);
     }
     .analytics-scroll { flex: 1; overflow-y: auto; padding: var(--sp) var(--hsp); scrollbar-gutter: stable; background: var(--bg); }
     .analytics-panel { display: none; }
@@ -198,22 +199,7 @@
     .an-team-name { font-weight: 700; font-size: 1.05em; margin-bottom: 8px; }
     .an-team-pts { color: var(--primary); font-weight: 700; font-size: 1.3em; }
 
-    /* ── Analytics/Tracker button — remove focus outline but preserve hover effect ── */
-    #analyticsBtn,
-    #analyticsBtnMobile {
-      -webkit-tap-highlight-color: transparent !important;
-    }
-    #analyticsBtn:focus:not(:hover),
-    #analyticsBtnMobile:focus:not(:hover),
-    #analyticsBtn:focus-visible,
-    #analyticsBtnMobile:focus-visible {
-      outline: none !important;
-      box-shadow: none !important;
-    }
-    #analyticsBtn:active,
-    #analyticsBtnMobile:active {
-      outline: none !important;
-    }
+
 
     /* ── Mobile sidebar overlay ── */
     @media (max-width: 900px) {
@@ -286,11 +272,7 @@
       background: linear-gradient(135deg, var(--primary), var(--secondary));
       color: #fff; font-weight: 700; cursor: pointer; font-size: .9em;
     }
-    #newSessionName {
-      width: 100%; padding: 10px 13px; border: 1.5px solid var(--input-border); border-radius: var(--radius-sm);
-      background: var(--input-bg); color: var(--input-text); font-weight: 600; font-size: .95em; font-family: inherit;
-    }
-    #newSessionName:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(102,126,234,.1); outline: none; }
+    #newSessionName { font-weight: 600; }
 
     /* ── Buttons ── */
     .button {
@@ -310,7 +292,8 @@
       background: var(--card); color: var(--text2); border: 1.5px solid var(--border);
       padding: clamp(9px,2vw,12px) clamp(12px,2.5vw,18px);
       border-radius: var(--radius-sm); font-size: clamp(.82em,1.8vw,.95em); font-family: inherit;
-      cursor: pointer; font-weight: 600; transition: all .15s;
+      cursor: pointer; font-weight: 600;
+      transition: border-color .15s, color .15s, background .15s, box-shadow .15s;
       box-shadow: var(--shadow-xs);
     }
     .button-point-type:hover, .button-category:hover, .button-player:hover {
@@ -319,7 +302,7 @@
     }
     .button-point-type.selected, .button-category.selected, .button-player.selected {
       background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      color: #fff; border-color: transparent; box-shadow: 0 4px 12px rgba(102,126,234,.35);
+      color: #fff; border-color: var(--primary-dark); box-shadow: 0 4px 12px rgba(102,126,234,.35);
     }
     .point-type-buttons, .category-buttons { display: grid; grid-template-columns: repeat(auto-fit,minmax(140px,1fr)); gap: 8px; padding: 2px; }
     .player-buttons { display: flex; flex-wrap: wrap; gap: 8px; padding: 2px; }
@@ -335,7 +318,8 @@
     .player-pool-item:hover { border-color: var(--primary); }
     .player-pool-item .remove {
       cursor: pointer; margin-left: 8px; color: var(--text3); font-weight: bold;
-      padding: 2px 6px; border-radius: 4px; border: 1px solid transparent; transition: all .15s; font-size: 1em;
+      padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border);
+      transition: border-color .15s, background .15s, color .15s; font-size: 1em;
     }
     .player-pool-item .remove:hover { background: var(--danger); color: #fff; border-color: var(--danger); }
     #playerPoolDisplay { padding: 10px; min-height: 40px; background: var(--sec-bg); border: 1.5px solid var(--border); border-radius: var(--radius-sm); }
@@ -393,7 +377,87 @@
       padding:1px 5px;border-radius:4px;border:1px solid currentColor;opacity:.6;
       margin-left:4px;vertical-align:middle;line-height:1.4;
     }
-    /* ── Record-answer toast flash ── */
+    /* ── Welcome toast ── */
+    #welcomeToast {
+      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(30px);
+      background: var(--card); color: var(--text); border: 1px solid var(--border);
+      border-radius: 14px; padding: 16px 20px; box-shadow: var(--shadow-xl);
+      z-index: 99998; opacity: 0; transition: opacity .3s, transform .3s;
+      pointer-events: none; min-width: 280px; max-width: 380px; text-align: center;
+    }
+    #welcomeToast.show { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
+    #welcomeToast .wt-title { font-size: 1.05em; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    #welcomeToast .wt-sub { font-size: .85em; color: var(--text2); margin-bottom: 14px; line-height: 1.5; }
+    #welcomeToast .wt-btns { display: flex; gap: 8px; justify-content: center; }
+    #welcomeToast .wt-btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: #fff; border: none; border-radius: 8px; padding: 8px 18px;
+      font-size: .88em; font-weight: 700; cursor: pointer; font-family: inherit;
+    }
+    #welcomeToast .wt-btn-dismiss {
+      background: var(--sec-bg); color: var(--text2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 8px 14px; font-size: .88em; font-weight: 600;
+      cursor: pointer; font-family: inherit;
+    }
+    /* ── User ID section ── */
+    .user-id-avatar {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 1.1em; color: #fff; flex-shrink: 0;
+    }
+    .user-id-status { display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+      background: var(--sec-bg); border-radius: var(--radius-sm); border: 1px solid var(--border);
+      margin-bottom: 12px;
+    }
+    /* ── Category selector — Option A (inline rows) ── */
+    .cat-row {
+      display: flex; align-items: stretch; gap: 0;
+      border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+      margin-bottom: 5px; background: var(--card);
+      box-shadow: var(--shadow-xs); transition: border-color .15s;
+    }
+    .cat-row:hover { border-color: var(--primary-light); }
+    .cat-row-label {
+      flex: 0 0 84px; padding: 7px 8px; font-size: .65em; font-weight: 800;
+      text-transform: uppercase; letter-spacing: .06em; text-align: center;
+      background: var(--sec-bg); border-right: none;
+      border-radius: calc(var(--radius-sm) - 1.5px) 0 0 calc(var(--radius-sm) - 1.5px);
+      color: var(--text3); cursor: pointer; font-family: inherit;
+      display: flex; align-items: center; justify-content: center;
+      transition: border-color .15s, color .15s, background .15s; line-height: 1.2;
+    }
+    .cat-row-label:hover { color: var(--primary); background: rgba(102,126,234,.06); }
+    .cat-row-label.selected {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: #fff;
+    }
+    .cat-row-subs {
+      flex: 1; display: flex; flex-wrap: wrap; gap: 4px;
+      padding: 6px 8px; align-items: center; background: var(--card);
+      border-left: 1.5px solid var(--border);
+      border-radius: 0 calc(var(--radius-sm) - 1.5px) calc(var(--radius-sm) - 1.5px) 0;
+    }
+    .cat-row-chip {
+      padding: 3px 10px;
+      border-radius: 5px; font-size: .78em; font-weight: 600;
+      border: 1.5px solid var(--border); background: var(--card); color: var(--text2);
+      cursor: pointer; font-family: inherit;
+      transition: border-color .15s, color .15s, background .15s, box-shadow .15s;
+    }
+    .cat-row-chip:hover {
+      border-color: var(--primary); color: var(--primary);
+      background: rgba(102,126,234,.05);
+    }
+    .cat-row-chip.selected {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: #fff; border-color: var(--primary-dark);
+      box-shadow: 0 2px 8px rgba(102,126,234,.28);
+    }
+    @media (max-width: 768px) {
+      .cat-row-label { flex: 0 0 68px; font-size: .6em; padding: 6px 5px; }
+      .cat-row-chip  { font-size: .72em; padding: 3px 7px; }
+    }
     #recordToast {
       position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
       background:var(--success);color:#fff;
@@ -406,6 +470,37 @@
     #recordToast.neg  { background:var(--danger); }
     #recordToast.miss { background:#888; }
     #recordToast.pts  { background:var(--primary); }
+
+    /* ── General-purpose toast ── */
+    #appToast {
+      position:fixed;bottom:70px;left:50%;transform:translateX(-50%) translateY(16px);
+      background:var(--danger);color:#fff;
+      padding:11px 22px;border-radius:28px;font-size:.9em;font-weight:700;
+      box-shadow:0 4px 20px rgba(0,0,0,.28);pointer-events:none;
+      opacity:0;transition:opacity .2s,transform .2s;z-index:100000;
+      max-width:88vw;text-align:center;letter-spacing:.01em;line-height:1.4;
+    }
+    #appToast.show { opacity:1;transform:translateX(-50%) translateY(0); }
+    #appToast.toast-warn    { background:#e67e22; }
+    #appToast.toast-success { background:var(--success); }
+    #appToast.toast-info    { background:var(--primary); }
+
+    /* ── Confirm toast (modal-style) ── */
+    #confirmToast {
+      position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);
+      background:var(--card);color:var(--text);
+      padding:16px 20px;border-radius:14px;font-size:.9em;
+      box-shadow:0 8px 32px rgba(0,0,0,.32);border:1.5px solid var(--border);
+      opacity:0;transition:opacity .2s,transform .2s;z-index:100001;
+      max-width:340px;width:90vw;text-align:center;
+      pointer-events:none;
+    }
+    #confirmToast.show { opacity:1;transform:translateX(-50%) translateY(0);pointer-events:all; }
+    #confirmToast .ct-msg { font-weight:600;margin-bottom:14px;line-height:1.45;color:var(--text); }
+    #confirmToast .ct-btns { display:flex;gap:10px;justify-content:center; }
+    #confirmToast .ct-ok   { background:var(--danger);color:#fff;border:none;border-radius:8px;padding:8px 22px;font-weight:700;cursor:pointer;font-family:inherit;font-size:.95em; }
+    #confirmToast .ct-ok.warn-ok { background:#e67e22; }
+    #confirmToast .ct-cancel { background:var(--sec-bg);color:var(--text2);border:1.5px solid var(--border);border-radius:8px;padding:8px 18px;font-weight:600;cursor:pointer;font-family:inherit;font-size:.95em; }
 
     /* ── Quick-log rows ── */
     .ql-row {
@@ -601,9 +696,6 @@
       .qb-scroll, .analytics-scroll { padding: 16px; }
       .qb-section { padding: 16px; }
       .point-type-buttons, .category-buttons { grid-template-columns: repeat(2,1fr); gap: 8px; }
-      /* Mobile category: each parent group stacks — label full width, subcats in 2-col grid */
-      #categoryButtonsContainer > div { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 5px !important; }
-      #categoryButtonsContainer > div > button:first-child { grid-column: 1 / -1; font-size:.78em !important; }
       .stats-grid { grid-template-columns: 1fr; }
       .button-group { flex-direction: column; }
       .button-group button, .button { width: 100%; }
@@ -635,7 +727,6 @@
         <div class="header-session-name" id="headerSessionName"></div>
       </div>
       <div class="header-controls">
-        <button class="header-btn" id="analyticsBtn" onclick="toggleAnalytics()" style="display:none;"></button>
         <!-- Tracker / Analytics toggle switch -->
         <div style="display:flex;align-items:center;gap:8px;user-select:none;" title="Switch between Tracker and Analytics">
           <span id="toggleLabelTracker" style="font-size:.82em;font-weight:700;color:rgba(255,255,255,.95);">Tracker</span>
@@ -650,7 +741,6 @@
       <div class="mobile-subrow" id="mobileSubrow">
         <button class="header-btn" id="sidebarOpenBtnMobile">&#9654; Menu</button>
         <span id="headerSessionNameMobile" style="flex:1;text-align:center;font-size:.78em;font-weight:600;color:rgba(255,255,255,.75);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></span>
-        <button class="header-btn" id="analyticsBtnMobile" onclick="toggleAnalytics()" style="display:none;"></button>
         <div onclick="toggleAnalytics()" id="viewToggleSwitchMobile" style="display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;" title="Switch view">
           <span id="toggleLabelMobile" style="font-size:.75em;font-weight:700;color:rgba(255,255,255,.9);">Tracker</span>
           <div style="width:38px;height:20px;background:rgba(255,255,255,.25);border-radius:10px;border:2px solid rgba(255,255,255,.4);position:relative;flex-shrink:0;">
@@ -677,8 +767,10 @@
               <button onclick="showSection('sec-teams')">Teams</button>
               <button onclick="showSection('sec-categories')">Categories</button>
               <button onclick="showSection('sec-export')">Export / Import</button>
+              <button onclick="showSection('sec-userid')">User ID</button>
               <button onclick="showSection('sec-visual')">Visual Settings</button>
-              <button onclick="showSection('sec-danger')">Data Management</button>
+              <button id="jumpBtn-sec-admin" onclick="showSection('sec-admin')" style="display:none;">Admin Panel</button>
+              <button id="jumpBtn-sec-danger" onclick="showSection('sec-danger')" style="display:none;">Data Management</button>
             </div>
           </div>
           <button class="sidebar-close-btn" onclick="toggleSidebar()">&#9664; Hide</button>
@@ -742,7 +834,6 @@
             <div class="collapsible-content">
               <p style="font-size:.85em;color:var(--text2);margin-bottom:10px;">Categories and subcategories are fixed. Select a parent category when recording answers to reveal its subcategories.</p>
               <div style="display:flex;flex-direction:column;gap:6px;">
-                <script>/* category tree display rendered below */</script>
               </div>
               <div id="categoryTreeDisplay"></div>
             </div>
@@ -772,6 +863,43 @@
                 </div>
                 <div id="importStatus" style="font-size:.85em;margin-top:8px;display:none;"></div>
               </div>
+            </div>
+          </div>
+
+          <div class="qb-section" id="sec-userid">
+            <h2>User ID <span class="toggle-icon">&#9660;</span></h2>
+            <div class="collapsible-content">
+              <p style="font-size:.82em;color:var(--text2);margin-bottom:14px;line-height:1.5;">Set your full name to sync your identity across devices. Used to distinguish users with the same first name.</p>
+              <div class="user-id-status" id="userIdStatus">
+                <div class="user-id-avatar" id="userIdAvatar" title="Click to upload photo" onclick="document.getElementById('userPhotoInput').click()" style="cursor:pointer;position:relative;overflow:hidden;">
+                  <span id="userIdAvatarText">?</span>
+                  <img id="userIdAvatarImg" src="" alt="" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%;" />
+                  <div style="position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s;" id="userAvatarOverlay">
+                    <span style="font-size:.55em;font-weight:700;color:#fff;letter-spacing:.03em;">PHOTO</span>
+                  </div>
+                </div>
+                <div>
+                  <div style="font-weight:700;font-size:.9em;color:var(--text);" id="userIdDisplayName">Not set</div>
+                  <div style="font-size:.75em;color:var(--text3);" id="userIdSubtitle">Enter your first and last name below</div>
+                </div>
+              </div>
+              <input type="file" id="userPhotoInput" accept="image/*" style="display:none;" onchange="handleUserPhotoUpload(event)" />
+              <div id="userPhotoStatus" style="font-size:.78em;color:var(--text3);margin-bottom:10px;display:none;"></div>
+              <div class="input-group">
+                <label>First Name:</label>
+                <input type="text" id="userIdFirstName" placeholder="e.g. Alex" maxlength="30"
+                  onkeydown="if(event.key==='Enter') document.getElementById('userIdLastName').focus()" />
+              </div>
+              <div class="input-group">
+                <label>Last Name:</label>
+                <input type="text" id="userIdLastName" placeholder="e.g. Smith" maxlength="30"
+                  onkeydown="if(event.key==='Enter') saveUserId()" />
+              </div>
+              <div class="button-group">
+                <button class="button button-success" onclick="saveUserId()">Save Name</button>
+                <button class="button button-secondary" onclick="clearUserId()">Clear</button>
+              </div>
+              <p style="font-size:.75em;color:var(--text3);margin-top:12px;padding-top:10px;border-top:1px solid var(--border);">Your client ID: <span id="userClientIdDisplay" style="font-family:monospace;font-size:.95em;word-break:break-all;"></span></p>
             </div>
           </div>
 
@@ -814,7 +942,23 @@
             </div>
           </div>
 
-          <div class="qb-section" id="sec-danger" style="border:2px solid var(--danger);">
+          <div class="qb-section" id="sec-admin" style="border:2px solid var(--primary);display:none;">
+            <h2 style="color:var(--primary);">Admin Panel <span class="toggle-icon">&#9660;</span></h2>
+            <div class="collapsible-content">
+              <p style="font-size:.82em;color:var(--text2);margin-bottom:12px;line-height:1.5;">Admins can access Data Management and control low-data player flagging. Add by exact full name.</p>
+              <div id="adminListDisplay" style="border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:12px;background:var(--card);"></div>
+              <div class="input-group" style="margin-bottom:0;">
+                <label>Add Admin (exact full name):</label>
+                <input type="text" id="adminAddInput" placeholder="e.g. Jane Smith" maxlength="61"
+                  onkeydown="if(event.key==='Enter') addAdmin()" />
+              </div>
+              <div class="button-group" style="margin-top:10px;">
+                <button class="button button-success" onclick="addAdmin()">Add Admin</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="qb-section" id="sec-danger" style="border:2px solid var(--danger);display:none;">
             <h2 style="color:var(--danger);">Data Management <span class="toggle-icon">&#9660;</span></h2>
             <div class="collapsible-content">
               <button class="button button-danger" onclick="resetAllData()">Delete All Data</button>
@@ -848,7 +992,7 @@
               </div>
               <div class="input-group" id="categoryInputGroup">
                 <label>Category: <span style="font-weight:400;font-size:.85em;color:var(--text2);">(Optional)</span></label>
-                <div id="categoryButtonsContainer" class="category-buttons"></div>
+                <div id="categoryButtonsContainer"></div>
               </div>
               <!-- t_heard counter -->
               <div style="display:flex;align-items:center;gap:12px;margin-top:14px;padding:12px 14px;background:var(--sec-bg);border:2px solid var(--border);border-radius:8px;">
@@ -1018,7 +1162,9 @@
   <script src="local-settings.js" onerror="void 0"></script>
   <script>
     // ── Firebase (initialized after DOM ready to ensure SDK scripts have loaded) ──
-    var db, sessionsRef, globalPlayersRef, versionRef, globalSettingsRef;
+    var db, sessionsRef, globalPlayersRef, versionRef, globalSettingsRef, userIdentitiesRef, adminListRef;
+    var adminList = ['Kamau Elston']; // seeded default; overwritten by Firebase
+    var isAdmin = false; // computed after user identity + adminList both load
     function initFirebase() {
       if (typeof firebase === 'undefined') { setTimeout(initFirebase, 50); return; }
       const firebaseConfig = {
@@ -1036,6 +1182,16 @@
       globalPlayersRef = db.ref('globalPlayers');
       versionRef = db.ref('appVersion');
       globalSettingsRef = db.ref('globalSettings');
+      userIdentitiesRef = db.ref('userIdentities');
+      adminListRef = db.ref('adminList');
+      // Seed admin list if empty
+      adminListRef.once('value').then(snap => {
+        if (!snap.val()) adminListRef.set(['Kamau Elston']);
+      });
+      adminListRef.on('value', snap => {
+        adminList = snap.val() || ['Kamau Elston'];
+        recomputeAdmin();
+      });
       startApp();
     }
 
@@ -1091,7 +1247,6 @@
       setupSectionToggle();
       applySidebarState();
       const savedSection=localStorage.getItem('activeSidebarSection')||'sec-session';
-      showSection(savedSection);
 
       // ── Restore analytics open state + tab + scroll ──
       const _wasAnalyticsOpen = localStorage.getItem('analyticsOpen') === 'true';
@@ -1128,6 +1283,9 @@
         if(w&&!w.contains(e.target)) w.classList.remove('open');
         ['helpModal','sessionsModal','playerDetailModal'].forEach(id=>{const m=document.getElementById(id);if(m&&e.target===m) m.classList.remove('open');});
       });
+      loadUserId();
+      recomputeAdmin();
+      maybeShowWelcomeToast();
     }
     function saveGlobalSettings() {
       if (!globalSettingsRef) return;
@@ -1152,8 +1310,148 @@
 
     function saveVersion() {
       const v = (document.getElementById('versionInput').value||'').trim();
-      if (!v) { alert('Enter a version number.'); return; }
-      versionRef.set(v).then(() => alert('Version updated to ' + v)).catch(e => showFirebaseError(e.message));
+      if (!v) { showToast('Enter a version number.'); return; }
+      versionRef.set(v).then(() => showToast('Version updated to ' + v, 'success')).catch(e => showFirebaseError(e.message));
+    }
+
+    // ── User ID ──
+    function loadUserId() {
+      const stored = localStorage.getItem('qb_userName') || '';
+      const photo  = localStorage.getItem('qb_userPhoto') || '';
+      const display = document.getElementById('userIdDisplayName');
+      const avatarText = document.getElementById('userIdAvatarText');
+      const avatarImg  = document.getElementById('userIdAvatarImg');
+      const sub     = document.getElementById('userIdSubtitle');
+      const fnInput = document.getElementById('userIdFirstName');
+      const lnInput = document.getElementById('userIdLastName');
+      const cid     = document.getElementById('userClientIdDisplay');
+      if (cid) cid.textContent = clientId;
+      // Avatar hover overlay
+      const avatarEl = document.getElementById('userIdAvatar');
+      const overlay  = document.getElementById('userAvatarOverlay');
+      if (avatarEl && overlay) {
+        avatarEl.onmouseenter = () => overlay.style.opacity = '1';
+        avatarEl.onmouseleave = () => overlay.style.opacity = '0';
+      }
+      if (photo && avatarImg) {
+        avatarImg.src = photo; avatarImg.style.display = 'block';
+        if (avatarText) avatarText.style.display = 'none';
+      } else if (avatarImg) {
+        avatarImg.style.display = 'none';
+        if (avatarText) avatarText.style.display = '';
+      }
+      if (stored) {
+        if (display) display.textContent = stored;
+        if (avatarText && !photo) avatarText.textContent = stored.trim().charAt(0).toUpperCase();
+        if (sub)     sub.textContent = 'Synced across devices with this ID';
+        const spaceIdx = stored.indexOf(' ');
+        if (fnInput) fnInput.value = spaceIdx > -1 ? stored.slice(0, spaceIdx) : stored;
+        if (lnInput) lnInput.value = spaceIdx > -1 ? stored.slice(spaceIdx + 1) : '';
+      } else {
+        if (display) display.textContent = 'Not set';
+        if (avatarText && !photo) avatarText.textContent = '?';
+        if (sub) sub.textContent = 'Enter your first and last name below';
+      }
+    }
+
+    function handleUserPhotoUpload(event) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      const statusEl = document.getElementById('userPhotoStatus');
+      if (statusEl) { statusEl.style.display = 'block'; statusEl.textContent = 'Processing…'; }
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = new Image();
+        img.onload = () => {
+          // Resize to max 120×120 on a canvas, then export as JPEG ~80% quality
+          const MAX = 120;
+          const scale = Math.min(MAX / img.width, MAX / img.height, 1);
+          const w = Math.round(img.width * scale);
+          const h = Math.round(img.height * scale);
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+          const kb = Math.round(dataUrl.length * 0.75 / 1024);
+          if (kb > 80) { showToast('Image too large after compression (' + kb + 'KB). Try a smaller photo.', 'warn'); return; }
+          localStorage.setItem('qb_userPhoto', dataUrl);
+          // Sync to Firebase alongside name
+          if (userIdentitiesRef) {
+            const name = localStorage.getItem('qb_userName') || '';
+            if (name) userIdentitiesRef.child(clientId).update({ photo: dataUrl })
+              .catch(e => showFirebaseError('Photo save failed: ' + e.message));
+          }
+          loadUserId();
+          if (statusEl) { statusEl.textContent = 'Photo saved (' + kb + 'KB)'; setTimeout(() => { statusEl.style.display = 'none'; }, 2500); }
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+      event.target.value = '';
+    }
+
+    function saveUserId() {
+      const fn = (document.getElementById('userIdFirstName')?.value || '').trim();
+      const ln = (document.getElementById('userIdLastName')?.value  || '').trim();
+      if (!fn) { showToast('Please enter your first name.'); document.getElementById('userIdFirstName')?.focus(); return; }
+      if (!ln) { showToast('Please enter your last name.');  document.getElementById('userIdLastName')?.focus();  return; }
+      const name = (fn + ' ' + ln).slice(0, 61);
+      localStorage.setItem('qb_userName', name);
+      recomputeAdmin();
+      if (userIdentitiesRef) {
+        const photo = localStorage.getItem('qb_userPhoto') || null;
+        const payload = { name, lastSeen: new Date().toISOString() };
+        if (photo) payload.photo = photo;
+        userIdentitiesRef.child(clientId).set(payload)
+          .catch(e => showFirebaseError('User ID save failed: ' + e.message));
+      }
+      loadUserId();
+      const sub = document.getElementById('userIdSubtitle');
+      if (sub) { sub.textContent = '✓ Saved!'; setTimeout(() => loadUserId(), 1800); }
+    }
+
+    function clearUserId() {
+      showConfirm('Clear your saved name from this device?', 'Clear').then(ok => {
+        if (!ok) return;
+        localStorage.removeItem('qb_userName');
+        localStorage.removeItem('qb_userPhoto');
+        const fn = document.getElementById('userIdFirstName');
+        const ln = document.getElementById('userIdLastName');
+        if (fn) fn.value = '';
+        if (ln) ln.value = '';
+        loadUserId();
+        recomputeAdmin();
+      });
+    }
+
+    // ── Welcome toast ──
+    const WELCOME_LAST_SHOWN_KEY = 'qb_welcomeLastShown';
+    const WELCOME_RESHOW_MS = 60 * 24 * 60 * 60 * 1000; // 60 days
+
+    function maybeShowWelcomeToast() {
+      const last = parseInt(localStorage.getItem(WELCOME_LAST_SHOWN_KEY) || '0', 10);
+      const now  = Date.now();
+      const isNew = last === 0;
+      const isReturning = last > 0 && (now - last) > WELCOME_RESHOW_MS;
+      if (!isNew && !isReturning) return;
+      setTimeout(() => {
+        const toast = document.getElementById('welcomeToast');
+        if (!toast) return;
+        const title = document.querySelector('#welcomeToast .wt-title');
+        const sub   = document.querySelector('#welcomeToast .wt-sub');
+        if (isReturning && title && sub) {
+          title.textContent = '👋 Welcome back!';
+          sub.textContent   = "It's been a while — want a refresher? The Help guide has everything you need.";
+        }
+        toast.classList.add('show');
+      }, 1200);
+    }
+
+    function dismissWelcomeToast(openHelp) {
+      const toast = document.getElementById('welcomeToast');
+      if (toast) toast.classList.remove('show');
+      localStorage.setItem(WELCOME_LAST_SHOWN_KEY, Date.now().toString());
+      if (openHelp) openHelpModal();
     }
 
     // ── Helpers ──
@@ -1222,6 +1520,7 @@
     const state={sessions:{},currentSessionId:null,selectedPlayer:null,selectedPointType:null,selectedCategory:null,categories:[]};
     let firebaseUnsubscribe=null, playersUnsubscribe=null;
     var analyticsOpen=false, currentAnalyticsTab='overview';
+    var userIdentitiesCache = {}; // { clientId: { name, photo } } — synced from Firebase
     var playerSortKey = 'points';       // default sort: points
     var lowDataPanelCollapsed = localStorage.getItem('lowDataPanelCollapsed') !== 'false' ? true : false;
     var skillSettingsCollapsed = localStorage.getItem('skillSettingsCollapsed') !== 'false' ? true : false;
@@ -1271,6 +1570,10 @@
       playersUnsubscribe=globalPlayersRef.on('value',snap=>{
         if(!state.currentSessionId) return;
         applyGlobalPlayersToSession(snap.val()||{});
+      });
+      // Keep user identities (names + photos) in sync
+      userIdentitiesRef.on('value', snap => {
+        userIdentitiesCache = snap.val() || {};
       });
     }
     function applyGlobalPlayersToSession(data) {
@@ -1411,15 +1714,17 @@
     }
 
     function deleteSession(id) {
-      if(!confirm('Delete session "'+state.sessions[id].name+'"?')) return;
-      sessionsRef.child(id).remove().catch(e=>showFirebaseError(e.message));
-      delete state.sessions[id];
-      if(state.currentSessionId===id){
-        state.currentSessionId=Object.keys(state.sessions)[0]||null;
-        if(!state.currentSessionId) createNewSession();
-        else{localStorage.setItem(CURRENT_SESSION_KEY,state.currentSessionId);loadSessionData();}
-      }
-      renderSessionsList(); renderAll();
+      showConfirm('Delete session "'+state.sessions[id].name+'"?', 'Delete').then(ok => {
+        if (!ok) return;
+        sessionsRef.child(id).remove().catch(e=>showFirebaseError(e.message));
+        delete state.sessions[id];
+        if(state.currentSessionId===id){
+          state.currentSessionId=Object.keys(state.sessions)[0]||null;
+          if(!state.currentSessionId) createNewSession();
+          else{localStorage.setItem(CURRENT_SESSION_KEY,state.currentSessionId);loadSessionData();}
+        }
+        renderSessionsList(); renderAll();
+      });
     }
 
     // ── Player Detail Modal ──
@@ -1448,7 +1753,7 @@
         sessionNames.push(sess.name);
         playerTHeard += (sess.tHeard || 0);
       });
-      if (!answers.length) { alert('No data found for ' + playerName); return; }
+      if (!answers.length) { showToast('No data found for ' + playerName, 'warn'); return; }
 
       const player = { name: playerName, points: totalPoints };
       const sessionCount = sessionNames.length;
@@ -1661,13 +1966,28 @@
       const skillAvgNote   = modalSkill !== null ? '<div style="font-size:.68em;color:var(--text3);">avg = 100</div>' : '';
 
       document.getElementById('pdModalTitle').textContent = playerName;
+      // Look up photo from userIdentitiesCache by matching name
+      const playerPhoto = Object.values(userIdentitiesCache).find(u => u.name === playerName)?.photo || null;
+      const avatarHtml = playerPhoto
+        ? `<img src="${playerPhoto}" alt="${playerName}" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid var(--border);flex-shrink:0;" />`
+        : `<div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--secondary));display:flex;align-items:center;justify-content:center;font-size:1.4em;font-weight:700;color:#fff;flex-shrink:0;">${playerName.charAt(0).toUpperCase()}</div>`;
       document.getElementById('pdModalBody').innerHTML = `
         <div class="pd-hero">
-          <div>
-            <div class="pd-hero-name">${playerName}</div>
-            <div class="pd-hero-sub">${sessionLabel} &bull; ${total} Answers &bull; ${acc}% Accuracy &bull; ${ppa} Pts/Answer</div>
+          <div style="display:flex;align-items:center;gap:14px;flex:1;min-width:0;">
+            ${avatarHtml}
+            <div style="min-width:0;">
+              <div class="pd-hero-name">${playerName}</div>
+              <div class="pd-hero-sub">${sessionLabel} &bull; ${total} Answers &bull; ${acc}% Accuracy &bull; ${ppa} Pts/Answer</div>
+              <div style="display:flex;align-items:center;gap:6px;margin-top:8px;">
+                <input id="renamePlayerInput" type="text" placeholder="Rename player…" value="${playerName}" maxlength="40"
+                  onkeydown="if(event.key==='Enter') renamePlayer('${playerName.replace(/'/g,"\\'")}');"
+                  style="padding:5px 9px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:.82em;background:var(--card);color:var(--text);width:160px;" />
+                <button onclick="renamePlayer('${playerName.replace(/'/g,"\\'")}');"
+                  style="padding:5px 12px;border:1.5px solid var(--primary);border-radius:6px;font-size:.8em;font-weight:700;color:var(--primary);background:rgba(102,126,234,.07);cursor:pointer;font-family:inherit;">Rename</button>
+              </div>
+            </div>
           </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
             <div class="pd-hero-pts">${player.points} Pts</div>
             <div style="font-size:.75em;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;">Skill Score</div>
             <div style="font-size:1.1em;font-weight:800;color:${skillHeroColor};">${skillHeroVal}</div>
@@ -1719,7 +2039,66 @@
       document.getElementById('playerDetailModal').classList.remove('open');
     }
 
-    // ── Substitution ──
+    // ── Admin panel management ──
+    function renderAdminPanel() {
+      const el = document.getElementById('adminListDisplay');
+      if (!el) return;
+      if (!isAdmin) { el.innerHTML = ''; return; }
+      el.innerHTML = adminList.map(function(name) {
+        const isOwner = name === 'Kamau Elston';
+        const action = isOwner
+          ? '<span style="font-size:.75em;color:var(--text3);">Owner</span>'
+          : '<button onclick="removeAdmin(\'' + name.replace(/\\/g,'\\\\').replace(/'/g,"\\'") + '\')" style="background:none;border:1px solid var(--danger);color:var(--danger);border-radius:5px;padding:2px 9px;font-size:.8em;cursor:pointer;font-family:inherit;">Remove</button>';
+        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-bottom:1px solid var(--border);font-size:.88em;">'
+          + '<span style="font-weight:600;">' + name + '</span>'
+          + action + '</div>';
+      }).join('');
+    }
+    function addAdmin() {
+      const input = document.getElementById('adminAddInput');
+      const name  = (input?.value || '').trim();
+      if (!name) { showToast('Enter a full name to add.'); return; }
+      if (adminList.includes(name)) { showToast(name + ' is already an admin.', 'warn'); return; }
+      adminListRef.set([...adminList, name]).catch(e => showFirebaseError(e.message));
+      if (input) input.value = '';
+    }
+    function removeAdmin(name) {
+      if (name === 'Kamau Elston') { showToast('Cannot remove the owner.', 'warn'); return; }
+      showConfirm('Remove ' + name + ' from admins?', 'Remove').then(ok => {
+        if (!ok) return;
+        adminListRef.set(adminList.filter(n => n !== name)).catch(e => showFirebaseError(e.message));
+      });
+    }
+
+    // ── Player rename ──
+    function renamePlayer(oldName) {
+      const input = document.getElementById('renamePlayerInput');
+      const newName = (input?.value || '').trim();
+      if (!newName) { showToast('Enter a new name.'); return; }
+      if (newName === oldName) { showToast('Name is the same.', 'warn'); return; }
+      Object.values(state.sessions).forEach(sess => {
+        if (sess.players?.[oldName]) {
+          sess.players[newName] = { ...sess.players[oldName], name: newName };
+          delete sess.players[oldName];
+        }
+        (sess.answerLog || []).forEach(a => { if (a.player === oldName) a.player = newName; });
+        (sess.teams || []).forEach(t => {
+          t.playerMembers = (t.playerMembers || []).map(p => p === oldName ? newName : p);
+        });
+      });
+      saveAllData();
+      globalPlayersRef.once('value').then(snap => {
+        const gp = snap.val() || {};
+        if (gp[oldName]) {
+          gp[newName] = { ...gp[oldName], name: newName };
+          delete gp[oldName];
+          globalPlayersRef.set(gp).catch(e => showFirebaseError(e.message));
+        }
+      });
+      renderAll();
+      closePlayerDetailModal();
+      showToast('Renamed to ' + newName, 'success');
+    }
 
     function executeSubstitution(outPlayer, inPlayer) {
       const id = state.currentSessionId; if (!id) return;
@@ -2156,13 +2535,6 @@
         avgPowerRate /= qualifiedWithPR.length;
       }
 
-      // Avg Actual Pts / 20 TU across qualified players
-      let avgActualRate = 0;
-      if (qualified.length > 0) {
-        qualified.forEach(p => { const tH = p.tHeard || 0; avgActualRate += tH > 0 ? (p.points / tH) * 20 : 0; });
-        avgActualRate /= qualified.length;
-      }
-
       // Avg Confidence (early buzz rate: P / P+T) across players with at least one correct toss-up
       const qualifiedWithConf = qualified.filter(p => (p.powers + p.tossupsCorrect) > 0);
       let avgConfNew = null;
@@ -2263,22 +2635,6 @@
         </div>`;
       }
 
-      const _teamAvgInner = !hasQualified
-        ? '<p style="color:var(--text2);font-size:.85em;font-style:italic;margin:0;">Not enough data yet — threshold: ≥' + MIN_BUZZ + ' buzz answers per player.</p>'
-        : '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;">'
-          + '<div style="background:var(--sec-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;text-align:center;"><div class="metric-lbl">Avg Actual Pts / 20 TU</div><div style="font-size:1.15em;font-weight:700;color:var(--primary);">' + avgActualRate.toFixed(1) + '</div></div>'
-          + '<div style="background:var(--sec-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;text-align:center;"><div class="metric-lbl">Avg Risk Payoff</div><div style="font-size:1.15em;font-weight:700;color:' + _avgPRCol + ';">' + _avgPRVal + '</div></div>'
-          + '<div style="background:var(--sec-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;text-align:center;"><div class="metric-lbl">Avg Accuracy</div><div style="font-size:1.15em;font-weight:700;color:' + _avgAccCol + ';">' + avgAcc.toFixed(1) + '%</div></div>'
-          + '</div>'
-          + '<div style="font-size:.7em;color:var(--text3);font-style:italic;">Skill Score is relative — 100 = exactly team average. A player at 150 is 50% above average across Actual Pts/20TU, Risk Payoff, and Accuracy.</div>';
-
-      html += `<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 18px;margin-bottom:var(--sp);box-shadow:var(--shadow-xs);">
-        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px;">
-          <span style="font-size:.9em;font-weight:700;color:var(--text);">Team Averages</span>
-          <span style="font-size:.72em;color:var(--text3);">${qualified.length} of ${active.length} Players Qualify</span>
-        </div>
-        ${_teamAvgInner}
-      </div>`;
 
       // ── Sort controls ──
       const sortOptions = [
@@ -2803,24 +3159,25 @@
       const barOpts = { responsive: true, maintainAspectRatio: false, plugins: pluginDefaults, scales: barScales };
 
       const catBarH    = Math.max(260, allCatsByAnswers.length * 24 + 60);
-      const playerBarH = Math.max(280, activePlayers.length * 24 + 80);
-
-      // Chart sizing thresholds
-      // Pie/doughnut charts: fixed compact size, pair side-by-side
-      // Bar charts: width scales with item count — narrow = share row, wide = full row
       const PIE_H = 300;
-      // Bar chart heights
       const catBarH_actual = catBarH;
-      const playerBarH_actual = playerBarH;
-      // How many items before a bar chart needs the full row width
       const CAT_COUNT   = allCatsByAnswers.length;
       const PLR_COUNT   = activePlayers.length;
-      // Min widths: ≤6 items fits in half row, ≤12 in 2/3, else full
       function barMinW(count) {
         if (count <= 5)  return '280px';
         if (count <= 10) return '420px';
         return '100%';
       }
+
+      const playerPtsH_raw      = Math.max(260, activePlayers.length * 28 + 80);
+      const playerBreakdownH_raw = Math.max(300, activePlayers.length * 36 + 100);
+      const playerCatH_raw      = Math.max(320, activePlayers.length * 44 + 120);
+      // If charts share a row (small player count), unify to the tallest so they align
+      const playerSharedRow = barMinW(PLR_COUNT) !== '100%';
+      const playerUnifiedH  = Math.max(playerPtsH_raw, playerBreakdownH_raw, playerCatH_raw);
+      const playerPtsH      = playerSharedRow ? playerUnifiedH : playerPtsH_raw;
+      const playerBreakdownH = playerSharedRow ? playerUnifiedH : playerBreakdownH_raw;
+      const playerCatH      = playerSharedRow ? playerUnifiedH : playerCatH_raw;
 
       // chart card: span controls CSS grid column spanning via min-width on the card
       // We use a responsive CSS grid on the container with auto-fill cols of minmax(280px,1fr)
@@ -2839,6 +3196,20 @@
           flex-wrap: wrap;
           gap: var(--sp);
           align-items: flex-start;
+        }
+        .ch-player-row {
+          display: flex;
+          flex-wrap: wrap;
+          gap: var(--sp);
+          width: 100%;
+          align-items: stretch;
+        }
+        .ch-player-row .ch-card {
+          display: flex;
+          flex-direction: column;
+        }
+        .ch-player-row .ch-card > div:last-child {
+          flex: 1;
         }
         .ch-card {
           background: var(--card);
@@ -2896,12 +3267,14 @@
       // ── Player charts ──
       if (activePlayers.length >= 1) {
         html += `<div class="ch-section">Players</div>`;
+        html += `<div class="ch-player-row">`;
         if (activePlayers.length > 1)
-          html += chartCard('chart-player-pts', 'Total Points by Player', playerBarH_actual, barMinW(PLR_COUNT));
+          html += chartCard('chart-player-pts', 'Total Points by Player', playerPtsH, barMinW(PLR_COUNT));
         if (activePlayers.length > 1)
-          html += chartCard('chart-player-breakdown', 'Player Answer Breakdown by Type', playerBarH_actual, barMinW(PLR_COUNT));
+          html += chartCard('chart-player-breakdown', 'Player Answer Breakdown by Type', playerBreakdownH, barMinW(PLR_COUNT));
         if (allCatsList.length)
-          html += chartCard('chart-player-cat', 'Player Points by Category', playerBarH_actual, barMinW(PLR_COUNT));
+          html += chartCard('chart-player-cat', 'Player Points by Category', playerCatH, barMinW(PLR_COUNT));
+        html += `</div>`;
       }
 
       html += `</div>`;
@@ -2947,30 +3320,130 @@
         });
       }
 
-      // ── Draw: Player points stacked by category ──
+      // ── Draw: Player points by category — parents collapsed, click to expand into subs ──
       if (activePlayers.length > 0 && allCatsList.length) {
         const pNames = activePlayers.map(p => p.name.split(' ')[0]);
-        makeChart('chart-player-cat', { type: 'bar',
-          data: {
-            labels: pNames,
-            datasets: allCatsList.map((cat, i) => ({
-              label: cat,
-              data: activePlayers.map(p => playerCatPts[p.name]?.[cat] || 0),
-              backgroundColor: PALETTE[i % PALETTE.length] + 'cc',
-              borderColor: PALETTE[i % PALETTE.length],
-              borderWidth: 1,
-              borderRadius: 3,
-            }))
-          },
+
+        // playerParentPts[name][parent] = pts
+        const playerParentPts = {};
+        // playerSubPts[name][parent][sub] = pts
+        const playerSubPts = {};
+        allAnswers.forEach(a => {
+          if (!a.category || a.category === '—' || a.player === '— Team Bonus —') return;
+          const parent = getParentCat(a.category);
+          const sub    = a.category;
+          if (!playerParentPts[a.player]) playerParentPts[a.player] = {};
+          playerParentPts[a.player][parent] = (playerParentPts[a.player][parent] || 0) + (a.points || 0);
+          if (!playerSubPts[a.player]) playerSubPts[a.player] = {};
+          if (!playerSubPts[a.player][parent]) playerSubPts[a.player][parent] = {};
+          playerSubPts[a.player][parent][sub] = (playerSubPts[a.player][parent][sub] || 0) + (a.points || 0);
+        });
+
+        // Order parents by total pts desc
+        const parentSet = new Set();
+        allAnswers.forEach(a => { if (a.category && a.category !== '—') parentSet.add(getParentCat(a.category)); });
+        const parentList = [...parentSet].sort((a, b) => {
+          const aT = activePlayers.reduce((s, p) => s + (playerParentPts[p.name]?.[a] || 0), 0);
+          const bT = activePlayers.reduce((s, p) => s + (playerParentPts[p.name]?.[b] || 0), 0);
+          return bT - aT;
+        });
+
+        // expandedParents: set of parent names currently expanded into subcategories
+        // Assign a stable base color index per parent so subs inherit a tint of it
+        const parentColorIdx = {};
+        parentList.forEach((p, i) => parentColorIdx[p] = i);
+
+        function buildPlayerCatDatasets(expandedParents) {
+          const datasets = [];
+          parentList.forEach(parent => {
+            const pIdx   = parentColorIdx[parent];
+            const pColor = PALETTE[pIdx % PALETTE.length];
+            if (expandedParents.has(parent)) {
+              // Expanded: one dataset per subcategory that has any data
+              const allSubs = CATEGORY_TREE[parent] || [];
+              // Include "General" (logged directly to parent) if any player has it
+              const hasGeneral = activePlayers.some(p => playerSubPts[p.name]?.[parent]?.[parent]);
+              // Build sub tints: slightly vary lightness using opacity steps
+              const subPool = [];
+              if (hasGeneral) subPool.push(parent);
+              allSubs.forEach(s => { if (activePlayers.some(p => (playerSubPts[p.name]?.[parent]?.[s] || 0) > 0)) subPool.push(s); });
+              subPool.forEach((sub, si) => {
+                // Tint: alternate between the base color and a lighter/darker mix
+                const alpha = si % 2 === 0 ? 'dd' : '88';
+                datasets.push({
+                  label: sub === parent ? `${parent} (General)` : sub,
+                  data: activePlayers.map(p => playerSubPts[p.name]?.[parent]?.[sub] || 0),
+                  backgroundColor: pColor + alpha,
+                  borderColor: pColor,
+                  borderWidth: si === 0 ? 2 : 1,
+                  borderDash: sub === parent ? [4, 3] : [],
+                  borderRadius: 2,
+                  _parent: parent,
+                  _expanded: true,
+                });
+              });
+            } else {
+              // Collapsed: single dataset for the whole parent
+              datasets.push({
+                label: parent,
+                data: activePlayers.map(p => playerParentPts[p.name]?.[parent] || 0),
+                backgroundColor: pColor + 'cc',
+                borderColor: pColor,
+                borderWidth: 1,
+                borderRadius: 3,
+                _parent: parent,
+                _expanded: false,
+              });
+            }
+          });
+          return datasets;
+        }
+
+        const expandedParents = new Set();
+        function redrawPlayerCat() {
+          const datasets = buildPlayerCatDatasets(expandedParents);
+          const chart = _chartInstances['chart-player-cat'];
+          if (!chart) return;
+          chart.data.datasets = datasets;
+          chart.update('active');
+          // Update title hint
+          const titleEl = chart.canvas.closest('.ch-card')?.querySelector('.ch-title');
+          if (titleEl) {
+            titleEl.textContent = expandedParents.size
+              ? `Player Points by Category — click expanded segment to collapse`
+              : `Player Points by Category — click a segment to expand`;
+          }
+        }
+
+        makeChart('chart-player-cat', {
+          type: 'bar',
+          data: { labels: pNames, datasets: buildPlayerCatDatasets(expandedParents) },
           options: {
             ...barOpts,
             scales: { ...barScales, x: { ...barScales.x, stacked: true }, y: { ...barScales.y, stacked: true } },
-            plugins: { ...pluginDefaults,
+            plugins: {
+              ...pluginDefaults,
               tooltip: { ...pluginDefaults.tooltip, mode: 'index', intersect: false },
               legend: { ...pluginDefaults.legend, position: 'bottom', labels: { ...pluginDefaults.legend.labels, padding: 10, boxWidth: 12 } }
+            },
+            onClick(evt, elements) {
+              if (!elements.length) return;
+              const ds = this.data.datasets[elements[0].datasetIndex];
+              const parent = ds._parent;
+              if (!parent) return;
+              if (expandedParents.has(parent)) expandedParents.delete(parent);
+              else expandedParents.add(parent);
+              redrawPlayerCat();
+            },
+            onHover(evt, elements) {
+              evt.native.target.style.cursor = elements.length ? 'pointer' : 'default';
             }
           }
         });
+
+        // Set initial hint in title
+        const titleEl = document.querySelector('#chart-player-cat')?.closest('.ch-card')?.querySelector('.ch-title');
+        if (titleEl) titleEl.textContent = 'Player Points by Category — click a segment to expand';
       }
 
       // ── Draw: Player answer breakdown stacked by type ──
@@ -3022,34 +3495,6 @@
       });
     }
 
-    function renderAnalyticsLeaderboard(globalPs, sessionCount) {
-      const el=document.getElementById('an-leaderboard'); if(!el) return;
-      const active=globalPs.filter(p=>p.totalAnswers>0);
-      let html='';
-      if(active.length){
-        let rank=1;
-        html+=active.map((p,i)=>{
-          const prev=active[i-1];
-          const tied=prev&&prev.points===p.points&&prev.powers===p.powers&&prev.negs===p.negs;
-          if(i>0&&!tied) rank=i+1;
-          const sfx=['st','nd','rd'][rank-1]||'th';
-          const escapedName=p.name.replace(/'/g,"\\'");
-          return `<div class="an-lb-row" style="cursor:pointer;" onclick="openPlayerDetailModal('${escapedName}')" title="Click for full details">
-            <span class="an-lb-rank">${rank}${sfx}</span>
-            <span class="an-lb-name" style="color:var(--primary);text-decoration:underline;text-underline-offset:2px;">${p.name}</span>
-            <span class="an-lb-pts">${p.points} Pts</span>
-            ${p.powers?`<span class="an-lb-chip power">+${p.powers} Power</span>`:''}
-            ${p.negs?`<span class="an-lb-chip neg">-${p.negs} Neg</span>`:''}
-            <span class="an-lb-chip">${p.totalAnswers} Ans</span>
-            ${p.sessions>1?`<span class="an-lb-chip">${p.sessions} Sessions</span>`:''}
-          </div>`;
-        }).join('');
-      } else {
-        html+='<p style="color:var(--text2)">No player data yet.</p>';
-      }
-      el.innerHTML=html;
-    }
-
     // ── UI ──
     function setupSectionToggle() {
       document.querySelectorAll('.qb-section h2').forEach(h2=>{
@@ -3060,7 +3505,7 @@
       });
     }
 
-    const SECTION_LABELS={'sec-session':'Session','sec-players':'Players','sec-teams':'Teams','sec-categories':'Categories','sec-export':'Export / Import','sec-visual':'Visual Settings','sec-danger':'Data Management'};
+    const SECTION_LABELS={'sec-session':'Session','sec-players':'Players','sec-teams':'Teams','sec-categories':'Categories','sec-export':'Export / Import','sec-userid':'User ID','sec-visual':'Visual Settings','sec-admin':'Admin Panel','sec-danger':'Data Management'};
 
     function showSection(id) {
       document.querySelectorAll('.qb-sidebar .qb-section').forEach(s=>s.classList.remove('active-section'));
@@ -3181,7 +3626,7 @@
     function addToPlayerPool() {
       const input=document.getElementById('playerInput');
       const player=input.value.trim();
-      if(!player){alert('Please enter a player name.');return;}
+      if(!player){showToast('Please enter a player name.');return;}
       const id=state.currentSessionId; if(!id) return;
       updateSessionAtomic(id,s=>{if(!s.players) s.players={};if(!s.players[player]) s.players[player]={name:player,points:0,answers:[]};}).then(()=>{input.value='';saveGlobalPlayers([player]);});
       withWriteLock(id,()=>{const s=getCurrentSession();if(!s.players) s.players={};if(!s.players[player]) s.players[player]={name:player,points:0,answers:[]};});
@@ -3197,12 +3642,14 @@
     }
 
     function clearPlayerPool() {
-      if(!confirm('Clear all players?')) return;
-      const id=state.currentSessionId; if(!id) return;
-      const reset=s=>{s.players={};(s.teams||[]).forEach(t=>{t.playerMembers=[];});s.answerLog=[];s.answers=[];};
-      updateSessionAtomic(id,reset);
-      withWriteLock(id,()=>{const s=getCurrentSession();if(s) reset(s);});
-      renderPlayerPool(); renderPlayerButtons(); renderSubPanel(); renderTeams(); renderAnswerLog(); renderStatistics(); renderSessionInfo();
+      showConfirm('Clear all players?', 'Clear').then(ok => {
+        if (!ok) return;
+        const id=state.currentSessionId; if(!id) return;
+        const reset=s=>{s.players={};(s.teams||[]).forEach(t=>{t.playerMembers=[];});s.answerLog=[];s.answers=[];};
+        updateSessionAtomic(id,reset);
+        withWriteLock(id,()=>{const s=getCurrentSession();if(s) reset(s);});
+        renderPlayerPool(); renderPlayerButtons(); renderSubPanel(); renderTeams(); renderAnswerLog(); renderStatistics(); renderSessionInfo();
+      });
     }
 
     function renderPlayerPool() {
@@ -3377,6 +3824,63 @@
       t._timer = setTimeout(() => { t.className = ''; }, 1700);
     }
 
+    // ── Admin ──
+    function recomputeAdmin() {
+      const name = localStorage.getItem('qb_userName') || '';
+      isAdmin = adminList.includes(name);
+      applyAdminUI();
+    }
+    function applyAdminUI() {
+      // Show/hide danger section and admin section
+      const dangerEl = document.getElementById('sec-danger');
+      const adminEl  = document.getElementById('sec-admin');
+      const dangerBtn = document.getElementById('jumpBtn-sec-danger');
+      const adminBtn  = document.getElementById('jumpBtn-sec-admin');
+      if (dangerEl)  dangerEl.style.display  = isAdmin ? '' : 'none';
+      if (adminEl)   adminEl.style.display   = isAdmin ? '' : 'none';
+      if (dangerBtn) dangerBtn.style.display  = isAdmin ? '' : 'none';
+      if (adminBtn)  adminBtn.style.display   = isAdmin ? '' : 'none';
+      // Show/hide session invalid toggles (low data flagging)
+      document.querySelectorAll('.session-invalid-toggle').forEach(el => {
+        el.style.display = isAdmin ? '' : 'none';
+      });
+      // Show/hide the low-data manual include/exclude buttons
+      document.querySelectorAll('.ld-admin-btn').forEach(el => {
+        el.style.display = isAdmin ? '' : 'none';
+      });
+      // Refresh admin panel list if open
+      renderAdminPanel();
+    }
+    function showToast(msg, type, duration) {
+      const t = document.getElementById('appToast');
+      if (!t) { alert(msg); return; }
+      t.textContent = msg;
+      t.className = 'show' + (type ? ' toast-'+type : '');
+      clearTimeout(t._timer);
+      t._timer = setTimeout(() => { t.className = ''; }, duration || 2800);
+    }
+
+    // Promise-based confirm toast (replaces confirm())
+    var _confirmResolve = null;
+    function showConfirm(msg, okLabel, warnStyle) {
+      return new Promise(resolve => {
+        _confirmResolve = resolve;
+        const el  = document.getElementById('confirmToast');
+        const msgEl = document.getElementById('confirmToastMsg');
+        const okEl  = document.getElementById('confirmToastOk');
+        if (!el) { resolve(confirm(msg)); return; }
+        msgEl.textContent = msg;
+        okEl.textContent  = okLabel || 'Confirm';
+        okEl.className    = 'ct-ok' + (warnStyle === 'warn' ? ' warn-ok' : '');
+        el.classList.add('show');
+      });
+    }
+    function resolveConfirmToast(result) {
+      const el = document.getElementById('confirmToast');
+      if (el) el.classList.remove('show');
+      if (_confirmResolve) { _confirmResolve(result); _confirmResolve = null; }
+    }
+
 
     function renderSubPanel() {
       const s = getCurrentSession();
@@ -3435,14 +3939,14 @@
 
     function executeSubFromPanel(outPlayer) {
       const sel = document.getElementById('subSelect_' + outPlayer);
-      if (!sel || !sel.value) { alert('Select a bench player to swap in.'); return; }
+      if (!sel || !sel.value) { showToast('Select a bench player to swap in.', 'warn'); return; }
       executeSubstitution(outPlayer, sel.value);
       renderSubPanel();
     }
 
     function executeSubFromPanel2() {
-      if (!_subOut) { alert('Please select the active player to substitute out.'); return; }
-      if (!_subIn)  { alert('Please select the bench player to substitute in.'); return; }
+      if (!_subOut) { showToast('Please select the active player to substitute out.', 'warn'); return; }
+      if (!_subIn)  { showToast('Please select the bench player to substitute in.', 'warn'); return; }
       executeSubstitution(_subOut, _subIn);
       _subOut = null; _subIn = null;
       renderSubPanel();
@@ -3466,7 +3970,7 @@
     // ── Teams ──
     function addTeam() {
       const input=document.getElementById('teamNameInput');
-      const name=input.value.trim(); if(!name){alert('Please enter a team name.');return;}
+      const name=input.value.trim(); if(!name){showToast('Please enter a team name.');return;}
       const id=state.currentSessionId; if(!id) return;
       const team={id:Date.now().toString(),name,playerMembers:[]};
       updateSessionAtomic(id,s=>{s.teams=toArray(s.teams);s.teams.push(team);});
@@ -3514,9 +4018,6 @@
     }
 
     // ── Categories (fixed tree) ──
-    function saveCategories() {
-      // Categories are now fixed — nothing to save manually
-    }
 
     function renderCategoryTreeDisplay() {
       const el = document.getElementById('categoryTreeDisplay'); if (!el) return;
@@ -3539,38 +4040,28 @@
       if (group) group.style.display = noCategory ? 'none' : '';
       if (noCategory) { el.innerHTML = ''; return; }
 
-      // Uniform grid: all buttons same size, grouped by parent with a tappable divider
-      // Grid uses fixed column width so positions stay consistent regardless of label length
-      let html = '<div style="display:flex;flex-direction:column;gap:8px;">';
+      let html = '';
       Object.entries(CATEGORY_TREE).forEach(([parent, subs]) => {
         const parentSel = state.selectedCategory === parent;
-        // One row per parent: [PARENT DIVIDER] [sub] [sub] [sub] ...
-        // Using CSS grid with fixed min column size so all chips are equal-width
-        html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:5px;">`;
-        // Parent chip — dashed border, acts as "General <Parent>"
-        html += `<button class="button-category cat-parent-btn${parentSel ? ' selected' : ''}" `
+        html += `<div class="cat-row">`;
+        // Left label — selects the parent as "General <Parent>"
+        html += `<button class="cat-row-label${parentSel ? ' selected' : ''}" `
               + `onclick="selectCategory('${parent.replace(/'/g,"\\'")}');" `
-              + `title="General ${parent}" `
-              + `style="font-weight:800;font-size:.7em;text-transform:uppercase;letter-spacing:.04em;`
-              + `border-style:dashed;box-sizing:border-box;text-align:center;">`
-              + `${parent}</button>`;
+              + `title="General ${parent}">${parent}</button>`;
+        // Right chip strip — subcategories
+        html += `<div class="cat-row-subs">`;
         subs.forEach(sub => {
           const sel = state.selectedCategory === sub;
-          html += `<button class="button-category${sel ? ' selected' : ''}" `
-                + `onclick="selectCategory('${sub.replace(/'/g,"\\'")}');" `
-                + `style="box-sizing:border-box;text-align:center;font-size:.78em;">`
-                + `${sub}</button>`;
+          html += `<button class="cat-row-chip${sel ? ' selected' : ''}" `
+                + `onclick="selectCategory('${sub.replace(/'/g,"\\'")}');">${sub}</button>`;
         });
-        html += `</div>`;
+        html += `</div></div>`;
       });
-      html += '</div>';
       el.innerHTML = html;
     }
 
     function selectCategory(c) {
-      // c might be a parent (general) or a subcategory
       state.selectedCategory = state.selectedCategory === c ? null : c;
-      // Keep _selectedParentCat in sync for effectiveCategory fallback
       _selectedParentCat = state.selectedCategory ? (CAT_PARENT[state.selectedCategory] || state.selectedCategory) : null;
       renderCategories();
     }
@@ -3617,8 +4108,8 @@
       const isBonus = state.selectedPointType === 'Bonus';
       const isDead  = state.selectedPointType === 'Dead';
       const isMiss = state.selectedPointType === 'Miss';
-      if (!state.selectedPlayer && !isBonus && !isDead && !isMiss) { alert('Please select a player.'); return; }
-      if (!state.selectedPointType) { alert('Please select a point type.'); return; }
+      if (!state.selectedPlayer && !isBonus && !isDead && !isMiss) { showToast('Please select a player.'); return; }
+      if (!state.selectedPointType) { showToast('Please select a point type.'); return; }
 
       // Resolve team bonus: __team__<id> sentinel → look up team name
       const isTeamBonus = isBonus && state.selectedPlayer && state.selectedPlayer.startsWith('__team__');
@@ -3690,20 +4181,6 @@
       }
     });
 
-    function renderTeamBonusButtons() {
-      const el = document.getElementById('teamBonusButtonsContainer');
-      const s  = getCurrentSession();
-      if (!el || !s) return;
-      const teams = (s.teams || []).filter(t => (t.playerMembers||[]).length > 0);
-      if (!teams.length) { el.innerHTML = ''; return; }
-      el.innerHTML = '<div style="display:flex;gap:8px;margin-top:10px;margin-bottom:0;flex-wrap:wrap;">'
-        + teams.map(t => {
-            const safe = t.id.replace(/'/g,"\\'");
-            return `<button class="button" onclick="recordTeamBonus('${safe}')" style="flex:1;min-width:120px;padding:10px;font-size:.88em;">★ ${t.name} Bonus</button>`;
-          }).join('')
-        + '</div>';
-    }
-
     function recordTeamBonus(teamId) {
       const id = state.currentSessionId; if (!id) return;
       const s0 = getCurrentSession(); if (!s0) return;
@@ -3717,20 +4194,6 @@
       updateSessionAtomic(id, apply);
       withWriteLock(id, () => { const s = getCurrentSession(); if (s) apply(s); });
       showRecordToast((team ? team.name : 'Team') + ' Bonus (+10 pts)', '');
-      renderAll();
-    }
-
-    function recordDead() {
-      const id = state.currentSessionId; if (!id) return;
-      const answer = {id:Date.now().toString(),player:'— Dead —',pointType:'Dead',category:'—',points:0,timestamp:new Date().toISOString()};
-      const apply = s => {
-        s.answerLog = toArray(s.answerLog);
-        s.tHeard = (s.tHeard||0) + 1;
-        s.answerLog.push(answer);
-      };
-      updateSessionAtomic(id, apply);
-      withWriteLock(id, () => { const s = getCurrentSession(); if (s) apply(s); });
-      showRecordToast('Dead TU (0 pts)', 'miss');
       renderAll();
     }
 
@@ -3765,12 +4228,14 @@
     }
 
     function clearAnswerLog() {
-      if(!confirm('Clear all answers?')) return;
-      const id=state.currentSessionId; if(!id) return;
-      const clear=s=>{s.answerLog=[];s.tHeard=0;Object.values(s.players||{}).forEach(p=>{p.points=0;p.answers=[];});};
-      updateSessionAtomic(id,clear);
-      withWriteLock(id,()=>{const s=getCurrentSession();if(s) clear(s);});
-      renderAll();
+      showConfirm('Clear all answers?', 'Clear').then(ok => {
+        if (!ok) return;
+        const id=state.currentSessionId; if(!id) return;
+        const clear=s=>{s.answerLog=[];s.tHeard=0;Object.values(s.players||{}).forEach(p=>{p.points=0;p.answers=[];});};
+        updateSessionAtomic(id,clear);
+        withWriteLock(id,()=>{const s=getCurrentSession();if(s) clear(s);});
+        renderAll();
+      });
     }
 
     function renderAnswerLog() {
@@ -3846,13 +4311,20 @@
           const data=JSON.parse(e.target.result);
           if(!data.sessionName||(!data.players&&!data.answerLog)) throw new Error('Not a valid export.');
           const existingId=Object.keys(state.sessions).find(id=>state.sessions[id].name===data.sessionName);
-          if(existingId&&!confirm('Session "'+data.sessionName+'" exists. Overwrite?')){statusEl.textContent='Cancelled.';event.target.value='';return;}
-          const sid=existingId||Date.now().toString();
-          const imported={id:sid,name:data.sessionName,created:data.created||new Date().toISOString(),lastUpdated:new Date().toISOString(),players:data.players||{},teams:data.teams||[],categories:data.categories||[],answers:data.answers||[],answerLog:data.answerLog||[]};
-          Object.keys(imported.players).forEach(name=>{imported.players[name].answers=imported.answerLog.filter(a=>a.player===name);imported.players[name].points=imported.players[name].answers.reduce((s,a)=>s+(a.points||0),0);});
-          state.sessions[sid]=imported; state.currentSessionId=sid;
-          loadSessionData(); saveAllData(); renderAll();
-          statusEl.style.color='var(--success)'; statusEl.textContent='Imported "'+imported.name+'" with '+imported.answerLog.length+' answers.';
+          const doImport = () => {
+            const sid=existingId||Date.now().toString();
+            const imported={id:sid,name:data.sessionName,created:data.created||new Date().toISOString(),lastUpdated:new Date().toISOString(),players:data.players||{},teams:data.teams||[],categories:data.categories||[],answers:data.answers||[],answerLog:data.answerLog||[]};
+            Object.keys(imported.players).forEach(name=>{imported.players[name].answers=imported.answerLog.filter(a=>a.player===name);imported.players[name].points=imported.players[name].answers.reduce((s,a)=>s+(a.points||0),0);});
+            state.sessions[sid]=imported; state.currentSessionId=sid;
+            loadSessionData(); saveAllData(); renderAll();
+            statusEl.style.color='var(--success)'; statusEl.textContent='Imported "'+imported.name+'" with '+imported.answerLog.length+' answers.';
+          };
+          if(existingId){
+            showConfirm('Session "'+data.sessionName+'" exists. Overwrite?','Overwrite','warn').then(ok=>{
+              if(!ok){statusEl.textContent='Cancelled.';event.target.value='';return;}
+              doImport();
+            });
+          } else { doImport(); }
         } catch(err){statusEl.style.color='var(--danger)';statusEl.textContent='Import failed: '+err.message;}
         event.target.value='';
       };
@@ -3883,13 +4355,35 @@
 
     // ── Reset ──
     function resetAllData() {
-      if(prompt('Enter the admin password:')!=='Neg 5'){alert('Incorrect password.');return;}
-      if(!confirm('Delete ALL sessions and data? Cannot be undone!')) return;
-      sessionsRef.remove().catch(e=>showFirebaseError(e.message));
-      globalPlayersRef.remove().catch(e=>showFirebaseError(e.message));
-      localStorage.setItem(CURRENT_SESSION_KEY,'');
-      state.sessions={}; state.currentSessionId=null;
-      createNewSession(); renderAll();
+      showConfirm('Enter the admin password to proceed:', 'Verify', 'warn').then(ok => {
+        if (!ok) return;
+        // Use a second confirm toast as a password prompt surrogate — 
+        // show an inline password field in the confirm toast
+        const ct = document.getElementById('confirmToast');
+        const msgEl = document.getElementById('confirmToastMsg');
+        const okEl  = document.getElementById('confirmToastOk');
+        if (!ct) return;
+        msgEl.innerHTML = 'Admin password: <input id="resetPwInput" type="password" placeholder="Password" style="margin-top:8px;display:block;width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:.95em;background:var(--card);color:var(--text);" />';
+        okEl.textContent = 'Submit';
+        okEl.className = 'ct-ok';
+        ct.classList.add('show');
+        setTimeout(() => document.getElementById('resetPwInput')?.focus(), 80);
+        _confirmResolve = (confirmed) => {
+          _confirmResolve = null;
+          ct.classList.remove('show');
+          if (!confirmed) return;
+          const pw = document.getElementById('resetPwInput')?.value;
+          if (pw !== 'Neg 5') { showToast('Incorrect password.'); return; }
+          showConfirm('Delete ALL sessions and data? This cannot be undone.', 'Delete Everything').then(final => {
+            if (!final) return;
+            sessionsRef.remove().catch(e=>showFirebaseError(e.message));
+            globalPlayersRef.remove().catch(e=>showFirebaseError(e.message));
+            localStorage.setItem(CURRENT_SESSION_KEY,'');
+            state.sessions={}; state.currentSessionId=null;
+            createNewSession(); renderAll();
+          });
+        };
+      });
     }
 
     // ── Init ──
@@ -3897,5 +4391,21 @@
     document.addEventListener('DOMContentLoaded', initFirebase);
   </script>
   <div id="recordToast"></div>
+  <div id="appToast"></div>
+  <div id="confirmToast">
+    <div class="ct-msg" id="confirmToastMsg"></div>
+    <div class="ct-btns">
+      <button class="ct-cancel" onclick="resolveConfirmToast(false)">Cancel</button>
+      <button class="ct-ok" id="confirmToastOk" onclick="resolveConfirmToast(true)">Confirm</button>
+    </div>
+  </div>
+  <div id="welcomeToast">
+    <div class="wt-title">👋 Welcome to HSE Quiz Bowl Tracker!</div>
+    <div class="wt-sub">New here? The Help guide covers everything — players, teams, recording answers, and analytics.</div>
+    <div class="wt-btns">
+      <button class="wt-btn-primary" onclick="dismissWelcomeToast(true)">Open Help Guide</button>
+      <button class="wt-btn-dismiss" onclick="dismissWelcomeToast(false)">Maybe Later</button>
+    </div>
+  </div>
 </body>
 </html>
