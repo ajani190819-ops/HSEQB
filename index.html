@@ -883,20 +883,20 @@
           <li><strong>Actual Pts / 20 TU</strong> &mdash; real earned points per 20 toss-ups heard</li>
           <li><strong>Potential Points</strong> &mdash; bonus opportunity unlocked by wins: 30 &times; (P + T)</li>
           <li><strong>Pot. Pts / 20 TU</strong> &mdash; bonus opportunity per 20 toss-ups heard</li>
-          <li><strong>Actualized Potential</strong> &mdash; Actual / Potential per 20 TU — how much of the opportunity was actually converted</li>
-          <li><strong>Confidence</strong> &mdash; buzz rate: how often the player buzzes in <code>100 &times; (P+T+N) / TU Heard</code>. Display only.</li>
+          <li><strong>Player Potential</strong> &mdash; Actual / Potential per 20 TU — how much of the opportunity was actually converted</li>
+          <li><strong>Buzz Volume</strong> &mdash; buzz rate: how often the player buzzes in <code>100 &times; (P+T+N) / TU Heard</code>. Display only.</li>
           <li><strong>Accuracy</strong> &mdash; correct buzz rate: of all buzzes, how many were right <code>(P+T) / (P+T+N) &times; 100</code>. Display only.</li>
-          <li><strong>Power Rate</strong> &mdash; of all risky buzzes (powers + negs), how many were powers <code>P / (P+N) &times; 100</code>. 50% = equal powers and negs. Goes into Skill Score.</li>
-          <li><strong>Skill Score</strong> &mdash; normalized average of Pot. Pts/20TU, Power Rate, and Accuracy. Team average = 100.</li>
+          <li><strong>Confidence</strong> &mdash; of all risky buzzes (powers + negs), how many were powers <code>P / (P+N) &times; 100</code>. 50% = equal powers and negs. Goes into Skill Score.</li>
+          <li><strong>Skill Score</strong> &mdash; normalized average of Pot. Pts/20TU, Confidence, and Accuracy. Team average = 100.</li>
         </ul>
 
         <h3 style="color:var(--primary);margin:0 0 6px;">Skill Score</h3>
-        <p style="margin-bottom:8px;">Each of the three skill metrics (Pot. Pts/20TU, Power Rate, Accuracy) is divided by the team average so all contribute equally. An exactly-average player scores 100; twice as good across the board scores ~200.</p>
+        <p style="margin-bottom:8px;">Each of the three skill metrics (Pot. Pts/20TU, Confidence, Accuracy) is divided by the team average so all contribute equally. An exactly-average player scores 100; twice as good across the board scores ~200.</p>
         <p style="margin-bottom:14px;font-family:monospace;font-size:.9em;background:var(--sec-bg);padding:8px 12px;border-radius:6px;border:1px solid var(--border);">Skill = (Prod/AvgProd + PowerRate/AvgPowerRate + Acc/AvgAcc) &times; 100/3</p>
         <p style="margin-bottom:14px;">Players with fewer buzz answers than the low-data threshold are flagged and excluded from skill scoring by default. You can manually include or exclude flagged players in the <strong>Low-Data Players</strong> panel. Inclusions sync globally across all devices and persist across sessions.</p>
 
         <h3 style="color:var(--primary);margin:0 0 6px;">Leaderboard Sorting</h3>
-        <p style="margin-bottom:14px;">Use the sort pills above the player list to rank by <strong>Points</strong>, <strong>Skill Score</strong>, <strong>Pot. Pts / 20 TU</strong>, <strong>Actual Pts / 20 TU</strong>, <strong>Power Rate</strong>, <strong>Confidence</strong>, <strong>Accuracy</strong>, <strong>Powers</strong>, or <strong>Negs</strong> (fewest first). Ties in Points are broken by most Powers, then fewest Negs.</p>
+        <p style="margin-bottom:14px;">Use the sort pills above the player list to rank by <strong>Points</strong>, <strong>Skill Score</strong>, <strong>Pot. Pts / 20 TU</strong>, <strong>Actual Pts / 20 TU</strong>, <strong>Confidence</strong>, <strong>Buzz Volume</strong>, <strong>Accuracy</strong>, <strong>Powers</strong>, or <strong>Negs</strong> (fewest first). Ties in Points are broken by most Powers, then fewest Negs.</p>
 
         <h3 style="color:var(--primary);margin:0 0 6px;">Export &amp; Import</h3>
         <p style="margin-bottom:14px;">Export to <strong>CSV</strong> for spreadsheets or <strong>JSON</strong> to back up and re-import a full session. Both options are in the Data section of the sidebar.</p>
@@ -1407,17 +1407,17 @@
       const uRate      = playerTHeard > 0 ? (uPoints / playerTHeard) * 20 : null;
       const actualPts20 = playerTHeard > 0 ? (totalPoints / playerTHeard) * 20 : null;
       const fmtPts20   = v => v === null ? null : (v % 1 === 0 ? v : parseFloat(v.toFixed(1)));
-      // Actualized Potential: how much of the bonus opportunity was converted (actual / potential)
+      // Player Potential: how much of the bonus opportunity was converted (actual / potential)
       const actualizedPot = (uRate !== null && uRate > 0 && actualPts20 !== null)
         ? Math.min(100, (actualPts20 / uRate) * 100) : null;
-      // Confidence: total buzz rate (always positive, display only) — misses excluded (not buzz-ins)
+      // Buzz Volume: total buzz rate (always positive, display only) — misses excluded (not buzz-ins)
       const totalBuzzesModal  = powers + tossups + negs;
       const confValueModal    = playerTHeard > 0 ? (100 * totalBuzzesModal) / playerTHeard : null;
       const confZeroModal     = playerTHeard === 0 && totalBuzzesModal === 0;
       // Accuracy: correct / total answers (misses count as wrong)
       const totalAnsweredModal = powers + tossups + negs + misses + bonuses;
       const modalAccuracy     = totalAnsweredModal > 0 ? (100 * (powers + tossups + bonuses)) / totalAnsweredModal : null;
-      // Power Rate: P / (P + N) × 100
+      // Confidence: P / (P + N) × 100
       const prDenomModal      = powers + negs;
       const prValueModal      = prDenomModal > 0 ? (100 * powers) / prDenomModal : null;
 
@@ -1603,19 +1603,19 @@
           ${actualizedPot !== null ? `
           <div style="padding:8px 0;border-bottom:1px solid var(--border);">
             <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;">
-              <span style="font-size:.82em;font-weight:700;color:var(--text2);">Actualized Potential</span>
+              <span style="font-size:.82em;font-weight:700;color:var(--text2);">Player Potential</span>
               <span style="font-size:.9em;font-weight:700;color:${actualizedPot >= 60 ? 'var(--success)' : actualizedPot >= 30 ? '#f39c12' : 'var(--danger)'};">${actualizedPot.toFixed(1)}%</span>
             </div>
             <div style="height:7px;background:var(--border);border-radius:8px;overflow:hidden;">
               <div style="height:100%;width:${actualizedPot.toFixed(1)}%;background:${actualizedPot >= 60 ? 'var(--success)' : actualizedPot >= 30 ? '#f39c12' : 'var(--danger)'};border-radius:8px;"></div>
             </div>
           </div>` : `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
-            <span style="font-size:.82em;font-weight:700;color:var(--text2);">Actualized Potential</span>
+            <span style="font-size:.82em;font-weight:700;color:var(--text2);">Player Potential</span>
             <span style="font-size:.85em;color:var(--text3);font-style:italic;">N/A</span>
           </div>`}
-          ${playerMetricBar(confZeroModal ? null : confValueModal, 'Confidence (buzz rate)', false, false, false)}
+          ${playerMetricBar(confZeroModal ? null : confValueModal, 'Buzz Volume (buzz rate)', false, false, false)}
           ${playerMetricBar(modalAccuracy, 'Accuracy (correct buzz %)', false, false, false)}
-          ${playerMetricBar(prValueModal, 'Power Rate (powers / risky buzzes)', false, false, false)}
+          ${playerMetricBar(prValueModal, 'Confidence (powers / risky buzzes)', false, false, false)}
           <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
             <span style="font-size:.82em;font-weight:700;color:var(--text2);">Skill Score <span style="font-weight:400;font-size:.9em;color:var(--text3);">(avg = 100)</span></span>
             ${modalSkill !== null
@@ -1888,9 +1888,9 @@
           colHeaders: ['Team', 'Avg / Player'],
           rows: [
             { label: 'Accuracy',               total: teamAccuracy,      avg: avgAccuracy,      totalColor: accColor(teamAccuracy),  avgColor: accColor(avgAccuracy)  },
-            { label: 'Actualized Potential',   total: teamActualizedPot, avg: avgActualizedPot, totalColor: 'var(--primary)',        avgColor: 'var(--primary)'       },
-            { label: 'Confidence (Buzz Rate)', total: teamConf,          avg: avgConf,          totalColor: 'var(--primary)',        avgColor: 'var(--primary)'       },
-            { label: 'Power Rate',             total: teamPowerRate,     avg: avgPowerRate,     totalColor: 'var(--primary)',        avgColor: 'var(--primary)'       },
+            { label: 'Player Potential',   total: teamActualizedPot, avg: avgActualizedPot, totalColor: 'var(--primary)',        avgColor: 'var(--primary)'       },
+            { label: 'Buzz Volume (Buzz Rate)', total: teamConf,          avg: avgConf,          totalColor: 'var(--primary)',        avgColor: 'var(--primary)'       },
+            { label: 'Confidence',              total: teamPowerRate,     avg: avgPowerRate,     totalColor: 'var(--primary)',        avgColor: 'var(--primary)'       },
             { label: 'Actual Pts / 20 TU',     total: teamActualPts20,   avg: avgActualPts20,   totalColor: 'var(--primary)', avgColor: 'var(--primary)' },
             { label: 'Pot. Pts / 20 TU',       total: teamPotPts20,      avg: avgPotPts20,      totalColor: 'var(--text2)',   avgColor: 'var(--text2)'  },
           ]
@@ -2038,12 +2038,12 @@
         const uPts = 30 * (p.powers + p.tossupsCorrect);
         // Pot. Pts / 20 TU heard
         const prodRate   = tH > 0 ? (uPts / tH) * 20 : 0;
-        // Confidence: buzz rate (always positive) — display only
+        // Buzz Volume: buzz rate (always positive) — display only
         const confidence = tH > 0 ? (100 * totalBuzzes) / tH : 0;
         // Accuracy: correct / all answers (misses count as wrong)
         const totalAnswered = p.powers + p.tossupsCorrect + p.negs + (p.misses || 0) + (p.bonusPoints / 10);
         const accuracy   = totalAnswered > 0 ? (100 * (p.powers + p.tossupsCorrect + (p.bonusPoints / 10))) / totalAnswered : 0;
-        // Power Rate: P / (P + N) × 100 — of risky buzzes, how many were powers
+        // Confidence: P / (P + N) × 100 — of risky buzzes, how many were powers
         const powerRate  = (p.powers + p.negs) > 0 ? (100 * p.powers) / (p.powers + p.negs) : null;
         return { prodRate, confidence, accuracy, powerRate };
       }
@@ -2091,7 +2091,7 @@
           onmouseover="this.style.background='var(--hover)';" onmouseout="this.style.background='';">
           <div style="display:flex;align-items:center;gap:10px;">
             <span style="font-size:.85em;font-weight:700;color:var(--text);">⚙ Skill Score Settings</span>
-            ${ssCollapsed ? `<span style="font-size:.72em;color:var(--text3);">Threshold ≥${MIN_BUZZ} &nbsp;·&nbsp; Pot. Pts + Power Rate + Accuracy</span>` : ''}
+            ${ssCollapsed ? `<span style="font-size:.72em;color:var(--text3);">Threshold ≥${MIN_BUZZ} &nbsp;·&nbsp; Pot. Pts + Confidence + Accuracy</span>` : ''}
           </div>
           <span style="font-size:.75em;color:var(--text3);transition:transform .25s;display:inline-block;transform:${ssCollapsed?'':'rotate(180deg)'};">&#9660;</span>
         </div>
@@ -2117,13 +2117,13 @@
             </div>
           </div>
           <div style="background:var(--sec-bg);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:.8em;color:var(--text2);line-height:1.5;">
-            <strong style="color:var(--text);">Skill Score = normalized average of Pot. Pts/20TU + Power Rate + Accuracy</strong><br>
+            <strong style="color:var(--text);">Skill Score = normalized average of Pot. Pts/20TU + Confidence + Accuracy</strong><br>
             Each metric is divided by the team average before summing, so all three contribute equally. An exactly-average player scores 100.
             <ul style="margin:6px 0 0 16px;padding:0;">
               <li><strong>Pot. Pts / 20 TU</strong> — bonus opportunity value per 20 TU heard <span style="color:var(--text3);">30×(P+T) / TU Heard × 20</span></li>
-              <li><strong>Power Rate</strong> — of all risky buzzes (powers + negs), how many were powers <span style="color:var(--text3);">P/(P+N)×100</span></li>
+              <li><strong>Confidence</strong> — of all risky buzzes (powers + negs), how many were powers <span style="color:var(--text3);">P/(P+N)×100</span></li>
               <li><strong>Accuracy</strong> — correct buzz rate <span style="color:var(--text3);">(P+T)/(P+T+N)×100</span></li>
-              <li><strong>Confidence</strong> — total buzz rate, display only <span style="color:var(--text3);">100×(P+T+N)/TU Heard</span></li>
+              <li><strong>Buzz Volume</strong> — total buzz rate, display only <span style="color:var(--text3);">100×(P+T+N)/TU Heard</span></li>
             </ul>
           </div>
         </div>`}
@@ -2172,11 +2172,11 @@
             <div style="font-size:1.15em;font-weight:700;color:var(--primary);">${avgProd.toFixed(1)}</div>
           </div>
           <div style="background:var(--sec-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;text-align:center;">
-            <div class="metric-lbl">Avg Confidence</div>
+            <div class="metric-lbl">Avg Buzz Volume</div>
             <div style="font-size:1.15em;font-weight:700;color:var(--primary);">${avgConf.toFixed(1)}%</div>
           </div>
           <div style="background:var(--sec-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;text-align:center;">
-            <div class="metric-lbl">Avg Power Rate</div>
+            <div class="metric-lbl">Avg Confidence</div>
             <div style="font-size:1.15em;font-weight:700;color:${avgPowerRate >= 75 ? 'var(--success)' : avgPowerRate >= 50 ? '#f39c12' : 'var(--danger)'};">${qualifiedWithPR.length > 0 ? avgPowerRate.toFixed(1)+'%' : '—'}</div>
           </div>
           <div style="background:var(--sec-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;text-align:center;">
@@ -2193,8 +2193,8 @@
         { key: 'skill',      label: 'Skill' },
         { key: 'prodRate',   label: 'Pot. Pts / 20 TU' },
         { key: 'actualRate', label: 'Actual Pts / 20 TU' },
-        { key: 'powerRate',  label: 'Power Rate' },
-        { key: 'confidence', label: 'Confidence' },
+        { key: 'powerRate',  label: 'Confidence' },
+        { key: 'confidence', label: 'Buzz Volume' },
         { key: 'accuracy',   label: 'Accuracy' },
         { key: 'powers',     label: 'Powers' },
         { key: 'negs',       label: 'Negs' },
@@ -2268,10 +2268,10 @@
         // Actualized potential: actual / potential (how much bonus opportunity was converted)
         const actualizedPot = (uRate !== null && uRate > 0) ? Math.min(100, (actualRate / uRate) * 100) : null;
         const fmtRate = v => v === null ? '—' : (v % 1 === 0 ? v : v.toFixed(1));
-        // Confidence: total buzz rate
+        // Buzz Volume: total buzz rate
         const confRaw   = tH > 0 ? (100 * totalBuzzes) / tH : 0;
         const confZero  = tH === 0 && totalBuzzes === 0;
-        // Power Rate: P / (P + N) × 100
+        // Confidence: P / (P + N) × 100
         const prDenom   = p.powers + p.negs;
         const prRaw     = prDenom > 0 ? (100 * p.powers) / prDenom : null;
         const prColor   = prRaw === null ? 'var(--text3)' : prRaw >= 75 ? 'var(--success)' : prRaw >= 50 ? '#f39c12' : 'var(--danger)';
@@ -2336,13 +2336,13 @@
                 </div>
                 <div class="metric-tile span2" style="background:var(--sec-bg);">
                   <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <div class="metric-lbl">Actualized Potential</div>
+                    <div class="metric-lbl">Player Potential</div>
                     <div class="metric-val" style="color:${actualizedPot === null ? 'var(--text3)' : actualizedPot >= 60 ? 'var(--success)' : actualizedPot >= 30 ? '#f39c12' : 'var(--danger)'};">${actualizedPot !== null ? actualizedPot.toFixed(1)+'%' : '—'}</div>
                   </div>
                   ${actualizedPot !== null ? `<div style="height:4px;background:var(--border);border-radius:4px;overflow:hidden;margin-top:5px;"><div style="height:100%;width:${actualizedPot.toFixed(1)}%;background:${actualizedPot >= 60 ? 'var(--success)' : actualizedPot >= 30 ? '#f39c12' : 'var(--danger)'};border-radius:4px;"></div></div>` : ''}
                 </div>
                 <div class="metric-tile">
-                  <div class="metric-lbl">Confidence</div>
+                  <div class="metric-lbl">Buzz Volume</div>
                   <div class="metric-val" style="color:${confZero ? 'var(--text3)' : 'var(--primary)'};">${confZero ? '—' : confRaw.toFixed(1)+'%'}</div>
                 </div>
                 <div class="metric-tile">
@@ -2352,7 +2352,7 @@
                 </div>
                 <div class="metric-tile span2">
                   <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <div class="metric-lbl">Power Rate</div>
+                    <div class="metric-lbl">Confidence</div>
                     <div class="metric-val" style="color:${prColor};margin-bottom:${prRaw!==null?'5px':'0'};">${prRaw !== null ? prRaw.toFixed(1)+'%' : '—'}</div>
                   </div>
                   ${prRaw !== null ? `<div style="height:4px;background:var(--border);border-radius:4px;overflow:hidden;"><div style="height:100%;width:${prRaw.toFixed(1)}%;background:${prColor};border-radius:4px;"></div></div>` : ''}
