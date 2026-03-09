@@ -57,19 +57,28 @@
     /* ── Header ── */
     .qb-header {
       background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-      color: #fff; padding: 14px 24px;
-      display: flex; justify-content: center; align-items: center;
+      color: #fff; padding: 10px 16px;
+      display: flex; align-items: center; gap: 10px;
       box-shadow: 0 2px 16px rgba(102,126,234,.28);
       position: relative; z-index: 200; flex-shrink: 0;
-      transition: filter .3s ease; min-height: 62px;
+      transition: filter .3s ease; min-height: 56px;
+      flex-wrap: nowrap;
     }
+    /* Left slot — menu button, fixed width */
+    .qb-header-left {
+      display: flex; align-items: center; flex-shrink: 0;
+      min-width: 0;
+    }
+    /* Centre slot — title + session name, shrinks and clips */
     .qb-header-center {
-      display: flex; flex-direction: column; align-items: center; gap: 2px;
-      pointer-events: none;
+      flex: 1 1 0; min-width: 0;
+      display: flex; flex-direction: column; align-items: center; gap: 1px;
+      pointer-events: none; overflow: hidden;
     }
     .qb-header h1 {
-      font-size: clamp(1.3em,3.5vw,1.85em); font-weight: 700; letter-spacing: -.3px;
-      white-space: nowrap; margin: 0; pointer-events: none;
+      font-size: clamp(.95em, 2.6vw, 1.55em); font-weight: 700; letter-spacing: -.3px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      max-width: 100%; margin: 0; pointer-events: none;
     }
     .version-badge {
       font-size: .42em; font-weight: 600; background: rgba(255,255,255,.18);
@@ -78,25 +87,32 @@
     }
     .header-session-name {
       font-size: .72em; font-weight: 500; color: rgba(255,255,255,.6);
-      white-space: nowrap; pointer-events: none; line-height: 1;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      max-width: 100%; pointer-events: none; line-height: 1;
     }
     .header-session-name::before { content: 'Session: '; opacity: .7; }
+    /* Right slot — controls, fixed width, never shrinks */
     .header-controls {
-      position: absolute; right: 20px; top: 50%; transform: translateY(-50%);
-      display: flex; gap: 8px; align-items: center;
+      display: flex; gap: 6px; align-items: center; flex-shrink: 0;
+    }
+    /* Toggle label text hides at tight widths */
+    .header-toggle-label {
+      font-size: .82em; font-weight: 700;
+    }
+    @media (max-width: 520px) {
+      .header-toggle-label { display: none; }
     }
     .header-btn {
       background: rgba(255,255,255,.14); color: #fff; border: 1px solid rgba(255,255,255,.28);
       border-radius: var(--radius-sm); padding: 6px 12px; font-size: .82em; font-weight: 600;
       cursor: pointer; font-family: inherit; white-space: nowrap; text-decoration: none;
       display: inline-flex; align-items: center; gap: 5px; transition: background .2s;
+      flex-shrink: 0;
     }
     .header-btn:hover { background: rgba(255,255,255,.26); }
     .header-btn.round { border-radius: 50%; width: 30px; height: 30px; padding: 0; justify-content: center; font-size: 1em; }
     .header-btn.active { background: rgba(255,255,255,.32); box-shadow: 0 0 0 2px rgba(255,255,255,.45); }
-    .sidebar-open-btn {
-      display: none; position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
-    }
+    .sidebar-open-btn { display: none; }
     .mobile-subrow { display: none; }
 
     /* ── Body ── */
@@ -228,9 +244,30 @@
         display: flex; align-items: center; justify-content: space-between;
         gap: 6px; width: 100%; margin-top: 4px;
       }
-      .header-session-name, .header-controls { display: none !important; }
+      /* header-session-name and controls stay visible — single-row layout handles it */
       .sidebar-open-btn { display: none !important; }
     }
+
+    /* ── iframe / preview overrides — disable mobile overlay, keep desktop sidebar ── */
+    body.is-iframe .qb-sidebar {
+      position: relative !important; transform: none !important; visibility: visible !important;
+      width: 300px !important; height: auto !important; max-height: none !important;
+      padding: var(--sp) var(--hsp) !important;
+      background: var(--card) !important;
+      backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+      box-shadow: none !important; pointer-events: auto !important;
+      transition: width .3s ease, padding .3s ease !important;
+    }
+    body.is-iframe .qb-sidebar.collapsed {
+      width: 0 !important; padding: 0 !important; overflow: hidden !important;
+    }
+    body.is-iframe #sidebarOpenBtn { display: inline-flex !important; }
+    body.is-iframe .sidebar-open-btn { display: inline-flex !important; }
+    body.is-iframe .mobile-subrow { display: none !important; }
+    body.is-iframe .header-controls { display: flex !important; }
+    body.is-iframe .header-session-name { display: block !important; }
+    body.is-iframe .qb-scroll.menu-blurred,
+    body.is-iframe .analytics-scroll.menu-blurred { filter: none !important; pointer-events: auto !important; }
 
     /* ── Sections ── */
     .qb-section {
@@ -807,34 +844,39 @@
     </div>
     <script>
       // Detect if inside an iframe (Claude preview, codepen, etc.)
-      try { if (window.self !== window.top) document.getElementById('sandboxWarning').style.display = 'block'; } catch(e) { document.getElementById('sandboxWarning').style.display = 'block'; }
+      try { if (window.self !== window.top) { document.getElementById('sandboxWarning').style.display = 'block'; document.body.classList.add('is-iframe'); } } catch(e) { document.getElementById('sandboxWarning').style.display = 'block'; document.body.classList.add('is-iframe'); }
     </script>
 
     <div class="qb-header" id="qbHeader">
-      <button class="header-btn sidebar-open-btn" id="sidebarOpenBtn">&#9654; Menu</button>
+      <!-- Left: menu button -->
+      <div class="qb-header-left">
+        <button class="header-btn sidebar-open-btn" id="sidebarOpenBtn" style="display:none;">&#9654; Menu</button>
+      </div>
+      <!-- Centre: title + session name -->
       <div class="qb-header-center">
         <h1>HSE Quiz Bowl Tracker <span class="version-badge" id="versionBadge" style="display:none;"></span></h1>
         <div class="header-session-name" id="headerSessionName"></div>
       </div>
+      <!-- Right: toggle + help + save indicator -->
       <div class="header-controls">
-        <!-- Tracker / Analytics toggle switch -->
-        <div style="display:flex;align-items:center;gap:8px;user-select:none;" title="Switch between Tracker and Analytics">
-          <span id="toggleLabelTracker" style="font-size:.82em;font-weight:700;color:rgba(255,255,255,.95);">Tracker</span>
-          <div onclick="toggleAnalytics()" id="viewToggleSwitch" style="width:46px;height:24px;background:rgba(255,255,255,.25);border-radius:12px;border:2px solid rgba(255,255,255,.4);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;">
+        <div style="display:flex;align-items:center;gap:6px;user-select:none;" title="Switch between Tracker and Analytics">
+          <span id="toggleLabelTracker" class="header-toggle-label" style="color:rgba(255,255,255,.95);">Tracker</span>
+          <div onclick="toggleAnalytics()" id="viewToggleSwitch" style="width:44px;height:24px;background:rgba(255,255,255,.25);border-radius:12px;border:2px solid rgba(255,255,255,.4);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;">
             <div id="viewToggleKnob" style="width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:1px;left:2px;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,.3);"></div>
           </div>
-          <span id="toggleLabelAnalytics" style="font-size:.82em;font-weight:700;color:rgba(255,255,255,.55);">Stats</span>
+          <span id="toggleLabelAnalytics" class="header-toggle-label" style="color:rgba(255,255,255,.55);">Stats</span>
         </div>
         <button class="header-btn round" onclick="openHelpModal()" title="Help / Tutorial">?</button>
         <span id="autosaveStatus" class="auto-save-indicator state-connecting"><span class="save-ring"><svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="8" r="6" stroke="rgba(255,255,255,0.25)" stroke-width="2"/><path d="M8 2 A6 6 0 0 1 14 8" stroke="white" stroke-width="2" stroke-linecap="round"/></svg><span class="save-ring-dot"></span></span><span class="save-label">Connecting…</span></span>
       </div>
-      <div class="mobile-subrow" id="mobileSubrow">
+      <!-- Mobile subrow removed — single-row layout handles all widths now -->
+      <div class="mobile-subrow" id="mobileSubrow" style="display:none!important;">
         <button class="header-btn" id="sidebarOpenBtnMobile">&#9654; Menu</button>
         <span id="headerSessionNameMobile" style="flex:1;text-align:center;font-size:.78em;font-weight:600;color:rgba(255,255,255,.75);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></span>
-        <div onclick="toggleAnalytics()" id="viewToggleSwitchMobile" style="display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;" title="Switch view">
+        <div onclick="toggleAnalytics()" id="viewToggleSwitchMobile" style="display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;">
           <span id="toggleLabelMobile" style="font-size:.75em;font-weight:700;color:rgba(255,255,255,.9);">Tracker</span>
           <div style="width:38px;height:20px;background:rgba(255,255,255,.25);border-radius:10px;border:2px solid rgba(255,255,255,.4);position:relative;flex-shrink:0;">
-            <div id="viewToggleKnobMobile" style="width:14px;height:14px;background:#fff;border-radius:50%;position:absolute;top:1px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3);"></div>
+            <div id="viewToggleKnobMobile" style="width:14px;height:14px;background:#fff;border-radius:50%;position:absolute;top:1px;left:2px;transition:left .2s;"></div>
           </div>
         </div>
         <button class="header-btn round" onclick="openHelpModal()" title="Help">?</button>
@@ -861,6 +903,7 @@
               <button onclick="showSection('sec-visual')">Visual Settings</button>
               <button id="jumpBtn-sec-admin" onclick="showSection('sec-admin')" style="display:none;">Admin Panel</button>
               <button id="jumpBtn-sec-danger" onclick="showSection('sec-danger')" style="display:none;">Data Management</button>
+              <button id="jumpBtn-sec-debug" onclick="showSection('sec-debug')" style="display:none;">Debug Menu</button>
             </div>
           </div>
           <button class="sidebar-close-btn" onclick="toggleSidebar()">&#9664; Hide</button>
@@ -1053,6 +1096,24 @@
             <div class="collapsible-content">
               <button class="button button-danger" onclick="resetAllData()">Delete All Data</button>
               <p style="margin-top:10px;font-size:.85em;color:var(--text2);">This cannot be undone. Export first!</p>
+            </div>
+          </div>
+
+          <div class="qb-section" id="sec-debug" style="border:2px solid var(--warning);display:none;">
+            <h2 style="color:var(--warning);">🛠 Debug Menu <span class="toggle-icon">&#9660;</span></h2>
+            <div class="collapsible-content">
+              <p style="font-size:.82em;color:var(--text2);margin-bottom:14px;line-height:1.5;">Inject realistic placeholder data into the current session to simulate a Firebase-populated game. Useful for testing UI, stats, and analytics without a live connection.</p>
+              <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;">
+                <label style="font-size:.85em;font-weight:600;color:var(--text2);">Scenario</label>
+                <select id="debugScenario" style="width:100%;padding:9px 12px;border:1.5px solid var(--input-border);border-radius:var(--radius-sm);font-size:.93em;font-family:inherit;background:var(--input-bg);color:var(--input-text);">
+                  <option value="mid">Mid-game (~20 questions)</option>
+                  <option value="full">Full game (~30 questions)</option>
+                  <option value="blowout">Blowout (one team dominant)</option>
+                </select>
+              </div>
+              <button class="button" style="width:100%;background:linear-gradient(135deg,var(--warning),#e67e22);" onclick="injectDebugData();loadSessionData();renderAll();">Inject Debug Data</button>
+              <button class="button button-secondary" style="width:100%;margin-top:8px;" onclick="clearDebugData()">Clear Session Data</button>
+              <div id="debugStatus" style="margin-top:10px;font-size:.82em;color:var(--text2);min-height:1.4em;"></div>
             </div>
           </div>
 
@@ -1251,11 +1312,62 @@
 
   <script src="local-settings.js" onerror="void 0"></script>
   <script>
+    // ── Environment detection — must be first ──
+    // Only treat as Claude preview if we're in an iframe AND the parent is claude.ai.
+    // Opening directly from an HTML file (file://) or any other host never triggers this.
+    const isIframe = (() => {
+      try {
+        if (window.self === window.top) return false; // not in an iframe at all
+        // Try to read the parent URL — will throw if cross-origin (which claude.ai is)
+        // A cross-origin parent that blocks access is the Claude preview case.
+        try {
+          const parentHref = window.parent.location.href; // throws on cross-origin
+          // If we can read it, check it's actually claude.ai (same-origin embeds on claude.ai)
+          return parentHref.includes('claude.ai');
+        } catch(crossOriginErr) {
+          // Cross-origin iframe — check referrer and ancestor hints as a fallback
+          // document.referrer will be set to claude.ai when embedded there
+          const ref = document.referrer || '';
+          // If referrer is empty and we're cross-origin-iframed, also accept
+          // (claude.ai sends no referrer in some sandbox configs)
+          return ref.includes('claude.ai') || ref === '';
+        }
+      } catch(e) { return false; }
+    })();
+
     // ── Firebase (initialized after DOM ready to ensure SDK scripts have loaded) ──
     var db, sessionsRef, globalPlayersRef, versionRef, globalSettingsRef, userIdentitiesRef, adminListRef;
-    var adminList = ['Kamau Elston']; // seeded default; overwritten by Firebase
-    var isAdmin = false; // computed after user identity + adminList both load
+    var adminList = []; // populated from Firebase; empty until synced
+    // ── Hardened admin state — not settable from the console ──
+    // isAdmin is backed by a private token; setting the global variable has no effect.
+    const _adminToken = (()=>{
+      let _tok = null; // null = not admin; a random string = admin
+      const _secret = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+      return {
+        grant()  { _tok = _secret; },
+        revoke() { _tok = null; },
+        check()  { return _tok === _secret; },
+      };
+    })();
+    // isAdmin is a read-only proxy — writing to it from console is silently ignored
+    Object.defineProperty(window, 'isAdmin', { get: () => _adminToken.check(), set: () => {}, configurable: false });
+
+    // Inert stub for Firebase refs — used in iframe mode so nothing crashes
+    function _noopRef() {
+      const noop = () => _noopRef();
+      const p = () => Promise.resolve({ val: () => null });
+      return { on: noop, off: noop, once: p, set: p, update: p, remove: p, child: noop, transaction: p };
+    }
+
     function initFirebase() {
+      // In an iframe (Claude preview) Firebase SDKs are blocked — skip straight to startApp
+      if (isIframe) {
+        db = null;
+        sessionsRef = _noopRef(); globalPlayersRef = _noopRef(); versionRef = _noopRef();
+        globalSettingsRef = _noopRef(); userIdentitiesRef = _noopRef(); adminListRef = _noopRef();
+        startApp();
+        return;
+      }
       if (typeof firebase === 'undefined') { setTimeout(initFirebase, 50); return; }
       const firebaseConfig = {
       apiKey: "AIzaSyCRkK3IpRXeQC9JH73iC0tC-mjq5nulaAo",
@@ -1276,10 +1388,10 @@
       adminListRef = db.ref('adminList');
       // Seed admin list if empty
       adminListRef.once('value').then(snap => {
-        if (!snap.val()) adminListRef.set(['Kamau Elston']);
+        // Don't auto-seed — let the real admin set up the list
       });
       adminListRef.on('value', snap => {
-        adminList = snap.val() || ['Kamau Elston'];
+        adminList = snap.val() || [];
         recomputeAdmin();
       });
       startApp();
@@ -1375,15 +1487,45 @@
       });
       loadUserId();
       recomputeAdmin();
-      maybeShowWelcomeToast();
+      if (!isIframe) maybeShowWelcomeToast();
+
+      // ── Auto-inject debug data when running inside an iframe (e.g. Claude preview) ──
+      // Fires after a short delay to let loadAllData settle. Uses a temporary fake identity
+      // so no real user session or player name is ever set. All Firebase writes are already
+      // blocked via the isIframe guards above, so nothing here can reach the database.
+      if (isIframe) {
+        // Runs exactly once. loadAllData() already created the session synchronously above.
+        // We just need to wait one tick for the DOM to settle, then inject and render once.
+        setTimeout(() => {
+          if (_iframeDebugActive) return; // already ran — never run twice
+          _iframeDebugActive = true;
+          // Grant temporary in-memory admin — no localStorage or Firebase write
+          _adminToken.grant();
+          applyAdminUI();
+          applyDebugMenuVisibility();
+          // Inject data into the session loadAllData() created
+          const sess = getCurrentSession();
+          if (sess) injectDebugData();
+          // Single renderAll now that data is populated
+          renderAll();
+          // Switch to Stats → Charts view
+          const chartsBtn = document.querySelector('.analytics-tab[onclick*="charts"]');
+          if (chartsBtn) {
+            if (!analyticsOpen) toggleAnalytics();
+            chartsBtn.click();
+          }
+        }, 0);
+      }
     }
     function saveGlobalSettings() {
+      if (isIframe) return;
       if (!globalSettingsRef) return;
       globalSettingsRef.set({ skillThresholdPct, manuallyIncluded: [...manuallyIncluded], playerTHeardOverrides, sessionInvalidFlags })
         .catch(e => showFirebaseError('Settings save failed: ' + e.message));
     }
 
     function saveManualInclusions() {
+      if (isIframe) return;
       if (!globalSettingsRef) return;
       globalSettingsRef.child('manuallyIncluded').set([...manuallyIncluded])
         .catch(e => showFirebaseError('Inclusion save failed: ' + e.message));
@@ -1468,7 +1610,7 @@
           // Sync to Firebase alongside name
           if (userIdentitiesRef) {
             const name = localStorage.getItem('qb_userName') || '';
-            if (name) userIdentitiesRef.child(clientId).update({ photo: dataUrl })
+            if (name && !isIframe) userIdentitiesRef.child(clientId).update({ photo: dataUrl })
               .catch(e => showFirebaseError('Photo save failed: ' + e.message));
           }
           loadUserId();
@@ -1564,6 +1706,7 @@
       }
     }
     function updateSessionAtomic(id, mutator) {
+      if (isIframe) return Promise.resolve(); // blocked in preview
       writeInFlight.add(id);
       notifySaveStart();
       return sessionsRef.child(id).transaction(
@@ -1587,6 +1730,7 @@
       });
     }
     function setSessionNonAtomic(id, value) {
+      if (isIframe) return Promise.resolve(); // blocked in preview
       writeInFlight.add(id);
       notifySaveStart();
       return sessionsRef.child(id).set(value)
@@ -1680,16 +1824,27 @@
       });
     }
 
+    // Show debug menu only when NOT connected to Firebase (i.e. offline / preview)
+    function applyDebugMenuVisibility() {
+      const show = !_connected;
+      const debugEl  = document.getElementById('sec-debug');
+      const debugBtn = document.getElementById('jumpBtn-sec-debug');
+      if (debugEl)  debugEl.style.display  = show ? '' : 'none';
+      if (debugBtn) debugBtn.style.display = show ? '' : 'none';
+    }
+
     // Page load — before Firebase connects
     const setLoadingState = () => {
       _connected = false;
       _setIndicatorState('connecting', 'Connecting…');
+      applyDebugMenuVisibility();
     };
 
     // Firebase ready — move to quiet idle
     const updateAutoSave = () => {
       _connected = true;
       if (!_flashTimer) _setIndicatorState('idle', 'Synced');
+      applyDebugMenuVisibility();
     };
 
     // Firebase / network error
@@ -1698,6 +1853,7 @@
       clearTimeout(_flashTimer);
       _flashTimer = null;
       _setIndicatorState('error', 'Offline', msg || 'Connection issue — changes may not be saved');
+      applyDebugMenuVisibility();
     };
 
     // Saves are silent — no intermediate "Saving…" state shown
@@ -1743,6 +1899,7 @@
 
     // ── Global players ──
     function setupGlobalPlayers() {
+      if (isIframe) return; // no Firebase in preview
       if (playersUnsubscribe) playersUnsubscribe();
       playersUnsubscribe = globalPlayersRef.on('value', snap => {
         if (!state.currentSessionId) return;
@@ -1775,6 +1932,7 @@
     }
 
     function saveGlobalPlayers(names) {
+      if (isIframe) return;
       const updates = {};
       names.forEach(n => { if (n) updates[n] = true; });
       if (Object.keys(updates).length) {
@@ -1788,6 +1946,20 @@
 
     // ── Data loading ──
     function loadAllData() {
+      if (isIframe) {
+        // In preview: create a bare local session; do NOT renderAll yet —
+        // the auto-inject timeout below will do the one-and-only render after data is ready
+        const id = 'preview-' + Date.now();
+        state.sessions[id] = {
+          id, name: 'Preview Session',
+          created: new Date().toISOString(), lastUpdated: new Date().toISOString(),
+          updatedBy: 'preview', players: {}, teams: [],
+          categories: [...DEFAULT_CATEGORIES], answers: [], answerLog: [], tHeard: 0
+        };
+        state.currentSessionId = id;
+        loadSessionData();
+        return; // renderAll happens after inject, not here
+      }
       setLoadingState();
       if (firebaseUnsubscribe) firebaseUnsubscribe();
 
@@ -1841,6 +2013,7 @@
     }
 
     function saveAllData() {
+      if (isIframe) return; // never write to Firebase from preview
       const s = getCurrentSession();
       if (s) {
         s.categories   = state.categories;
@@ -2275,6 +2448,7 @@
       }).join('');
     }
     function addAdmin() {
+      if (!isAdmin) { showToast('Not authorised.', 'warn'); return; }
       const input = document.getElementById('adminAddInput');
       const name  = (input?.value || '').trim();
       if (!name) { showToast('Enter a full name to add.'); return; }
@@ -2283,7 +2457,7 @@
       if (input) input.value = '';
     }
     function removeAdmin(name) {
-      if (name === 'Kamau Elston') { showToast('Cannot remove the owner.', 'warn'); return; }
+      if (!isAdmin) { showToast('Not authorised.', 'warn'); return; }
       showConfirm('Remove ' + name + ' from admins?', 'Remove').then(ok => {
         if (!ok) return;
         adminListRef.set(adminList.filter(n => n !== name)).catch(e => showFirebaseError(e.message));
@@ -3389,9 +3563,9 @@
         return '100%';
       }
 
-      const playerPtsH_raw      = Math.max(380, activePlayers.length * 48 + 120);
-      const playerBreakdownH_raw = Math.max(420, activePlayers.length * 56 + 140);
-      const playerCatH_raw      = Math.max(460, activePlayers.length * 64 + 160);
+      const playerPtsH_raw      = Math.max(520, activePlayers.length * 56 + 180);
+      const playerBreakdownH_raw = Math.max(520, activePlayers.length * 56 + 180);
+      const playerCatH_raw      = Math.max(520, activePlayers.length * 56 + 180);
       // If charts share a row (small player count), unify to the tallest so they align
       const playerSharedRow = barMinW(PLR_COUNT) !== '100%';
       const playerUnifiedH  = Math.max(playerPtsH_raw, playerBreakdownH_raw, playerCatH_raw);
@@ -3406,7 +3580,9 @@
         const mw = minWidth || '280px';
         return `<div class="ch-card" style="min-width:${mw};">
           <div class="ch-title">${title}</div>
-          <div style="position:relative;height:${height}px;overflow-x:auto;"><canvas id="${id}"></canvas></div>
+          <div style="overflow-x:auto;overflow-y:hidden;border-radius:4px;">
+            <div style="position:relative;height:${height}px;min-width:${mw};"><canvas id="${id}"></canvas></div>
+          </div>
         </div>`;
       }
 
@@ -3573,6 +3749,38 @@
         const parentColorIdx = {};
         parentList.forEach((p, i) => parentColorIdx[p] = i);
 
+        // Create a diagonal-hatch CanvasPattern for subcategory bars
+        function makeHatch(hexColor, spacing, angle) {
+          const size = spacing || 8;
+          const c = document.createElement('canvas');
+          c.width = size; c.height = size;
+          const ctx = c.getContext('2d');
+          ctx.clearRect(0, 0, size, size);
+          // Fill base with a semi-transparent version of the colour
+          ctx.fillStyle = hexColor + '55';
+          ctx.fillRect(0, 0, size, size);
+          // Draw diagonal lines
+          ctx.strokeStyle = hexColor + 'dd';
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          if (angle === 'back') {
+            // back-slash \
+            ctx.moveTo(size, 0); ctx.lineTo(0, size);
+            ctx.moveTo(size*2, 0); ctx.lineTo(0, size*2);
+            ctx.moveTo(size, -size); ctx.lineTo(-size, size);
+          } else {
+            // forward-slash /
+            ctx.moveTo(0, 0); ctx.lineTo(size, size);
+            ctx.moveTo(-size, 0); ctx.lineTo(size, size*2);
+            ctx.moveTo(0, -size); ctx.lineTo(size*2, size);
+          }
+          ctx.stroke();
+          // Grab the chart canvas for createPattern context (fallback to offscreen)
+          const chartCanvas = document.getElementById('chart-player-cat');
+          const ref = (chartCanvas && chartCanvas.getContext) ? chartCanvas : c;
+          return ref.getContext('2d').createPattern(c, 'repeat');
+        }
+
         function buildPlayerCatDatasets(expandedParents) {
           const datasets = [];
           parentList.forEach(parent => {
@@ -3588,15 +3796,18 @@
               if (hasGeneral) subPool.push(parent);
               allSubs.forEach(s => { if (activePlayers.some(p => (playerSubPts[p.name]?.[parent]?.[s] || 0) > 0)) subPool.push(s); });
               subPool.forEach((sub, si) => {
-                // Tint: alternate between the base color and a lighter/darker mix
-                const alpha = si % 2 === 0 ? 'dd' : '88';
+                // Alternate between solid and hatched fills for visual distinction
+                const useHatch = si % 2 !== 0;
+                const hatchAngle = (Math.floor(si / 2) % 2 === 0) ? 'fwd' : 'back';
+                const bgFill = useHatch
+                  ? makeHatch(pColor, 7, hatchAngle)
+                  : pColor + 'cc';
                 datasets.push({
                   label: sub === parent ? `${parent} (General)` : sub,
                   data: activePlayers.map(p => playerSubPts[p.name]?.[parent]?.[sub] || 0),
-                  backgroundColor: pColor + alpha,
+                  backgroundColor: bgFill,
                   borderColor: pColor,
-                  borderWidth: si === 0 ? 2 : 1,
-                  borderDash: sub === parent ? [4, 3] : [],
+                  borderWidth: 2,
                   borderRadius: 2,
                   _parent: parent,
                   _expanded: true,
@@ -3625,7 +3836,7 @@
           const chart = _chartInstances['chart-player-cat'];
           if (!chart) return;
           chart.data.datasets = datasets;
-          chart.update('active');
+          chart.update('none');
           // Update title hint
           const titleEl = chart.canvas.closest('.ch-card')?.querySelector('.ch-title');
           if (titleEl) {
@@ -3725,7 +3936,7 @@
       });
     }
 
-    const SECTION_LABELS={'sec-session':'Session','sec-players':'Players','sec-teams':'Teams','sec-categories':'Categories','sec-export':'Export / Import','sec-userid':'User ID','sec-visual':'Visual Settings','sec-admin':'Admin Panel','sec-danger':'Data Management'};
+    const SECTION_LABELS={'sec-session':'Session','sec-players':'Players','sec-teams':'Teams','sec-categories':'Categories','sec-export':'Export / Import','sec-userid':'User ID','sec-visual':'Visual Settings','sec-admin':'Admin Panel','sec-danger':'Data Management','sec-debug':'Debug Menu'};
 
     function showSection(id) {
       document.querySelectorAll('.qb-sidebar .qb-section').forEach(s=>s.classList.remove('active-section'));
@@ -3750,7 +3961,27 @@
 
     function toggleJumpDropdown() { document.getElementById('sidebarJumpWrapper')?.classList.toggle('open'); }
 
-    const isMobile=()=>window.innerWidth<=900;
+    // In an iframe (e.g. Claude preview) force desktop sidebar mode so it is always accessible
+    const isMobile = () => !isIframe && window.innerWidth <= 900;
+
+    // ── localStorage isolation for iframe preview ──
+    // Replace localStorage with an in-memory store so nothing persists from the preview.
+    if (isIframe) {
+      const _memStore = {};
+      const _safeLS = {
+        getItem:    k => (_memStore[k] !== undefined ? _memStore[k] : null),
+        setItem:    (k, v) => { _memStore[k] = String(v); },
+        removeItem: k => { delete _memStore[k]; },
+        clear:      () => { Object.keys(_memStore).forEach(k => delete _memStore[k]); },
+        key:        i => Object.keys(_memStore)[i] || null,
+        get length(){ return Object.keys(_memStore).length; }
+      };
+      try { Object.defineProperty(window, 'localStorage', { get: () => _safeLS }); } catch(e) {}
+      // Force dark mode immediately — before any render — so there's no light flash
+      document.body.classList.add('dark-mode');
+    }
+    // In iframe/preview, all Firebase writes are blocked — data is local-only
+    var _iframeDebugActive = false; // set true after auto-inject so saves are permanently suppressed
 
     function toggleSidebar() {
       const sidebar=document.getElementById('mainSidebar');
@@ -3766,14 +3997,16 @@
         updateMobileBtn(opening);
       } else {
         const collapsed=sidebar.classList.toggle('collapsed');
-        localStorage.setItem('sidebarCollapsed',collapsed);
+        if (!isIframe) localStorage.setItem('sidebarCollapsed',collapsed);
         updateDesktopBtn(collapsed);
       }
     }
 
     function updateDesktopBtn(collapsed) {
-      const btn=document.getElementById('sidebarOpenBtn');
-      if(btn){btn.style.display=collapsed?'inline-flex':'none'; btn.style.alignItems='center'; btn.style.gap='6px';}
+      const btn = document.getElementById('sidebarOpenBtn');
+      if (!btn) return;
+      // Show the Menu button whenever sidebar is collapsed (or always in iframe)
+      btn.style.display = (collapsed || isIframe) ? 'inline-flex' : 'none';
     }
     function updateMobileBtn(open) {
       const btn=document.getElementById('sidebarOpenBtnMobile');
@@ -3791,7 +4024,7 @@
       document.body.classList.remove('menu-open');
       updateMobileBtn(false);
       if(isMobile()){sidebar.classList.remove('collapsed');updateDesktopBtn(false);}
-      else{const c=localStorage.getItem('sidebarCollapsed')==='true';sidebar.classList.toggle('collapsed',c);updateDesktopBtn(c);}
+      else{const c=isIframe?false:localStorage.getItem('sidebarCollapsed')==='true';sidebar.classList.toggle('collapsed',c);updateDesktopBtn(c);}
     }
 
     // ── Visual settings ──
@@ -4109,8 +4342,9 @@
 
     // ── Admin ──
     function recomputeAdmin() {
+      if (isIframe && _iframeDebugActive) return; // preserve temp admin grant in preview
       const name = localStorage.getItem('qb_userName') || '';
-      isAdmin = adminList.includes(name);
+      if (adminList.includes(name)) _adminToken.grant(); else _adminToken.revoke();
       applyAdminUI();
     }
     function applyAdminUI() {
@@ -4123,6 +4357,8 @@
       if (adminEl)   adminEl.style.display   = isAdmin ? '' : 'none';
       if (dangerBtn) dangerBtn.style.display  = isAdmin ? '' : 'none';
       if (adminBtn)  adminBtn.style.display   = isAdmin ? '' : 'none';
+      // Debug menu visibility is driven by Firebase connection state, not admin status
+      applyDebugMenuVisibility();
       // Show/hide session invalid toggles (low data flagging)
       document.querySelectorAll('.session-invalid-toggle').forEach(el => {
         el.style.display = isAdmin ? '' : 'none';
@@ -4636,8 +4872,163 @@
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
     }
 
+    // ── Debug Data Injection ──
+    function injectDebugData() {
+      const s = getCurrentSession(); if (!s) { showToast('No active session.', 'warn'); return; }
+      const scenario = document.getElementById('debugScenario')?.value || 'mid';
+      const statusEl = document.getElementById('debugStatus');
+
+      // ── Roster: two evenly-matched teams ──
+      const team1Players = ['Alex Carter', 'Jordan Lee', 'Sam Rivera', 'Morgan Chen'];
+      const team2Players = ['Taylor Brooks', 'Casey Kim', 'Riley Patel', 'Drew Nguyen'];
+      const allPlayers   = [...team1Players, ...team2Players];
+
+      // ── Point distributions per scenario ──
+      // Each entry: [player, pointType, category]
+      // We build a realistic answer log where better players have more powers/tossups
+      // and negs are rare but present. Bonus answers are unattributed (team bonus).
+      const cats = DEFAULT_CATEGORIES;
+      const rng = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+      // Profile: likelihood weights per player (power%, tossup%, bonus%, neg%, miss%)
+      // Values are relative weights; they get normalised inside buildAnswers
+      const profiles = {
+        'Alex Carter':   { power:25, tossup:40, bonus:20, neg:8,  miss:7  }, // star player
+        'Jordan Lee':    { power:10, tossup:35, bonus:25, neg:10, miss:20 },
+        'Sam Rivera':    { power:5,  tossup:25, bonus:20, neg:5,  miss:45 }, // more passive
+        'Morgan Chen':   { power:15, tossup:35, bonus:20, neg:12, miss:18 },
+        'Taylor Brooks': { power:20, tossup:38, bonus:20, neg:10, miss:12 }, // opposing star
+        'Casey Kim':     { power:8,  tossup:30, bonus:22, neg:8,  miss:32 },
+        'Riley Patel':   { power:6,  tossup:28, bonus:18, neg:6,  miss:42 },
+        'Drew Nguyen':   { power:12, tossup:32, bonus:20, neg:15, miss:21 },
+      };
+
+      const pointMap = { 'Power':15, 'Toss-up':10, 'Bonus':10, 'Neg':-5, 'Miss':0, 'Dead':0 };
+
+      // Total toss-ups heard per scenario
+      const tuHeard = scenario === 'full' ? 30 : scenario === 'blowout' ? 30 : 20;
+
+      function pickType(player) {
+        const p = scenario === 'blowout' && team2Players.includes(player)
+          ? { power:3, tossup:15, bonus:10, neg:18, miss:54 }  // team 2 struggles in blowout
+          : (profiles[player] || { power:10, tossup:30, bonus:20, neg:10, miss:30 });
+        const pool = [];
+        for (let i=0; i<p.power;   i++) pool.push('Power');
+        for (let i=0; i<p.tossup;  i++) pool.push('Toss-up');
+        for (let i=0; i<p.bonus;   i++) pool.push('Bonus');
+        for (let i=0; i<p.neg;     i++) pool.push('Neg');
+        for (let i=0; i<p.miss;    i++) pool.push('Miss');
+        return rng(pool);
+      }
+
+      // Build an answer log that approximates tuHeard toss-ups
+      const log = [];
+      let tHeardCount = 0;
+      // We'll simulate question-by-question: each question has one buzz result + optional bonus
+      const baseTime = new Date('2025-11-01T14:00:00Z').getTime();
+      let t = baseTime;
+      const playerAnswers = {}; // { name: [answers] }
+      allPlayers.forEach(n => { playerAnswers[n] = []; });
+
+      for (let q = 0; q < tuHeard; q++) {
+        t += 35000 + Math.floor(Math.random() * 40000); // 35–75s per question
+        // Pick a buzzing player (weighted toward star players slightly)
+        const buzzPool = [...allPlayers, 'Alex Carter', 'Taylor Brooks', 'Morgan Chen'];
+        const buzzer = rng(buzzPool);
+        const type = pickType(buzzer);
+        const cat  = rng(cats);
+        const ts   = new Date(t).toISOString();
+
+        const buzzAnswer = {
+          id: (t).toString(),
+          player: buzzer,
+          pointType: type,
+          category: cat,
+          points: pointMap[type],
+          timestamp: ts,
+        };
+        log.push(buzzAnswer);
+        playerAnswers[buzzer].push(buzzAnswer);
+
+        // tHeard increments on TU/Power/Neg (and not if immediately following a neg)
+        const isBuzz = ['Toss-up','Power','Neg','Miss','Dead'].includes(type);
+        if (isBuzz) {
+          const prev = log[log.length - 2] || null;
+          const prevWasWrong = prev && (prev.pointType === 'Neg' || prev.pointType === 'Miss');
+          const isFollowup = prevWasWrong && (type === 'Toss-up' || type === 'Power');
+          if (!isFollowup) tHeardCount++;
+        }
+
+        // If the buzzer got it right (Power or Toss-up), there's a ~65% chance of a bonus
+        if ((type === 'Power' || type === 'Toss-up') && Math.random() < 0.65) {
+          t += 20000 + Math.floor(Math.random() * 15000);
+          const bonusCat = Math.random() < 0.7 ? cat : rng(cats); // usually same category
+          const bonusTs  = new Date(t).toISOString();
+          // Bonus is typically answered by a teammate or left unattributed
+          const teammates = (team1Players.includes(buzzer) ? team1Players : team2Players).filter(p => p !== buzzer);
+          const bonusPlayer = Math.random() < 0.4 ? rng(teammates) : null; // 40% attributed to a teammate
+          const bonusAnswer = {
+            id: (t + 1).toString(),
+            player: bonusPlayer || '— Team Bonus —',
+            pointType: 'Bonus',
+            category: bonusCat,
+            points: 10,
+            timestamp: bonusTs,
+          };
+          log.push(bonusAnswer);
+          if (bonusPlayer) playerAnswers[bonusPlayer].push(bonusAnswer);
+        }
+      }
+
+      // ── Build player objects ──
+      const players = {};
+      allPlayers.forEach(name => {
+        const answers = playerAnswers[name];
+        const points  = answers.reduce((sum, a) => sum + a.points, 0);
+        players[name] = { name, points, answers };
+      });
+
+      // ── Build teams ──
+      const teams = [
+        { name: 'Team Alpha', playerMembers: team1Players, id: 'debug-team-1' },
+        { name: 'Team Beta',  playerMembers: team2Players, id: 'debug-team-2' },
+      ];
+
+      // ── Apply to LOCAL state only — no Firebase writes ever happen from debug functions ──
+      const id = state.currentSessionId; void id; // kept for reference only, never written to Firebase
+      const sess = getCurrentSession(); if (!sess) { showToast('No session.', 'warn'); return; }
+      sess.players    = players;
+      sess.teams      = teams;
+      sess.answerLog  = log;
+      sess.tHeard     = tHeardCount;
+      sess.categories = [...DEFAULT_CATEGORIES];
+      sess.lastUpdated = new Date().toISOString();
+
+      const totalAnswers = log.length;
+      const totalPts = allPlayers.reduce((s, n) => s + (players[n]?.points || 0), 0);
+      if (statusEl) statusEl.textContent = `✓ Injected ${totalAnswers} answers across ${tuHeard} questions. ${allPlayers.length} players, 2 teams, ${totalPts} total points.`;
+      showToast('Debug data injected.', 'success');
+    }
+
+    function clearDebugData() {
+      // Local-only — no Firebase writes
+      showConfirm('Clear all data in the current session?', 'Clear').then(ok => {
+        if (!ok) return;
+        const s = getCurrentSession(); if (!s) return;
+        s.players   = {};
+        s.teams     = [];
+        s.answerLog = [];
+        s.tHeard    = 0;
+        loadSessionData(); renderAll();
+        const statusEl = document.getElementById('debugStatus');
+        if (statusEl) statusEl.textContent = '✓ Session data cleared.';
+        showToast('Session cleared.');
+      });
+    }
+
     // ── Reset ──
     function resetAllData() {
+      if (!isAdmin) { showToast('Not authorised.', 'warn'); return; }
       showConfirm('Enter the admin password to proceed:', 'Verify', 'warn').then(ok => {
         if (!ok) return;
         // Use a second confirm toast as a password prompt surrogate — 
