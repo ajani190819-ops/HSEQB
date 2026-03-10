@@ -2779,9 +2779,22 @@
         return;
       }
       const sessionCount = validSessions().length;
-      let html = `<div style="background:rgba(118,75,162,.08);border:1px solid var(--secondary);border-radius:8px;padding:10px 14px;margin-bottom:var(--sp);font-size:.85em;color:var(--secondary);font-weight:600;">
-        ${allTeamCards.length} team composition${allTeamCards.length !== 1 ? 's' : ''} across <strong>${sessionCount} session${sessionCount !== 1 ? 's' : ''}</strong> &mdash; Most Recent First
-      </div>`;
+      let html = `
+        <div style="margin-bottom:12px;position:relative;">
+          <input
+            id="teamCompSearch"
+            type="text"
+            placeholder="Search by team name, player, or date…"
+            oninput="filterTeamCards(this.value)"
+            style="width:100%;padding:10px 36px 10px 13px;border:2px solid var(--input-border);border-radius:var(--radius-sm);font-size:.92em;font-family:inherit;background:var(--input-bg);color:var(--input-text);transition:border-color .2s;"
+            onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--input-border)'"
+          />
+          <span style="position:absolute;right:11px;top:50%;transform:translateY(-50%);font-size:1em;color:var(--text3);pointer-events:none;">🔍</span>
+        </div>
+        <div id="teamCompSummary" style="background:rgba(118,75,162,.08);border:1px solid var(--secondary);border-radius:8px;padding:10px 14px;margin-bottom:var(--sp);font-size:.85em;color:var(--secondary);font-weight:600;">
+          ${allTeamCards.length} team composition${allTeamCards.length !== 1 ? 's' : ''} across <strong>${sessionCount} session${sessionCount !== 1 ? 's' : ''}</strong> &mdash; Most Recent First
+        </div>
+        <div id="teamCompList">`;
       const accentColors = ['var(--primary)', 'var(--secondary)', 'var(--success)', '#e67e22', '#e74c3c'];
       allTeamCards.forEach((team, ti) => {
         const color = accentColors[ti % accentColors.length];
@@ -2805,7 +2818,7 @@
           </div>`
         ).join('');
         html += `
-        <div style="background:var(--card);border:2px solid ${team.isCurrent ? 'var(--primary)' : 'var(--border)'};border-left:4px solid ${color};border-radius:10px;margin-bottom:10px;overflow:hidden;box-shadow:var(--shadow-sm);">
+        <div class="team-comp-card" data-search="${[team.teamName, ...team.members, team.dateStr].join(' ').toLowerCase()}" style="background:var(--card);border:2px solid ${team.isCurrent ? 'var(--primary)' : 'var(--border)'};border-left:4px solid ${color};border-radius:10px;margin-bottom:10px;overflow:hidden;box-shadow:var(--shadow-sm);">
           <div onclick="toggleTeamCard('${cardId}')" style="display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;user-select:none;">
             <div style="flex:1;min-width:0;">
               <div style="font-weight:700;font-size:1em;color:${color};display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
@@ -2834,7 +2847,11 @@
           </div>
         </div>`;
       });
-      el.innerHTML = html;
+      el.innerHTML = html + '</div>'; // close #teamCompList
+
+      // Restore search query if one was active before re-render
+      const searchEl = document.getElementById('teamCompSearch');
+      if (searchEl && searchEl.value) filterTeamCards(searchEl.value);
 
       expandedTeamCards.forEach(id => {
         const panel = document.getElementById(id);
@@ -2852,6 +2869,27 @@
       panel.style.display = open ? 'block' : 'none';
       if (arrow) arrow.style.transform = open ? 'rotate(180deg)' : '';
       if (open) expandedTeamCards.add(id); else expandedTeamCards.delete(id);
+    }
+    function filterTeamCards(query) {
+      const q = query.trim().toLowerCase();
+      const cards = document.querySelectorAll('.team-comp-card');
+      let visible = 0;
+      cards.forEach(card => {
+        const match = !q || card.dataset.search.includes(q);
+        card.style.display = match ? '' : 'none';
+        if (match) visible++;
+      });
+      const summary = document.getElementById('teamCompSummary');
+      if (summary) {
+        if (q) {
+          summary.textContent = visible === 0
+            ? `No results for "${query}"`
+            : `${visible} result${visible !== 1 ? 's' : ''} for "${query}"`;
+        } else {
+          const total = cards.length;
+          summary.innerHTML = `${total} team composition${total !== 1 ? 's' : ''} &mdash; Most Recent First`;
+        }
+      }
     }
     var _chartInstances = {};
     var _lastChartFingerprint = null;
