@@ -826,7 +826,7 @@
       </div>
     </div>
   </div>
-  <div id="sessionsModal" class="qb-modal"><div class="modal-content"><div class="modal-header"><h2>Load Session</h2><button class="close-modal" onclick="closeSessionsModal()">&#215;</button></div><div id="sessionsList" class="sessions-list"></div></div></div>
+  <div id="sessionsModal" class="qb-modal"><div class="modal-content"><div class="modal-header"><h2>Load Session</h2><button class="close-modal" onclick="closeSessionsModal()">&#215;</button></div><div style="display:flex;gap:8px;flex-wrap:wrap;padding:12px 16px;border-bottom:1.5px solid var(--border);background:var(--sec-bg);"><input type="text" id="sessionsSearchInput" placeholder="Search sessions..." style="flex:1;min-width:150px;padding:8px 12px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:.95em;background:var(--input-bg);color:var(--input-text);" /><select id="sessionsSortSelect" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:.95em;background:var(--input-bg);color:var(--input-text);"><option value="date-desc">Newest First</option><option value="date-asc">Oldest First</option><option value="name">Alphabetical (A-Z)</option><option value="answers-desc">Most Answers</option><option value="answers-asc">Least Answers</option></select></div><div id="sessionsList" class="sessions-list"></div></div></div>
   </div>
   <div id="playerDetailModal" class="qb-modal"><div class="modal-content" style="max-width:620px;"><div class="modal-header"><h2 id="pdModalTitle">Player Details</h2><button class="close-modal" onclick="closePlayerDetailModal()">&#215;</button></div><div id="pdModalBody"></div></div></div>
   <script src="local-settings.js" onerror="void 0"></script>
@@ -847,7 +847,7 @@
     const FILE_VERSION  = 'v66';           // human-readable label
     const FILE_BUILD_ID = '20250310-1200'; // unique build ID — changes every release
     // ─────────────────────────────────────────────────────────────────────────
-    var db, sessionsRef, globalPlayersRef, versionRef, globalSettingsRef, userIdentitiesRef, adminListRef;
+    var db, sessionsRef, globalPlayersRef, versionRef, globalSettingsRef, userIdentitiesRef, adminListRef, adminList = [];
     const _adminToken = (()=>{
       let _tok = null;
       const _secret = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
@@ -888,6 +888,7 @@
         const remoteBuild = (typeof data === 'object') ? (data.buildId || '')      : '';
         const downloadUrl = (typeof data === 'object') ? (data.downloadUrl || '')  : '';
         const releaseNotes= (typeof data === 'object') ? (data.releaseNotes || '') : '';
+        const remoteLabel = (typeof data === 'object') ? (data.label || '')         : '';
         // Badge always reflects FILE_VERSION — intentionally not set from Firebase
         // Pre-fill URL and release notes inputs if admin hasn't typed in them yet
         const rnInput  = document.getElementById('releaseNotesInput');
@@ -903,8 +904,11 @@
         const isLiveSite = window.location.hostname === 'ajani190819-ops.github.io';
         const isLocalFile = window.location.protocol === 'file:';
         const shouldCheckUpdates = isLocalFile && !isLiveSite;
-        if (shouldCheckUpdates && remoteBuild && remoteBuild !== FILE_BUILD_ID) {
-          showUpdateBanner(data.label || '', downloadUrl, releaseNotes);
+        // FIX: Compare both buildId AND label to prevent false positives when both claim to be current
+        const isActuallyDifferent = remoteBuild && remoteLabel && 
+                                     (remoteBuild !== FILE_BUILD_ID || remoteLabel !== FILE_VERSION);
+        if (shouldCheckUpdates && isActuallyDifferent) {
+          showUpdateBanner(remoteLabel, downloadUrl, releaseNotes);
         } else {
           hideUpdateBanner();
         }
@@ -961,8 +965,6 @@
 
       document.getElementById('analyticsScroll')?.addEventListener('scroll',function(){localStorage.setItem('analyticsScroll_'+currentAnalyticsTab,this.scrollTop);});
       showSection(savedSection);
-      document.getElementById('sidebarOpenBtn').onclick=toggleSidebar;
-      document.getElementById('sidebarOpenBtnMobile').onclick=toggleSidebar;
       document.addEventListener('click',e=>{ const w=document.getElementById('sidebarJumpWrapper'); if(w&&!w.contains(e.target)) w.classList.remove('open'); ['helpModal','sessionsModal','playerDetailModal'].forEach(id=>{const m=document.getElementById(id);if(m&&e.target===m)m.classList.remove('open');}); });
       loadUserId();
       recomputeAdmin();
@@ -972,6 +974,11 @@
       // Populate "This file" build ID in admin panel
       const buildDisp = document.getElementById('thisFileBuildDisplay');
       if (buildDisp) buildDisp.textContent = `${FILE_VERSION} — build ${FILE_BUILD_ID}`;
+      // FIX: Check if elements exist before setting onclick
+      const sidebarOpenBtn = document.getElementById('sidebarOpenBtn');
+      if (sidebarOpenBtn) sidebarOpenBtn.onclick = toggleSidebar;
+      const sidebarOpenBtnMobile = document.getElementById('sidebarOpenBtnMobile');
+      if (sidebarOpenBtnMobile) sidebarOpenBtnMobile.onclick = toggleSidebar;
       if (!isIframe) maybeShowWelcomeToast();
       if (isIframe) {
         setTimeout(() => {
@@ -1501,16 +1508,61 @@
       }).catch(()=>{ setSessionNonAtomic(id,session).catch(e=>showFirebaseError(e.message)); localStorage.setItem(CURRENT_SESSION_KEY,id); if(nameInput) nameInput.value=''; closeSessionsModal(); renderAll(); });
     }
 
-    function openSessionsModal()  { document.getElementById('sessionsModal').classList.add('open'); renderSessionsList(); }
+    function openSessionsModal()  { 
+      document.getElementById('sessionsModal').classList.add('open'); 
+      document.getElementById('sessionsSearchInput').value = '';
+      document.getElementById('sessionsSortSelect').value = 'date-desc';
+      renderSessionsList(); 
+      // Add event listeners for search and sort
+      document.getElementById('sessionsSearchInput').addEventListener('input', renderSessionsList);
+      document.getElementById('sessionsSortSelect').addEventListener('change', renderSessionsList);
+    }
     function closeSessionsModal() { document.getElementById('sessionsModal').classList.remove('open'); }
     function openHelpModal()      { document.getElementById('helpModal').classList.add('open'); }
     function closeHelpModal()     { document.getElementById('helpModal').classList.remove('open'); }
 
     function renderSessionsList() {
-      const list=document.getElementById('sessionsList');
-      const sessions=Object.values(state.sessions).sort((a,b)=>new Date(b.created)-new Date(a.created));
-      if(!sessions.length){list.innerHTML='<p style="color:var(--text2)">No sessions found.</p>';return;}
-      list.innerHTML=sessions.map(s=>{
+      const list = document.getElementById('sessionsList');
+      const searchInput = document.getElementById('sessionsSearchInput');
+      const sortSelect = document.getElementById('sessionsSortSelect');
+      
+      let sessions = Object.values(state.sessions);
+      const searchTerm = (searchInput?.value || '').toLowerCase().trim();
+      const sortMode = sortSelect?.value || 'date-desc';
+      
+      // Filter by search term
+      if (searchTerm) {
+        sessions = sessions.filter(s => 
+          s.name.toLowerCase().includes(searchTerm) || 
+          (s.created && new Date(s.created).toLocaleString().toLowerCase().includes(searchTerm))
+        );
+      }
+      
+      // Sort sessions
+      sessions.sort((a, b) => {
+        switch(sortMode) {
+          case 'date-asc':
+            return new Date(a.created) - new Date(b.created);
+          case 'name':
+            return a.name.localeCompare(b.name);
+          case 'answers-desc':
+            return ((b.answerLog||[]).length) - ((a.answerLog||[]).length);
+          case 'answers-asc':
+            return ((a.answerLog||[]).length) - ((b.answerLog||[]).length);
+          case 'date-desc':
+          default:
+            return new Date(b.created) - new Date(a.created);
+        }
+      });
+      
+      if(!sessions.length){
+        list.innerHTML = searchTerm 
+          ? `<p style="color:var(--text2);padding:16px;">No sessions match "${searchTerm}".`
+          : '<p style="color:var(--text2);padding:16px;">No sessions found.</p>';
+        return;
+      }
+      
+      list.innerHTML = sessions.map(s=>{
         const isInvalid = !!sessionInvalidFlags[s.id];
         const isCurrent = s.id === state.currentSessionId;
         return `
