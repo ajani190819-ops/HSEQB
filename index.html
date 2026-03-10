@@ -685,8 +685,9 @@
                 </div>
                 <div id="releasePrompt">
                   <div class="input-group" style="margin-bottom:10px;">
-                    <label>Version Label <span style="font-size:.75em;font-weight:400;color:var(--text2);">— display name (e.g. v66.1)</span></label>
-                    <input type="text" id="releaseLabelInput" placeholder="v66.1" />
+                    <label>Version Label <span style="font-size:.75em;font-weight:400;color:var(--text2);">— what users will see (e.g. v66.1)</span></label>
+                    <input type="text" id="releaseLabelInput" placeholder="e.g. v66.1 or v66.0" />
+                    <div style="font-size:.7em;color:var(--text2);margin-top:4px;">Use format like v66.0, v66.1, etc. This is shown in the update banner.</div>
                   </div>
                   <div class="input-group" style="margin-bottom:10px;">
                     <label>Download URL <span style="font-size:.75em;font-weight:400;color:var(--text2);">— raw GitHub link to this file</span></label>
@@ -897,11 +898,10 @@
         const releaseNotes= (typeof data === 'object') ? (data.releaseNotes || '') : '';
         const remoteLabel = (typeof data === 'object') ? (data.label || '')         : '';
         // Badge always reflects FILE_VERSION — intentionally not set from Firebase
-        // Pre-fill URL, version label, and release notes inputs if admin hasn't typed in them yet
-        const labelInput = document.getElementById('releaseLabelInput');
+        // Pre-fill URL and release notes inputs if admin hasn't typed in them yet
+        // Note: Version Label is NOT auto-filled to avoid confusion with old Firebase data
         const rnInput  = document.getElementById('releaseNotesInput');
         const urlInput = document.getElementById('releaseUrlInput');
-        if (labelInput && document.activeElement !== labelInput && !labelInput.value) labelInput.value = remoteLabel;
         if (rnInput  && document.activeElement !== rnInput  && !rnInput.value)  rnInput.value  = releaseNotes;
         if (urlInput && document.activeElement !== urlInput && !urlInput.value) urlInput.value = downloadUrl;
         // Update live build display in admin panel
