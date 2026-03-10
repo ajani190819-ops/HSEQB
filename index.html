@@ -1034,13 +1034,25 @@
     }
     function downloadUpdate(url) {
       if (!url) { showToast('No download URL configured for this release.', 'warn'); return; }
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'hse-quiz-bowl-tracker.html';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      showToast('Download started — replace your existing .html file with the new one.', 'success');
+      showToast('Fetching update…');
+      fetch(url)
+        .then(r => {
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          return r.blob();
+        })
+        .then(blob => {
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = 'hse-quiz-bowl-tracker.html';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+          showToast('Downloaded! Replace your existing file with the new one.', 'success');
+        })
+        .catch(err => {
+          showToast('Download failed: ' + err.message, 'warn');
+        });
     }
     function loadUserId() {
       const stored = localStorage.getItem('qb_userName') || '';
