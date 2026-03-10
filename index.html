@@ -848,8 +848,11 @@
       } catch(e) { return false; }
     })();
     // ─── File identity (baked in at each release) ────────────────────────────
+    // IMPORTANT: Change FILE_BUILD_ID every time you create a new version!
+    // Use current date/time: YYYYMMDD-HHMM (e.g., 20250310-1200 for Mar 10, 2025 at 12:00)
+    // FILE_VERSION can stay the same if you just want to update metadata
     const FILE_VERSION  = 'v66.0';          // human-readable label (major.minor)
-    const FILE_BUILD_ID = '20250310-1200'; // unique build ID — changes every release
+    const FILE_BUILD_ID = '20250310-1200'; // unique build ID — CHANGE THIS EVERY RELEASE!
     // ─────────────────────────────────────────────────────────────────────────
     var db, sessionsRef, globalPlayersRef, versionRef, globalSettingsRef, userIdentitiesRef, adminListRef, adminList = [];
     const _adminToken = (()=>{
