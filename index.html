@@ -52,6 +52,23 @@
       height: 100vh; overflow: hidden; color: var(--text); display: flex; flex-direction: column;
     }
     .qb-container { width: 100%; flex: 1; display: flex; flex-direction: column; background: var(--bg); overflow: hidden; }
+    /* ── Update banner ─────────────────────────────────────────────────────── */
+    #updateBanner {
+      max-height: 0; overflow: hidden;
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      color: #fff; padding: 0 16px; font-size: .88em; font-weight: 600;
+      box-shadow: 0 2px 10px rgba(17,153,142,.35);
+      position: relative; z-index: 150; flex-shrink: 0;
+      transition: max-height .3s ease, padding .3s ease;
+    }
+    #updateBanner.show { max-height: 60px; padding: 9px 16px; }
+    .ub-icon { font-size: 1.1em; flex-shrink: 0; }
+    .ub-msg  { flex: 1; min-width: 0; }
+    .ub-btn  { background: rgba(255,255,255,.22); border: 1.5px solid rgba(255,255,255,.45); color: #fff; border-radius: 6px; padding: 5px 13px; font-size: .85em; font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap; transition: background .15s; }
+    .ub-btn:hover { background: rgba(255,255,255,.38); }
+    .ub-dismiss { padding: 4px 9px; }
+    /* ─────────────────────────────────────────────────────────────────────── */
     .qb-header {
       background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
       color: #fff; padding: 0 12px;
@@ -448,6 +465,7 @@
         <button class="header-btn round" onclick="openHelpModal()" title="Help / Tutorial">?</button>
         <span id="autosaveStatus" class="auto-save-indicator state-connecting"><span class="save-ring"><svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="8" r="6" stroke="rgba(255,255,255,0.25)" stroke-width="2"/><path d="M8 2 A6 6 0 0 1 14 8" stroke="white" stroke-width="2" stroke-linecap="round"/></svg><span class="save-ring-dot"></span></span><span class="save-label">Connecting…</span></span>
       </div></div>
+    <div id="updateBanner"></div>
     <div class="qb-body">
       <aside class="qb-sidebar" id="mainSidebar">
         <div class="sidebar-nav">
@@ -640,12 +658,27 @@
                 </div>
                 <div id="catColorStatus" style="font-size:.8em;color:var(--success);margin-top:6px;min-height:1.2em;"></div>
               </div>
-              <div class="input-group" style="padding-top:14px;border-top:1.5px solid var(--border);">
-                <label>Version Number <span style="font-size:.75em;font-weight:400;color:var(--text2);">(Syncs for all users)</span></label>
-                <div style="display:flex;gap:8px;align-items:center;">
-                  <input type="text" id="versionInput" placeholder="e.g. v30" style="flex:1;" />
-                  <button class="button" onclick="saveVersion()" style="white-space:nowrap;padding:10px 16px;">Save</button>
+              <div style="padding-top:14px;border-top:1.5px solid var(--border);">
+                <div style="font-weight:700;font-size:.9em;color:var(--text);margin-bottom:4px;">Publish New Release</div>
+                <div style="font-size:.78em;color:var(--text2);margin-bottom:12px;line-height:1.5;">
+                  Publishes a new build ID along with the version label. Users running an older file will see an update banner with a download button. Only change the label without publishing if you don't want to trigger an update notification.
                 </div>
+                <div style="background:var(--sec-bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:12px;font-size:.8em;color:var(--text2);">
+                  📦 <strong>This file:</strong> <span style="font-family:monospace;color:var(--primary);" id="thisFileBuildDisplay"></span>
+                </div>
+                <div class="input-group" style="margin-bottom:10px;">
+                  <label>Version Label <span style="font-size:.75em;font-weight:400;color:var(--text2);">(e.g. v66)</span></label>
+                  <input type="text" id="versionInput" placeholder="e.g. v66" />
+                </div>
+                <div class="input-group" style="margin-bottom:10px;">
+                  <label>Download URL <span style="font-size:.75em;font-weight:400;color:var(--text2);">— direct link to the new .html file</span></label>
+                  <input type="text" id="releaseUrlInput" placeholder="https://..." />
+                </div>
+                <div class="input-group" style="margin-bottom:12px;">
+                  <label>Release Notes <span style="font-size:.75em;font-weight:400;color:var(--text2);">(optional, shown in update banner)</span></label>
+                  <input type="text" id="releaseNotesInput" placeholder="e.g. Fixed analytics, added export" />
+                </div>
+                <button class="button button-success" onclick="publishRelease()" style="width:100%;">🚀 Publish Release</button>
               </div>
             </div>
           </div>
@@ -809,6 +842,10 @@
         }
       } catch(e) { return false; }
     })();
+    // ─── File identity (baked in at each release) ────────────────────────────
+    const FILE_VERSION  = 'v66';           // human-readable label
+    const FILE_BUILD_ID = '20250310-1200'; // unique build ID — changes every release
+    // ─────────────────────────────────────────────────────────────────────────
     var db, sessionsRef, globalPlayersRef, versionRef, globalSettingsRef, userIdentitiesRef, adminListRef;
     const _adminToken = (()=>{
       let _tok = null;
@@ -843,7 +880,31 @@
       startApp();
     }
     function startApp() {
-      versionRef.on('value', snap => { const v=snap.val(); if(!v) return; const badge=document.getElementById('versionBadge'),input=document.getElementById('versionInput'); if(badge) badge.textContent=v; if(input&&document.activeElement!==input) input.value=v; });
+      versionRef.on('value', snap => {
+        const data = snap.val();
+        if (!data) return;
+        // Support both old string format and new object format
+        const label      = (typeof data === 'object') ? (data.label || '')        : data;
+        const remoteBuild = (typeof data === 'object') ? (data.buildId || '')      : '';
+        const downloadUrl = (typeof data === 'object') ? (data.downloadUrl || '')  : '';
+        const releaseNotes= (typeof data === 'object') ? (data.releaseNotes || '') : '';
+        // Update badge and admin input
+        const badge = document.getElementById('versionBadge');
+        const input = document.getElementById('versionInput');
+        if (badge) { badge.textContent = label; badge.style.display = ''; }
+        if (input && document.activeElement !== input) input.value = label;
+        // Update admin release notes / url inputs if present
+        const rnInput  = document.getElementById('releaseNotesInput');
+        const urlInput = document.getElementById('releaseUrlInput');
+        if (rnInput  && document.activeElement !== rnInput)  rnInput.value  = releaseNotes;
+        if (urlInput && document.activeElement !== urlInput) urlInput.value = downloadUrl;
+        // Show update banner if remote buildId differs from this file's baked-in buildId
+        if (remoteBuild && remoteBuild !== FILE_BUILD_ID) {
+          showUpdateBanner(label, downloadUrl, releaseNotes);
+        } else {
+          hideUpdateBanner();
+        }
+      });
       globalSettingsRef.on('value', snap => {
         const s = snap.val(); if (!s) return;
         let changed = false;
@@ -901,6 +962,9 @@
       document.addEventListener('click',e=>{ const w=document.getElementById('sidebarJumpWrapper'); if(w&&!w.contains(e.target)) w.classList.remove('open'); ['helpModal','sessionsModal','playerDetailModal'].forEach(id=>{const m=document.getElementById(id);if(m&&e.target===m)m.classList.remove('open');}); });
       loadUserId();
       recomputeAdmin();
+      // Populate "This file" build ID in admin panel
+      const buildDisp = document.getElementById('thisFileBuildDisplay');
+      if (buildDisp) buildDisp.textContent = `${FILE_VERSION} — build ${FILE_BUILD_ID}`;
       if (!isIframe) maybeShowWelcomeToast();
       if (isIframe) {
         setTimeout(() => {
@@ -937,10 +1001,46 @@
       renderAnalyticsPlayersUniversal();
     }
 
-    function saveVersion() {
-      const v = (document.getElementById('versionInput').value||'').trim();
-      if (!v) { showToast('Enter a version number.'); return; }
-      versionRef.set(v).then(() => showToast('Version updated to ' + v, 'success')).catch(e => showFirebaseError(e.message));
+    function saveVersion() { publishRelease(); } // legacy alias
+    function publishRelease() {
+      if (!isAdmin) { showToast('Not authorised.', 'warn'); return; }
+      const label = (document.getElementById('versionInput')?.value || '').trim();
+      const notes = (document.getElementById('releaseNotesInput')?.value || '').trim();
+      const url   = (document.getElementById('releaseUrlInput')?.value || '').trim();
+      if (!label) { showToast('Enter a version label.'); return; }
+      // Generate a build ID from current timestamp (YYYYMMDD-HHmm)
+      const now = new Date();
+      const pad = n => String(n).padStart(2,'0');
+      const buildId = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}`;
+      const payload = { label, buildId, downloadUrl: url, releaseNotes: notes };
+      versionRef.set(payload)
+        .then(() => showToast(`Published ${label} (build ${buildId})`, 'success'))
+        .catch(e => showFirebaseError(e.message));
+    }
+    function showUpdateBanner(newLabel, downloadUrl, notes) {
+      const banner = document.getElementById('updateBanner');
+      if (!banner) return;
+      const hasUrl = downloadUrl && downloadUrl.startsWith('http');
+      banner.innerHTML =
+        `<span class="ub-icon">⬆️</span>` +
+        `<span class="ub-msg"><strong>${newLabel}</strong> is available${notes ? ` &mdash; ${notes}` : ''}.</span>` +
+        (hasUrl ? `<button class="ub-btn ub-download" onclick="downloadUpdate('${downloadUrl}')">⬇ Download Update</button>` : '') +
+        `<button class="ub-btn ub-dismiss" onclick="hideUpdateBanner()" title="Dismiss">✕</button>`;
+      banner.classList.add('show');
+    }
+    function hideUpdateBanner() {
+      const banner = document.getElementById('updateBanner');
+      if (banner) banner.classList.remove('show');
+    }
+    function downloadUpdate(url) {
+      if (!url) { showToast('No download URL configured for this release.', 'warn'); return; }
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'hse-quiz-bowl-tracker.html';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      showToast('Download started — replace your existing .html file with the new one.', 'success');
     }
     function loadUserId() {
       const stored = localStorage.getItem('qb_userName') || '';
