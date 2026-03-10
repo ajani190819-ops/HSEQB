@@ -901,14 +901,16 @@
         // Update live build display in admin panel
         const liveDisp = document.getElementById('liveFirebaseBuildDisplay');
         if (liveDisp) liveDisp.textContent = remoteBuild || '(none — old format)';
-        // Only show update banner if:
-        // 1. Firebase has a real buildId (new format — not just an old string version)
-        // 2. That buildId is different from this file's baked-in FILE_BUILD_ID
-        // 3. The remoteBuild is non-empty (prevents false positives on first run / no data)
-        if (remoteBuild && remoteBuild !== FILE_BUILD_ID) {
+        // Only check for updates if the user is running a local file, not the live GitHub Pages site.
+        // GitHub Pages auto-updates, so the banner is irrelevant there.
+        const isLiveSite = window.location.hostname === 'ajani190819-ops.github.io';
+        const isLocalFile = window.location.protocol === 'file:';
+        const shouldCheckUpdates = isLocalFile && !isLiveSite;
+
+        if (shouldCheckUpdates && remoteBuild && remoteBuild !== FILE_BUILD_ID) {
           showUpdateBanner(label, downloadUrl, releaseNotes);
         } else {
-          // Matches exactly, or no buildId exists yet — either way, no banner
+          // Either on the live site, already up to date, or no buildId yet — never show banner
           hideUpdateBanner();
         }
       });
