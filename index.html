@@ -451,7 +451,7 @@
     <div class="qb-header" id="qbHeader">
       <div class="qb-header-left"><button class="header-btn sidebar-open-btn" id="sidebarOpenBtn" style="display:none;">&#9654; Menu</button></div>
       <div class="qb-header-center">
-        <h1 data-short="HSE QB" data-medium="HSE QB Tracker">HSE Quiz Bowl Tracker <span class="version-badge" id="versionBadge" style="display:none;"></span></h1>
+        <h1 data-short="HSE QB" data-medium="HSE QB Tracker">HSE Quiz Bowl Tracker <span class="version-badge" id="versionBadge"></span></h1>
         <div class="header-session-name" id="headerSessionName"></div>
       </div>
       <div class="header-controls">
@@ -679,10 +679,14 @@
                   📦 <strong>This file:</strong> <span style="font-family:monospace;color:var(--primary);" id="thisFileBuildDisplay"></span><br>
                   ☁️ <strong>Live in Firebase:</strong> <span style="font-family:monospace;color:var(--success);" id="liveFirebaseBuildDisplay">—</span>
                 </div>
-                <div id="releasePrompt" style="display:none;">
-                  <div style="background:rgba(17,153,142,.08);border:1.5px solid rgba(17,153,142,.35);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:12px;">
-                    <div style="font-weight:700;font-size:.88em;color:var(--success);margin-bottom:4px;">🆕 New version detected</div>
-                    <div style="font-size:.78em;color:var(--text2);line-height:1.5;">This file has a build ID that hasn't been published to Firebase yet. Publish it so users on older files get an update notification.</div>
+                <div id="releaseNewVersionAlert" style="background:rgba(17,153,142,.08);border:1.5px solid rgba(17,153,142,.35);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:12px;display:none;">
+                  <div style="font-weight:700;font-size:.88em;color:var(--success);margin-bottom:4px;">🆕 New version detected</div>
+                  <div style="font-size:.78em;color:var(--text2);line-height:1.5;">This file has a build ID that hasn't been published to Firebase yet. Publish it so users on older files get an update notification.</div>
+                </div>
+                <div id="releasePrompt">
+                  <div class="input-group" style="margin-bottom:10px;">
+                    <label>Version Label <span style="font-size:.75em;font-weight:400;color:var(--text2);">— display name (e.g. v66.1)</span></label>
+                    <input type="text" id="releaseLabelInput" placeholder="v66.1" />
                   </div>
                   <div class="input-group" style="margin-bottom:10px;">
                     <label>Download URL <span style="font-size:.75em;font-weight:400;color:var(--text2);">— raw GitHub link to this file</span></label>
@@ -844,7 +848,7 @@
       } catch(e) { return false; }
     })();
     // ─── File identity (baked in at each release) ────────────────────────────
-    const FILE_VERSION  = 'v66';           // human-readable label
+    const FILE_VERSION  = 'v66.0';          // human-readable label (major.minor)
     const FILE_BUILD_ID = '20250310-1200'; // unique build ID — changes every release
     // ─────────────────────────────────────────────────────────────────────────
     var db, sessionsRef, globalPlayersRef, versionRef, globalSettingsRef, userIdentitiesRef, adminListRef, adminList = [];
@@ -890,9 +894,11 @@
         const releaseNotes= (typeof data === 'object') ? (data.releaseNotes || '') : '';
         const remoteLabel = (typeof data === 'object') ? (data.label || '')         : '';
         // Badge always reflects FILE_VERSION — intentionally not set from Firebase
-        // Pre-fill URL and release notes inputs if admin hasn't typed in them yet
+        // Pre-fill URL, version label, and release notes inputs if admin hasn't typed in them yet
+        const labelInput = document.getElementById('releaseLabelInput');
         const rnInput  = document.getElementById('releaseNotesInput');
         const urlInput = document.getElementById('releaseUrlInput');
+        if (labelInput && document.activeElement !== labelInput && !labelInput.value) labelInput.value = remoteLabel;
         if (rnInput  && document.activeElement !== rnInput  && !rnInput.value)  rnInput.value  = releaseNotes;
         if (urlInput && document.activeElement !== urlInput && !urlInput.value) urlInput.value = downloadUrl;
         // Update live build display in admin panel
@@ -970,7 +976,19 @@
       recomputeAdmin();
       // Set header version badge to THIS file's version immediately — never reflects Firebase label
       const badge = document.getElementById('versionBadge');
-      if (badge) { badge.textContent = FILE_VERSION; badge.style.display = ''; }
+      if (badge) { 
+        // Extract date from build ID (format: YYYYMMDD-HHMM)
+        const buildMatch = FILE_BUILD_ID.match(/(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})/);
+        let buildDate = FILE_BUILD_ID;
+        if (buildMatch) {
+          const [, year, month, day, hour, min] = buildMatch;
+          buildDate = `${month}/${day}/${year.slice(2)} ${hour}:${min}`;
+        }
+        badge.textContent = FILE_VERSION;
+        badge.title = `Build: ${buildDate}`;
+        // Use !important to override CSS media query that hides it on mobile
+        badge.style.setProperty('display', 'inline', 'important');
+      }
       // Populate "This file" build ID in admin panel
       const buildDisp = document.getElementById('thisFileBuildDisplay');
       if (buildDisp) buildDisp.textContent = `${FILE_VERSION} — build ${FILE_BUILD_ID}`;
@@ -1018,22 +1036,23 @@
     function saveVersion() { publishRelease(); } // legacy alias
     function checkReleasePrompt(remoteBuild) {
       if (!isAdmin) return;
-      const prompt    = document.getElementById('releasePrompt');
+      const alert    = document.getElementById('releaseNewVersionAlert');
       const upToDate  = document.getElementById('releaseUpToDate');
-      if (!prompt || !upToDate) return;
+      if (!alert || !upToDate) return;
       const isUnpublished = !remoteBuild || remoteBuild !== FILE_BUILD_ID;
-      prompt.style.display   = isUnpublished ? '' : 'none';
+      alert.style.display   = isUnpublished ? '' : 'none';
       upToDate.style.display = isUnpublished ? 'none' : '';
     }
     function publishRelease() {
       if (!isAdmin) { showToast('Not authorised.', 'warn'); return; }
+      const label = (document.getElementById('releaseLabelInput')?.value || '').trim() || FILE_VERSION;
       const notes = (document.getElementById('releaseNotesInput')?.value || '').trim();
       const url   = (document.getElementById('releaseUrlInput')?.value || '').trim();
-      // Label and buildId come directly from the file itself — no manual input needed
-      const payload = { label: FILE_VERSION, buildId: FILE_BUILD_ID, downloadUrl: url, releaseNotes: notes };
+      // FIX: Allow custom version label from input, defaults to FILE_VERSION if empty
+      const payload = { label: label, buildId: FILE_BUILD_ID, downloadUrl: url, releaseNotes: notes };
       versionRef.set(payload)
         .then(() => {
-          showToast(`Published ${FILE_VERSION} (build ${FILE_BUILD_ID})`, 'success');
+          showToast(`Published ${label} (build ${FILE_BUILD_ID})`, 'success');
           hideUpdateBanner();
           checkReleasePrompt(FILE_BUILD_ID);
         })
@@ -1045,7 +1064,7 @@
       const hasUrl = downloadUrl && downloadUrl.startsWith('http');
       banner.innerHTML =
         `<span class="ub-icon">⬆️</span>` +
-        `<span class="ub-msg"><strong>${newLabel}</strong> is available${notes ? ` &mdash; ${notes}` : ''}.</span>` +
+        `<span class="ub-msg"><strong>${newLabel}</strong> is available (you have ${FILE_VERSION})${notes ? ` &mdash; ${notes}` : ''}.</span>` +
         (hasUrl ? `<button class="ub-btn ub-download" onclick="downloadUpdate('${downloadUrl}')">⬇ Download Update</button>` : '') +
         `<button class="ub-btn ub-dismiss" onclick="hideUpdateBanner()" title="Dismiss">✕</button>`;
       banner.classList.add('show');
