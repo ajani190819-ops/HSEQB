@@ -675,27 +675,26 @@
                 <button class="button button-success" onclick="addAdmin()">Add Admin</button>
               </div>
               <div style="border-top:1.5px solid var(--border);padding-top:16px;">
-                <div style="font-weight:700;font-size:.9em;color:var(--text);margin-bottom:4px;">🚀 Publish New Release</div>
-                <div style="font-size:.78em;color:var(--text2);margin-bottom:12px;line-height:1.5;">
-                  Publishes this file's build ID to Firebase. Any user whose file has a different build ID will see an update banner. <strong>Always publish from the newest version of the file</strong> — whatever file you're running when you hit Publish becomes the "current" version for everyone.
+                <div style="background:var(--sec-bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:12px;font-size:.8em;color:var(--text2);line-height:1.6;">
+                  📦 <strong>This file:</strong> <span style="font-family:monospace;color:var(--primary);" id="thisFileBuildDisplay"></span><br>
+                  ☁️ <strong>Live in Firebase:</strong> <span style="font-family:monospace;color:var(--success);" id="liveFirebaseBuildDisplay">—</span>
                 </div>
-                <div style="background:var(--sec-bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:14px;font-size:.8em;color:var(--text2);line-height:1.6;">
-                  📦 <strong>This file's build:</strong> <span style="font-family:monospace;color:var(--primary);" id="thisFileBuildDisplay"></span><br>
-                  ☁️ <strong>Live build in Firebase:</strong> <span style="font-family:monospace;color:var(--success);" id="liveFirebaseBuildDisplay">—</span>
+                <div id="releasePrompt" style="display:none;">
+                  <div style="background:rgba(17,153,142,.08);border:1.5px solid rgba(17,153,142,.35);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:12px;">
+                    <div style="font-weight:700;font-size:.88em;color:var(--success);margin-bottom:4px;">🆕 New version detected</div>
+                    <div style="font-size:.78em;color:var(--text2);line-height:1.5;">This file has a build ID that hasn't been published to Firebase yet. Publish it so users on older files get an update notification.</div>
+                  </div>
+                  <div class="input-group" style="margin-bottom:10px;">
+                    <label>Download URL <span style="font-size:.75em;font-weight:400;color:var(--text2);">— raw GitHub link to this file</span></label>
+                    <input type="text" id="releaseUrlInput" placeholder="https://raw.githubusercontent.com/..." />
+                  </div>
+                  <div class="input-group" style="margin-bottom:14px;">
+                    <label>Release Notes <span style="font-size:.75em;font-weight:400;color:var(--text2);">(optional — shown in the update banner)</span></label>
+                    <input type="text" id="releaseNotesInput" placeholder="e.g. Fixed analytics, added export" />
+                  </div>
+                  <button class="button button-success" onclick="publishRelease()" style="width:100%;">🚀 Publish Release</button>
                 </div>
-                <div class="input-group" style="margin-bottom:10px;">
-                  <label>Version Label <span style="font-size:.75em;font-weight:400;color:var(--text2);">(e.g. v67)</span></label>
-                  <input type="text" id="versionInput" placeholder="e.g. v67" />
-                </div>
-                <div class="input-group" style="margin-bottom:10px;">
-                  <label>Download URL <span style="font-size:.75em;font-weight:400;color:var(--text2);">— raw GitHub link to the new .html file</span></label>
-                  <input type="text" id="releaseUrlInput" placeholder="https://raw.githubusercontent.com/..." />
-                </div>
-                <div class="input-group" style="margin-bottom:14px;">
-                  <label>Release Notes <span style="font-size:.75em;font-weight:400;color:var(--text2);">(optional — shown in the update banner)</span></label>
-                  <input type="text" id="releaseNotesInput" placeholder="e.g. Fixed analytics, added export" />
-                </div>
-                <button class="button button-success" onclick="publishRelease()" style="width:100%;">🚀 Publish Release</button>
+                <div id="releaseUpToDate" style="display:none;font-size:.82em;color:var(--success);font-weight:600;">✓ This file is already the published version.</div>
               </div>
             </div>
           </div>
@@ -884,33 +883,29 @@
     function startApp() {
       versionRef.on('value', snap => {
         const data = snap.val();
-        if (!data) return;
+        if (!data) { checkReleasePrompt(''); return; }
         // Support both old string format and new object format
-        const label       = (typeof data === 'object') ? (data.label || '')        : data;
         const remoteBuild = (typeof data === 'object') ? (data.buildId || '')      : '';
         const downloadUrl = (typeof data === 'object') ? (data.downloadUrl || '')  : '';
         const releaseNotes= (typeof data === 'object') ? (data.releaseNotes || '') : '';
-        // Update badge is intentionally NOT done here — badge always reflects FILE_VERSION, not Firebase
-        // Update admin inputs (don't overwrite if user is actively typing)
-        const input    = document.getElementById('versionInput');
+        // Badge always reflects FILE_VERSION — intentionally not set from Firebase
+        // Pre-fill URL and release notes inputs if admin hasn't typed in them yet
         const rnInput  = document.getElementById('releaseNotesInput');
         const urlInput = document.getElementById('releaseUrlInput');
-        if (input    && document.activeElement !== input)    input.value    = label;
-        if (rnInput  && document.activeElement !== rnInput)  rnInput.value  = releaseNotes;
-        if (urlInput && document.activeElement !== urlInput) urlInput.value = downloadUrl;
+        if (rnInput  && document.activeElement !== rnInput  && !rnInput.value)  rnInput.value  = releaseNotes;
+        if (urlInput && document.activeElement !== urlInput && !urlInput.value) urlInput.value = downloadUrl;
         // Update live build display in admin panel
         const liveDisp = document.getElementById('liveFirebaseBuildDisplay');
-        if (liveDisp) liveDisp.textContent = remoteBuild || '(none — old format)';
+        if (liveDisp) liveDisp.textContent = remoteBuild || '(none)';
+        // Show/hide the release prompt for admins
+        checkReleasePrompt(remoteBuild);
         // Only check for updates if the user is running a local file, not the live GitHub Pages site.
-        // GitHub Pages auto-updates, so the banner is irrelevant there.
         const isLiveSite = window.location.hostname === 'ajani190819-ops.github.io';
         const isLocalFile = window.location.protocol === 'file:';
         const shouldCheckUpdates = isLocalFile && !isLiveSite;
-
         if (shouldCheckUpdates && remoteBuild && remoteBuild !== FILE_BUILD_ID) {
-          showUpdateBanner(label, downloadUrl, releaseNotes);
+          showUpdateBanner(data.label || '', downloadUrl, releaseNotes);
         } else {
-          // Either on the live site, already up to date, or no buildId yet — never show banner
           hideUpdateBanner();
         }
       });
@@ -1014,20 +1009,26 @@
     }
 
     function saveVersion() { publishRelease(); } // legacy alias
+    function checkReleasePrompt(remoteBuild) {
+      if (!isAdmin) return;
+      const prompt    = document.getElementById('releasePrompt');
+      const upToDate  = document.getElementById('releaseUpToDate');
+      if (!prompt || !upToDate) return;
+      const isUnpublished = !remoteBuild || remoteBuild !== FILE_BUILD_ID;
+      prompt.style.display   = isUnpublished ? '' : 'none';
+      upToDate.style.display = isUnpublished ? 'none' : '';
+    }
     function publishRelease() {
       if (!isAdmin) { showToast('Not authorised.', 'warn'); return; }
-      const label = (document.getElementById('versionInput')?.value || '').trim();
       const notes = (document.getElementById('releaseNotesInput')?.value || '').trim();
       const url   = (document.getElementById('releaseUrlInput')?.value || '').trim();
-      if (!label) { showToast('Enter a version label.'); return; }
-      // Use this file's own baked-in FILE_BUILD_ID as the canonical build ID.
-      // This means the file you're holding when you hit Publish is always considered current —
-      // no mismatch between what's in Firebase and what's in the file.
-      const payload = { label, buildId: FILE_BUILD_ID, downloadUrl: url, releaseNotes: notes };
+      // Label and buildId come directly from the file itself — no manual input needed
+      const payload = { label: FILE_VERSION, buildId: FILE_BUILD_ID, downloadUrl: url, releaseNotes: notes };
       versionRef.set(payload)
         .then(() => {
-          showToast(`Published ${label} (build ${FILE_BUILD_ID})`, 'success');
+          showToast(`Published ${FILE_VERSION} (build ${FILE_BUILD_ID})`, 'success');
           hideUpdateBanner();
+          checkReleasePrompt(FILE_BUILD_ID);
         })
         .catch(e => showFirebaseError(e.message));
     }
