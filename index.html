@@ -1066,12 +1066,36 @@
         `<span class="ub-icon">⬆️</span>` +
         `<span class="ub-msg"><strong>${newLabel}</strong> is available (you have ${FILE_VERSION})${notes ? ` &mdash; ${notes}` : ''}.</span>` +
         (hasUrl ? `<button class="ub-btn ub-download" onclick="downloadUpdate('${downloadUrl}')">⬇ Download Update</button>` : '') +
+        `<button class="ub-btn" onclick="refreshUpdateStatus()" title="Check if you already have this version">🔄 Check Again</button>` +
         `<button class="ub-btn ub-dismiss" onclick="hideUpdateBanner()" title="Dismiss">✕</button>`;
       banner.classList.add('show');
     }
     function hideUpdateBanner() {
       const banner = document.getElementById('updateBanner');
       if (banner) banner.classList.remove('show');
+    }
+    function refreshUpdateStatus() {
+      // Force a re-check by reloading Firebase version data
+      versionRef.once('value', snap => {
+        const data = snap.val();
+        if (!data) { hideUpdateBanner(); return; }
+        const remoteBuild = (typeof data === 'object') ? (data.buildId || '') : '';
+        const downloadUrl = (typeof data === 'object') ? (data.downloadUrl || '') : '';
+        const releaseNotes = (typeof data === 'object') ? (data.releaseNotes || '') : '';
+        const remoteLabel = (typeof data === 'object') ? (data.label || '') : '';
+        
+        const isLiveSite = window.location.hostname === 'ajani190819-ops.github.io';
+        const isLocalFile = window.location.protocol === 'file:';
+        const shouldCheckUpdates = isLocalFile && !isLiveSite;
+        const isActuallyDifferent = remoteBuild && remoteLabel && 
+                                     (remoteBuild !== FILE_BUILD_ID || remoteLabel !== FILE_VERSION);
+        if (shouldCheckUpdates && isActuallyDifferent) {
+          showUpdateBanner(remoteLabel, downloadUrl, releaseNotes);
+        } else {
+          hideUpdateBanner();
+          showToast('✓ You have the latest version!', 'success');
+        }
+      });
     }
     function downloadUpdate(url) {
       if (!url) { showToast('No download URL configured for this release.', 'warn'); return; }
