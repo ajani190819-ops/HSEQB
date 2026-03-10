@@ -981,6 +981,21 @@
               <div style="display:flex;flex-direction:column;gap:6px;">
               </div>
               <div id="categoryTreeDisplay"></div>
+
+              <!-- Expected Subcategory Frequencies — admin only, synced globally -->
+              <div id="catFreqSection" style="display:none;margin-top:16px;padding-top:14px;border-top:1.5px solid var(--border);">
+                <div style="font-weight:600;font-size:.85em;margin-bottom:4px;color:var(--text);">
+                  Expected Subcategory Frequencies
+                  <span style="font-weight:400;font-size:.82em;color:var(--text2);margin-left:6px;">Admin only &mdash; synced for all users</span>
+                </div>
+                <p style="font-size:.76em;color:var(--text3);margin-bottom:10px;line-height:1.5;">Enter the expected % of tossups for each subcategory at a typical tournament. Shown under each subcategory breakdown chart.</p>
+                <div id="catFreqPickers" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;"></div>
+                <div class="button-group">
+                  <button class="button" onclick="saveCatFreqs()">Save Frequencies</button>
+                  <button class="button" style="background:var(--sec-bg);color:var(--text2);border:1.5px solid var(--border);" onclick="resetCatFreqs()">Reset Defaults</button>
+                </div>
+                <div id="catFreqStatus" style="font-size:.8em;color:var(--success);margin-top:6px;min-height:1.2em;"></div>
+              </div>
             </div>
           </div>
 
@@ -1095,20 +1110,6 @@
                 <div id="catColorStatus" style="font-size:.8em;color:var(--success);margin-top:6px;min-height:1.2em;"></div>
               </div>
 
-              <!-- Expected Subcategory Frequency — admin only, synced globally -->
-              <div id="catFreqSection" style="display:none;padding-top:14px;border-top:1.5px solid var(--border);">
-                <div style="font-weight:600;font-size:.85em;margin-bottom:4px;color:var(--text);">
-                  Expected Subcategory Frequencies
-                  <span style="font-weight:400;font-size:.82em;color:var(--text2);margin-left:6px;">Admin only &mdash; synced for all users</span>
-                </div>
-                <p style="font-size:.76em;color:var(--text3);margin-bottom:10px;line-height:1.5;">Enter the expected % of tossups for each subcategory at a typical tournament. Shown under each subcategory breakdown chart.</p>
-                <div id="catFreqPickers" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;"></div>
-                <div class="button-group">
-                  <button class="button" onclick="saveCatFreqs()">Save Frequencies</button>
-                  <button class="button" style="background:var(--sec-bg);color:var(--text2);border:1.5px solid var(--border);" onclick="resetCatFreqs()">Reset Defaults</button>
-                </div>
-                <div id="catFreqStatus" style="font-size:.8em;color:var(--success);margin-top:6px;min-height:1.2em;"></div>
-              </div>
 
               <div class="input-group" style="padding-top:14px;border-top:1.5px solid var(--border);">
                 <label>Version Number <span style="font-size:.75em;font-weight:400;color:var(--text2);">(Syncs for all users)</span></label>
@@ -2587,40 +2588,42 @@
     const CAT_ORDER = ['Literature', 'Science', 'History', 'Social Studies', 'Fine Arts', 'Pop Culture'];
 
     // ── Expected subcategory frequency defaults (% of tossups at a standard tournament) ──
+    // CAT_FREQ_DEFAULTS — derived from NAQT High School Invitational Series distribution
+    // Normalized to 100% across all leaf subcategories (source: naqt.com/hs/distribution.jsp)
     const CAT_FREQ_DEFAULTS = {
-      // Literature
-      'Poetry':           4.5,
-      'Theater':          1.5,
-      'Fiction':          4.0,
-      'Nonfiction':       1.5,
-      // Science
-      'Biology':          4.0,
-      'Chemistry':        3.0,
-      'Physics':          3.5,
-      'Math':             1.5,
-      'Astronomy':        1.0,
-      'Computer Science': 0.5,
-      'Earth Science':    1.0,
-      // History
-      'Ancient History':  2.0,
-      'American History': 4.0,
-      'European History': 4.0,
-      'World History':    2.0,
-      // Social Studies
-      'Philosophy':       2.0,
-      'Geography':        1.0,
-      'Religion':         2.0,
-      'Mythology':        2.0,
-      'Social Sciences':  1.0,
-      // Fine Arts
-      'Visual Arts':      3.5,
-      'Music':            2.5,
-      'Musicals':         0.5,
-      'Opera':            1.0,
-      // Pop Culture
-      'Popular Media':    1.5,
-      'Sports':           1.0,
-      'Current Events':   0.5,
+      // Literature (total ~15.2%)
+      'Poetry':           3.1,
+      'Theater':          1.8,
+      'Fiction':          8.1,
+      'Nonfiction':       2.2,
+      // Science (total ~20.9%)
+      'Biology':          3.7,
+      'Chemistry':        2.6,
+      'Physics':          4.5,
+      'Math':             7.5,
+      'Astronomy':        1.1,
+      'Computer Science': 0.4,
+      'Earth Science':    1.1,
+      // History (total ~17.2%)
+      'Ancient History':  1.5,
+      'American History': 7.8,
+      'European History': 4.5,
+      'World History':    3.4,
+      // Social Studies (total ~26.9%)
+      'Philosophy':       1.5,
+      'Geography':        8.6,
+      'Religion':         6.7,
+      'Mythology':        7.5,
+      'Social Sciences':  2.6,
+      // Fine Arts (total ~7.8%)
+      'Visual Arts':      4.1,
+      'Music':            2.2,
+      'Musicals':         0.4,
+      'Opera':            1.1,
+      // Pop Culture (total ~12.0%)
+      'Popular Media':    5.6,
+      'Sports':           1.9,
+      'Current Events':   4.5,
     };
     var catFreqs = { ...CAT_FREQ_DEFAULTS };
 
@@ -4072,16 +4075,32 @@
           const id = 'chart-subcat-' + parent.replace(/\s+/g,'_');
           // Build frequency reference rows for this parent's subs
           const activeSubs = subs.filter(s => allAnswers.some(a => a.category === s));
+          // Compute actual % for each subcat from allAnswers
+          const totalVol = allAnswers.length || 1;
           const freqRows = activeSubs.map(sub => {
-            const pct = catFreqs[sub] ?? null;
-            if (pct === null) return '';
-            return `<div style="display:flex;align-items:center;gap:6px;font-size:.74em;line-height:1.6;">
-              <span style="flex:1;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${sub}</span>
-              <span style="color:var(--text3);font-variant-numeric:tabular-nums;">${pct.toFixed(1)}%</span>
+            const expected = catFreqs[sub] ?? null;
+            const actualCount = allAnswers.filter(a => a.category === sub).length;
+            const actualPct = (actualCount / totalVol) * 100;
+            const expStr = expected != null ? expected.toFixed(1) + '%' : '—';
+            const actStr = actualPct.toFixed(1) + '%';
+            const gap = expected != null ? expected - actualPct : null;
+            const gapColor = gap == null ? 'var(--text3)'
+              : gap > 3   ? 'var(--danger)'
+              : gap > 1   ? '#f39c12'
+              : gap < -1  ? 'var(--success)'
+              : 'var(--text3)';
+            const gapStr = gap == null ? '' : (gap > 0 ? '▼' : '▲') + Math.abs(gap).toFixed(1) + '%';
+            return `<div style="display:grid;grid-template-columns:1fr auto auto auto;align-items:center;gap:4px;font-size:.73em;line-height:1.7;">
+              <span style="color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${sub}</span>
+              <span style="color:var(--text3);font-variant-numeric:tabular-nums;text-align:right;">${actStr}</span>
+              <span style="color:var(--text3);padding:0 2px;">/</span>
+              <span style="color:${gapColor};font-variant-numeric:tabular-nums;text-align:right;" title="Expected">${expStr}</span>
             </div>`;
           }).join('');
           const freqBlock = freqRows ? `<div style="margin-top:10px;padding-top:8px;border-top:1.5px solid var(--border);">
-              <div style="font-size:.7em;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:4px;">Expected Freq.</div>
+              <div style="display:grid;grid-template-columns:1fr auto auto auto;gap:4px;font-size:.68em;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:2px;padding-bottom:3px;border-bottom:1.5px solid var(--border);">
+                <span>Subcategory</span><span style="text-align:right;">Actual</span><span></span><span style="text-align:right;">Expected</span>
+              </div>
               ${freqRows}
             </div>` : '';
           html += `<div class="ch-card ch-subcat-card">
