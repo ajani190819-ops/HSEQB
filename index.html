@@ -85,7 +85,7 @@
     }
     .qb-header h1 {
       font-size: clamp(1em, 2.6vw, 1.55em); font-weight: 700; letter-spacing: -.3px;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      white-space: nowrap; overflow: hidden; text-overflow: clip;
       max-width: 100%; margin: 0; line-height: 1.25; text-align: center;
     }
     .version-badge {
@@ -105,14 +105,20 @@
     .qb-header-spacer { display: none; }
     .header-toggle-label { font-size: .82em; font-weight: 700; flex-shrink: 0; }
 
-    /* ── Narrow: left-align title, show abbreviation via data-short ── */
+    /* ── Narrow: swap to medium abbreviation ── */
+    @media (max-width: 720px) {
+      .qb-header h1 > .version-badge { display: none; }
+    }
+    @media (max-width: 640px) {
+      .qb-header h1 { font-size: 0; }
+      .qb-header h1::before { content: attr(data-medium); font-size: clamp(.82em, 4.5vw, 1em); font-weight: 700; white-space: nowrap; }
+    }
     @media (max-width: 540px) {
       .qb-header-center { align-items: flex-start; }
-      .qb-header h1 { text-align: left; font-size: clamp(.82em, 4.5vw, 1em); }
       .header-session-name { display: none; }
       .header-toggle-label { display: none; }
     }
-    /* At very tight widths swap to abbreviated title */
+    /* At very tight widths swap to shortest abbreviation */
     @media (max-width: 360px) {
       .qb-header h1 { font-size: 0; }
       .qb-header h1::before { content: attr(data-short); font-size: 1rem; font-weight: 700; white-space: nowrap; }
@@ -866,7 +872,7 @@
       </div>
       <!-- Centre: title + session name -->
       <div class="qb-header-center">
-        <h1 data-short="HSE QB">HSE Quiz Bowl Tracker <span class="version-badge" id="versionBadge" style="display:none;"></span></h1>
+        <h1 data-short="HSE QB" data-medium="HSE QB Tracker">HSE Quiz Bowl Tracker <span class="version-badge" id="versionBadge" style="display:none;"></span></h1>
         <div class="header-session-name" id="headerSessionName"></div>
       </div>
       <!-- Right: toggle + help + save indicator -->
@@ -4039,6 +4045,13 @@
           min-width: 0;
           box-sizing: border-box;
         }
+        /* On small screens override the inline repeat(N,1fr) to wrap into 2 cols then 1 col */
+        @media (max-width: 900px) {
+          .ch-subcat-row { grid-template-columns: repeat(2, 1fr) !important; }
+        }
+        @media (max-width: 540px) {
+          .ch-subcat-row { grid-template-columns: 1fr !important; }
+        }
       </style>`;
 
       html += `<div class="ch-grid">`;
@@ -4077,36 +4090,46 @@
           const activeSubs = subs.filter(s => allAnswers.some(a => a.category === s));
           // Compute actual % for each subcat from allAnswers
           const totalVol = allAnswers.length || 1;
-          const freqRows = activeSubs.map(sub => {
-            const expected = catFreqs[sub] ?? null;
+          // Build combined legend + actual/expected rows for the info panel
+          const pColor = catColor(parent);
+          const infoRows = activeSubs.map((sub, i) => {
+            const expected   = catFreqs[sub] ?? null;
             const actualCount = allAnswers.filter(a => a.category === sub).length;
-            const actualPct = (actualCount / totalVol) * 100;
-            const expStr = expected != null ? expected.toFixed(1) + '%' : '—';
-            const actStr = actualPct.toFixed(1) + '%';
-            const gap = expected != null ? expected - actualPct : null;
-            const gapColor = gap == null ? 'var(--text3)'
-              : gap > 3   ? 'var(--danger)'
-              : gap > 1   ? '#f39c12'
-              : gap < -1  ? 'var(--success)'
+            const actualPct  = (actualCount / totalVol) * 100;
+            const expStr     = expected != null ? expected.toFixed(1) + '%' : '—';
+            const actStr     = actualPct.toFixed(1) + '%';
+            const gap        = expected != null ? expected - actualPct : null;
+            const gapColor   = gap == null ? 'var(--text3)'
+              : gap > 3  ? 'var(--danger)'
+              : gap > 1  ? '#f39c12'
+              : gap < -1 ? 'var(--success)'
               : 'var(--text3)';
-            const gapStr = gap == null ? '' : (gap > 0 ? '▼' : '▲') + Math.abs(gap).toFixed(1) + '%';
-            return `<div style="display:grid;grid-template-columns:1fr auto auto auto;align-items:center;gap:4px;font-size:.73em;line-height:1.7;">
-              <span style="color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${sub}</span>
-              <span style="color:var(--text3);font-variant-numeric:tabular-nums;text-align:right;">${actStr}</span>
-              <span style="color:var(--text3);padding:0 2px;">/</span>
-              <span style="color:${gapColor};font-variant-numeric:tabular-nums;text-align:right;" title="Expected">${expStr}</span>
+            // Swatch color: tint of parent color matching the doughnut slice tint
+            const bgBase = isDark ? [28,33,40] : [255,255,255];
+            const ratio  = activeSubs.length === 1 ? 0.65 : 0.30 + 0.55 * (i / (activeSubs.length - 1));
+            const swatchCol = mixColor(pColor, bgBase, ratio);
+            return `<div style="display:grid;grid-template-columns:10px 1fr auto auto auto;align-items:center;gap:5px;padding:3px 0;border-bottom:1px solid var(--border);">
+              <span style="width:10px;height:10px;border-radius:2px;background:${swatchCol};flex-shrink:0;display:inline-block;"></span>
+              <span style="font-size:.78em;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${sub}</span>
+              <span style="font-size:.76em;color:var(--text2);font-variant-numeric:tabular-nums;text-align:right;">${actStr}</span>
+              <span style="font-size:.76em;color:var(--text3);padding:0 2px;">/</span>
+              <span style="font-size:.76em;color:${gapColor};font-variant-numeric:tabular-nums;text-align:right;">${expStr}</span>
             </div>`;
           }).join('');
-          const freqBlock = freqRows ? `<div style="margin-top:10px;padding-top:8px;border-top:1.5px solid var(--border);">
-              <div style="display:grid;grid-template-columns:1fr auto auto auto;gap:4px;font-size:.68em;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:2px;padding-bottom:3px;border-bottom:1.5px solid var(--border);">
-                <span>Subcategory</span><span style="text-align:right;">Actual</span><span></span><span style="text-align:right;">Expected</span>
+
+          html += `<div class="ch-card ch-subcat-card" style="display:flex;flex-direction:column;padding:0;overflow:hidden;">
+            <!-- Chart panel -->
+            <div style="padding:14px 14px 10px;">
+              <div class="ch-title" style="margin-bottom:10px;">${parent}</div>
+              <div style="position:relative;height:${maxSubcatH}px;width:100%;"><canvas id="${id}"></canvas></div>
+            </div>
+            <!-- Info panel -->
+            <div style="padding:10px 14px 12px;border-top:2px solid var(--border);background:var(--sec-bg);">
+              <div style="display:grid;grid-template-columns:10px 1fr auto auto auto;gap:5px;font-size:.68em;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);padding-bottom:4px;margin-bottom:2px;border-bottom:1.5px solid var(--border);">
+                <span></span><span>Subcategory</span><span style="text-align:right;">Actual</span><span></span><span style="text-align:right;">Exp.</span>
               </div>
-              ${freqRows}
-            </div>` : '';
-          html += `<div class="ch-card ch-subcat-card">
-            <div class="ch-title">${parent}</div>
-            <div style="position:relative;height:${maxSubcatH}px;width:100%;"><canvas id="${id}"></canvas></div>
-            ${freqBlock}
+              ${infoRows}
+            </div>
           </div>`;
         });
         html += `</div>`;
@@ -4377,10 +4400,9 @@
         makeChart('chart-subcat-' + parent.replace(/\s+/g,'_'), {
           type: 'doughnut',
           data: { labels, datasets: [{ data, backgroundColor: colors, borderColor: 'transparent', borderWidth: 0 }] },
-          options: { ...pieOpts, maintainAspectRatio: false, plugins: { ...pieOpts.plugins, legend: {
-            position: 'bottom',
-            labels: { color: labelColor, font: { ...baseFont, size: 10 }, boxWidth: 10, boxHeight: 10, padding: 6 }
-          } } }
+          options: { ...pieOpts, maintainAspectRatio: false, plugins: { ...pieOpts.plugins,
+            legend: { display: false }
+          } }
         });
       });
     }
