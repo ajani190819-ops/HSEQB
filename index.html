@@ -658,28 +658,7 @@
                 </div>
                 <div id="catColorStatus" style="font-size:.8em;color:var(--success);margin-top:6px;min-height:1.2em;"></div>
               </div>
-              <div style="padding-top:14px;border-top:1.5px solid var(--border);">
-                <div style="font-weight:700;font-size:.9em;color:var(--text);margin-bottom:4px;">Publish New Release</div>
-                <div style="font-size:.78em;color:var(--text2);margin-bottom:12px;line-height:1.5;">
-                  Publishes a new build ID along with the version label. Users running an older file will see an update banner with a download button. Only change the label without publishing if you don't want to trigger an update notification.
-                </div>
-                <div style="background:var(--sec-bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:12px;font-size:.8em;color:var(--text2);">
-                  📦 <strong>This file:</strong> <span style="font-family:monospace;color:var(--primary);" id="thisFileBuildDisplay"></span>
-                </div>
-                <div class="input-group" style="margin-bottom:10px;">
-                  <label>Version Label <span style="font-size:.75em;font-weight:400;color:var(--text2);">(e.g. v66)</span></label>
-                  <input type="text" id="versionInput" placeholder="e.g. v66" />
-                </div>
-                <div class="input-group" style="margin-bottom:10px;">
-                  <label>Download URL <span style="font-size:.75em;font-weight:400;color:var(--text2);">— direct link to the new .html file</span></label>
-                  <input type="text" id="releaseUrlInput" placeholder="https://..." />
-                </div>
-                <div class="input-group" style="margin-bottom:12px;">
-                  <label>Release Notes <span style="font-size:.75em;font-weight:400;color:var(--text2);">(optional, shown in update banner)</span></label>
-                  <input type="text" id="releaseNotesInput" placeholder="e.g. Fixed analytics, added export" />
-                </div>
-                <button class="button button-success" onclick="publishRelease()" style="width:100%;">🚀 Publish Release</button>
-              </div>
+
             </div>
           </div>
           <div class="qb-section" id="sec-admin" style="border:2px solid var(--primary);display:none;">
@@ -692,8 +671,31 @@
                 <input type="text" id="adminAddInput" placeholder="e.g. Jane Smith" maxlength="61"
                   onkeydown="if(event.key==='Enter') addAdmin()" />
               </div>
-              <div class="button-group" style="margin-top:10px;">
+              <div class="button-group" style="margin-top:10px;margin-bottom:18px;">
                 <button class="button button-success" onclick="addAdmin()">Add Admin</button>
+              </div>
+              <div style="border-top:1.5px solid var(--border);padding-top:16px;">
+                <div style="font-weight:700;font-size:.9em;color:var(--text);margin-bottom:4px;">🚀 Publish New Release</div>
+                <div style="font-size:.78em;color:var(--text2);margin-bottom:12px;line-height:1.5;">
+                  Publishes this file's build ID to Firebase. Any user whose file has a different build ID will see an update banner. <strong>Always publish from the newest version of the file</strong> — whatever file you're running when you hit Publish becomes the "current" version for everyone.
+                </div>
+                <div style="background:var(--sec-bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:14px;font-size:.8em;color:var(--text2);line-height:1.6;">
+                  📦 <strong>This file's build:</strong> <span style="font-family:monospace;color:var(--primary);" id="thisFileBuildDisplay"></span><br>
+                  ☁️ <strong>Live build in Firebase:</strong> <span style="font-family:monospace;color:var(--success);" id="liveFirebaseBuildDisplay">—</span>
+                </div>
+                <div class="input-group" style="margin-bottom:10px;">
+                  <label>Version Label <span style="font-size:.75em;font-weight:400;color:var(--text2);">(e.g. v67)</span></label>
+                  <input type="text" id="versionInput" placeholder="e.g. v67" />
+                </div>
+                <div class="input-group" style="margin-bottom:10px;">
+                  <label>Download URL <span style="font-size:.75em;font-weight:400;color:var(--text2);">— raw GitHub link to the new .html file</span></label>
+                  <input type="text" id="releaseUrlInput" placeholder="https://raw.githubusercontent.com/..." />
+                </div>
+                <div class="input-group" style="margin-bottom:14px;">
+                  <label>Release Notes <span style="font-size:.75em;font-weight:400;color:var(--text2);">(optional — shown in the update banner)</span></label>
+                  <input type="text" id="releaseNotesInput" placeholder="e.g. Fixed analytics, added export" />
+                </div>
+                <button class="button button-success" onclick="publishRelease()" style="width:100%;">🚀 Publish Release</button>
               </div>
             </div>
           </div>
@@ -884,24 +886,29 @@
         const data = snap.val();
         if (!data) return;
         // Support both old string format and new object format
-        const label      = (typeof data === 'object') ? (data.label || '')        : data;
+        const label       = (typeof data === 'object') ? (data.label || '')        : data;
         const remoteBuild = (typeof data === 'object') ? (data.buildId || '')      : '';
         const downloadUrl = (typeof data === 'object') ? (data.downloadUrl || '')  : '';
         const releaseNotes= (typeof data === 'object') ? (data.releaseNotes || '') : '';
-        // Update badge and admin input
-        const badge = document.getElementById('versionBadge');
-        const input = document.getElementById('versionInput');
-        if (badge) { badge.textContent = label; badge.style.display = ''; }
-        if (input && document.activeElement !== input) input.value = label;
-        // Update admin release notes / url inputs if present
+        // Update badge is intentionally NOT done here — badge always reflects FILE_VERSION, not Firebase
+        // Update admin inputs (don't overwrite if user is actively typing)
+        const input    = document.getElementById('versionInput');
         const rnInput  = document.getElementById('releaseNotesInput');
         const urlInput = document.getElementById('releaseUrlInput');
+        if (input    && document.activeElement !== input)    input.value    = label;
         if (rnInput  && document.activeElement !== rnInput)  rnInput.value  = releaseNotes;
         if (urlInput && document.activeElement !== urlInput) urlInput.value = downloadUrl;
-        // Show update banner if remote buildId differs from this file's baked-in buildId
+        // Update live build display in admin panel
+        const liveDisp = document.getElementById('liveFirebaseBuildDisplay');
+        if (liveDisp) liveDisp.textContent = remoteBuild || '(none — old format)';
+        // Only show update banner if:
+        // 1. Firebase has a real buildId (new format — not just an old string version)
+        // 2. That buildId is different from this file's baked-in FILE_BUILD_ID
+        // 3. The remoteBuild is non-empty (prevents false positives on first run / no data)
         if (remoteBuild && remoteBuild !== FILE_BUILD_ID) {
           showUpdateBanner(label, downloadUrl, releaseNotes);
         } else {
+          // Matches exactly, or no buildId exists yet — either way, no banner
           hideUpdateBanner();
         }
       });
@@ -962,6 +969,9 @@
       document.addEventListener('click',e=>{ const w=document.getElementById('sidebarJumpWrapper'); if(w&&!w.contains(e.target)) w.classList.remove('open'); ['helpModal','sessionsModal','playerDetailModal'].forEach(id=>{const m=document.getElementById(id);if(m&&e.target===m)m.classList.remove('open');}); });
       loadUserId();
       recomputeAdmin();
+      // Set header version badge to THIS file's version immediately — never reflects Firebase label
+      const badge = document.getElementById('versionBadge');
+      if (badge) { badge.textContent = FILE_VERSION; badge.style.display = ''; }
       // Populate "This file" build ID in admin panel
       const buildDisp = document.getElementById('thisFileBuildDisplay');
       if (buildDisp) buildDisp.textContent = `${FILE_VERSION} — build ${FILE_BUILD_ID}`;
@@ -1008,13 +1018,15 @@
       const notes = (document.getElementById('releaseNotesInput')?.value || '').trim();
       const url   = (document.getElementById('releaseUrlInput')?.value || '').trim();
       if (!label) { showToast('Enter a version label.'); return; }
-      // Generate a build ID from current timestamp (YYYYMMDD-HHmm)
-      const now = new Date();
-      const pad = n => String(n).padStart(2,'0');
-      const buildId = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}`;
-      const payload = { label, buildId, downloadUrl: url, releaseNotes: notes };
+      // Use this file's own baked-in FILE_BUILD_ID as the canonical build ID.
+      // This means the file you're holding when you hit Publish is always considered current —
+      // no mismatch between what's in Firebase and what's in the file.
+      const payload = { label, buildId: FILE_BUILD_ID, downloadUrl: url, releaseNotes: notes };
       versionRef.set(payload)
-        .then(() => showToast(`Published ${label} (build ${buildId})`, 'success'))
+        .then(() => {
+          showToast(`Published ${label} (build ${FILE_BUILD_ID})`, 'success');
+          hideUpdateBanner();
+        })
         .catch(e => showFirebaseError(e.message));
     }
     function showUpdateBanner(newLabel, downloadUrl, notes) {
