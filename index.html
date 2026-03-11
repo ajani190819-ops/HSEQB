@@ -7,6 +7,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     :root{
       --sp:18px; --hsp:14px;
@@ -52,15 +53,7 @@
       height:100vh; overflow:hidden; color:var(--text); display:flex; flex-direction:column;
     }
     .qb-container{ width:100%; flex:1; display:flex; flex-direction:column; background:var(--bg); overflow:hidden; }
-    #updateBanner{
-      max-height:0; overflow:hidden;
-      display:flex; align-items:center; gap:10px; flex-wrap:wrap;
-      background:linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-      color:#fff; padding:0 16px; font-size:.88em; font-weight:600;
-      box-shadow:0 2px 10px rgba(17,153,142,.35);
-      position:relative; z-index:150; flex-shrink:0;
-      transition:max-height .3s ease, padding .3s ease;
-    }
+    #updateBanner{max-height:0; overflow:hidden; display:flex; align-items:center; gap:10px; flex-wrap:wrap; background:linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color:#fff; padding:0 16px; font-size:.88em; font-weight:600; box-shadow:0 2px 10px rgba(17,153,142,.35); position:relative; z-index:150; flex-shrink:0; transition:max-height .3s ease, padding .3s ease;}
     #updateBanner.show{ max-height:60px; padding:9px 16px; }
     .ub-icon{ font-size:1.1em; flex-shrink:0; }
     .ub-msg { flex:1; min-width:0; }
@@ -261,39 +254,17 @@
       .cat-row-label{ flex:0 0 68px; font-size:.6em; padding:6px 5px; }
       .cat-row-chip { font-size:.72em; padding:3px 7px; }
     }
-    #recordToast{
-      position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
-      background:var(--success);color:#fff;
-      padding:10px 22px;border-radius:28px;font-size:.92em;font-weight:700;
-      box-shadow:0 4px 18px rgba(0,0,0,.22);pointer-events:none;
-      opacity:0;transition:opacity .18s,transform .18s;z-index:99999;
-      white-space:nowrap;letter-spacing:.01em;
-    }
+    #recordToast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px); background:var(--success);color:#fff; padding:10px 22px;border-radius:28px;font-size:.92em;font-weight:700; box-shadow:0 4px 18px rgba(0,0,0,.22);pointer-events:none; opacity:0;transition:opacity .18s,transform .18s;z-index:99999; white-space:nowrap;letter-spacing:.01em;}
     #recordToast.show{ opacity:1;transform:translateX(-50%) translateY(0); }
     #recordToast.neg { background:var(--danger); }
     #recordToast.miss{ background:#888; }
     #recordToast.pts { background:var(--primary); }
-    #appToast{
-      position:fixed;bottom:70px;left:50%;transform:translateX(-50%) translateY(16px);
-      background:var(--danger);color:#fff;
-      padding:11px 22px;border-radius:28px;font-size:.9em;font-weight:700;
-      box-shadow:0 4px 20px rgba(0,0,0,.28);pointer-events:none;
-      opacity:0;transition:opacity .2s,transform .2s;z-index:100000;
-      max-width:88vw;text-align:center;letter-spacing:.01em;line-height:1.4;
-    }
+    #appToast{position:fixed;bottom:70px;left:50%;transform:translateX(-50%) translateY(16px); background:var(--danger);color:#fff; padding:11px 22px;border-radius:28px;font-size:.9em;font-weight:700; box-shadow:0 4px 20px rgba(0,0,0,.28);pointer-events:none; opacity:0;transition:opacity .2s,transform .2s;z-index:100000; max-width:88vw;text-align:center;letter-spacing:.01em;line-height:1.4;}
     #appToast.show{ opacity:1;transform:translateX(-50%) translateY(0); }
     #appToast.toast-warn   { background:#e67e22; }
     #appToast.toast-success{ background:var(--success); }
     #appToast.toast-info   { background:var(--primary); }
-    #confirmToast{
-      position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);
-      background:var(--card);color:var(--text);
-      padding:16px 20px;border-radius:14px;font-size:.9em;
-      box-shadow:0 8px 32px rgba(0,0,0,.32);border:1.5px solid var(--border);
-      opacity:0;transition:opacity .2s,transform .2s;z-index:100001;
-      max-width:340px;width:90vw;text-align:center;
-      pointer-events:none;
-    }
+    #confirmToast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px); background:var(--card);color:var(--text); padding:16px 20px;border-radius:14px;font-size:.9em; box-shadow:0 8px 32px rgba(0,0,0,.32);border:1.5px solid var(--border); opacity:0;transition:opacity .2s,transform .2s;z-index:100001; max-width:340px;width:90vw;text-align:center; pointer-events:none;}
     #confirmToast.show{ opacity:1;transform:translateX(-50%) translateY(0);pointer-events:all; }
     #confirmToast .ct-msg{ font-weight:600;margin-bottom:14px;line-height:1.45;color:var(--text); }
     #confirmToast .ct-btns{ display:flex;gap:10px;justify-content:center; }
@@ -523,16 +494,12 @@
         <div class="sidebar-nav">
           <div class="sidebar-jump-wrapper" id="sidebarJumpWrapper">
             <button class="sidebar-jump-btn" onclick="toggleJumpDropdown()" type="button">
-              <span id="sidebarJumpLabel">Session & Data</span>
+              <span id="sidebarJumpLabel">Setup</span>
               <span class="sidebar-jump-arrow">&#9662;</span>
             </button>
             <div class="sidebar-jump-menu">
-              <div style="font-weight:700;font-size:.75em;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:8px 12px 4px;margin:4px 0;border-bottom:1.5px solid var(--border);">Session & Data</div>
+              <div style="font-weight:700;font-size:.75em;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:8px 12px 4px;margin:4px 0;border-bottom:1.5px solid var(--border);">Setup</div>
               <button onclick="showSection('sec-session')">Session</button>
-              <button onclick="showSection('sec-export')">Export / Import</button>
-              <button id="jumpBtn-sec-danger" onclick="showSection('sec-danger')" class="hidden">Data Management</button>
-              <button id="jumpBtn-sec-debug" onclick="showSection('sec-debug')" class="hidden">Debug Menu</button>
-              <div style="font-weight:700;font-size:.75em;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:8px 12px 4px;margin:8px 0 4px;border-bottom:1.5px solid var(--border);">Setup</div>
               <button onclick="showSection('sec-players')">Players</button>
               <button onclick="showSection('sec-teams')">Teams</button>
               <button onclick="showSection('sec-categories')">Categories</button>
@@ -540,6 +507,10 @@
               <button onclick="showSection('sec-userid')">User ID</button>
               <button onclick="showSection('sec-visual')">Visual Settings</button>
               <button id="jumpBtn-sec-admin" onclick="showSection('sec-admin')" class="hidden">Admin Panel</button>
+              <div style="font-weight:700;font-size:.75em;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:8px 12px 4px;margin:8px 0 4px;border-bottom:1.5px solid var(--border);">Session & Data</div>
+              <button onclick="showSection('sec-export')">Export / Import</button>
+              <button id="jumpBtn-sec-danger" onclick="showSection('sec-danger')" class="hidden">Data Management</button>
+              <button id="jumpBtn-sec-debug" onclick="showSection('sec-debug')" class="hidden">Debug Menu</button>
             </div>
           </div>
           <button class="sidebar-close-btn" onclick="toggleSidebar()">&#9664; Hide</button>
@@ -574,6 +545,11 @@
               <div class="button-group" class="mb-14">
                 <button class="button" onclick="addToPlayerPool()">Add Player</button>
                 <button class="button button-danger" onclick="clearPlayerPool()">Clear All</button>
+              </div>
+              <div style="padding-bottom:14px;border-bottom:1.5px solid var(--border);margin-bottom:14px;">
+                <div style="font-weight:600;font-size:.85em;margin-bottom:8px;color:var(--text);">Player Management</div>
+                <div style="font-size:.78em;color:var(--text2);margin-bottom:10px;">Rename players to fix typos or merge duplicates.</div>
+                <div id="playerMgmtContainer" style="display:flex;flex-direction:column;gap:8px;"></div>
               </div>
               <div class="input-group">
                 <label>Import from File (CSV/TXT):</label>
@@ -706,7 +682,7 @@
               </div>
             </div>
           </div>
-          <div class="qb-section" id="sec-admin" style="border:2px solid var(--primary);display:none;">
+<div class="qb-section" id="sec-admin" style="border:2px solid var(--primary);display:none;">
             <h2 class="primary">Admin Panel <span class="toggle-icon">&#9660;</span></h2>
             <div class="collapsible-content">
               <p style="font-size:.82em;color:var(--text2);margin-bottom:12px;line-height:1.5;">Admins can access Data Management and control low-data player flagging. Add by exact full name.</p>
@@ -776,8 +752,49 @@
           <div class="qb-section" id="sec-danger" style="border:2px solid var(--danger);display:none;">
             <h2 class="danger">Data Management <span class="toggle-icon">&#9660;</span></h2>
             <div class="collapsible-content">
-              <button class="button button-danger" onclick="resetAllData()">Delete All Data</button>
-              <p style="margin-top:10px;font-size:.85em;color:var(--text2);">This cannot be undone. Export first!</p>
+              <div style="margin-bottom:18px;padding-bottom:16px;border-bottom:1.5px solid var(--border);">
+                <div style="font-weight:700;font-size:.92em;color:var(--text);margin-bottom:10px;">&#9881; Skill Score Settings</div>
+                <p style="font-size:.78em;color:var(--text2);margin-bottom:12px;padding:8px 10px;background:var(--hover);border-radius:6px;border:1.5px solid var(--border);"><strong>Global settings</strong> &#8212; Synced across all devices and sessions.</p>
+                <label style="font-size:.85em;font-weight:600;color:var(--text2);display:block;margin-bottom:8px;">Low Data Threshold <span class="fw4-82-ml6">Flag players with low buzz count</span></label>
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+                  <button class="button" onclick="changeSkillThreshold(-5)" style="width:40px;padding:6px 0;">&#8722;</button>
+                  <div style="flex:1;display:flex;flex-direction:column;gap:4px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:.85em;color:var(--text);">Threshold:</span><span style="font-size:.85em;font-weight:700;color:var(--primary);" id="skillThresholdDisplay">40%</span></div>
+                    <div style="height:8px;background:var(--sec-bg);border-radius:4px;overflow:hidden;border:1.5px solid var(--border);"><div style="height:100%;width:40%;background:var(--primary);border-radius:4px;transition:width .2s;" id="skillThresholdBar"></div></div>
+                    <div style="font-size:.75em;color:var(--text2);line-height:1.4;" id="skillThresholdHelp">Players flagged when buzz count &lt; threshold of team median</div>
+                  </div>
+                  <button class="button" onclick="changeSkillThreshold(5)" style="width:40px;padding:6px 0;">+</button>
+                </div>
+                <p style="font-size:.78em;color:var(--text2);padding:8px 12px;background:var(--sec-bg);border-radius:6px;border:1.5px solid var(--border);"><strong>What this does:</strong> Players with fewer buzzes than the threshold are highlighted in analytics to show they might not have enough data for accurate skill comparison.</p>
+              </div>
+              <div style="margin-bottom:18px;padding-bottom:16px;border-bottom:1.5px solid var(--border);">
+                <div style="font-weight:700;font-size:.92em;color:var(--text);margin-bottom:6px;">Expected Subcategory Frequencies <span class="fw4-82-ml6">Admin only — synced for all users</span></div>
+                <p style="font-size:.78em;color:var(--text2);margin-bottom:12px;line-height:1.4;">Set how often each subcategory should appear. Used to calculate expected bonus opportunities.</p>
+                <div id="catFreqPickers" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;"></div>
+                <div class="button-group">
+                  <button class="button" onclick="saveCatFreqs()">Save Frequencies</button>
+                  <button class="button" style="background:var(--sec-bg);color:var(--text2);border:1.5px solid var(--border);" onclick="resetCatFreqs()">Reset Defaults</button>
+                </div>
+                <div id="catFreqStatus" class="fs-8-success-mt6"></div>
+              </div>
+              <div style="border:2px solid var(--danger);border-radius:var(--radius-sm);overflow:hidden;">
+                <div id="dangerZoneHeader" onclick="toggleDangerZone()" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(220,53,69,.07);cursor:pointer;user-select:none;">
+                  <span style="font-weight:700;font-size:.9em;color:var(--danger);">&#9888; Danger Zone</span>
+                  <span id="dangerZoneArrow" style="font-size:.8em;color:var(--danger);transition:transform .25s;transform:rotate(-90deg);">&#9660;</span>
+                </div>
+                <div id="dangerZoneBody" style="display:none;padding:14px;border-top:1.5px solid rgba(220,53,69,.25);">
+                  <p style="font-size:.82em;color:var(--text2);margin-bottom:12px;line-height:1.5;">This permanently deletes <strong>all sessions and all data</strong> across every device. There is no undo. Export your data first.</p>
+                  <div style="margin-bottom:10px;">
+                    <div style="font-weight:600;font-size:.82em;color:var(--text2);margin-bottom:6px;">Export format before deleting:</div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                      <button class="button button-success" style="flex:1;" onclick="exportAllData('xlsx')">&#8595; Export All as Excel</button>
+                      <button class="button button-success" style="flex:1;" onclick="exportAllData('csv')">&#8595; Export All as CSV</button>
+                      <button class="button button-success" style="flex:1;" onclick="exportAllData('json')">&#8595; Export All as JSON</button>
+                    </div>
+                  </div>
+                  <button class="button button-danger" style="width:100%;" onclick="resetAllData()">Delete All Data</button>
+                </div>
+              </div>
             </div>
           </div>
           <div class="qb-section" id="sec-debug" style="border:2px solid var(--warning);display:none;">
@@ -917,10 +934,31 @@
           return parentHref.includes('claude.ai');
         } catch(crossOriginErr){
           const ref = document.referrer || '';
-          return ref.includes('claude.ai') || ref === '';
-        }
+          return ref.includes('claude.ai') || ref === ''; }
       } catch(e){ return false; }
     })();
+    // Global error resilience — catch JS errors and show a non-fatal warning
+    window.addEventListener('error', function(e){
+      const msg=(e&&e.message)?e.message:'Unknown error';
+      console.error('[HSE QB]', msg, e&&e.error);
+      if (!e.filename||e.filename===window.location.href||e.filename===''){
+        try{ showToast('&#9888; JS error: '+msg.slice(0,70),'warn',5000); }catch(_){}
+      }
+    });
+    window.addEventListener('unhandledrejection', function(e){
+      console.error('[HSE QB Promise]', e.reason);
+      try{ showToast('&#9888; Async error — check console','warn',4000); }catch(_){}
+    });
+    // _safe(fn, label): run fn(), catch+log errors, show toast. Returns null on error.
+    function _safe(fn,label){
+      try{ return fn(); }
+      catch(e){
+        console.error('[_safe:'+(label||'?')+']',e);
+        try{ showToast('&#9888; Error in '+(label||'component')+': '+e.message.slice(0,60),'warn',4000); }catch(_){}
+        return null;
+      }
+    }
+
     const DISPLAY_VERSION = '1.0.0';      // User-facing version (e.g., 1.5.1)
     const INTERNAL_BUILD = 'build.2025.mar.10'; // Internal build identifier
     const FILE_VERSION  = DISPLAY_VERSION; // For backward compatibility
@@ -945,8 +983,7 @@
         if (isIframe){
         db=null; sessionsRef=_noopRef(); globalPlayersRef=_noopRef(); versionRef=_noopRef(); globalSettingsRef=_noopRef(); userIdentitiesRef=_noopRef(); adminListRef=_noopRef();
         startApp();
-        return;
-      }
+        return; }
       if (typeof firebase === 'undefined'){ setTimeout(initFirebase, 50); return; }
       const firebaseConfig ={apiKey:"AIzaSyCRkK3IpRXeQC9JH73iC0tC-mjq5nulaAo",authDomain:"hse-quiz-bowl.firebaseapp.com",databaseURL:"https://hse-quiz-bowl-default-rtdb.firebaseio.com",projectId:"hse-quiz-bowl",storageBucket:"hse-quiz-bowl.firebasestorage.app",messagingSenderId:"676670239956",appId:"1:676670239956:web:9c569fc74ecf21de25f741"};
     try{ firebase.app(); } catch(e){ firebase.initializeApp(firebaseConfig); }
@@ -954,8 +991,7 @@
       sessionsRef=db.ref('sessions'); globalPlayersRef=db.ref('globalPlayers'); versionRef=db.ref('appVersion');
       globalSettingsRef=db.ref('globalSettings'); userIdentitiesRef=db.ref('userIdentities'); adminListRef=db.ref('adminList');
       adminListRef.on('value', snap =>{ adminList=snap.val()||[]; recomputeAdmin(); });
-      startApp();
-    }
+      startApp(); }
     function startApp(){
       versionRef.on('value', snap =>{
         const data = snap.val();
@@ -992,12 +1028,10 @@
         if (shouldCheckUpdates && isActuallyDifferent && isLocalBehind){
           showUpdateBanner(remoteLabel, downloadUrl, releaseNotes);
         } else{
-          hideUpdateBanner();
-        }
+          hideUpdateBanner(); }
         // Store loading source for help menu
         const loadingSource = isLocalFile ? 'Local File' :isGitHubPages ? 'GitHub Pages' :isOtherOnline ? 'Online' :'Unknown';
-        localStorage.setItem('qb_loadingSource', loadingSource);
-      });
+        localStorage.setItem('qb_loadingSource', loadingSource); });
       globalSettingsRef.on('value', snap =>{
         const s = snap.val(); if (!s) return;
         let changed = false;
@@ -1038,15 +1072,13 @@
         currentAnalyticsTab = _savedAnalyticsTab;
         document.querySelectorAll('.analytics-tab').forEach(b =>{
           const matches = b.getAttribute('onclick')?.includes("'"+_savedAnalyticsTab+"'");
-          b.classList.toggle('active', !!matches);
-        });
+          b.classList.toggle('active', !!matches); });
         document.querySelectorAll('.analytics-panel').forEach(p => p.classList.remove('active'));
         document.getElementById('an-'+_savedAnalyticsTab)?.classList.add('active');
         setTimeout(() =>{
           const scrollEl = document.getElementById('analyticsScroll');
           if (scrollEl) scrollEl.scrollTop = parseInt(localStorage.getItem('analyticsScroll_'+_savedAnalyticsTab)||'0', 10);
-        }, 600);
-      }
+        }, 600); }
       document.getElementById('analyticsScroll')?.addEventListener('scroll',function(){localStorage.setItem('analyticsScroll_'+currentAnalyticsTab,this.scrollTop);});
       showSection(savedSection);
       document.addEventListener('click',e=>{ const w=document.getElementById('sidebarJumpWrapper'); if(w&&!w.contains(e.target)) w.classList.remove('open'); ['helpModal','sessionsModal','playerDetailModal'].forEach(id=>{const m=document.getElementById(id);if(m&&e.target===m)m.classList.remove('open');}); });
@@ -1065,8 +1097,7 @@
         badge.textContent = FILE_VERSION;
         badge.title = `Build:${buildDate}`;
         // Use !important to override CSS media query that hides it on mobile
-        badge.style.setProperty('display', 'inline', 'important');
-      }
+        badge.style.setProperty('display', 'inline', 'important'); }
       // Populate version displays in admin panel
       const displayVerDisp = document.getElementById('displayVersionDisplay');
       const internalVerDisp = document.getElementById('internalVersionDisplay');
@@ -1091,10 +1122,8 @@
           const chartsBtn = document.querySelector('.analytics-tab[onclick*="charts"]');
           if (chartsBtn){
             if (!analyticsOpen) toggleAnalytics();
-            chartsBtn.click();
-          }
-        }, 0);
-      }
+            chartsBtn.click(); }
+        }, 0); }
     }
     function saveGlobalSettings(){
       if (isIframe || !globalSettingsRef) return;
@@ -1108,8 +1137,7 @@
       playerTHeardOverrides[playerName] = (playerTHeardOverrides[playerName] || 0) + delta;
       if (playerTHeardOverrides[playerName] === 0) delete playerTHeardOverrides[playerName];
       if (globalSettingsRef) globalSettingsRef.child('playerTHeardOverrides').set(playerTHeardOverrides).catch(e => showFirebaseError('TH save failed:' + e.message));
-      renderAnalyticsPlayersUniversal();
-    }
+      renderAnalyticsPlayersUniversal(); }
     function saveVersion(){ publishRelease(); } // legacy alias
     function checkReleasePrompt(remoteBuild){
       if (!isAdmin) return;
@@ -1119,18 +1147,15 @@
       const isUnpublished = !remoteBuild || remoteBuild !== FILE_BUILD_ID;
       prompt.style.display   = isUnpublished ? '' :'none';
       upToDate.style.display = isUnpublished ? 'none' :'';
-      if (isUnpublished) checkGitHubWarning(remoteBuild);
-    }
+      if (isUnpublished) checkGitHubWarning(remoteBuild); }
     function checkGitHubWarning(remoteBuild){
       const warning = document.getElementById('githubWarning');
       if (!warning) return;
       if (!remoteBuild){
         warning.style.display = 'none';
-        return;
-      }
+        return; }
       const isUploaded = FILE_BUILD_ID === remoteBuild;
-      warning.style.display = isUploaded ? 'none' :'';
-    }
+      warning.style.display = isUploaded ? 'none' :''; }
     function publishRelease(){
       if (!isAdmin){ showToast('Not authorised.', 'warn'); return; }
       const label = (document.getElementById('releaseLabelInput')?.value || '').trim() || FILE_VERSION;
@@ -1149,10 +1174,8 @@
         .then(() =>{
           showToast(`Updated release info for ${label}`, 'success');
           hideUpdateBanner();
-          checkReleasePrompt(FILE_BUILD_ID);
-        })
-        .catch(e => showFirebaseError(e.message));
-    }
+          checkReleasePrompt(FILE_BUILD_ID); })
+        .catch(e => showFirebaseError(e.message)); }
     function showUpdateBanner(newLabel, downloadUrl, notes){
       const banner = document.getElementById('updateBanner');
       if (!banner) return;
@@ -1162,20 +1185,17 @@
         `<span class="ub-msg"><strong>${newLabel}</strong> is available (you have ${FILE_VERSION})${notes ? ` — ${notes}` :''}.</span>` +
         (hasUrl ? `<button class="ub-btn ub-download" onclick="downloadUpdate('${downloadUrl}')">↓ Download Update</button>` :'') +
         `<button class="ub-btn ub-dismiss" onclick="hideUpdateBanner()" title="Dismiss">✕</button>`;
-      banner.classList.add('show');
-    }
+      banner.classList.add('show'); }
     function hideUpdateBanner(){
       const banner = document.getElementById('updateBanner');
-      if (banner) banner.classList.remove('show');
-    }
+      if (banner) banner.classList.remove('show'); }
     function downloadUpdate(url){
       if (!url){ showToast('No download URL configured for this release.', 'warn'); return; }
       showToast('Fetching update…');
       fetch(url)
         .then(r =>{
           if (!r.ok) throw new Error('HTTP ' + r.status);
-          return r.blob();
-        })
+          return r.blob(); })
         .then(blob =>{
           const a = document.createElement('a');
           a.href = URL.createObjectURL(blob);
@@ -1184,11 +1204,9 @@
           a.click();
           document.body.removeChild(a);
           setTimeout(() => URL.revokeObjectURL(a.href), 5000);
-          showToast('Downloaded! Replace your existing file with the new one.', 'success');
-        })
+          showToast('Downloaded! Replace your existing file with the new one.', 'success'); })
         .catch(err =>{
-          showToast('Download failed:' + err.message, 'warn');
-        });
+          showToast('Download failed:' + err.message, 'warn'); });
     }
     function loadUserId(){
       const stored = localStorage.getItem('qb_userName') || '';
@@ -1206,8 +1224,7 @@
         if (lnInput) lnInput.value = spaceIdx > -1 ? stored.slice(spaceIdx + 1) :'';
       } else{
         if (display) display.textContent = 'Not set';
-        if (sub) sub.textContent = 'Enter your first and last name below';
-      }
+        if (sub) sub.textContent = 'Enter your first and last name below'; }
     }
     function saveUserId(){
       const fn = (document.getElementById('userIdFirstName')?.value || '').trim();
@@ -1222,8 +1239,7 @@
         const payload ={ name, lastSeen:new Date().toISOString() };
         if (photo) payload.photo = photo;
         userIdentitiesRef.child(clientId).set(payload)
-          .catch(e => showFirebaseError('User ID save failed:' + e.message));
-      }
+          .catch(e => showFirebaseError('User ID save failed:' + e.message)); }
       loadUserId();
       const sub = document.getElementById('userIdSubtitle');
       if (sub){ sub.textContent = '✔ Saved!'; setTimeout(() => loadUserId(), 1800); }
@@ -1237,8 +1253,7 @@
         if (fn) fn.value = '';
         if (ln) ln.value = '';
         loadUserId();
-        recomputeAdmin();
-      });
+        recomputeAdmin(); });
     }
     function loadExistingAccount(){
       const fn = (document.getElementById('userIdFirstName')?.value || '').trim();
@@ -1250,26 +1265,22 @@
       const match = Object.values(userIdentitiesCache).find(u => u.name === name);
       if (!match){
         setStatus('No existing account found for "' + name + '". Use Save to create one.', 'var(--warning)');
-        return;
-      }
+        return; }
       localStorage.setItem('qb_userName', name);
       recomputeAdmin();
       if (!isIframe && userIdentitiesRef){
         const payload ={ name, lastSeen:new Date().toISOString() };
         userIdentitiesRef.child(clientId).set(payload)
-          .catch(e => showFirebaseError('Account load failed:' + e.message));
-      }
+          .catch(e => showFirebaseError('Account load failed:' + e.message)); }
       loadUserId();
       setStatus('✔ Account loaded.', 'var(--success)');
-      setTimeout(() => setStatus(''), 3000);
-    }
+      setTimeout(() => setStatus(''), 3000); }
     function newAccount(){
       showConfirm('This will generate a new client ID and clear your local identity. Continue?', 'New Account').then(ok =>{
         if (!ok) return;
         localStorage.removeItem('qb_clientId');
         localStorage.removeItem('qb_userName');
-        location.reload();
-      });
+        location.reload(); });
     }
     const WELCOME_LAST_SHOWN_KEY = 'qb_welcomeLastShown';
     const WELCOME_RESHOW_MS = 60 * 24 * 60 * 60 * 1000; // 60 days
@@ -1289,14 +1300,12 @@
           sub.textContent   = "It's been a while — want a refresher? The Help guide has everything you need.";
         }
         toast.classList.add('show');
-      }, 1200);
-    }
+      }, 1200); }
     function dismissWelcomeToast(openHelp){
       const toast = document.getElementById('welcomeToast');
       if (toast) toast.classList.remove('show');
       localStorage.setItem(WELCOME_LAST_SHOWN_KEY, Date.now().toString());
-      if (openHelp) openHelpModal();
-    }
+      if (openHelp) openHelpModal(); }
     const clientId = (() =>{
       try{
         const k='qb_clientId', e=localStorage.getItem(k); if (e) return e;
@@ -1320,18 +1329,15 @@
           mutator(n);
           n.lastUpdated = new Date().toISOString();
           n.updatedBy = clientId;
-          return n;
-        },
+          return n; },
         err =>{
           setTimeout(() => writeInFlight.delete(id), 300);
           notifySaveComplete(); // decrement counter; error already shown by caller
-          if (err) showFirebaseError('Save failed:' + err.message);
-        },
+          if (err) showFirebaseError('Save failed:' + err.message); },
         false
       ).then(() =>{
         setTimeout(() => writeInFlight.delete(id), 300);
-        notifySaveComplete();
-      });
+        notifySaveComplete(); });
     }
     function setSessionNonAtomic(id, value){
       if (isIframe) return Promise.resolve();
@@ -1339,13 +1345,11 @@
       return sessionsRef.child(id).set(value)
         .then(()=>notifySaveComplete())
         .catch(e=>{notifySaveComplete();throw e;})
-        .finally(()=>setTimeout(()=>writeInFlight.delete(id),300));
-    }
+        .finally(()=>setTimeout(()=>writeInFlight.delete(id),300)); }
     function toArray(val){
       if (!val) return [];
       if (Array.isArray(val)) return val;
-      return Object.keys(val).sort((a,b)=>+a-+b).map(k=>val[k]);
-    }
+      return Object.keys(val).sort((a,b)=>+a-+b).map(k=>val[k]); }
     function normalizeSession(s){
       if (!s) return s;
       s.teams=toArray(s.teams); s.answerLog=toArray(s.answerLog);
@@ -1353,8 +1357,7 @@
       if (s.players) Object.values(s.players).forEach(p=>{p.answers=toArray(p.answers);});
       s.teams.forEach(t=>{t.playerMembers=toArray(t.playerMembers);});
       if (typeof s.tHeard!=='number') s.tHeard=0;
-      return s;
-    }
+      return s; }
     const CURRENT_SESSION_KEY='currentSession';
     const CATEGORY_TREE ={
       'Literature':    ['Poetry','Theater','Fiction','Nonfiction'],
@@ -1405,38 +1408,32 @@
         el.classList.add('state-' + stateName);
         const label = el.querySelector('.save-label');
         if (label) label.textContent = labelText;
-        if (title) el.title = title; else el.removeAttribute('title');
-      });
+        if (title) el.title = title; else el.removeAttribute('title'); });
     }
     function applyDebugMenuVisibility(){
       const show = !_connected;
       const debugEl  = document.getElementById('sec-debug');
       const debugBtn = document.getElementById('jumpBtn-sec-debug');
       if (debugEl)  debugEl.style.display  = show ? '' :'none';
-      if (debugBtn) debugBtn.style.display = show ? '' :'none';
-    }
+      if (debugBtn) debugBtn.style.display = show ? '' :'none'; }
     const setLoadingState = () =>{
       _connected = false;
       _setIndicatorState('connecting', 'Connecting…');
-      applyDebugMenuVisibility();
-    };
+      applyDebugMenuVisibility(); };
     const updateAutoSave = () =>{
       _connected = true;
       if (!_flashTimer) _setIndicatorState('idle', 'Synced');
-      applyDebugMenuVisibility();
-    };
+      applyDebugMenuVisibility(); };
     const showFirebaseError = msg =>{
       _connected = false;
       clearTimeout(_flashTimer);
       _flashTimer = null;
       _setIndicatorState('error', 'Offline', msg || 'Connection issue — changes may not be saved');
-      applyDebugMenuVisibility();
-    };
+      applyDebugMenuVisibility(); };
     function notifySaveStart(){
       if (!_connected) return;
       clearTimeout(_flashTimer);
-      _setIndicatorState('flash', 'Syncing…');
-    }
+      _setIndicatorState('flash', 'Syncing…'); }
     function notifySaveComplete(){
       if (!_connected) return;
       clearTimeout(_flashTimer);
@@ -1450,8 +1447,7 @@
         const el=document.querySelector(sel); if(!el) return;
         const up=el.scrollTop>2, dn=el.scrollHeight>el.scrollTop+el.clientHeight+2;
         const mask=up&&dn?`linear-gradient(to bottom,transparent 0,black ${F}px,black calc(100% - ${F}px),transparent 100%)`:up?`linear-gradient(to bottom,transparent 0,black ${F}px,black 100%)`:dn?`linear-gradient(to bottom,black 0%,black calc(100% - ${F}px),transparent 100%)`:'none';
-        el.style.webkitMaskImage=el.style.maskImage=mask;
-      });
+        el.style.webkitMaskImage=el.style.maskImage=mask; });
     }
     function updateHeaderHeight(){ const h=document.getElementById('qbHeader'); if(h) document.documentElement.style.setProperty('--header-height',h.offsetHeight+'px'); }
     function setupGlobalPlayers(){
@@ -1463,16 +1459,14 @@
       });
         userIdentitiesRef.on('value', snap =>{
         userIdentitiesCache = snap.val() ||{};
-      });
-    }
+      }); }
     function applyGlobalPlayersToSession(data){
       const s = getCurrentSession(); if (!s) return;
       let changed = false;
       Object.keys(data).forEach(name =>{ if (!s.players[name]){ s.players[name] ={ name, points:0, answers:[] }; changed = true; } });
       if (changed){
         sessionsRef.child(state.currentSessionId).set(s).catch(e => showFirebaseError(e.message));
-        renderPlayerPool(); renderPlayerButtons(); renderSubPanel(); renderTeams();
-      }
+        renderPlayerPool(); renderPlayerButtons(); renderSubPanel(); renderTeams(); }
     }
     function saveGlobalPlayers(names){
       if (isIframe) return;
@@ -1512,22 +1506,18 @@
         } else{
           updateAutoSave();
           createNewSession();
-          return;
-        }
+          return; }
         loadSessionData();
         globalPlayersRef.once('value').then(s => applyGlobalPlayersToSession(s.val() ||{}));
         updateAutoSave();
         renderAll();
         if (document.getElementById('sessionsModal')?.classList.contains('open')){
-          renderSessionsList();
-        }
-      }, err => showFirebaseError('Connection failed:' + err.message));
-    }
+          renderSessionsList(); }
+      }, err => showFirebaseError('Connection failed:' + err.message)); }
     function loadSessionData(){
       const s=getCurrentSession(); if(!s){createNewSession();return;}
       state.categories = s.categories = [...DEFAULT_CATEGORIES];
-      setTimeout(renderCategoryTreeDisplay, 0);
-    }
+      setTimeout(renderCategoryTreeDisplay, 0); }
     function saveAllData(){
       if (isIframe) return;
       const s = getCurrentSession();
@@ -1564,8 +1554,7 @@
       const loadingSource = localStorage.getItem('qb_loadingSource') || 'Unknown';
       const sourceEl = document.getElementById('helpLoadingSource');
       if (sourceEl) sourceEl.textContent = loadingSource;
-      document.getElementById('helpModal').classList.add('open');
-    }
+      document.getElementById('helpModal').classList.add('open'); }
     function closeHelpModal()    { document.getElementById('helpModal').classList.remove('open'); }
     function renderSessionsList(){
       const list = document.getElementById('sessionsList');
@@ -1581,8 +1570,7 @@
         sessions = sessions.filter(s => 
           s.name.toLowerCase().includes(searchTerm) || 
           (s.created && new Date(s.created).toLocaleString().toLowerCase().includes(searchTerm))
-        );
-      }
+        ); }
       
       // Sort sessions
       sessions.sort((a, b) =>{
@@ -1597,16 +1585,14 @@
             return ((a.answerLog||[]).length) - ((b.answerLog||[]).length);
           case 'date-desc':
           default:
-            return new Date(b.created) - new Date(a.created);
-        }
+            return new Date(b.created) - new Date(a.created); }
       });
       
       if(!sessions.length){
         list.innerHTML = searchTerm 
           ? `<p class="text-2-p16">No sessions match "${searchTerm}".`
           :'<p class="text-2-p16">No sessions found.</p>';
-        return;
-      }
+        return; }
       
       list.innerHTML = sessions.map(s=>{
         const isInvalid = !!sessionInvalidFlags[s.id];
@@ -1635,15 +1621,13 @@
             <button class="button button-danger" onclick="deleteSession('${s.id}')">Delete</button>
           </div>
         </div>`;
-      }).join('');
-    }
+      }).join(''); }
     function toggleSessionInvalid(id){
       const s = state.sessions[id]; if (!s) return;
       if (sessionInvalidFlags[id]) delete sessionInvalidFlags[id]; else sessionInvalidFlags[id]=true;
       globalSettingsRef.child('sessionInvalidFlags').set(sessionInvalidFlags).catch(e=>showFirebaseError('Analytics toggle failed:'+e.message));
       renderSessionsList();
-      if (analyticsOpen) renderAnalytics();
-    }
+      if (analyticsOpen) renderAnalytics(); }
     function loadSession(id){ state.currentSessionId=id; loadSessionData(); globalPlayersRef.once('value').then(s=>applyGlobalPlayersToSession(s.val()||{})); saveAllData(); renderAll(); closeSessionsModal(); }
     function deleteSession(id){
       showConfirm('Delete session "'+state.sessions[id].name+'"?', 'Delete').then(ok =>{
@@ -1654,8 +1638,7 @@
           state.currentSessionId=Object.keys(state.sessions)[0]||null;
           if(!state.currentSessionId) createNewSession(); else{localStorage.setItem(CURRENT_SESSION_KEY,state.currentSessionId);loadSessionData();}
         }
-        renderSessionsList(); renderAll();
-      });
+        renderSessionsList(); renderAll(); });
     }
     function openPlayerDetailModal(playerName){
         let totalPoints = 0;
@@ -1668,8 +1651,7 @@
       const _MIN_BUZZ = Math.max(3, Math.floor(_medBuzz * (skillThresholdPct / 100)));
       const _qualified  = _allPlayers.filter(p =>{
         const buzzes = p.powers + p.tossupsCorrect + p.negs;
-        return (buzzes >= _MIN_BUZZ && (p.tHeard || 0) > 0) || manuallyIncluded.has(p.name);
-      });
+        return (buzzes >= _MIN_BUZZ && (p.tHeard || 0) > 0) || manuallyIncluded.has(p.name); });
       validSessions().forEach(sess =>{
         const p = (sess.players ||{})[playerName];
         if (!p) return;
@@ -1678,8 +1660,7 @@
         totalPoints += (p.points || 0);
         answers.push(...a);
         sessionNames.push(sess.name);
-        playerTHeard += (sess.tHeard || 0);
-      });
+        playerTHeard += (sess.tHeard || 0); });
       if (!answers.length){ showToast('No data found for ' + playerName, 'warn'); return; }
       const player ={ name:playerName, points:totalPoints };
       const sessionCount = sessionNames.length;
@@ -1770,19 +1751,15 @@
           return ROW_PLAIN(typeof value === 'number' ? (value % 1 === 0 ? value :value.toFixed(1)) :value, 'var(--text2)');
         if (type === 'pts20'){
           const color = value >= 20 ? 'var(--success)' :value >= 10 ? '#f39c12' :'var(--danger)';
-          return ROW_PLAIN(value % 1 === 0 ? value :value.toFixed(1), color);
-        }
+          return ROW_PLAIN(value % 1 === 0 ? value :value.toFixed(1), color); }
         if (type === 'pts'){
           const color = value >= 8 ? 'var(--success)' :value >= 2 ? '#f39c12' :'var(--danger)';
-          return ROW_PLAIN(value.toFixed(2) + ' pts', color);
-        }
+          return ROW_PLAIN(value.toFixed(2) + ' pts', color); }
         const pct = Math.min(Math.max(value, 0), 100);
         const color = pct >= 66 ? 'var(--success)' :pct >= 33 ? '#f39c12' :'var(--danger)';
-        return ROW_BAR(value.toFixed(1) + '%', color, pct);
-      }
+        return ROW_BAR(value.toFixed(1) + '%', color, pct); }
       function playerMetricBar(value, label, isRatio){
-        return metricRow(value, label, value===null?'raw':isRatio?'pts20':'pct');
-      }
+        return metricRow(value, label, value===null?'raw':isRatio?'pts20':'pct'); }
       function rankBadge(i){
         if (i === 0) return '<span class="pd-rank-badge gold">1</span>';
         if (i === 1) return '<span class="pd-rank-badge silver">2</span>';
@@ -1797,13 +1774,11 @@
         catArr.forEach(c =>{
           const parent = getParentCat(c.name);
           if (!parentGroups[parent]) parentGroups[parent] = [];
-          parentGroups[parent].push(c);
-        });
+          parentGroups[parent].push(c); });
         const sortedParents = Object.entries(parentGroups).sort((a, b) =>{
           const aSum = a[1].reduce((s, c) => s + c.pts, 0);
           const bSum = b[1].reduce((s, c) => s + c.pts, 0);
-          return bSum - aSum;
-        });
+          return bSum - aSum; });
         let rowIdx = 0;
         sortedParents.forEach(([parent, cats]) =>{
           const parentPts = cats.reduce((s, c) => s + c.pts, 0);
@@ -1843,11 +1818,9 @@
                     </div>
                   </td>
                 </tr>`;
-              rowIdx++;
-            });
+              rowIdx++; });
           }
-        });
-      }
+        }); }
       const tHeardLabel = playerTHeard > 0 ? `${playerTHeard} Toss-Ups Heard` :'No Toss-Ups-Heard Data';
       const skillHeroColor = modalSkill === null ? 'var(--text3)' :modalSkill >= 120 ? 'var(--success)' :modalSkill >= 80 ? 'var(--primary)' :'var(--danger)';
       const skillHeroVal   = modalSkill !== null ? modalSkill.toFixed(1) :'↓ Low data';
@@ -1915,8 +1888,7 @@
           </table>
         </div>
       `;
-      document.getElementById('playerDetailModal').classList.add('open');
-    }
+      document.getElementById('playerDetailModal').classList.add('open'); }
     function closePlayerDetailModal(){ document.getElementById('playerDetailModal').classList.remove('open'); }
     function renderAdminPanel(){
       const el = document.getElementById('adminListDisplay');
@@ -1927,8 +1899,7 @@
         const action = isOwner ? '<span class="fs-75-text3">Owner</span>'
           :'<button onclick="removeAdmin(\'' + name.replace(/\\/g,'\\\\').replace(/'/g,"\\'") + '\')" style="background:none;border:1px solid var(--danger);color:var(--danger);border-radius:5px;padding:2px 9px;font-size:.8em;cursor:pointer;font-family:inherit;">Remove</button>';
         return '<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:.88em;">' + '<span style="font-weight:600;">' + name + '</span>' + action + '</div>';
-      }).join('');
-    }
+      }).join(''); }
     function addAdmin(){
       if (!isAdmin){ showToast('Not authorised.', 'warn'); return; }
       const input = document.getElementById('adminAddInput');
@@ -1936,15 +1907,13 @@
       if (!name){ showToast('Enter a full name to add.'); return; }
       if (adminList.includes(name)){ showToast(name + ' is already an admin.', 'warn'); return; }
       adminListRef.set([...adminList, name]).catch(e => showFirebaseError(e.message));
-      if (input) input.value = '';
-    }
+      if (input) input.value = ''; }
     function removeAdmin(name){
       if (!isAdmin){ showToast('Not authorised.', 'warn'); return; }
       showConfirm('Remove ' + name + ' from admins?', 'Remove').then(ok =>{
         if (!ok) return;
         adminListRef.set(adminList.filter(n => n !== name)).catch(e => showFirebaseError(e.message));
-      });
-    }
+      }); }
     const CAT_COLOR_DEFAULTS ={'Literature':'#3b82f6','Science':'#11998e','History':'#f97316','Social Studies':'#eab308','Pop Culture':'#a855f7','Fine Arts':'#06b6d4'};
     const CAT_ORDER = ['Literature', 'Science', 'History', 'Social Studies', 'Fine Arts', 'Pop Culture'];
     const CAT_FREQ_DEFAULTS ={
@@ -1972,25 +1941,20 @@
               <span style="font-size:.8em;color:var(--text3);">%</span>
             </div>
           </div>`;
-        });
-      });
-      container.innerHTML = html;
-    }
+        }); });
+      container.innerHTML = html; }
     function saveCatFreqs(){
       const statusEl = document.getElementById('catFreqStatus');
       Object.entries(CATEGORY_TREE).forEach(([, subs]) =>{
         subs.forEach(sub =>{
           const input = document.getElementById('catfreq_' + sub.replace(/\s+/g,'_'));
-          if (input) catFreqs[sub] = parseFloat(input.value) || 0;
-        });
+          if (input) catFreqs[sub] = parseFloat(input.value) || 0; });
       });
       if (!isIframe && globalSettingsRef){
         globalSettingsRef.child('catFreqs').set(catFreqs)
-          .catch(e => showFirebaseError('Frequency save failed:' + e.message));
-      }
+          .catch(e => showFirebaseError('Frequency save failed:' + e.message)); }
       if (statusEl){ statusEl.textContent = '✔ Saved'; setTimeout(() =>{ statusEl.textContent = ''; }, 2000); }
-      if (analyticsOpen) renderAnalytics();
-    }
+      if (analyticsOpen) renderAnalytics(); }
     function resetCatFreqs(){ catFreqs={...CAT_FREQ_DEFAULTS}; renderCatFreqPickers(); saveCatFreqs(); }
     function renderCatColorPickers(){
       const el = document.getElementById('catColorPickers');
@@ -2004,14 +1968,12 @@
           <button onclick="resetOneCatColor('${cat}')" title="Reset to default"
             style="font-size:.75em;background:none;border:1.5px solid var(--border);color:var(--text2);border-radius:5px;padding:2px 8px;cursor:pointer;">Reset</button>
         </div>`;
-      }).join('');
-    }
+      }).join(''); }
     function saveCatColors(){
       if (!isAdmin){ showToast('Not authorised.', 'warn'); return; }
       CAT_ORDER.forEach(cat =>{
         const input = document.getElementById('catColorInput_' + cat.replace(/\s+/g,'_'));
-        if (input) catColors[cat] = input.value;
-      });
+        if (input) catColors[cat] = input.value; });
       const statusEl = document.getElementById('catColorStatus');
       if (!isIframe){
         globalSettingsRef.child('catColors').set(catColors)
@@ -2020,19 +1982,16 @@
       } else{
         if (statusEl){ statusEl.textContent = '✔ Applied (preview only — not saved).'; setTimeout(() => statusEl.textContent = '', 2500); }
       }
-      if (analyticsOpen) renderAnalytics();
-    }
+      if (analyticsOpen) renderAnalytics(); }
     function resetCatColors(){
       if (!isAdmin){ showToast('Not authorised.', 'warn'); return; }
       catColors ={ ...CAT_COLOR_DEFAULTS };
       renderCatColorPickers();
-      saveCatColors();
-    }
+      saveCatColors(); }
     function resetOneCatColor(cat){
       catColors[cat] = CAT_COLOR_DEFAULTS[cat];
       const input = document.getElementById('catColorInput_' + cat.replace(/\s+/g,'_'));
-      if (input) input.value = CAT_COLOR_DEFAULTS[cat];
-    }
+      if (input) input.value = CAT_COLOR_DEFAULTS[cat]; }
     function renamePlayer(oldName){
       const input = document.getElementById('renamePlayerInput');
       const newName = (input?.value || '').trim();
@@ -2041,8 +2000,7 @@
       Object.values(state.sessions).forEach(sess =>{
         if (sess.players?.[oldName]){
           sess.players[newName] ={ ...sess.players[oldName], name:newName };
-          delete sess.players[oldName];
-        }
+          delete sess.players[oldName]; }
         (sess.answerLog || []).forEach(a =>{ if (a.player === oldName) a.player = newName; });
         (sess.teams || []).forEach(t =>{ t.playerMembers = (t.playerMembers || []).map(p => p === oldName ? newName :p); });
       });
@@ -2052,13 +2010,11 @@
         if (gp[oldName]){
           gp[newName] ={ ...gp[oldName], name:newName };
           delete gp[oldName];
-          globalPlayersRef.set(gp).catch(e => showFirebaseError(e.message));
-        }
+          globalPlayersRef.set(gp).catch(e => showFirebaseError(e.message)); }
       });
       renderAll();
       closePlayerDetailModal();
-      showToast('Renamed to ' + newName, 'success');
-    }
+      showToast('Renamed to ' + newName, 'success'); }
     function executeSubstitution(outPlayer, inPlayer){
       const id = state.currentSessionId; if (!id) return;
       const apply = s =>{
@@ -2067,8 +2023,7 @@
           const idx = members.indexOf(outPlayer);
           if (idx > -1){
             members.splice(idx, 1, inPlayer);
-            t.playerMembers = members;
-          }
+            t.playerMembers = members; }
         });
         if (!s.players) s.players ={};
         if (!s.players[inPlayer]) s.players[inPlayer] ={ name:inPlayer, points:0, answers:[] };
@@ -2082,8 +2037,7 @@
       notify.textContent = `✔ ${inPlayer} in for ${outPlayer}`;
       notify.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--success);color:#fff;padding:10px 20px;border-radius:10px;font-weight:700;font-size:.92em;z-index:9999;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.25);';
       document.body.appendChild(notify);
-      setTimeout(() => notify.remove(), 2800);
-    }
+      setTimeout(() => notify.remove(), 2800); }
     function setToggleSwitchState(on){
       const knob = document.getElementById('viewToggleKnob');
       const sw   = document.getElementById('viewToggleSwitch');
@@ -2096,8 +2050,7 @@
       const mknob = document.getElementById('viewToggleKnobMobile');
       const mlbl  = document.getElementById('toggleLabelMobile');
       if (mknob) mknob.style.left = on ? '20px' :'2px';
-      if (mlbl)  mlbl.textContent = on ? 'Stats' :'Tracker';
-    }
+      if (mlbl)  mlbl.textContent = on ? 'Stats' :'Tracker'; }
     function toggleAnalytics(){
       analyticsOpen=!analyticsOpen;
       localStorage.setItem('analyticsOpen', analyticsOpen);
@@ -2107,18 +2060,15 @@
         tv.style.display='none'; av.style.display='flex';
         renderAnalytics();
       } else{
-        tv.style.display='flex'; av.style.display='none';
-      }
+        tv.style.display='flex'; av.style.display='none'; }
       setToggleSwitchState(analyticsOpen);
-      setTimeout(updateFadeMasks,50);
-    }
+      setTimeout(updateFadeMasks,50); }
     function switchAnalyticsTab(tab, el){
       currentAnalyticsTab=tab;
       localStorage.setItem('analyticsTab', tab);
       if (tab !== 'charts'){
         Object.keys(_chartInstances).forEach(id => destroyChart(id));
-        _lastChartFingerprint = null;
-      }
+        _lastChartFingerprint = null; }
       document.querySelectorAll('.analytics-tab').forEach(b=>b.classList.remove('active'));
       el.classList.add('active');
       document.querySelectorAll('.analytics-panel').forEach(p=>p.classList.remove('active'));
@@ -2127,15 +2077,13 @@
       const scrollEl = document.getElementById('analyticsScroll');
       if (scrollEl){
         const saved = parseInt(localStorage.getItem('analyticsScroll_'+tab)||'0', 10);
-        scrollEl.scrollTop = saved;
-      }
+        scrollEl.scrollTop = saved; }
     }
     function validSessions(){ return Object.values(state.sessions).filter(s => !sessionInvalidFlags[s.id]); }
     function buildGlobalAnswerLog(){
       const all = [];
       validSessions().forEach(s => all.push(...toArray(s.answerLog)));
-      return all;
-    }
+      return all; }
     function buildGlobalTHeard(){ return validSessions().reduce((sum, s) => sum + (s.tHeard || 0), 0); }
     function renderAnalytics(forceCharts){
       const s=getCurrentSession(); if(!s) return;
@@ -2150,11 +2098,9 @@
         const fp = buildChartFingerprint(globalLog, globalPs);
         if (forceCharts || fp !== _lastChartFingerprint){
           _lastChartFingerprint = fp;
-          renderAnalyticsCharts(globalLog, globalPs, globalTHeard);
-        }
+          renderAnalyticsCharts(globalLog, globalPs, globalTHeard); }
       }
-      else if(tab==='teams') renderAnalyticsTeamCompositions();
-    }
+      else if(tab==='teams') renderAnalyticsTeamCompositions(); }
     function renderAnalyticsOverview(allAnswers, ps, globalTHeard, sessionCount){
       const el=document.getElementById('an-overview'); if(!el) return;
       const totalPts=ps.reduce((sum,p)=>sum+p.points,0);
@@ -2175,8 +2121,7 @@
         if(!catMap[cat]) catMap[cat]={pts:0,count:0,negs:0,misses:0};
         catMap[cat].pts+=(a.points||0); catMap[cat].count++;
         if(a.pointType==='Neg') catMap[cat].negs++;
-        else if(a.pointType==='Miss') catMap[cat].misses++;
-      });
+        else if(a.pointType==='Miss') catMap[cat].misses++; });
       const catArr=Object.keys(catMap).map(c=>({name:c,pts:catMap[c].pts,count:catMap[c].count,negs:catMap[c].negs,misses:catMap[c].misses}));
       catArr.sort((a,b)=>b.pts-a.pts);
       const strengths=catArr.slice(0,5);
@@ -2202,8 +2147,7 @@
         const vals = activePlayers.map(p => fn(p)).filter(v => v !== null);
         if (!vals.length) return '—';
         const mean = vals.reduce((s, v) => s + v, 0) / vals.length;
-        return asPct ? (mean * 100).toFixed(1) + '%' :mean.toFixed(1);
-      }
+        return asPct ? (mean * 100).toFixed(1) + '%' :mean.toFixed(1); }
       const avgAccuracy      = avgRate(p =>{
         const correct = (p.powers||0) + (p.tossupsCorrect||0) + (p.bonusPoints > 0 ? p.bonusPoints/10 :0);
         const denom   = correct + (p.negs||0) + (p.misses||0);
@@ -2311,13 +2255,11 @@
         html += '<div style="background:var(--card);border:2px solid var(--border);border-radius:10px;padding:16px;margin-bottom:var(--sp);box-shadow:var(--shadow-sm);">';
         html += '<h3 class="m12-fs95">&#9650; Category Strengths</h3>';
         strengths.forEach(c =>{ html += '<div class="stat-row"><span class="stat-label">'+c.name+'</span><span class="stat-value" style="color:var(--success)">'+c.pts+' Pts</span></div>'; });
-        html += '</div>';
-      }
+        html += '</div>'; }
       const subcatVolMap ={};
       allAnswers.forEach(a =>{
         const raw = a.category || ''; if (!raw) return;
-        subcatVolMap[raw] = (subcatVolMap[raw] || 0) + 1;
-      });
+        subcatVolMap[raw] = (subcatVolMap[raw] || 0) + 1; });
       const totalSubcatVol = Object.values(subcatVolMap).reduce((s, v) => s + v, 0);
       const subcatGaps = [];
       Object.entries(CATEGORY_TREE).forEach(([parent, subs]) =>{
@@ -2327,8 +2269,7 @@
           const actual = totalSubcatVol > 0 ? (subcatVolMap[sub] || 0) / totalSubcatVol * 100 :0;
           const gap = expected - actual; // positive = under-covered
           subcatGaps.push({ sub, parent, expected, actual, gap });
-        });
-      });
+        }); });
       const parentOrder = Object.keys(CATEGORY_TREE);
       const needsWork = subcatGaps
         .filter(x => x.gap > 0.5) // only show meaningful gaps
@@ -2346,8 +2287,7 @@
           if (parent !== lastParent){
             if (lastParent !== null) html += '<div style="height:6px;"></div>';
             html += '<div style="font-size:.72em;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);padding:4px 0 2px;border-bottom:1.5px solid var(--border);margin-bottom:4px;">' + parent + '</div>';
-            lastParent = parent;
-          }
+            lastParent = parent; }
           const gapColor = gap > 3 ? 'var(--danger)' :gap > 1.5 ? '#f39c12' :'var(--text2)';
           html += '<div class="stat-row">'
             + '<span class="stat-label">' + sub + '</span>'
@@ -2355,11 +2295,9 @@
             + actual.toFixed(1) + '% heard vs ' + expected.toFixed(1) + '% expected'
             + '</span>' + '<span class="stat-value" style="color:' + gapColor + ';">&minus;' + gap.toFixed(1) + '%</span>' + '</div>';
         });
-        html += '</div>';
-      }
+        html += '</div>'; }
       if(!totalAns) html+='<p class="text-2">No answers recorded yet. Start tracking to see your team overview!</p>';
-      el.innerHTML=html;
-    }
+      el.innerHTML=html; }
     function buildUniversalPlayerStats(){
       const playerMap ={};
       validSessions().forEach(session =>{
@@ -2386,16 +2324,14 @@
           u._tHeardBase = (u._tHeardBase || 0) + sessionTHeard;
           answers.forEach(a =>{
             if (a.category && a.category !== '—'){ const pc = getParentCat(a.category); u.catMap[pc] = (u.catMap[pc] || 0) + 1; }
-          });
-        });
+          }); });
       });
       return Object.values(playerMap)
         .map(p =>{
           const delta = playerTHeardOverrides[p.name] || 0;
           p.tHeard = Math.max(0, (p._tHeardBase || 0) + delta);
           p.tHeardDelta = delta;
-          return p;
-        })
+          return p; })
         .sort((a, b) => b.points !== a.points ? b.points - a.points :b.powers !== a.powers ? b.powers - a.powers :a.negs - b.negs);
     }
     function renderAnalyticsPlayersUniversal(){
@@ -2412,8 +2348,7 @@
       const qualified = active.filter(p =>{
         const tH = p.tHeard || 0;
         const buzzes = p.powers + p.tossupsCorrect + p.negs;
-        return (buzzes >= MIN_BUZZ && tH > 0) || manuallyIncluded.has(p.name);
-      });
+        return (buzzes >= MIN_BUZZ && tH > 0) || manuallyIncluded.has(p.name); });
       const lowData = new Set(active.filter(p =>{
         const buzzes = p.powers + p.tossupsCorrect + p.negs;
         return buzzes < MIN_BUZZ || (p.tHeard || 0) === 0;
@@ -2437,20 +2372,17 @@
         const nProd = avgProd     > 0 ? m.prodRate  / avgProd     :(m.prodRate  > 0 ? 2 :0);
         const nPR   = avgPowerRate > 0 ? m.powerRate / avgPowerRate :(m.powerRate > 0 ? 2 :0);
         const nAcc  = avgAcc       > 0 ? m.accuracy  / avgAcc      :(m.accuracy  > 0 ? 2 :0);
-        return (nProd + nPR + nAcc) * (100 / 3);
-      }
+        return (nProd + nPR + nAcc) * (100 / 3); }
       let avgProd = 0, avgConf = 0, avgPowerRate = 0, avgAcc = 0;
       const qualifiedWithPR = qualified.filter(p => (p.powers + p.negs) > 0);
       if (qualified.length > 0){
         qualified.forEach(p =>{ const m = playerMetrics(p); avgProd += m.prodRate; avgConf += m.confidence; avgAcc += m.accuracy; });
         avgProd /= qualified.length;
         avgConf /= qualified.length;
-        avgAcc  /= qualified.length;
-      }
+        avgAcc  /= qualified.length; }
       if (qualifiedWithPR.length > 0){
         qualifiedWithPR.forEach(p =>{ avgPowerRate += playerMetrics(p).powerRate; });
-        avgPowerRate /= qualifiedWithPR.length;
-      }
+        avgPowerRate /= qualifiedWithPR.length; }
       const qualifiedWithConf = qualified.filter(p => (p.powers + p.tossupsCorrect) > 0);
       let avgConfNew = null;
       if (qualifiedWithConf.length > 0){
@@ -2582,8 +2514,7 @@
           case 'negs':      return a.negs        - b.negs;
           case 'alpha':     return a.name.localeCompare(b.name);
           default:          return b.points !== a.points ? b.points - a.points
-                                  :b.powers !== a.powers ? b.powers - a.powers :a.negs - b.negs;
-        }
+                                  :b.powers !== a.powers ? b.powers - a.powers :a.negs - b.negs; }
       });
       let rank = 1;
       html += playersSorted.map((p, i) =>{
@@ -2599,8 +2530,7 @@
             :playerSortKey === 'accuracy'   ? prev._accuracy   === p._accuracy
             :playerSortKey === 'powers'     ? prev.powers      === p.powers
             :playerSortKey === 'negs'       ? prev.negs        === p.negs :false;
-          if (!sameRank) rank = i + 1;
-        }
+          if (!sameRank) rank = i + 1; }
         const sfx = ['st','nd','rd'][rank-1] || 'th';
         const rankLabel = playerSortKey === 'alpha' ? '' :`${rank}${sfx}`;
         const acc = p.totalAnswers ? Math.round(((p.totalAnswers - p.negs - (p.misses||0)) / p.totalAnswers) * 100) :0;
@@ -2733,8 +2663,7 @@
         const arrow = document.getElementById(id + '_arrow');
         if (panel){ panel.style.display = 'block'; }
         if (arrow){ arrow.style.transform = 'rotate(180deg)'; }
-      });
-    }
+      }); }
     function togglePlayerCard(id){
       const panel = document.getElementById(id);
       const arrow = document.getElementById(id + '_arrow');
@@ -2743,36 +2672,29 @@
       panel.style.display = open ? 'block' :'none';
       if (arrow) arrow.style.transform = open ? 'rotate(180deg)' :'';
       if (open) expandedPlayerCards.add(id);
-      else expandedPlayerCards.delete(id);
-    }
+      else expandedPlayerCards.delete(id); }
     function toggleLowDataInclude(playerName){
       if (manuallyIncluded.has(playerName)) manuallyIncluded.delete(playerName); else manuallyIncluded.add(playerName);
-      saveManualInclusions(); renderAnalyticsPlayersUniversal();
-    }
+      saveManualInclusions(); renderAnalyticsPlayersUniversal(); }
     function _getLowDataThresh(){
       const all = buildUniversalPlayerStats();
       const counts = all.map(p => p.powers + p.tossupsCorrect + p.negs).sort((a,b)=>a-b);
       const med = counts[Math.floor(counts.length/2)] || 0;
-      return Math.max(3, Math.floor(med * (skillThresholdPct / 100)));
-    }
+      return Math.max(3, Math.floor(med * (skillThresholdPct / 100))); }
     function includeLowDataAll(){
       const thresh = _getLowDataThresh();
       buildUniversalPlayerStats().forEach(p =>{
         const buzzes = p.powers + p.tossupsCorrect + p.negs;
-        if (buzzes < thresh || (p.tHeard || 0) === 0) manuallyIncluded.add(p.name);
-      });
+        if (buzzes < thresh || (p.tHeard || 0) === 0) manuallyIncluded.add(p.name); });
       saveManualInclusions();
-      renderAnalyticsPlayersUniversal();
-    }
+      renderAnalyticsPlayersUniversal(); }
     function excludeLowDataAll(){
       const thresh = _getLowDataThresh();
       buildUniversalPlayerStats().forEach(p =>{
         const buzzes = p.powers + p.tossupsCorrect + p.negs;
-        if (buzzes < thresh || (p.tHeard || 0) === 0) manuallyIncluded.delete(p.name);
-      });
+        if (buzzes < thresh || (p.tHeard || 0) === 0) manuallyIncluded.delete(p.name); });
       saveManualInclusions();
-      renderAnalyticsPlayersUniversal();
-    }
+      renderAnalyticsPlayersUniversal(); }
     function calcTeamEfficiency(team, sessionTHeard){
       const{ tossups, bonuses, powers, negs } = team;
       const eBonus = (tossups + powers) > 0 ? (100 * (10 * bonuses)) / (30 * (tossups + powers)) :null;
@@ -2797,12 +2719,22 @@
     function renderAnalyticsTeamCompositions(){
       const el = document.getElementById('an-teams'); if (!el) return;
       const sessions = validSessions();
+      const teamMap = {};
       const allTeamCards = [];
       sessions.forEach(session =>{
         const dateStr = new Date(session.created).toLocaleDateString([],{ month:'short', day:'numeric', year:'numeric' });
         const teams = toArray(session.teams).filter(t => toArray(t.playerMembers).length > 0);
         teams.forEach(team =>{
-          const members = toArray(team.playerMembers);
+          const members = toArray(team.playerMembers).slice().sort();
+          const key = members.join('|');
+          const data = {
+            teamName:team.name,
+            members,
+            dateStr,
+            sessionDate:session.created,
+            sessionId:session.id,
+            isCurrent:session.id === state.currentSessionId
+          };
           let pts = 0, answers = 0, powers = 0, negs = 0, misses = 0, tossups = 0, bonuses = 0;
           members.forEach(name =>{
             const p = (session.players ||{})[name];
@@ -2814,50 +2746,64 @@
             negs    += a.filter(x => x.pointType === 'Neg').length;
             misses  += a.filter(x => x.pointType === 'Miss').length;
             tossups += a.filter(x => x.pointType === 'Toss-up').length;
-            bonuses += a.filter(x => x.pointType === 'Bonus').length;
-          });
+            bonuses += a.filter(x => x.pointType === 'Bonus').length; });
           const eff = calcTeamEfficiency({ tossups, bonuses, powers, negs, answers }, session.tHeard || 0);
-          allTeamCards.push({
-            teamName:team.name,
-            members,
-            dateStr,
-            sessionDate:session.created,
-            sessionId:session.id,
-            isCurrent:session.id === state.currentSessionId,
-            pts, answers, powers, negs, misses, tossups, bonuses, ...eff
-          });
-        });
-      });
+          Object.assign(data, { pts, answers, powers, negs, misses, tossups, bonuses, ...eff });
+          if(!teamMap[key]){ teamMap[key] = { ...data, appearances: 1 }; }
+          else{
+            teamMap[key].appearances++;
+            teamMap[key].pts += pts;
+            teamMap[key].answers += answers;
+            teamMap[key].powers += powers;
+            teamMap[key].negs += negs;
+            teamMap[key].misses += misses;
+            teamMap[key].tossups += tossups;
+            teamMap[key].bonuses += bonuses;
+            teamMap[key].teamName = data.teamName;
+            teamMap[key].dateStr = data.dateStr;
+            if(new Date(data.sessionDate) > new Date(teamMap[key].sessionDate)) teamMap[key].sessionDate = data.sessionDate;
+          }
+        }); });
+      Object.values(teamMap).forEach(team => allTeamCards.push(team));
       allTeamCards.sort((a, b) => new Date(b.sessionDate) - new Date(a.sessionDate));
       if (!allTeamCards.length){
         el.innerHTML = '<p class="text-2">No team compositions found. Create teams and assign players to sessions to see them here.</p>';
-        return;
-      }
+        return; }
       const sessionCount = validSessions().length;
+      const playerCounts = [...new Set(allTeamCards.map(t => t.members.length))].sort((a,b) => a-b);
       let html = `
-        <div style="margin-bottom:12px;position:relative;">
-          <input
-            id="teamCompSearch"
-            type="text"
-            placeholder="Search by team name, player, or date…"
-            oninput="filterTeamCards(this.value)"
-            style="width:100%;padding:10px 36px 10px 13px;border:2px solid var(--input-border);border-radius:var(--radius-sm);font-size:.92em;font-family:inherit;background:var(--input-bg);color:var(--input-text);transition:border-color .2s;"
-            onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--input-border)'"
-          />
-          <span style="position:absolute;right:11px;top:50%;transform:translateY(-50%);font-size:1em;color:var(--text3);pointer-events:none;">🔍</span>
+        <div style="margin-bottom:12px;">
+          <div style="margin-bottom:10px;position:relative;">
+            <input
+              id="teamCompSearch"
+              type="text"
+              placeholder="Search by team name, player, or date…"
+              oninput="filterTeamCards(this.value)"
+              style="width:100%;padding:10px 36px 10px 13px;border:2px solid var(--input-border);border-radius:var(--radius-sm);font-size:.92em;font-family:inherit;background:var(--input-bg);color:var(--input-text);transition:border-color .2s;"
+              onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--input-border)'"
+            />
+            <span style="position:absolute;right:11px;top:50%;transform:translateY(-50%);font-size:1em;color:var(--text3);pointer-events:none;">🔍</span>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;">
+            <button class="button" onclick="filterTeamsByPlayerCount(0)" id="tcfilter-all" style="font-size:.8em;padding:4px 10px;background:var(--primary);color:#fff;">Show All (${allTeamCards.length})</button>`;
+      playerCounts.forEach(count => {
+        const cnt = allTeamCards.filter(t => t.members.length === count).length;
+        html += `<button class="button" onclick="filterTeamsByPlayerCount(${count})" id="tcfilter-${count}" style="font-size:.8em;padding:4px 10px;">${count} Player${count !== 1 ? 's' :''} (${cnt})</button>`;
+      });
+      html += `  </div>
         </div>
         <div id="teamCompSummary" style="background:rgba(118,75,162,.08);border:1px solid var(--secondary);border-radius:8px;padding:10px 14px;margin-bottom:var(--sp);font-size:.85em;color:var(--secondary);font-weight:600;">
-          ${allTeamCards.length} team composition${allTeamCards.length !== 1 ? 's' :''} across <strong>${sessionCount} session${sessionCount !== 1 ? 's' :''}</strong> &mdash; Most Recent First
+          ${allTeamCards.length} unique team composition${allTeamCards.length !== 1 ? 's' :''} across <strong>${sessionCount} session${sessionCount !== 1 ? 's' :''}</strong>
         </div>
         <div id="teamCompList">`;
       const accentColors = ['var(--primary)', 'var(--secondary)', 'var(--success)', '#e67e22', '#e74c3c'];
       allTeamCards.forEach((team, ti) =>{
         const color = accentColors[ti % accentColors.length];
-        const cardId = 'tcomp_' + team.sessionId + '_' + team.teamName.replace(/\W/g, '_');
+        const cardId = 'tcomp_' + team.members.join('_').replace(/\W/g, '_');
         const acc = team.answers ? Math.round(((team.answers - team.negs - (team.misses||0)) / team.answers) * 100) :0;
         const memberTitle = team.members.join(' / ');
         const eBonusTooltip = `Capitalization = 100 × (10 × bonuses) / (30 × (toss-ups + powers)). How well the team capitalized on the bonuses available after winning toss-ups.`;
-        const eTotalTooltip = `Point Control = 100 × (15P + 10T + 10B − 5N) / (45 × questions heard). Questions heard = ${team.tHeard} (${team.tHeardIsReal ? 'From Session Counter' :'Estimated'}).`;
+        const eTotalTooltip = `Point Control = 100 × (15P + 10T + 10B − 5N) / (45 × questions heard).`;
         const statChips = [
           ['Points',   team.pts,      color],
           ['Toss-ups', team.tossups,  'var(--success)'],
@@ -2873,12 +2819,12 @@
           </div>`
         ).join('');
         html += `
-        <div class="team-comp-card" data-search="${[team.teamName, ...team.members, team.dateStr].join(' ').toLowerCase()}" style="background:var(--card);border:2px solid ${team.isCurrent ? 'var(--primary)' :'var(--border)'};border-left:4px solid ${color};border-radius:10px;margin-bottom:10px;overflow:hidden;box-shadow:var(--shadow-sm);">
+        <div class="team-comp-card" data-player-count="${team.members.length}" data-search="${[team.teamName, ...team.members, team.dateStr].join(' ').toLowerCase()}" style="background:var(--card);border:2px solid var(--border);border-left:4px solid ${color};border-radius:10px;margin-bottom:10px;overflow:hidden;box-shadow:var(--shadow-sm);">
           <div onclick="toggleTeamCard('${cardId}')" style="display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;user-select:none;">
             <div class="flex-1-min0">
               <div style="font-weight:700;font-size:1em;color:${color};display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
                 ${team.teamName}
-                ${team.isCurrent ? '<span style="font-size:.7em;background:var(--primary);color:#fff;padding:2px 8px;border-radius:8px;font-weight:700;">Current</span>' :''}
+                ${team.appearances > 1 ? `<span style="font-size:.7em;background:var(--success);color:#fff;padding:2px 8px;border-radius:8px;font-weight:700;">${team.appearances} Appearances</span>` :''}
               </div>
               <div style="font-size:.82em;color:var(--text);font-weight:600;margin-top:2px;">${memberTitle}</div>
               <div style="font-size:.75em;color:var(--text2);margin-top:1px;">${team.dateStr} &bull; ${team.answers} Answers</div>
@@ -2902,16 +2848,13 @@
           </div>
         </div>`;
       });
-      el.innerHTML = html + '</div>'; // close #teamCompList
-      // Restore search query if one was active before re-render
-      const searchEl = document.getElementById('teamCompSearch');
-      if (searchEl && searchEl.value) filterTeamCards(searchEl.value);
+      html += '</div>';
+      el.innerHTML = html;
       expandedTeamCards.forEach(id =>{
         const panel = document.getElementById(id);
         const arrow = document.getElementById(id + '_arrow');
         if (panel) panel.style.display = 'block';
-        if (arrow) arrow.style.transform = 'rotate(180deg)';
-      });
+        if (arrow) arrow.style.transform = 'rotate(180deg)'; });
     }
     function toggleTeamCard(id){
       const panel = document.getElementById(id);
@@ -2920,29 +2863,40 @@
       const open = panel.style.display === 'none';
       panel.style.display = open ? 'block' :'none';
       if (arrow) arrow.style.transform = open ? 'rotate(180deg)' :'';
-      if (open) expandedTeamCards.add(id); else expandedTeamCards.delete(id);
-    }
+      if (open) expandedTeamCards.add(id); else expandedTeamCards.delete(id); }
     function filterTeamCards(query){
       const q = query.trim().toLowerCase();
       const cards = document.querySelectorAll('.team-comp-card');
       let visible = 0;
       cards.forEach(card =>{
-        const match = !q || card.dataset.search.includes(q);
+        const playerCountMatch = _currentTeamFilterCount === 0 || parseInt(card.dataset.playerCount) === _currentTeamFilterCount;
+        const queryMatch = !q || card.dataset.search.includes(q);
+        const match = playerCountMatch && queryMatch;
         card.style.display = match ? '' :'none';
-        if (match) visible++;
-      });
+        if (match) visible++; });
       const summary = document.getElementById('teamCompSummary');
       if (summary){
-        if (q){
+        if (q || _currentTeamFilterCount > 0){
+          const filters = [];
+          if(_currentTeamFilterCount > 0) filters.push(`${_currentTeamFilterCount} player${_currentTeamFilterCount !== 1 ? 's' :''}`);
+          if(q) filters.push(`"${query}"`);
           summary.textContent = visible === 0
-            ? `No results for "${query}"`
-            :`${visible} result${visible !== 1 ? 's' :''} for "${query}"`;
+            ? `No results for ${filters.join(' + ')}`
+            :`${visible} result${visible !== 1 ? 's' :''} for ${filters.join(' + ')}`;
         } else{
           const total = cards.length;
-          summary.innerHTML = `${total} team composition${total !== 1 ? 's' :''} &mdash; Most Recent First`;
+          summary.innerHTML = `${total} unique team composition${total !== 1 ? 's' :''} across all sessions`;
         }
       }
     }
+    var _currentTeamFilterCount = 0;
+    function filterTeamsByPlayerCount(count){
+      _currentTeamFilterCount = count;
+      document.querySelectorAll('[id^="tcfilter-"]').forEach(btn => btn.classList.remove('active'));
+      const btn = document.getElementById('tcfilter-' + (count === 0 ? 'all' : count));
+      if(btn) btn.classList.add('active');
+      const query = document.getElementById('teamCompSearch')?.value || '';
+      filterTeamCards(query); }
     var _chartInstances ={};
     var _lastChartFingerprint = null;
     function destroyChart(id){ if (_chartInstances[id]){ _chartInstances[id].destroy(); delete _chartInstances[id]; } }
@@ -2974,8 +2928,7 @@
             ctx.beginPath();
             ctx.moveTo(cx + inner * Math.cos(angle), cy + inner * Math.sin(angle));
             ctx.lineTo(cx + outer * Math.cos(angle), cy + outer * Math.sin(angle));
-            ctx.stroke();
-          });
+            ctx.stroke(); });
           ctx.restore();
           if (arcEnd > arcStart){
             const innerInset = inner > 4 ? inner + borderW / 2 :0;
@@ -2986,34 +2939,28 @@
             if (innerInset > 0){
               ctx.lineTo(cx + innerInset * Math.cos(arcEnd), cy + innerInset * Math.sin(arcEnd));
               ctx.arc(cx, cy, innerInset, arcEnd, arcStart, true);
-              ctx.closePath();
-            }
+              ctx.closePath(); }
             ctx.strokeStyle = outlineCol;
             ctx.lineWidth = borderW;
             ctx.stroke();
-            ctx.restore();
-          }
-        });
-      }
+            ctx.restore(); }
+        }); }
     });
     function makeChart(id, config){
       destroyChart(id);
       const canvas = document.getElementById(id);
-      if (canvas) _chartInstances[id] = new Chart(canvas.getContext('2d'), config);
-    }
+      if (canvas) _chartInstances[id] = new Chart(canvas.getContext('2d'), config); }
     function buildChartFingerprint(log, ps){
       const totalPts = ps.reduce((s, p) => s + p.points, 0);
       const players  = ps.filter(p => p.totalAnswers > 0).map(p => p.name).sort().join('|');
       const cats     = [...new Set(log.map(a => a.category).filter(Boolean))].sort().join('|');
-      return log.length + '|' + totalPts + '|' + players + '|' + cats;
-    }
+      return log.length + '|' + totalPts + '|' + players + '|' + cats; }
     function renderAnalyticsCharts(allAnswers, ps, globalTHeard){
       const el = document.getElementById('an-charts'); if (!el) return;
       Object.keys(_chartInstances).forEach(id => destroyChart(id));
       if (!allAnswers.length){
         el.innerHTML = '<p style="color:var(--text2);padding:20px;">No data recorded yet.</p>';
-        return;
-      }
+        return; }
       const cnt=t=>allAnswers.filter(a=>a.pointType===t).length;
       const powers=cnt('Power'),tossups=cnt('Toss-up'),bonuses=cnt('Bonus'),negs=cnt('Neg'),misses=cnt('Miss'),deads=cnt('Dead');
       const catAnswers ={}, catByType ={};
@@ -3056,8 +3003,7 @@
       function barMinW(count){
         if (count <= 5)  return '280px';
         if (count <= 10) return '420px';
-        return '100%';
-      }
+        return '100%'; }
       const playerPtsH_raw      = Math.max(520, activePlayers.length * 56 + 180);
       const playerBreakdownH_raw = Math.max(520, activePlayers.length * 56 + 180);
       const playerCatH_raw      = Math.max(520, activePlayers.length * 56 + 180);
@@ -3088,8 +3034,7 @@
           box-shadow:var(--shadow-sm);
           flex:1 1 280px;
           box-sizing:border-box;
-          overflow:hidden;
-        }
+          overflow:hidden; }
         .ch-title{ font-size:.95em; font-weight:700; color:var(--primary); margin-bottom:14px; }
         .ch-section{
           width:100%;
@@ -3100,8 +3045,7 @@
           color:var(--text3);
           padding:4px 0 2px;
           border-bottom:1.5px solid var(--border);
-          margin-bottom:2px;
-        }
+          margin-bottom:2px; }
         /* Subcat doughnuts:JS sets grid-template-columns inline; cards fill columns evenly */
         .ch-subcat-row{ width:100%; box-sizing:border-box; display:grid; gap:var(--sp); align-items:start; }
         .ch-subcat-row .ch-card{ flex:none; width:100%; min-width:0; box-sizing:border-box; }
@@ -3122,8 +3066,7 @@
         html += chartCard('chart-cat-breakdown', 'Category Answer Breakdown by Type', catBarH_actual, barMinW(CAT_COUNT));
       }
       const parentsWithSubData = Object.entries(CATEGORY_TREE).filter(([parent, subs]) =>{
-        return subs.some(sub => allAnswers.some(a => a.category === sub));
-      });
+        return subs.some(sub => allAnswers.some(a => a.category === sub)); });
       if (parentsWithSubData.length){
         html += `<div class="ch-section">Subcategory Breakdown</div>`;
         const subcatCount = parentsWithSubData.length;
@@ -3202,13 +3145,11 @@
         makeChart('chart-type-pie',{ type:'doughnut',
           data:{ labels:typeLabels, datasets:[{ data:typeData, backgroundColor:typeColors, borderColor:'transparent', borderWidth:0 }] },
           options:{ ...pieOpts, plugins:{ ...pieOpts.plugins, legend:{ ...pieOpts.plugins.legend, position:'right' } } }
-        });
-      }
+        }); }
       if (allCatsByVol.length){
         makeChart('chart-cat-vol',{type:'doughnut',
           data:{labels:allCatsByVol,datasets:[{data:allCatsByVol.map(c=>catAnswers[c]),backgroundColor:allCatsByVol.map(c=>catColor(getParentCat(c))+'cc'),borderColor:'transparent',borderWidth:0}]},
-          options:pieOpts});
-      }
+          options:pieOpts}); }
       if (allCatsByVol.length){
         makeChart('chart-cat-breakdown',{ type:'bar',
           data:{labels:allCatsByVol,datasets:[
@@ -3219,8 +3160,7 @@
            {label:'Misses',   data:allCatsByVol.map(c=>catByType[c]?.Miss||0),        backgroundColor:'#f39c12cc',borderColor:'#f39c12',borderWidth:3,borderRadius:3},
           ]},
           options:{ ...barOpts, scales:{ ...barScales, x:{ ...barScales.x, stacked:true }, y:{ ...barScales.y, stacked:true } } }
-        });
-      }
+        }); }
       if (activePlayers.length > 0 && allCatsList.length){
         const pNames = activePlayers.map(p => p.name.split(' ')[0]);
         const playerParentPts ={};
@@ -3240,8 +3180,7 @@
         const parentList = [...parentSet].sort((a, b) =>{
           const aT = activePlayers.reduce((s, p) => s + (playerParentPts[p.name]?.[a] || 0), 0);
           const bT = activePlayers.reduce((s, p) => s + (playerParentPts[p.name]?.[b] || 0), 0);
-          return bT - aT;
-        });
+          return bT - aT; });
         function makeHatch(hexColor, tintColor, spacing, angle){
           const size = spacing || 8;
           const c = document.createElement('canvas');
@@ -3259,13 +3198,11 @@
           } else{
             ctx.moveTo(0, 0);     ctx.lineTo(size, size);
             ctx.moveTo(-size, 0); ctx.lineTo(size, size*2);
-            ctx.moveTo(0, -size); ctx.lineTo(size*2, size);
-          }
+            ctx.moveTo(0, -size); ctx.lineTo(size*2, size); }
           ctx.stroke();
           const chartCanvas = document.getElementById('chart-player-cat');
           const ref = (chartCanvas && chartCanvas.getContext) ? chartCanvas :c;
-          return ref.getContext('2d').createPattern(c, 'repeat');
-        }
+          return ref.getContext('2d').createPattern(c, 'repeat'); }
         function buildPlayerCatDatasets(expandedParents){
           const bgBase = isDark ? [28, 33, 40] :[255, 255, 255];
           const datasets = [];
@@ -3290,8 +3227,7 @@
                   backgroundColor:bgFill,
                   borderColor:pColor,
                   borderWidth:3, borderRadius:2, _parent:parent, _expanded:true,
-                });
-              });
+                }); });
             } else{
               datasets.push({
                 label:parent,
@@ -3299,11 +3235,9 @@
                 backgroundColor:pColor + 'cc',
                 borderColor:pColor,
                 borderWidth:3, borderRadius:3, _parent:parent, _expanded:false,
-              });
-            }
+              }); }
           });
-          return datasets;
-        }
+          return datasets; }
         const expandedParents = new Set();
         function redrawPlayerCat(){
           const datasets = buildPlayerCatDatasets(expandedParents);
@@ -3336,11 +3270,9 @@
               if (!parent) return;
               if (expandedParents.has(parent)) expandedParents.delete(parent);
               else expandedParents.add(parent);
-              redrawPlayerCat();
-            },
+              redrawPlayerCat(); },
             onHover(evt, elements){
-              evt.native.target.style.cursor = elements.length ? 'pointer' :'default';
-            }
+              evt.native.target.style.cursor = elements.length ? 'pointer' :'default'; }
           }
         });
         const titleEl = document.querySelector('#chart-player-cat')?.closest('.ch-card')?.querySelector('.ch-title');
@@ -3360,15 +3292,13 @@
             ]
           },
           options:{ ...barOpts, scales:{ ...barScales, x:{ ...barScales.x, stacked:true }, y:{ ...barScales.y, stacked:true } } }
-        });
-      }
+        }); }
       if (activePlayers.length > 1){
         const pNames = activePlayers.map(p => p.name.split(' ')[0]);
         makeChart('chart-player-pts',{ type:'bar',
           data:{ labels:pNames, datasets:[{ label:'Points', data:activePlayers.map(p => p.points), backgroundColor:activePlayers.map((_, i) => PALETTE[i % PALETTE.length] + 'cc'), borderColor:activePlayers.map((_, i) => PALETTE[i % PALETTE.length]), borderWidth:3, borderRadius:4 }] },
           options:{ ...barOpts, plugins:{ ...barOpts.plugins, legend:{ display:false } } }
-        });
-      }
+        }); }
       Object.entries(CATEGORY_TREE).forEach(([parent, subs]) =>{
         const subCounts ={};
         let hasData = false;
@@ -3385,38 +3315,40 @@
         const bgBase = isDark ? [28, 33, 40] :[255, 255, 255];
         const colors = labels.map((_, i) =>{
           const ratio = labels.length === 1 ? 0.65 :0.30 + 0.55 * (i / (labels.length - 1));
-          return mixColor(pColor, bgBase, ratio);
-        });
+          return mixColor(pColor, bgBase, ratio); });
         makeChart('chart-subcat-' + parent.replace(/\s+/g,'_'),{
           type:'doughnut',
           data:{ labels, datasets:[{ data, backgroundColor:colors, borderColor:'transparent', borderWidth:0 }] },
           options:{ ...pieOpts, maintainAspectRatio:false, plugins:{ ...pieOpts.plugins,
             legend:{ display:false }
           } }
-        });
-      });
+        }); });
     }
     function setupSectionToggle(){
       document.querySelectorAll('.qb-section h2').forEach(h2=>h2.addEventListener('click',function(){
         this.querySelector('.toggle-icon')?.classList.toggle('collapsed');
         this.nextElementSibling?.classList.toggle('collapsed');
-      }));
-    }
-    const SECTION_LABELS={'sec-session':'Session & Data','sec-players':'Setup','sec-teams':'Setup','sec-categories':'Setup','sec-export':'Session & Data','sec-userid':'Settings','sec-visual':'Settings','sec-admin':'Admin Panel','sec-danger':'Session & Data','sec-debug':'Session & Data'};
+      })); }
+    const SECTION_LABELS={'sec-session':'Setup','sec-players':'Setup','sec-teams':'Setup','sec-categories':'Setup','sec-export':'Session & Data','sec-userid':'Settings','sec-visual':'Settings','sec-admin':'Admin Panel','sec-danger':'Session & Data','sec-debug':'Session & Data'};
     function showSection(id){
       document.querySelectorAll('.qb-sidebar .qb-section').forEach(s=>s.classList.remove('active-section'));
       const el=document.getElementById(id);
       if(el){ el.classList.add('active-section'); el.querySelector('.collapsible-content')?.classList.remove('collapsed'); el.querySelector('.toggle-icon')?.classList.remove('collapsed'); }
       localStorage.setItem('activeSidebarSection',id);
       updateJumpDropdown(id);
-      document.getElementById('sidebarJumpWrapper')?.classList.remove('open');
-    }
+      document.getElementById('sidebarJumpWrapper')?.classList.remove('open'); }
     function updateJumpDropdown(activeId){
       const labelEl=document.getElementById('sidebarJumpLabel');
       if(labelEl&&SECTION_LABELS[activeId]) labelEl.textContent=SECTION_LABELS[activeId];
       document.querySelectorAll('.sidebar-jump-menu button').forEach(btn=>btn.classList.toggle('active-item',(btn.getAttribute('onclick')||'').includes(activeId)));
     }
     function toggleJumpDropdown(){ document.getElementById('sidebarJumpWrapper')?.classList.toggle('open'); }
+    function toggleDangerZone(){
+      const body=document.getElementById('dangerZoneBody'), arrow=document.getElementById('dangerZoneArrow');
+      if(!body) return;
+      const open=body.style.display==='none';
+      body.style.display=open?'':'none';
+      if(arrow) arrow.style.transform=open?'':'rotate(-90deg)'; }
     const isMobile = () => !isIframe && window.innerWidth <= 900;
     if (isIframe){
       const _memStore ={};
@@ -3429,8 +3361,7 @@
         get length(){ return Object.keys(_memStore).length; }
       };
       try{ Object.defineProperty(window, 'localStorage',{ get:() => _safeLS }); } catch(e){}
-        document.body.classList.add('dark-mode');
-    }
+        document.body.classList.add('dark-mode'); }
     var _iframeDebugActive = false;
     function toggleSidebar(){
       const sidebar=document.getElementById('mainSidebar');
@@ -3447,8 +3378,7 @@
       } else{
         const collapsed=sidebar.classList.toggle('collapsed');
         if (!isIframe) localStorage.setItem('sidebarCollapsed',collapsed);
-        updateDesktopBtn(collapsed);
-      }
+        updateDesktopBtn(collapsed); }
     }
     function updateDesktopBtn(collapsed){
       const btn = document.getElementById('sidebarOpenBtn'); if (!btn) return;
@@ -3472,13 +3402,30 @@
       const on=document.body.classList.toggle('dark-mode');
       localStorage.setItem('darkMode',on);
       const el=document.getElementById('darkModeToggle2'); if(el) el.checked=on;
-        Object.values(_chartInstances).forEach(c => c.update());
-    }
+        Object.values(_chartInstances).forEach(c => c.update()); }
     function setAccentColor(color){ document.documentElement.style.setProperty('--primary',color); localStorage.setItem('accentColor',color); }
+    function changeSkillThreshold(delta){
+      const oldThreshold = skillThresholdPct;
+      skillThresholdPct = Math.max(10, Math.min(80, skillThresholdPct + delta));
+      saveGlobalSettings();
+      updateSkillThresholdUI();
+      if(analyticsOpen) renderAnalyticsPlayersUniversal();
+      showToast(`Skill threshold changed from ${oldThreshold}% to ${skillThresholdPct}%`, 'success', 3000, () => {
+        skillThresholdPct = oldThreshold;
+        saveGlobalSettings();
+        updateSkillThresholdUI();
+        if(analyticsOpen) renderAnalyticsPlayersUniversal(); });
+    }
+    function updateSkillThresholdUI(){
+      const display = document.getElementById('skillThresholdDisplay');
+      const bar = document.getElementById('skillThresholdBar');
+      if(display) display.textContent = skillThresholdPct + '%';
+      if(bar) bar.style.width = skillThresholdPct + '%'; }
+    function initSkillThresholdUI(){
+      updateSkillThresholdUI(); }
     function toggleScrollbars(){
       const on=document.body.classList.toggle('hide-scrollbars'); localStorage.setItem('hideScrollbars',on);
-      const el=document.getElementById('hideScrollbarsToggle'); if(el) el.checked=on;
-    }
+      const el=document.getElementById('hideScrollbarsToggle'); if(el) el.checked=on; }
     function restoreVisualSettings(){
       const ls=window.LOCAL_SETTINGS||{}; const get=(k,fb)=>ls[k]!==undefined?ls[k]:(localStorage.getItem(k)??fb);
       if(get('darkMode','false')==='true'||get('darkMode',false)===true){document.body.classList.add('dark-mode');const e=document.getElementById('darkModeToggle2');if(e)e.checked=true;}
@@ -3486,12 +3433,11 @@
       const ac=get('accentColor',null); if(ac){document.documentElement.style.setProperty('--primary',ac);const e=document.getElementById('accentColorSelect');if(e)e.value=ac;}
     }
     function renderAll(){
-      renderSessionInfo(); renderPlayerPool(); renderPlayerButtons(); renderSubPanel();
+      renderSessionInfo(); renderPlayerPool(); renderPlayerMgmt(); renderPlayerButtons(); renderSubPanel();
       renderPointTypeButtons(); renderTeams(); renderCategories(); renderAnswerLog(); renderStatistics(); renderTHeard();
       if(analyticsOpen) renderAnalytics();
       if(document.getElementById('sessionsModal')?.classList.contains('open')) renderSessionsList();
-      setTimeout(updateFadeMasks,50);
-    }
+      setTimeout(updateFadeMasks,50); }
     function renderSessionInfo(){
       const s = getCurrentSession();
       if (!s) return;
@@ -3501,8 +3447,7 @@
       set('headerSessionNameMobile', s.name);
       set('sessionCreated',     new Date(s.created).toLocaleString());
       set('sessionLastUpdated', new Date(s.lastUpdated).toLocaleString());
-      set('sessionAnswerCount', (s.answerLog || []).length);
-    }
+      set('sessionAnswerCount', (s.answerLog || []).length); }
     function addToPlayerPool(){
       const input  = document.getElementById('playerInput');
       const player = input.value.trim();
@@ -3514,8 +3459,7 @@
         if (!s.players[player]) s.players[player] ={ name:player, points:0, answers:[] };
       }).then(() =>{
         input.value = '';
-        saveGlobalPlayers([player]);
-      });
+        saveGlobalPlayers([player]); });
       withWriteLock(id, () =>{
         const s = getCurrentSession();
         if (!s.players) s.players ={};
@@ -3524,8 +3468,7 @@
       renderPlayerPool();
       renderPlayerButtons();
       renderSubPanel();
-      renderTeams();
-    }
+      renderTeams(); }
     function removeFromPlayerPool(player){
       const id = state.currentSessionId;
       if (!id) return;
@@ -3543,8 +3486,7 @@
       renderPlayerPool();
       renderPlayerButtons();
       renderSubPanel();
-      renderTeams();
-    }
+      renderTeams(); }
     function clearPlayerPool(){
       showConfirm('Clear all players?', 'Clear').then(ok =>{
         if (!ok) return;
@@ -3554,8 +3496,7 @@
           s.players  ={};
           (s.teams || []).forEach(t =>{ t.playerMembers = []; });
           s.answerLog = [];
-          s.answers   = [];
-        };
+          s.answers   = []; };
         updateSessionAtomic(id, reset);
         withWriteLock(id, () =>{ const s = getCurrentSession(); if (s) reset(s); });
         renderPlayerPool();
@@ -3564,9 +3505,166 @@
         renderTeams();
         renderAnswerLog();
         renderStatistics();
-        renderSessionInfo();
-      });
+        renderSessionInfo(); });
     }
+    function renderPlayerMgmt(){
+      const s = getCurrentSession();
+      const el = document.getElementById('playerMgmtContainer');
+      if(!el || !s) return;
+      const players = Object.keys(s.players || {});
+      if(players.length === 0){
+        el.innerHTML = '<p class="text-2" style="font-size:.8em;">Add players first.</p>';
+        return; }
+      let html = '';
+      players.forEach(player => {
+        const safe = player.replace(/'/g, "\\'");
+        html += `<div style="display:flex;gap:6px;align-items:center;">
+          <span style="flex:1;font-size:.82em;overflow:hidden;text-overflow:ellipsis;">${player}</span>
+          <button class="button" onclick="startRenamePlayer('${safe}')" style="width:70px;padding:4px 8px;font-size:.75em;">Rename</button>
+          <button class="button" onclick="startMergePlayer('${safe}')" style="width:70px;padding:4px 8px;font-size:.75em;">Merge</button>
+        </div>`;
+      });
+      el.innerHTML = html; }
+    function startRenamePlayer(oldName){
+      const newName = prompt(`Rename "${oldName}" to:`, oldName);
+      if(!newName || newName === oldName) return;
+      renamePlayer(oldName, newName); }
+    function renamePlayer(oldName, newName){
+      const newNameTrimmed = newName.trim();
+      if(!newNameTrimmed){
+        showToast('Player name cannot be empty.');
+        return; }
+      const id = state.currentSessionId;
+      if(!id) return;
+      const oldData = getCurrentSession()?.players?.[oldName];
+      if(!oldData) return;
+      updateSessionAtomic(id, s =>{
+        if(s.players?.[oldName]){
+          s.players[newNameTrimmed] = oldData;
+          delete s.players[oldName];
+          (s.teams || []).forEach(t =>{
+            if(t.playerMembers){
+              const idx = t.playerMembers.indexOf(oldName);
+              if(idx !== -1) t.playerMembers[idx] = newNameTrimmed; }
+          });
+          (s.answerLog || []).forEach(a =>{
+            if(a.player === oldName) a.player = newNameTrimmed; });
+          if(s.answers){
+            Object.keys(s.answers).forEach(key =>{
+              if(s.answers[key].player === oldName) s.answers[key].player = newNameTrimmed; });
+          }
+        }
+      });
+      withWriteLock(id, () =>{
+        const s = getCurrentSession();
+        if(!s) return;
+        if(s.players?.[oldName]){
+          s.players[newNameTrimmed] = oldData;
+          delete s.players[oldName];
+          (s.teams || []).forEach(t =>{
+            if(t.playerMembers){
+              const idx = t.playerMembers.indexOf(oldName);
+              if(idx !== -1) t.playerMembers[idx] = newNameTrimmed; }
+          }); }
+      });
+      showToast(`Renamed "${oldName}" to "${newNameTrimmed}"`, 'success', 3000, () =>{
+        renamePlayer(newNameTrimmed, oldName); });
+      renderPlayerPool();
+      renderPlayerMgmt();
+      renderPlayerButtons();
+      renderTeams(); }
+    function startMergePlayer(player1){
+      const s = getCurrentSession();
+      if(!s?.players) return;
+      const otherPlayers = Object.keys(s.players).filter(p => p !== player1);
+      if(otherPlayers.length === 0){
+        showToast('No other players to merge with.');
+        return; }
+      const player2 = prompt(`Merge "${player1}" with (exact name):\n\n${otherPlayers.join('\n')}`, otherPlayers[0]);
+      if(!player2 || !s.players[player2]) return;
+      mergePlayers(player1, player2); }
+    function mergePlayers(player1, player2){
+      const id = state.currentSessionId;
+      if(!id) return;
+      const p1Data = getCurrentSession()?.players?.[player1];
+      const p2Data = getCurrentSession()?.players?.[player2];
+      if(!p1Data || !p2Data) return;
+      const mergedData = {
+        name: player2,
+        points: (p1Data.points || 0) + (p2Data.points || 0),
+        answers: [...(p1Data.answers || []), ...(p2Data.answers || [])]
+      };
+      updateSessionAtomic(id, s =>{
+        if(s.players?.[player1]){
+          s.players[player2] = mergedData;
+          delete s.players[player1];
+          (s.teams || []).forEach(t =>{
+            if(t.playerMembers){
+              const idx = t.playerMembers.indexOf(player1);
+              if(idx !== -1){
+                t.playerMembers.splice(idx, 1);
+                if(!t.playerMembers.includes(player2)) t.playerMembers.push(player2); }
+            }
+          });
+          (s.answerLog || []).forEach(a =>{
+            if(a.player === player1) a.player = player2; });
+          if(s.answers){
+            Object.keys(s.answers).forEach(key =>{
+              if(s.answers[key].player === player1) s.answers[key].player = player2; });
+          }
+        }
+      });
+      withWriteLock(id, () =>{
+        const s = getCurrentSession();
+        if(!s?.players) return;
+        if(s.players[player1]){
+          s.players[player2] = mergedData;
+          delete s.players[player1];
+          (s.teams || []).forEach(t =>{
+            if(t.playerMembers){
+              const idx = t.playerMembers.indexOf(player1);
+              if(idx !== -1){
+                t.playerMembers.splice(idx, 1);
+                if(!t.playerMembers.includes(player2)) t.playerMembers.push(player2); }
+            }
+          }); }
+      });
+      showToast(`Merged "${player1}" into "${player2}"`, 'success', 3000, () =>{
+        splitPlayers(player1, player2, p1Data, p2Data); });
+      renderPlayerPool();
+      renderPlayerMgmt();
+      renderPlayerButtons();
+      renderTeams();
+      renderAnswerLog();
+      renderStatistics(); }
+    function splitPlayers(player1, player2, p1Data, p2Data){
+      const id = state.currentSessionId;
+      if(!id) return;
+      updateSessionAtomic(id, s =>{
+        if(s.players?.[player2]){
+          s.players[player1] = p1Data;
+          s.players[player2] = p2Data;
+          (s.answerLog || []).forEach(a =>{
+            if(a.player === player2 && p1Data.answers.some(ans => ans === a)) a.player = player1;
+          });
+          if(s.answers){
+            Object.keys(s.answers).forEach(key =>{
+              if(s.answers[key].player === player2 && p1Data.answers.some(ans => ans === s.answers[key])){
+                s.answers[key].player = player1; }
+            }); }
+        }
+      });
+      withWriteLock(id, () =>{
+        const s = getCurrentSession();
+        if(!s?.players) return;
+        s.players[player1] = p1Data;
+        s.players[player2] = p2Data; });
+      renderPlayerPool();
+      renderPlayerMgmt();
+      renderPlayerButtons();
+      renderTeams();
+      renderAnswerLog();
+      renderStatistics(); }
     function renderPlayerPool(){
       const s  = getCurrentSession();
       const el = document.getElementById('playerPoolDisplay');
@@ -3575,8 +3673,7 @@
       el.innerHTML = players.length
         ? players.map(p =>
             `<span class="player-pool-item">${p}<span class="remove" onclick="removeFromPlayerPool('${p}')">&#215;</span></span>`
-          ).join('') :'<p class="text-2">No players added yet.</p>';
-    }
+          ).join('') :'<p class="text-2">No players added yet.</p>'; }
     function getDisplayName(full,all){
       const parts=full.trim().split(/\s+/),first=parts[0];
       return (all.some(n=>n!==full&&n.trim().split(/\s+/)[0]===first)&&parts.length>1)?first+' '+parts[parts.length-1][0]+'.':first;
@@ -3602,10 +3699,8 @@
           const disp = getDisplayName(p, allPlayers);
           const sel  = state.selectedPlayer === p ? ' selected' :'';
           html += `<button class="button-player${sel}" onclick="selectPlayer('${p.replace(/'/g,"\\'")}');" title="${p}">${disp}</button>`;
-        });
-      });
-      el.innerHTML = html;
-    }
+        }); });
+      el.innerHTML = html; }
     let _subOut = null, _subIn = null;
     let _qlPending = null; //{ player, type, cat } waiting for optional category
     function renderQuickLog(){
@@ -3615,8 +3710,7 @@
       const players = [...new Set((s.teams||[]).flatMap(t=>t.playerMembers||[]))];
       if (!players.length){
         el.innerHTML = '<p style="color:var(--text2);font-size:.85em;margin-bottom:10px;">Add players to a team to use quick-log.</p>';
-        return;
-      }
+        return; }
       const allPlayers = Object.keys(s.players||{});
       const cats = (s.categories||[]);
       const hasCats = cats.length > 0;
@@ -3646,8 +3740,7 @@
           </div>
         </div>
         <div class="ql-cat-row ${catRowOpen}" id="${pid}_cats">${catChips}</div>`;
-      }).join('');
-    }
+      }).join(''); }
     function qlTap(player, type){
       const s = getCurrentSession();
       const hasCats = s && (s.categories||[]).length > 0;
@@ -3655,14 +3748,12 @@
         _qlPending ={ player, type, cat:null };
         renderQuickLog();
       } else{
-        qlQuickRecord(player, type, null);
-      }
+        qlQuickRecord(player, type, null); }
     }
     function qlSelectCat(player,cat){ if(_qlPending&&_qlPending.player===player){_qlPending.cat=_qlPending.cat===cat?null:cat;renderQuickLog();} }
     function qlConfirm(player){
       if (!_qlPending || _qlPending.player !== player) return;
-      qlQuickRecord(_qlPending.player, _qlPending.type, _qlPending.cat);
-    }
+      qlQuickRecord(_qlPending.player, _qlPending.type, _qlPending.cat); }
     function qlCancel(){ _qlPending = null; renderQuickLog(); }
     function qlQuickRecord(player, type, cat){
       _qlPending = null;
@@ -3679,16 +3770,14 @@
           const prev = s.answerLog.length > 0 ? s.answerLog[s.answerLog.length-1] :null;
           const prevWasWrong = prev && (prev.pointType === 'Neg' || prev.pointType === 'Miss');
           const thisIsFollowup = prevWasWrong && (type === 'Toss-up' || type === 'Power');
-          if (!thisIsFollowup) s.tHeard = (s.tHeard||0) + 1;
-        }
+          if (!thisIsFollowup) s.tHeard = (s.tHeard||0) + 1; }
         s.answerLog.push(answer);
         if (!s.players) s.players ={};
         if (player){
           const pl = s.players[player]||(s.players[player]={name:player,points:0,answers:[]});
           pl.answers = toArray(pl.answers); pl.answers.push(answer); pl.points = (pl.points||0)+points;
         }
-        if (type === 'Bonus' && !player) s.teamBonusPoints = (s.teamBonusPoints||0)+points;
-      };
+        if (type === 'Bonus' && !player) s.teamBonusPoints = (s.teamBonusPoints||0)+points; };
       updateSessionAtomic(id, applyAnswer);
       withWriteLock(id, ()=>{ const s=getCurrentSession(); if(s) applyAnswer(s); });
       const s2 = getCurrentSession();
@@ -3697,8 +3786,7 @@
       const ptSign   = points > 0 ? '+'+points :(points < 0 ? ''+points :'0');
       const toastCls = type === 'Neg' ? 'neg' :(type === 'Miss' || type === 'Dead' ? 'miss' :(points >= 15 ? 'pts' :''));
       showRecordToast(dispName + ' — ' + type + ' (' + ptSign + ' pts)', toastCls);
-      renderAll();
-    }
+      renderAll(); }
     function showRecordToast(msg, cls){
       const t = document.getElementById('recordToast');
       if (!t) return;
@@ -3711,8 +3799,7 @@
       if (isIframe && _iframeDebugActive) return; // preserve temp admin grant in preview
       const name = localStorage.getItem('qb_userName') || '';
       if (adminList.includes(name)) _adminToken.grant(); else _adminToken.revoke();
-      applyAdminUI();
-    }
+      applyAdminUI(); }
     function applyAdminUI(){
       const ccs = document.getElementById('catColorSection');
       if (ccs) ccs.style.display = isAdmin ? '' :'none';
@@ -3730,12 +3817,26 @@
       applyDebugMenuVisibility();
       document.querySelectorAll('.session-invalid-toggle').forEach(el =>{ el.style.display = isAdmin ? '' :'none'; });
       document.querySelectorAll('.ld-admin-btn').forEach(el =>{ el.style.display = isAdmin ? '' :'none'; });
-      renderAdminPanel();
-    }
-    function showToast(msg, type, duration){
+      renderAdminPanel(); }
+    function showToast(msg, type, duration, undoCallback){
       const t = document.getElementById('appToast');
       if (!t){ alert(msg); return; }
-      t.textContent = msg;
+      t.innerHTML = '';
+      const msgEl = document.createElement('span');
+      msgEl.textContent = msg;
+      t.appendChild(msgEl);
+      if(undoCallback){
+        const space = document.createElement('span');
+        space.textContent = ' ';
+        t.appendChild(space);
+        const undoBtn = document.createElement('button');
+        undoBtn.textContent = 'Undo';
+        undoBtn.style.cssText = 'background:rgba(255,255,255,.25);border:1px solid rgba(255,255,255,.4);color:#fff;padding:2px 8px;border-radius:4px;cursor:pointer;font-weight:700;font-family:inherit;font-size:.9em;margin-left:8px;';
+        undoBtn.onclick = () => {
+          undoCallback();
+          t.className = '';
+          showToast('Undone', 'info', 1500); };
+        t.appendChild(undoBtn); }
       t.className   = 'show' + (type ? ' toast-' + type :'');
       clearTimeout(t._timer);
       t._timer = setTimeout(() =>{ t.className = ''; }, duration || 2800);
@@ -3751,8 +3852,7 @@
         msgEl.textContent = msg;
         okEl.textContent  = okLabel || 'Confirm';
         okEl.className    = 'ct-ok' + (warnStyle === 'warn' ? ' warn-ok' :'');
-        el.classList.add('show');
-      });
+        el.classList.add('show'); });
     }
     function resolveConfirmToast(result){
       const el = document.getElementById('confirmToast');
@@ -3768,8 +3868,7 @@
       const bench         = poolPlayers.filter(p => !activePlayers.includes(p));
       if (!activePlayers.length){
         el.innerHTML = '<p style="color:var(--text2);font-size:.88em;">No active players yet. Add players to a team first.</p>';
-        return;
-      }
+        return; }
       if (_subOut && !activePlayers.includes(_subOut)) _subOut = null;
       if (_subIn  && !bench.includes(_subIn))          _subIn  = null;
       const chipStyle = (sel) =>
@@ -3807,15 +3906,13 @@
       const sel = document.getElementById('subSelect_' + outPlayer);
       if (!sel || !sel.value){ showToast('Select a bench player to swap in.', 'warn'); return; }
       executeSubstitution(outPlayer, sel.value);
-      renderSubPanel();
-    }
+      renderSubPanel(); }
     function executeSubFromPanel2(){
       if (!_subOut){ showToast('Please select the active player to substitute out.', 'warn'); return; }
       if (!_subIn) { showToast('Please select the bench player to substitute in.', 'warn'); return; }
       executeSubstitution(_subOut, _subIn);
       _subOut = null; _subIn = null;
-      renderSubPanel();
-    }
+      renderSubPanel(); }
     function selectPlayer(p){state.selectedPlayer=state.selectedPlayer===p?null:p;renderPlayerButtons();}
     function handlePlayerImport(event){
       const file=event.target.files[0]; if(!file) return;
@@ -3825,10 +3922,8 @@
         const id=state.currentSessionId; if(!id) return;
         updateSessionAtomic(id,s=>{if(!s.players) s.players={};players.forEach(p=>{if(!s.players[p]) s.players[p]={name:p,points:0,answers:[]};});}).then(()=>saveGlobalPlayers(players));
         withWriteLock(id,()=>{const s=getCurrentSession();if(!s.players) s.players={};players.forEach(p=>{if(!s.players[p]) s.players[p]={name:p,points:0,answers:[]};});});
-        renderPlayerPool(); renderPlayerButtons(); renderSubPanel(); renderTeams();
-      };
-      reader.readAsText(file); event.target.value='';
-    }
+        renderPlayerPool(); renderPlayerButtons(); renderSubPanel(); renderTeams(); };
+      reader.readAsText(file); event.target.value=''; }
     function addTeam(){
       const input=document.getElementById('teamNameInput');
       const name=input.value.trim(); if(!name){showToast('Please enter a team name.');return;}
@@ -3836,15 +3931,13 @@
       const team={id:Date.now().toString(),name,playerMembers:[]};
       updateSessionAtomic(id,s=>{s.teams=toArray(s.teams);s.teams.push(team);});
       withWriteLock(id,()=>{const s=getCurrentSession();s.teams=toArray(s.teams);s.teams.push(team);});
-      input.value=''; renderTeams();
-    }
+      input.value=''; renderTeams(); }
     function removeTeam(teamId){
       const id=state.currentSessionId; if(!id) return;
       const filter=s=>{s.teams=toArray(s.teams).filter(t=>t.id!==teamId);};
       updateSessionAtomic(id,filter);
       withWriteLock(id,()=>{const s=getCurrentSession();if(s) filter(s);});
-      renderTeams(); renderPlayerButtons(); renderSubPanel();
-    }
+      renderTeams(); renderPlayerButtons(); renderSubPanel(); }
     function updateTeamName(teamId,newName){
       const id=state.currentSessionId; if(!id) return;
       const update=s=>{const t=toArray(s.teams).find(t=>t.id===teamId);if(t) t.name=newName;};
@@ -3856,8 +3949,7 @@
       const toggle=s=>{const t=toArray(s.teams).find(t=>t.id===teamId);if(!t) return;t.playerMembers=toArray(t.playerMembers);const i=t.playerMembers.indexOf(player);if(i>-1) t.playerMembers.splice(i,1);else t.playerMembers.push(player);};
       updateSessionAtomic(id,toggle);
       withWriteLock(id,()=>{const s=getCurrentSession();if(s) toggle(s);});
-      renderTeams(); renderPlayerButtons(); renderSubPanel();
-    }
+      renderTeams(); renderPlayerButtons(); renderSubPanel(); }
     function renderTeams(){
       const s=getCurrentSession(); const el=document.getElementById('teamsContainer');
       if(!el||!s) return;
@@ -3880,8 +3972,7 @@
           <div style="font-size:.78em;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);margin-bottom:4px;">${parent}</div>
           <div style="display:flex;flex-wrap:wrap;gap:4px;">${subs.map(s=>`<span style="font-size:.8em;padding:2px 8px;border-radius:10px;background:var(--sec-bg);border:1.5px solid var(--border);color:var(--text1);">${s}</span>`).join('')}</div>
         </div>`
-      ).join('');
-    }
+      ).join(''); }
     var _selectedParentCat = null;
     function renderCategories(){
       const el = document.getElementById('categoryButtonsContainer');
@@ -3905,18 +3996,15 @@
         });
         html += `</div></div>`;
       });
-      el.innerHTML = html;
-    }
+      el.innerHTML = html; }
     function selectCategory(c){
       state.selectedCategory = state.selectedCategory === c ? null :c;
       _selectedParentCat = state.selectedCategory ? (CAT_PARENT[state.selectedCategory] || state.selectedCategory) :null;
-      renderCategories();
-    }
+      renderCategories(); }
     function selectPointType(type){
       state.selectedPointType = state.selectedPointType === type ? null :type;
       if (state.selectedPointType === 'Neg' || state.selectedPointType === 'Dead'){
-        state.selectedCategory = null; _selectedParentCat = null;
-      }
+        state.selectedCategory = null; _selectedParentCat = null; }
       renderPointTypeButtons();
       renderPlayerButtons();
       renderCategories();
@@ -3927,20 +4015,17 @@
     function renderPointTypeButtons(){
       document.querySelectorAll('.button-point-type').forEach(btn=>{
         btn.classList.toggle('selected',!!state.selectedPointType&&btn.textContent.includes(state.selectedPointType));
-      });
-    }
+      }); }
     function renderTHeard(){
       const el = document.getElementById('tHeardDisplay');
-      if (el) el.textContent = (getCurrentSession()?.tHeard) || 0;
-    }
+      if (el) el.textContent = (getCurrentSession()?.tHeard) || 0; }
     function adjustTHeard(delta){
       const id = state.currentSessionId; if (!id) return;
       const apply = s =>{ s.tHeard = Math.max(0, (s.tHeard || 0) + delta); };
       updateSessionAtomic(id, apply);
       withWriteLock(id, () =>{ const s = getCurrentSession(); if (s) apply(s); });
       renderTHeard();
-      if (analyticsOpen) renderAnalytics();
-    }
+      if (analyticsOpen) renderAnalytics(); }
     function recordAnswer(){
       const id = state.currentSessionId; if (!id) return;
       const isBonus = state.selectedPointType === 'Bonus';
@@ -3966,8 +4051,7 @@
           const prev = s.answerLog.length > 0 ? s.answerLog[s.answerLog.length - 1] :null;
           const prevWasWrong = prev && (prev.pointType === 'Neg' || prev.pointType === 'Miss');
           const thisIsFollowup = prevWasWrong && (state.selectedPointType === 'Toss-up' || state.selectedPointType === 'Power');
-          if (!thisIsFollowup) s.tHeard = (s.tHeard || 0) + 1;
-        }
+          if (!thisIsFollowup) s.tHeard = (s.tHeard || 0) + 1; }
         s.answerLog.push(answer);
         if (!s.players) s.players ={};
       const realPlayer = !isTeamBonus && state.selectedPlayer && !state.selectedPlayer.startsWith('— ');
@@ -3990,8 +4074,7 @@
       state.selectedPlayer = null; state.selectedPointType = null; state.selectedCategory = null; _selectedParentCat = null;
       const playerHint = document.getElementById('playerOptionalHint');
       if (playerHint) playerHint.style.display = 'none';
-      renderAll();
-    }
+      renderAll(); }
     document.addEventListener('keydown', e =>{
       const tag = document.activeElement && document.activeElement.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
@@ -4013,13 +4096,11 @@
       const answer ={id:Date.now().toString(),player:label,pointType:'Bonus',category:'—',points:10,timestamp:new Date().toISOString()};
       const apply = s =>{
         s.answerLog = toArray(s.answerLog); s.answerLog.push(answer);
-        s.teamBonusPoints = (s.teamBonusPoints||0) + 10;
-      };
+        s.teamBonusPoints = (s.teamBonusPoints||0) + 10; };
       updateSessionAtomic(id, apply);
       withWriteLock(id, () =>{ const s = getCurrentSession(); if (s) apply(s); });
       showRecordToast((team ? team.name :'Team') + ' Bonus (+10 pts)', '');
-      renderAll();
-    }
+      renderAll(); }
     function deleteAnswer(answerId){
       const id=state.currentSessionId; if(!id) return;
       const del=s=>{
@@ -4037,13 +4118,11 @@
         s.answerLog = s.answerLog.filter(x=>x.id!==answerId);
         if (a.player === '— Team Bonus —'){ s.teamBonusPoints = Math.max(0, (s.teamBonusPoints || 0) - (a.points || 0)); } else if(s.players?.[a.player]){
           s.players[a.player].answers=toArray(s.players[a.player].answers).filter(x=>x.id!==answerId);
-          s.players[a.player].points=(s.players[a.player].points||0)-(a.points||0);
-        }
+          s.players[a.player].points=(s.players[a.player].points||0)-(a.points||0); }
       };
       updateSessionAtomic(id,del);
       withWriteLock(id,()=>{const s=getCurrentSession();if(s) del(s);});
-      renderAll();
-    }
+      renderAll(); }
     function clearAnswerLog(){
       showConfirm('Clear all answers?', 'Clear').then(ok =>{
         if (!ok) return;
@@ -4051,8 +4130,7 @@
         const clear=s=>{s.answerLog=[];s.tHeard=0;Object.values(s.players||{}).forEach(p=>{p.points=0;p.answers=[];});};
         updateSessionAtomic(id,clear);
         withWriteLock(id,()=>{const s=getCurrentSession();if(s) clear(s);});
-        renderAll();
-      });
+        renderAll(); });
     }
     function renderAnswerLog(){
       const s=getCurrentSession(); const el=document.getElementById('answerLog');
@@ -4065,8 +4143,7 @@
               <button class="button button-danger" onclick="deleteAnswer('${a.id}')" style="padding:4px 8px;font-size:.8em;">Delete</button>
             </div>`).join('') :'<p class="text-2">No answers recorded yet.</p>';
       el.onscroll=updateFadeMasks;
-      setTimeout(updateFadeMasks,20);
-    }
+      setTimeout(updateFadeMasks,20); }
     function calculatePlayerStats(){
       return Object.values(getCurrentSession()?.players||{}).map(p=>{
         const a=p.answers||[];
@@ -4079,8 +4156,7 @@
         let pts=0,ans=0;
         team.playerMembers.forEach(n=>{const p=s.players[n];if(p){pts+=p.points;ans+=(p.answers||[]).length;}});
         return{name:team.name,totalPoints:pts,totalAnswers:ans,members:team.playerMembers,averagePerMember:team.playerMembers.length?(pts/team.playerMembers.length).toFixed(2):0};
-      }).sort((a,b)=>b.totalPoints-a.totalPoints);
-    }
+      }).sort((a,b)=>b.totalPoints-a.totalPoints); }
     function buildRankingList(players){
       let html='',rank=1;
       players.forEach((s,i)=>{
@@ -4090,8 +4166,7 @@
         const sfx=['st','nd','rd'][rank-1]||'th';
         html+=`<li style="padding:6px 0;border-bottom:1.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;"><span><strong style="color:var(--primary);min-width:42px;display:inline-block;">${rank}${sfx}</strong> ${s.name}</span><span style="color:var(--text2);font-size:.92em;">${s.points} Pts${s.powers?' &middot; '+'+'+s.powers+' Power':''}${s.negs?' &middot; '+'-'+s.negs+' Neg':''}${s.misses?' &middot; '+s.misses+' Miss':''}</span></li>`;
       });
-      return html;
-    }
+      return html; }
     function renderStatistics(){
       const el=document.getElementById('statisticsContainer'); if(!el) return;
       const open=new Set();
@@ -4129,15 +4204,12 @@
           if(existingId){
             showConfirm('Session "'+data.sessionName+'" exists. Overwrite?','Overwrite','warn').then(ok=>{
               if(!ok){statusEl.textContent='Cancelled.';event.target.value='';return;}
-              doImport();
-            });
+              doImport(); });
           } else{ doImport(); }
         } catch(err){statusEl.style.color='var(--danger)';statusEl.textContent='Import failed:'+err.message;}
-        event.target.value='';
-      };
+        event.target.value=''; };
       reader.onerror=()=>{statusEl.style.color='var(--danger)';statusEl.textContent='Failed to read file.';};
-      reader.readAsText(file);
-    }
+      reader.readAsText(file); }
     function exportToExcel(){
       const s=getCurrentSession(); if(!s) return;
       const ps=calculatePlayerStats(),ts=calculateTeamStats(),csv=[];
@@ -4145,6 +4217,66 @@
       if(document.getElementById('exportTeamStats').classList.contains('selected')&&ts.length){csv.push('Team Statistics','Team Name,Total Points,Total Answers,Members');ts.forEach(t=>csv.push([t.name,t.totalPoints,t.totalAnswers,'"'+t.members.join(', ')+'"'].join(',')));csv.push('');}
       if(document.getElementById('exportAnswerLog').classList.contains('selected')){csv.push('Answer Log','Player,Point Type,Category,Points,Timestamp');(s.answerLog||[]).forEach(a=>csv.push([a.player,a.pointType,a.category,a.points,new Date(a.timestamp).toLocaleString()].join(',')));}
       downloadFile(csv.join('\n'),'quiz-bowl-'+s.name+'-'+new Date().toISOString().split('T')[0]+'.csv','text/csv');
+    }
+    function exportAllData(format){
+      const allSessions = Object.values(state.sessions||{});
+      if (!allSessions.length){ showToast('No data to export.', 'warn'); return; }
+      const date = new Date().toISOString().split('T')[0];
+      if (format === 'json'){
+        const payload = { exportedAt: new Date().toISOString(), sessions: allSessions };
+        downloadFile(JSON.stringify(payload, null, 2), 'hse-qb-all-sessions-'+date+'.json', 'application/json');
+        showToast('All sessions exported as JSON.', 'success');
+      } else if (format === 'xlsx'){
+        if (typeof XLSX === 'undefined'){ showToast('Excel library not loaded yet — try again.', 'warn'); return; }
+        const wb = XLSX.utils.book_new();
+        // Sheet 1: Answer Log (all sessions)
+        const logRows = [['Session','Player','Point Type','Category','Points','Timestamp']];
+        allSessions.forEach(s =>{
+          (s.answerLog||[]).forEach(a =>{
+            logRows.push([s.name||'', a.player||'', a.pointType||'', a.category||'', a.points, new Date(a.timestamp).toLocaleString()]);
+          });
+        });
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(logRows), 'Answer Log');
+        // Sheet 2: Player Stats (per session)
+        const playerRows = [['Session','Player','Points','Toss-ups','Powers','Bonuses','Negs','Misses','Total Answers']];
+        allSessions.forEach(s =>{
+          Object.values(s.players||{}).forEach(p =>{
+            const ans = (p.answers||[]);
+            playerRows.push([
+              s.name||'', p.name||'', p.points||0,
+              ans.filter(a=>a.pointType==='Toss-up').length,
+              ans.filter(a=>a.pointType==='Power').length,
+              ans.filter(a=>a.pointType==='Bonus').length,
+              ans.filter(a=>a.pointType==='Neg').length,
+              ans.filter(a=>a.pointType==='Miss').length,
+              ans.length
+            ]);
+          });
+        });
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(playerRows), 'Player Stats');
+        // Sheet 3: Session Summary
+        const summaryRows = [['Session','Created','Answer Count','Toss-Ups Heard']];
+        allSessions.forEach(s =>{
+          summaryRows.push([s.name||'', s.created ? new Date(s.created).toLocaleString() : '', (s.answerLog||[]).length, s.tHeard||0]);
+        });
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(summaryRows), 'Session Summary');
+        XLSX.writeFile(wb, 'hse-qb-all-sessions-'+date+'.xlsx');
+        showToast('All sessions exported as Excel.', 'success');
+      } else {
+        const rows = ['Session,Player,Point Type,Category,Points,Timestamp'];
+        allSessions.forEach(s =>{
+          (s.answerLog||[]).forEach(a =>{
+            rows.push([
+              '"'+(s.name||'').replace(/"/g,'""')+'"',
+              '"'+(a.player||'').replace(/"/g,'""')+'"',
+              a.pointType, '"'+(a.category||'').replace(/"/g,'""')+'"',
+              a.points, new Date(a.timestamp).toLocaleString()
+            ].join(','));
+          });
+        });
+        downloadFile(rows.join('\n'), 'hse-qb-all-sessions-'+date+'.csv', 'text/csv');
+        showToast('All sessions exported as CSV.', 'success');
+      }
     }
     function exportToJSON(){
       const s=getCurrentSession(); if(!s) return;
@@ -4154,8 +4286,7 @@
       const a=document.createElement('a');
       a.href='data:'+mimeType+';charset=utf-8,'+encodeURIComponent(content);
       a.download=filename; a.style.display='none';
-      document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    }
+      document.body.appendChild(a); a.click(); document.body.removeChild(a); }
     function injectDebugData(){
       const s = getCurrentSession(); if (!s){ showToast('No active session.', 'warn'); return; }
       const scenario = document.getElementById('debugScenario')?.value || 'mid';
@@ -4187,8 +4318,7 @@
         for (let i=0; i<p.bonus;   i++) pool.push('Bonus');
         for (let i=0; i<p.neg;     i++) pool.push('Neg');
         for (let i=0; i<p.miss;    i++) pool.push('Miss');
-        return rng(pool);
-      }
+        return rng(pool); }
       const log = [];
       let tHeardCount = 0;
       const baseTime = new Date('2025-11-01T14:00:00Z').getTime();
@@ -4217,8 +4347,7 @@
           const prev = log[log.length - 2] || null;
           const prevWasWrong = prev && (prev.pointType === 'Neg' || prev.pointType === 'Miss');
           const isFollowup = prevWasWrong && (type === 'Toss-up' || type === 'Power');
-          if (!isFollowup) tHeardCount++;
-        }
+          if (!isFollowup) tHeardCount++; }
         if ((type === 'Power' || type === 'Toss-up') && Math.random() < 0.65){
           t += 20000 + Math.floor(Math.random() * 15000);
           const bonusCat = Math.random() < 0.7 ? cat :rng(cats); // usually same category
@@ -4234,8 +4363,7 @@
             timestamp:bonusTs,
           };
           log.push(bonusAnswer);
-          if (bonusPlayer) playerAnswers[bonusPlayer].push(bonusAnswer);
-        }
+          if (bonusPlayer) playerAnswers[bonusPlayer].push(bonusAnswer); }
       }
       const players ={};
       allPlayers.forEach(name =>{
@@ -4258,8 +4386,7 @@
       const totalAnswers = log.length;
       const totalPts = allPlayers.reduce((s, n) => s + (players[n]?.points || 0), 0);
       if (statusEl) statusEl.textContent = `✔ Injected ${totalAnswers} answers across ${tuHeard} questions. ${allPlayers.length} players, 2 teams, ${totalPts} total points.`;
-      showToast('Debug data injected.', 'success');
-    }
+      showToast('Debug data injected.', 'success'); }
     function clearDebugData(){
       showConfirm('Clear all data in the current session?', 'Clear').then(ok =>{
         if (!ok) return;
@@ -4271,8 +4398,7 @@
         loadSessionData(); renderAll();
         const statusEl = document.getElementById('debugStatus');
         if (statusEl) statusEl.textContent = '✔ Session data cleared.';
-        showToast('Session cleared.');
-      });
+        showToast('Session cleared.'); });
     }
     function resetAllData(){
       if (!isAdmin){ showToast('Not authorised.', 'warn'); return; }
@@ -4299,10 +4425,8 @@
             globalPlayersRef.remove().catch(e=>showFirebaseError(e.message));
             localStorage.setItem(CURRENT_SESSION_KEY,'');
             state.sessions={}; state.currentSessionId=null;
-            createNewSession(); renderAll();
-          });
-        };
-      });
+            createNewSession(); renderAll(); });
+        }; });
     }
     document.addEventListener('DOMContentLoaded', initFirebase);
   </script>
