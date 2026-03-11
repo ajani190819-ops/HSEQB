@@ -960,7 +960,7 @@
       }
     }
 
-    const VERSION = '3.1.1'; // ← Change only this each release
+    const VERSION = '3.1.2'; // ← Change only this each release
     const DISPLAY_VERSION = VERSION; const INTERNAL_BUILD = VERSION;
     const FILE_VERSION    = VERSION; const FILE_BUILD_ID  = VERSION;
     var db, sessionsRef, globalPlayersRef, versionRef, globalSettingsRef, userIdentitiesRef, adminListRef, adminList = [];
@@ -1150,12 +1150,12 @@
     function saveVersion(){ publishRelease(); } // legacy alias
     function checkReleasePrompt(remoteBuild){
       if (!isAdmin) return;
-      const prompt    = document.getElementById('releasePrompt');
-      const upToDate  = document.getElementById('releaseUpToDate');
+      const prompt   = document.getElementById('releasePrompt');
+      const upToDate = document.getElementById('releaseUpToDate');
       if (!prompt || !upToDate) return;
       const isUnpublished = !remoteBuild || remoteBuild !== FILE_BUILD_ID;
-      prompt.style.display   = isUnpublished ? '' :'none';
-      upToDate.style.display = isUnpublished ? 'none' :'';
+      if (isUnpublished){ prompt.classList.remove('hidden'); upToDate.classList.add('hidden'); }
+      else { prompt.classList.add('hidden'); upToDate.classList.remove('hidden'); }
       if (isUnpublished) checkGitHubWarning(remoteBuild); }
     function checkGitHubWarning(remoteBuild){
       const warning = document.getElementById('githubWarning');
