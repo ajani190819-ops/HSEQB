@@ -699,7 +699,8 @@
                 <div style="background:var(--sec-bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:12px;font-size:.8em;color:var(--text2);line-height:1.6;">
                   This file (display):<span class="mono-primary" id="displayVersionDisplay"></span><br>
                   This file (internal):<span class="mono-primary" id="internalVersionDisplay"></span><br>
-                  Published in Firebase:<span style="font-family:monospace;color:var(--success);" id="liveFirebaseBuildDisplay">—</span>
+                  Published in Firebase:<span style="font-family:monospace;color:var(--success);" id="liveFirebaseBuildDisplay">—</span><br>
+                  Published on GitHub:<span id="githubPublishedDisplay" style="font-family:monospace;color:var(--text3);">—</span>
                 </div>
                 <div id="releasePrompt" class="hidden">
                   <div style="background:rgba(17,153,142,.08);border:1.5px solid rgba(17,153,142,.35);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:12px;">
@@ -959,10 +960,9 @@
       }
     }
 
-    const DISPLAY_VERSION = '1.0.0';      // User-facing version (e.g., 1.5.1)
-    const INTERNAL_BUILD = 'build.2025.mar.10'; // Internal build identifier
-    const FILE_VERSION  = DISPLAY_VERSION; // For backward compatibility
-    const FILE_BUILD_ID = INTERNAL_BUILD;  // For backward compatibility
+    const VERSION = '1.0.0'; // ← Change only this each release
+    const DISPLAY_VERSION = VERSION; const INTERNAL_BUILD = VERSION;
+    const FILE_VERSION    = VERSION; const FILE_BUILD_ID  = VERSION;
     var db, sessionsRef, globalPlayersRef, versionRef, globalSettingsRef, userIdentitiesRef, adminListRef, adminList = [];
     const _adminToken = (()=>{
       let _tok = null;
@@ -1012,6 +1012,13 @@
         // Update live build display in admin panel
         const liveDisp = document.getElementById('liveFirebaseBuildDisplay');
         if (liveDisp) liveDisp.textContent = remoteBuild || '(none)';
+        // GitHub published: file is on GitHub when its build ID matches the Firebase-published build
+        const ghDisp = document.getElementById('githubPublishedDisplay');
+        if (ghDisp){
+          const onGitHub = remoteBuild && remoteBuild === FILE_BUILD_ID;
+          ghDisp.textContent = onGitHub ? '✔ Yes' : remoteBuild ? '✗ Not yet' : '—';
+          ghDisp.style.color = onGitHub ? 'var(--success)' : remoteBuild ? 'var(--danger)' : 'var(--text3)';
+        }
         // Show/hide the release prompt for admins
         checkReleasePrompt(remoteBuild);
         // Only check for updates if the user is running a local file, not the live GitHub Pages site or online deployment
@@ -1087,15 +1094,8 @@
       // Set header version badge to THIS file's version immediately — never reflects Firebase label
       const badge = document.getElementById('versionBadge');
       if (badge){ 
-        // Extract date from build ID (format:YYYYMMDD-HHMM)
-        const buildMatch = FILE_BUILD_ID.match(/(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})/);
-        let buildDate = FILE_BUILD_ID;
-        if (buildMatch){
-          const [, year, month, day, hour, min] = buildMatch;
-          buildDate = `${month}/${day}/${year.slice(2)} ${hour}:${min}`;
-        }
         badge.textContent = FILE_VERSION;
-        badge.title = `Build:${buildDate}`;
+        badge.title = `Build: ${FILE_BUILD_ID}`;
         // Use !important to override CSS media query that hides it on mobile
         badge.style.setProperty('display', 'inline', 'important'); }
       // Populate version displays in admin panel
