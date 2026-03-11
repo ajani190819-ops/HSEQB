@@ -699,7 +699,7 @@
                 <div style="background:var(--sec-bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:12px;font-size:.8em;color:var(--text2);line-height:1.6;">
                   This file (display):<span class="mono-primary" id="displayVersionDisplay"></span><br>
                   This file (internal):<span class="mono-primary" id="internalVersionDisplay"></span><br>
-                  Published in Firebase:<span style="font-family:monospace;color:var(--success);" id="liveFirebaseBuildDisplay">—</span><br>
+                  Published in Firebase:<span style="font-family:monospace;color:var(--success);" id="liveFirebaseBuildDisplay">—</span> <span style="font-family:monospace;color:var(--text3);" id="liveFirebaseLabelDisplay"></span><br>
                   Published on GitHub:<span id="githubPublishedDisplay" style="font-family:monospace;color:var(--text3);">—</span>
                 </div>
                 <div id="releasePrompt" class="hidden">
@@ -960,7 +960,7 @@
       }
     }
 
-    const VERSION = '3.1.0'; // ← Change only this each release
+    const VERSION = '3.1.1'; // ← Change only this each release
     const DISPLAY_VERSION = VERSION; const INTERNAL_BUILD = VERSION;
     const FILE_VERSION    = VERSION; const FILE_BUILD_ID  = VERSION;
     var db, sessionsRef, globalPlayersRef, versionRef, globalSettingsRef, userIdentitiesRef, adminListRef, adminList = [];
@@ -1012,6 +1012,8 @@
         // Update live build display in admin panel
         const liveDisp = document.getElementById('liveFirebaseBuildDisplay');
         if (liveDisp) liveDisp.textContent = remoteBuild || '(none)';
+        const liveLabelDisp = document.getElementById('liveFirebaseLabelDisplay');
+        if (liveLabelDisp) liveLabelDisp.textContent = remoteLabel ? '('+remoteLabel+')' : '';
         // GitHub published: file is on GitHub when its build ID matches the Firebase-published build
         const ghDisp = document.getElementById('githubPublishedDisplay');
         if (ghDisp){
@@ -1028,11 +1030,18 @@
         const shouldCheckUpdates = isLocalFile && !isGitHubPages;
         // Only show update if remote build is actually published AND is different from local
         // Don't show if local build is unpublished (same as remote build but not yet on GitHub)
-        const isActuallyDifferent = remoteBuild && remoteLabel && 
-                                     (remoteBuild !== FILE_BUILD_ID || remoteLabel !== FILE_VERSION);
-        // Additional check:Only show if local is behind published (not ahead/unpublished)
-        const isLocalBehind = FILE_BUILD_ID !== remoteBuild;
-        if (shouldCheckUpdates && isActuallyDifferent && isLocalBehind){
+        // Compare versions numerically so "3.1.0" is correctly seen as newer than "1.5.46"
+        function parseVer(v){ return (v||'').split('.').map(n=>parseInt(n,10)||0); }
+        function isNewer(remote, local){
+          const r=parseVer(remote), l=parseVer(local);
+          for(let i=0;i<Math.max(r.length,l.length);i++){
+            if((r[i]||0)>(l[i]||0)) return true;
+            if((r[i]||0)<(l[i]||0)) return false;
+          }
+          return false;
+        }
+        const remoteIsNewer = remoteBuild && remoteLabel && isNewer(remoteBuild, FILE_BUILD_ID);
+        if (shouldCheckUpdates && remoteIsNewer){
           showUpdateBanner(remoteLabel, downloadUrl, releaseNotes);
         } else{
           hideUpdateBanner(); }
