@@ -548,7 +548,7 @@
               </div>
               <div style="padding-bottom:14px;border-bottom:1.5px solid var(--border);margin-bottom:14px;">
                 <div style="font-weight:600;font-size:.85em;margin-bottom:8px;color:var(--text);">Player Management</div>
-                <div style="font-size:.78em;color:var(--text2);margin-bottom:10px;">Rename players to fix typos or merge duplicates.</div>
+                <div style="font-size:.78em;color:var(--text2);margin-bottom:10px;">Rename players to fix typos. To merge, click <strong>Merge</strong> on the player you want to <em>remove</em> — their stats will be combined into whichever player you select next.</div>
                 <div id="playerMgmtContainer" style="display:flex;flex-direction:column;gap:8px;"></div>
               </div>
               <div class="input-group">
@@ -715,9 +715,7 @@
                       </div>
                     </div>
                   </div>
-                  <div style="font-size:.78em;color:var(--text2);padding:6px 10px;background:var(--sec-bg);border-radius:6px;border:1.5px solid var(--border);margin-bottom:10px;">
-                    Publishes as version <strong id="releaseLabelPreview"></strong> — download link is hardcoded in the file.
-                  </div>
+
                   <div class="input-group" class="mb-10">
                     <label>Release Notes <span class="fs-75-fw4">— shown to users in update notification</span></label>
                     <input type="text" id="releaseNotesInput" placeholder="e.g. Fixed analytics, added export" />
@@ -726,18 +724,7 @@
                     <label>Admin Comments <span class="fs-75-fw4">— internal notes (not shown to users)</span></label>
                     <input type="text" id="adminCommentsInput" placeholder="e.g. Tested with large datasets, ready for production" />
                   </div>
-                  <div id="githubWarning" style="background:rgba(220,53,69,.08);border:1.5px solid rgba(220,53,69,.35);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:14px;display:none;">
-                    <div style="font-weight:700;font-size:.88em;color:var(--danger);margin-bottom:6px;">↑ Not uploaded to GitHub yet</div>
-                    <div style="font-size:.78em;color:var(--text2);line-height:1.6;">
-                      <div class="mb-8">The internal build version in Firebase doesn't match this file's internal build version.</div>
-                      <div class="fw6-m10-8">This means:</div>
-                      <div style="margin-left:8px;border-left:2px solid var(--danger);padding-left:8px;">
-                        • This file hasn't been uploaded to GitHub yet<br>
-                        • After uploading to GitHub, the versions will match automatically<br>
-                        • Users will then be able to download the update
-                      </div>
-                    </div>
-                  </div>
+
                   <button class="button button-success" onclick="publishRelease()" style="width:100%;">Update Release Info</button>
                 </div>
                 <div id="releaseUpToDate" style="display:none;font-size:.82em;color:var(--success);font-weight:600;">✔ This file is already the published version.</div>
@@ -918,6 +905,17 @@
   </div>
   <div id="sessionsModal" class="qb-modal"><div class="modal-content"><div class="modal-header"><h2>Load Session</h2><button class="close-modal" onclick="closeSessionsModal()">&#215;</button></div><div style="display:flex;gap:8px;flex-wrap:wrap;padding:12px 16px;border-bottom:1.5px solid var(--border);background:var(--sec-bg);"><input type="text" id="sessionsSearchInput" placeholder="Search sessions..." style="flex:1;min-width:150px;padding:8px 12px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:.95em;background:var(--input-bg);color:var(--input-text);" /><select id="sessionsSortSelect" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:.95em;background:var(--input-bg);color:var(--input-text);"><option value="date-desc">Newest First</option><option value="date-asc">Oldest First</option><option value="name">Alphabetical (A-Z)</option><option value="answers-desc">Most Answers</option><option value="answers-asc">Least Answers</option></select></div><div id="sessionsList" class="sessions-list"></div></div></div>
   </div>
+  <div id="playerActionModal" class="qb-modal" onclick="if(event.target===this)closePlayerActionModal()">
+    <div class="modal-content" style="max-width:420px;">
+      <div class="modal-header">
+        <h2 id="pamTitle">Player Action</h2>
+        <button class="close-modal" onclick="closePlayerActionModal()">&#215;</button>
+      </div>
+      <div style="padding:16px;">
+        <div id="pamBody"></div>
+      </div>
+    </div>
+  </div>
   <div id="playerDetailModal" class="qb-modal"><div class="modal-content" style="max-width:620px;"><div class="modal-header"><h2 id="pdModalTitle">Player Details</h2><button class="close-modal" onclick="closePlayerDetailModal()">&#215;</button></div><div id="pdModalBody"></div></div></div>
   <script src="local-settings.js" onerror="void 0"></script>
   <script>
@@ -954,7 +952,7 @@
       }
     }
 
-    const VERSION = '3.1.4'; // ← Change only this each release
+    const VERSION = '3.2.4'; // ← Change only this each release
     const DOWNLOAD_URL = 'https://raw.githubusercontent.com/ajani190819-ops/HSEQB/main/index.html';
     const DISPLAY_VERSION = VERSION; const INTERNAL_BUILD = VERSION;
     const FILE_VERSION    = VERSION; const FILE_BUILD_ID  = VERSION;
@@ -1001,8 +999,7 @@
         const rnInput = document.getElementById('releaseNotesInput');
         if (rnInput && document.activeElement !== rnInput && !rnInput.value) rnInput.value = releaseNotes;
         // Populate version preview label
-        const lrp = document.getElementById('releaseLabelPreview');
-        if (lrp) lrp.textContent = FILE_VERSION;
+
         // Update live build display in admin panel
         const liveDisp = document.getElementById('liveFirebaseBuildDisplay');
         if (liveDisp) liveDisp.textContent = remoteBuild || '(none)';
@@ -1150,15 +1147,8 @@
       const isUnpublished = !remoteBuild || remoteBuild !== FILE_BUILD_ID;
       if (isUnpublished){ prompt.classList.remove('hidden'); upToDate.classList.add('hidden'); }
       else { prompt.classList.add('hidden'); upToDate.classList.remove('hidden'); }
-      if (isUnpublished) checkGitHubWarning(remoteBuild); }
-    function checkGitHubWarning(remoteBuild){
-      const warning = document.getElementById('githubWarning');
-      if (!warning) return;
-      if (!remoteBuild){
-        warning.style.display = 'none';
-        return; }
-      const isUploaded = FILE_BUILD_ID === remoteBuild;
-      warning.style.display = isUploaded ? 'none' :''; }
+    }
+
     function publishRelease(){
       if (!isAdmin){ showToast('Not authorised.', 'warn'); return; }
       const notes    = (document.getElementById('releaseNotesInput')?.value || '').trim();
@@ -3520,117 +3510,177 @@
       });
       el.innerHTML = html; }
     function startRenamePlayer(oldName){
-      const newName = prompt(`Rename "${oldName}" to:`, oldName);
-      if(!newName || newName === oldName) return;
+      const modal = document.getElementById('playerActionModal');
+      const title = document.getElementById('pamTitle');
+      const body  = document.getElementById('pamBody');
+      if(!modal||!title||!body) return;
+      title.textContent = 'Rename Player';
+      body.innerHTML = `
+        <p style="font-size:.85em;color:var(--text2);margin-bottom:12px;">Renaming <strong>${oldName}</strong> will update their name everywhere in this session.</p>
+        <label style="font-size:.85em;font-weight:600;color:var(--text2);display:block;margin-bottom:6px;">New Name</label>
+        <input id="pamRenameInput" type="text" value="${oldName.replace(/"/g,'&quot;')}"
+          style="width:100%;padding:9px 12px;border:1.5px solid var(--input-border);border-radius:var(--radius-sm);font-size:.95em;font-family:inherit;background:var(--input-bg);color:var(--input-text);box-sizing:border-box;margin-bottom:14px;"
+          onkeydown="if(event.key==='Enter')confirmRenamePlayer('${oldName.replace(/'/g,"\'")}')"/>
+        <div style="display:flex;gap:8px;">
+          <button class="button button-success" style="flex:1;" onclick="confirmRenamePlayer('${oldName.replace(/'/g,"\'")}')">Rename</button>
+          <button class="button" style="flex:1;background:var(--sec-bg);color:var(--text2);" onclick="closePlayerActionModal()">Cancel</button>
+        </div>`;
+      modal.style.display = 'flex';
+      setTimeout(()=>{ const inp=document.getElementById('pamRenameInput'); if(inp){inp.focus();inp.select();} },50); }
+    function confirmRenamePlayer(oldName){
+      const inp = document.getElementById('pamRenameInput');
+      if(!inp) return;
+      const newName = inp.value.trim();
+      if(!newName){ showToast('Name cannot be empty.','warn'); return; }
+      if(newName === oldName){ closePlayerActionModal(); return; }
+      closePlayerActionModal();
       renamePlayer(oldName, newName); }
     function renamePlayer(oldName, newName){
       const newNameTrimmed = newName.trim();
-      if(!newNameTrimmed){
-        showToast('Player name cannot be empty.');
-        return; }
+      if(!newNameTrimmed){ showToast('Player name cannot be empty.','warn'); return; }
       const id = state.currentSessionId;
       if(!id) return;
-      const oldData = getCurrentSession()?.players?.[oldName];
-      if(!oldData) return;
-      updateSessionAtomic(id, s =>{
-        if(s.players?.[oldName]){
-          s.players[newNameTrimmed] = oldData;
-          delete s.players[oldName];
-          (s.teams || []).forEach(t =>{
-            if(t.playerMembers){
-              const idx = t.playerMembers.indexOf(oldName);
-              if(idx !== -1) t.playerMembers[idx] = newNameTrimmed; }
-          });
-          (s.answerLog || []).forEach(a =>{
-            if(a.player === oldName) a.player = newNameTrimmed; });
-          if(s.answers){
-            Object.keys(s.answers).forEach(key =>{
-              if(s.answers[key].player === oldName) s.answers[key].player = newNameTrimmed; });
-          }
-        }
+      const s = getCurrentSession();
+      if(!s?.players?.[oldName]){ showToast('Player not found.','warn'); return; }
+      // Mutate local state immediately
+      const oldData = JSON.parse(JSON.stringify(s.players[oldName]));
+      oldData.name = newNameTrimmed;
+      s.players[newNameTrimmed] = oldData;
+      delete s.players[oldName];
+      (s.teams || []).forEach(t =>{
+        if(t.playerMembers){
+          const idx = t.playerMembers.indexOf(oldName);
+          if(idx !== -1) t.playerMembers[idx] = newNameTrimmed; }
       });
-      withWriteLock(id, () =>{
-        const s = getCurrentSession();
-        if(!s) return;
-        if(s.players?.[oldName]){
-          s.players[newNameTrimmed] = oldData;
-          delete s.players[oldName];
-          (s.teams || []).forEach(t =>{
-            if(t.playerMembers){
-              const idx = t.playerMembers.indexOf(oldName);
-              if(idx !== -1) t.playerMembers[idx] = newNameTrimmed; }
-          }); }
-      });
-      showToast(`Renamed "${oldName}" to "${newNameTrimmed}"`, 'success', 3000, () =>{
-        renamePlayer(newNameTrimmed, oldName); });
-      renderPlayerPool();
-      renderPlayerMgmt();
-      renderPlayerButtons();
-      renderTeams(); }
+      (s.answerLog || []).forEach(a =>{ if(a.player === oldName) a.player = newNameTrimmed; });
+      if(s.answers) Object.values(s.answers).forEach(a =>{ if(a.player === oldName) a.player = newNameTrimmed; });
+      s.lastUpdated = new Date().toISOString();
+      s.updatedBy = clientId;
+      // Hold writeInFlight for 2s — long enough to block applyGlobalPlayersToSession
+      // from re-adding the old name before globalPlayersRef is updated
+      writeInFlight.add(id);
+      notifySaveStart();
+      Promise.all([
+        sessionsRef.child(id).set(s),
+        globalPlayersRef.child(newNameTrimmed).set(true),
+        globalPlayersRef.child(oldName).remove()
+      ])
+        .then(()=>{
+          notifySaveComplete();
+          setTimeout(()=>writeInFlight.delete(id), 2000);
+          showToast(`Renamed "${oldName}" → "${newNameTrimmed}"`, 'success', 3000, () => renamePlayer(newNameTrimmed, oldName));
+        })
+        .catch(e =>{
+          notifySaveComplete();
+          writeInFlight.delete(id);
+          showFirebaseError('Rename failed: ' + e.message);
+        });
+      renderPlayerPool(); renderPlayerMgmt(); renderPlayerButtons(); renderTeams(); renderAnswerLog(); renderStatistics(); }
     function startMergePlayer(player1){
       const s = getCurrentSession();
       if(!s?.players) return;
-      const otherPlayers = Object.keys(s.players).filter(p => p !== player1);
-      if(otherPlayers.length === 0){
-        showToast('No other players to merge with.');
-        return; }
-      const player2 = prompt(`Merge "${player1}" with (exact name):\n\n${otherPlayers.join('\n')}`, otherPlayers[0]);
-      if(!player2 || !s.players[player2]) return;
+      const otherPlayers = Object.keys(s.players).filter(p => p !== player1).sort();
+      if(otherPlayers.length === 0){ showToast('No other players to merge with.','warn'); return; }
+      const modal = document.getElementById('playerActionModal');
+      const title = document.getElementById('pamTitle');
+      const body  = document.getElementById('pamBody');
+      if(!modal||!title||!body) return;
+      title.textContent = 'Merge Players';
+      const opts = otherPlayers.map(p => `<option value="${p.replace(/"/g,'&quot;')}">${p}</option>`).join('');
+      body.innerHTML = `
+        <p style="font-size:.85em;color:var(--text2);margin-bottom:12px;">
+          Merge <strong>${player1}</strong> into another player. All answers and points will be combined. This can be undone.
+        </p>
+        <label style="font-size:.85em;font-weight:600;color:var(--text2);display:block;margin-bottom:6px;">Search &amp; select player to merge into</label>
+        <input id="pamMergeSearch" type="text" placeholder="Type to filter..."
+          style="width:100%;padding:8px 12px;border:1.5px solid var(--input-border);border-radius:var(--radius-sm) var(--radius-sm) 0 0;border-bottom:none;font-size:.9em;font-family:inherit;background:var(--input-bg);color:var(--input-text);box-sizing:border-box;"
+          oninput="filterMergeList()" />
+        <select id="pamMergeSelect" size="5"
+          style="width:100%;padding:4px;border:1.5px solid var(--input-border);border-radius:0 0 var(--radius-sm) var(--radius-sm);font-size:.9em;font-family:inherit;background:var(--input-bg);color:var(--input-text);box-sizing:border-box;margin-bottom:14px;">${opts}</select>
+        <div style="display:flex;gap:8px;">
+          <button class="button button-success" style="flex:1;" onclick="confirmMergePlayer('${player1.replace(/'/g,"\'")}')">Merge</button>
+          <button class="button" style="flex:1;background:var(--sec-bg);color:var(--text2);" onclick="closePlayerActionModal()">Cancel</button>
+        </div>`;
+      modal.style.display = 'flex';
+      setTimeout(()=>document.getElementById('pamMergeSearch')?.focus(), 50); }
+    function filterMergeList(){
+      const q = (document.getElementById('pamMergeSearch')?.value || '').toLowerCase();
+      const sel = document.getElementById('pamMergeSelect');
+      if(!sel) return;
+      Array.from(sel.options).forEach(o =>{
+        o.style.display = o.text.toLowerCase().includes(q) ? '' : 'none'; }); }
+    function confirmMergePlayer(player1){
+      const sel = document.getElementById('pamMergeSelect');
+      if(!sel) return;
+      const player2 = sel.value;
+      if(!player2){ showToast('Select a player to merge into.','warn'); return; }
+      closePlayerActionModal();
       mergePlayers(player1, player2); }
+    function closePlayerActionModal(){
+      const m = document.getElementById('playerActionModal');
+      if(m) m.style.display = 'none'; }
+    function fuzzyPlayerMatch(name, candidates){
+      // Exact match first
+      if(candidates.includes(name)) return name;
+      const nl = name.toLowerCase().trim();
+      // Case-insensitive exact
+      const ci = candidates.find(c => c.toLowerCase().trim() === nl);
+      if(ci) return ci;
+      // First name match
+      const firstName = nl.split(/\s+/)[0];
+      const fnMatch = candidates.find(c => c.toLowerCase().trim().split(/\s+/)[0] === firstName);
+      if(fnMatch) return fnMatch;
+      // One contains the other
+      const containsMatch = candidates.find(c => c.toLowerCase().includes(nl) || nl.includes(c.toLowerCase().trim()));
+      if(containsMatch) return containsMatch;
+      return null; }
     function mergePlayers(player1, player2){
       const id = state.currentSessionId;
       if(!id) return;
-      const p1Data = getCurrentSession()?.players?.[player1];
-      const p2Data = getCurrentSession()?.players?.[player2];
-      if(!p1Data || !p2Data) return;
+      const s = getCurrentSession();
+      const allPlayers = Object.keys(s?.players || {});
+      const resolved1 = fuzzyPlayerMatch(player1, allPlayers) || player1;
+      const resolved2 = fuzzyPlayerMatch(player2, allPlayers) || player2;
+      const p1Data = s?.players?.[resolved1];
+      const p2Data = s?.players?.[resolved2];
+      if(!p1Data || !p2Data){ showToast('Could not find both players to merge.','warn'); return; }
       const mergedData = {
-        name: player2,
+        name: resolved2,
         points: (p1Data.points || 0) + (p2Data.points || 0),
         answers: [...(p1Data.answers || []), ...(p2Data.answers || [])]
       };
-      updateSessionAtomic(id, s =>{
-        if(s.players?.[player1]){
-          s.players[player2] = mergedData;
-          delete s.players[player1];
-          (s.teams || []).forEach(t =>{
-            if(t.playerMembers){
-              const idx = t.playerMembers.indexOf(player1);
-              if(idx !== -1){
-                t.playerMembers.splice(idx, 1);
-                if(!t.playerMembers.includes(player2)) t.playerMembers.push(player2); }
-            }
-          });
-          (s.answerLog || []).forEach(a =>{
-            if(a.player === player1) a.player = player2; });
-          if(s.answers){
-            Object.keys(s.answers).forEach(key =>{
-              if(s.answers[key].player === player1) s.answers[key].player = player2; });
-          }
+      // Mutate local state immediately
+      s.players[resolved2] = JSON.parse(JSON.stringify(mergedData));
+      delete s.players[resolved1];
+      (s.teams || []).forEach(t =>{
+        if(t.playerMembers){
+          const idx = t.playerMembers.indexOf(resolved1);
+          if(idx !== -1){
+            t.playerMembers.splice(idx, 1);
+            if(!t.playerMembers.includes(resolved2)) t.playerMembers.push(resolved2); }
         }
       });
-      withWriteLock(id, () =>{
-        const s = getCurrentSession();
-        if(!s?.players) return;
-        if(s.players[player1]){
-          s.players[player2] = mergedData;
-          delete s.players[player1];
-          (s.teams || []).forEach(t =>{
-            if(t.playerMembers){
-              const idx = t.playerMembers.indexOf(player1);
-              if(idx !== -1){
-                t.playerMembers.splice(idx, 1);
-                if(!t.playerMembers.includes(player2)) t.playerMembers.push(player2); }
-            }
-          }); }
-      });
-      showToast(`Merged "${player1}" into "${player2}"`, 'success', 3000, () =>{
-        splitPlayers(player1, player2, p1Data, p2Data); });
-      renderPlayerPool();
-      renderPlayerMgmt();
-      renderPlayerButtons();
-      renderTeams();
-      renderAnswerLog();
-      renderStatistics(); }
+      (s.answerLog || []).forEach(a =>{ if(a.player === resolved1) a.player = resolved2; });
+      if(s.answers) Object.values(s.answers).forEach(a =>{ if(a.player === resolved1) a.player = resolved2; });
+      s.lastUpdated = new Date().toISOString();
+      s.updatedBy = clientId;
+      writeInFlight.add(id);
+      notifySaveStart();
+      Promise.all([
+        sessionsRef.child(id).set(s),
+        globalPlayersRef.child(resolved1).remove()
+      ])
+        .then(()=>{
+          notifySaveComplete();
+          setTimeout(()=>writeInFlight.delete(id), 2000);
+          showToast(`Merged "${resolved1}" into "${resolved2}"`, 'success', 4000, () => splitPlayers(resolved1, resolved2, p1Data, p2Data));
+        })
+        .catch(e =>{
+          notifySaveComplete();
+          writeInFlight.delete(id);
+          showFirebaseError('Merge failed: ' + e.message);
+        });
+      renderPlayerPool(); renderPlayerMgmt(); renderPlayerButtons(); renderTeams(); renderAnswerLog(); renderStatistics(); }
     function splitPlayers(player1, player2, p1Data, p2Data){
       const id = state.currentSessionId;
       if(!id) return;
