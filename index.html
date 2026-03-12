@@ -373,6 +373,20 @@
     .state-error{ background:rgba(255,90,90,.1); border-color:rgba(255,90,90,.28); cursor:help; }
     .state-error .save-ring svg{ animation:none; opacity:.45; }
     .state-error .save-ring-dot::after{ background:#ff6b6b; box-shadow:0 0 4px 1px rgba(255,107,107,.55); }
+    /* GitHub deploy indicator — same ring style */
+    .gh-deploy-indicator{ width:30px; height:30px; padding:0; border-radius:50%; flex-shrink:0; background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.28); display:inline-flex; align-items:center; justify-content:center; overflow:hidden; transition:background 1.4s ease, border-color 1.4s ease, box-shadow 1.4s ease; cursor:default; }
+    .gh-deploy-indicator .save-ring svg{ animation:save-spin 2.8s linear infinite; }
+    .gh-state-unknown .save-ring svg { opacity:.3; }
+    .gh-state-unknown .save-ring-dot::after{ content:''; width:7px; height:7px; border-radius:50%; background:rgba(255,255,255,.2); display:block; }
+    .gh-state-pending{ background:rgba(255,212,59,.12); border-color:rgba(255,212,59,.35); box-shadow:0 0 6px rgba(255,212,59,.2); }
+    .gh-state-pending .save-ring svg { opacity:.9; }
+    .gh-state-pending .save-ring-dot::after{ content:''; width:7px; height:7px; border-radius:50%; background:#ffd43b; box-shadow:0 0 5px 2px rgba(255,212,59,.6); transform:scale(1.2); display:block; }
+    .gh-state-success{ background:rgba(56,239,125,.14); border-color:rgba(56,239,125,.3); box-shadow:0 0 7px rgba(56,239,125,.18); }
+    .gh-state-success .save-ring svg { opacity:.5; animation:none; }
+    .gh-state-success .save-ring-dot::after{ content:''; width:7px; height:7px; border-radius:50%; background:#38ef7d; box-shadow:0 0 5px 2px rgba(56,239,125,.6); display:block; }
+    .gh-state-failure{ background:rgba(255,90,90,.1); border-color:rgba(255,90,90,.28); }
+    .gh-state-failure .save-ring svg { animation:none; opacity:.45; }
+    .gh-state-failure .save-ring-dot::after{ content:''; width:7px; height:7px; border-radius:50%; background:#ff6b6b; box-shadow:0 0 4px 1px rgba(255,107,107,.55); display:block; }
     .state-error .save-label{ color:rgba(255,180,180,.85); }
     @keyframes save-spin{ to{ transform:rotate(360deg); } }
     .sidebar-nav{ display:flex; align-items:center; gap:8px; padding:8px 10px; background:linear-gradient(135deg, var(--primary), var(--secondary)); border-radius:var(--radius-sm); margin-bottom:12px; box-shadow:var(--shadow-sm); position:relative; z-index:50; flex-shrink:0; }
@@ -487,6 +501,7 @@
           <span id="toggleLabelAnalytics" class="header-toggle-label" style="color:rgba(255,255,255,.55);">Stats</span>
         </div>
         <button class="header-btn round" onclick="openHelpModal()" title="Help / Tutorial">?</button>
+        <span id="ghDeployStatus" class="gh-deploy-indicator gh-state-unknown" title="GitHub deploy status"><span class="save-ring"><svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="8" r="6" stroke="rgba(255,255,255,0.25)" stroke-width="2"/><path d="M8 2 A6 6 0 0 1 14 8" stroke="white" stroke-width="2" stroke-linecap="round"/></svg><span class="save-ring-dot"></span></span></span>
         <span id="autosaveStatus" class="auto-save-indicator state-connecting"><span class="save-ring"><svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="8" r="6" stroke="rgba(255,255,255,0.25)" stroke-width="2"/><path d="M8 2 A6 6 0 0 1 14 8" stroke="white" stroke-width="2" stroke-linecap="round"/></svg><span class="save-ring-dot"></span></span><span class="save-label">Connecting…</span></span>
       </div></div>
     <div id="updateBanner"></div>
@@ -1478,6 +1493,46 @@
         _flashTimer = setTimeout(() =>{ _flashTimer = null; _setIndicatorState('idle', 'Synced'); }, 2000);
     }
     function notifySaveError(msg){ clearTimeout(_flashTimer); _flashTimer = null; showFirebaseError(msg); }
+
+    // ── GitHub Deploy Status ──────────────────────────────────────────────────
+    const GH_API = 'https://api.github.com/repos/ajani190819-ops/HSEQB/actions/runs?per_page=1';
+    const GH_TOKEN = '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';
+    const GH_POLL_INTERVAL = 10000; // 10s
+    let _ghPollTimer = null;
+    function _setGhState(state, title){
+      const el = document.getElementById('ghDeployStatus');
+      if(!el) return;
+      el.className = 'gh-deploy-indicator gh-state-' + state;
+      el.title = title;
+    }
+    async function checkGhDeploy(){
+      try {
+        const res = await fetch(GH_API, { headers:{ Accept:'application/vnd.github+json', Authorization:'Bearer '+GH_TOKEN } });
+        if(!res.ok){ _setGhState('unknown', 'GitHub status unavailable'); return; }
+        const data = await res.json();
+        const run = data.workflow_runs?.[0];
+        if(!run){ _setGhState('unknown', 'No deploy runs found'); return; }
+        const { status, conclusion, display_title, created_at } = run;
+        const ago = Math.round((Date.now() - new Date(created_at).getTime()) / 60000);
+        const agoStr = ago < 60 ? ago+'m ago' : Math.round(ago/60)+'h ago';
+        if(status === 'in_progress' || status === 'queued' || status === 'waiting'){
+          _setGhState('pending', `Deploying… — "${display_title}" (${agoStr})`);
+        } else if(status === 'completed' && conclusion === 'success'){
+          _setGhState('success', `Deploy succeeded — "${display_title}" (${agoStr})`);
+        } else if(status === 'completed' && (conclusion === 'failure' || conclusion === 'cancelled')){
+          _setGhState('failure', `Deploy ${conclusion} — "${display_title}" (${agoStr})`);
+        } else {
+          _setGhState('unknown', `Status: ${status}/${conclusion||'—'} — "${display_title}"`);
+        }
+      } catch(e){
+        _setGhState('unknown', 'GitHub status unavailable');
+      }
+    }
+    function startGhPolling(){
+      checkGhDeploy();
+      _ghPollTimer = setInterval(checkGhDeploy, GH_POLL_INTERVAL);
+    }
+    startGhPolling();
     const getCurrentSession = ()=>state.sessions[state.currentSessionId]||null;
     function updateFadeMasks(){
       const F=28; ['.qb-scroll','.sidebar-sections','.log-container','.analytics-scroll'].forEach(sel=>{
