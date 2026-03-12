@@ -1004,7 +1004,7 @@
       }
     }
 
-    const VERSION = '3.5.0'; // ← Change only this each release
+    const VERSION = '3.5.1'; // ← Change only this each release
     const DOWNLOAD_URL = 'https://raw.githubusercontent.com/ajani190819-ops/HSEQB/main/index.html';
     const DISPLAY_VERSION = VERSION; const INTERNAL_BUILD = VERSION;
     const FILE_VERSION    = VERSION; const FILE_BUILD_ID  = VERSION;
@@ -3463,19 +3463,25 @@
       const isDark = document.body.classList.contains('dark-mode');
       const gridC  = isDark?'rgba(255,255,255,.1)':'rgba(0,0,0,.08)';
       const labelC = isDark?'#9ba3c0':'#5a6178';
-      // Radar: TU Efficiency (10–15 pts, normalized to 0–100), Accuracy (0–100%), Conversion Rate (0–100%)
-      const effMin=10, effMax=15;
-      const dispEff = Math.min(100, Math.max(0, ((m.tuEfficiency - effMin) / (effMax - effMin)) * 100));
-      const dispAcc = Math.min(100, Math.max(0, m.accuracy));
-      const dispCon = Math.min(100, Math.max(0, m.convRate));
-      const teamEffs = d.activePlayers.map(q => { const c=(q.powers||0)+(q.tossupsCorrect||0); return c>0?(15*q.powers+10*q.tossupsCorrect)/c:0; });
-      const teamCons = d.activePlayers.map(q => { const c=(q.powers||0)+(q.tossupsCorrect||0); return (q.tHeard||0)>0?(100*c)/(q.tHeard||1):0; });
-      const avgEff2 = teamEffs.reduce((a,b)=>a+b,0)/(teamEffs.length||1);
-      const avgAcc2 = d.sAvgAcc||0;
-      const avgCon2 = teamCons.reduce((a,b)=>a+b,0)/(teamCons.length||1);
-      const dispAvgEff = Math.min(100, Math.max(0, ((avgEff2-effMin)/(effMax-effMin))*100));
-      const dispAvgAcc = Math.min(100, Math.max(0, avgAcc2));
-      const dispAvgCon = Math.min(100, Math.max(0, avgCon2));
+      // Radar: Overall Score Breakdown — TU Efficiency, Accuracy, Conversion Rate each normalized to avg=100
+      const _cn = p.tHeard||0; const CK = skillRegressionK;
+      function radarReg(r,a){ return _cn>0?(r*_cn+a*CK)/(_cn+CK):a; }
+      const aEff = radarReg(m.tuEfficiency, d.sAvgEff||0);
+      const aAcc = radarReg(m.accuracy,     d.sAvgAcc||0);
+      const aCon = radarReg(m.convRate,     d.sAvgCon||0);
+      const rEff = Math.min(150, Math.max(50, 100+((aEff-(d.sAvgEff||0))/(d.sStdEff||1))*25));
+      const rAcc = Math.min(150, Math.max(50, 100+((aAcc-(d.sAvgAcc||0))/(d.sStdAcc||1))*25));
+      const rCon = Math.min(150, Math.max(50, 100+((aCon-(d.sAvgCon||0))/(d.sStdCon||1))*25));
+      // Rescale so team mean = exactly 100 per component
+      const allEff = d.activePlayers.map(q => { const qm=d.chartPlayerMetrics(q); const n=q.tHeard||0; const a=n>0?(qm.tuEfficiency*n+(d.sAvgEff||0)*CK)/(n+CK):(d.sAvgEff||0); return Math.min(150,Math.max(50,100+((a-(d.sAvgEff||0))/(d.sStdEff||1))*25)); });
+      const allAcc = d.activePlayers.map(q => { const qm=d.chartPlayerMetrics(q); const n=q.tHeard||0; const a=n>0?(qm.accuracy*n+(d.sAvgAcc||0)*CK)/(n+CK):(d.sAvgAcc||0); return Math.min(150,Math.max(50,100+((a-(d.sAvgAcc||0))/(d.sStdAcc||1))*25)); });
+      const allCon = d.activePlayers.map(q => { const qm=d.chartPlayerMetrics(q); const n=q.tHeard||0; const a=n>0?(qm.convRate*n+(d.sAvgCon||0)*CK)/(n+CK):(d.sAvgCon||0); return Math.min(150,Math.max(50,100+((a-(d.sAvgCon||0))/(d.sStdCon||1))*25)); });
+      const meanEff = allEff.reduce((s,v)=>s+v,0)/(allEff.length||1);
+      const meanAcc = allAcc.reduce((s,v)=>s+v,0)/(allAcc.length||1);
+      const meanCon = allCon.reduce((s,v)=>s+v,0)/(allCon.length||1);
+      const sEff = rEff * (meanEff>0?100/meanEff:1);
+      const sAcc = rAcc * (meanAcc>0?100/meanAcc:1);
+      const sCon = rCon * (meanCon>0?100/meanCon:1);
       destroyChart('chart-player-radar');
       const canvas = document.getElementById('chart-player-radar');
       if(!canvas) return;
@@ -3485,7 +3491,7 @@
           labels:['TU Efficiency','Accuracy','Conversion Rate'],
           datasets:[{
             label:playerName,
-            data:[dispEff, dispAcc, dispCon],
+            data:[sEff, sAcc, sCon],
             backgroundColor:'rgba(102,126,234,0.2)',
             borderColor:'#667eea',
             borderWidth:2,
@@ -3494,8 +3500,8 @@
             pointBorderWidth:2,
             pointRadius:5,
           },{
-            label:'Team Average',
-            data:[dispAvgEff, dispAvgAcc, dispAvgCon],
+            label:'Team Average (100)',
+            data:[100, 100, 100],
             backgroundColor:'rgba(155,163,184,0.08)',
             borderColor:isDark?'rgba(255,255,255,.2)':'rgba(0,0,0,.15)',
             borderWidth:1.5,
@@ -3508,32 +3514,27 @@
           responsive:true, maintainAspectRatio:false,
           plugins:{
             ...d.pluginDefaults,
+            title:{ display:true, text:'Overall Score Breakdown', color:labelC, font:{...d.baseFont, size:13, weight:'700'}, padding:{bottom:8} },
             legend:{ labels:{ color:labelC, font:d.baseFont, boxWidth:12, padding:10 } },
             tooltip:{ callbacks:{
               label: ctx => {
-                if(ctx.datasetIndex===1){
-                  return [
-                    'Team avg: '+avgEff2.toFixed(2)+' pts/correct',
-                    'Team avg: '+avgAcc2.toFixed(1)+'%',
-                    'Team avg: '+avgCon2.toFixed(1)+'%'
-                  ][ctx.dataIndex];
-                }
-                const vals = [m.tuEfficiency.toFixed(2)+' pts/correct', m.accuracy.toFixed(1)+'%', m.convRate.toFixed(1)+'%'];
-                return playerName+': '+vals[ctx.dataIndex];
+                if(ctx.datasetIndex===1) return 'Team avg: 100';
+                const vals=[sEff,sAcc,sCon];
+                return playerName+': '+vals[ctx.dataIndex].toFixed(1);
               }
             }}
           },
           scales:{
             r:{
-              min:0, max:100,
-              ticks:{ stepSize:25, color:labelC, font:{...d.baseFont,size:9}, backdropColor:'transparent', callback: v => v+'%' },
+              min:50, max:150,
+              ticks:{ stepSize:25, color:labelC, font:{...d.baseFont,size:9}, backdropColor:'transparent' },
               grid:{ color:gridC },
               angleLines:{ color:gridC },
               pointLabels:{
                 color:labelC, font:{...d.baseFont,size:11},
-                callback:(label, i) => {
-                  const raw=[m.tuEfficiency.toFixed(2)+' pts', m.accuracy.toFixed(1)+'%', m.convRate.toFixed(1)+'%'];
-                  return [label, raw[i]];
+                callback:(label,i) => {
+                  const vals=[sEff,sAcc,sCon];
+                  return [label, vals[i].toFixed(1)];
                 }
               }
             }
