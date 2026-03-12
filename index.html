@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>HSE Quiz Bowl Tracker</title>
+  <meta name="deploy-sha" content="dev">
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -1014,7 +1015,7 @@
       }
     }
 
-    const VERSION = '3.5.8'; // ← Change only this each release
+    const VERSION = '3.5.9'; // ← Change only this each release
     const DOWNLOAD_URL = 'https://raw.githubusercontent.com/ajani190819-ops/HSEQB/main/index.html';
     const DISPLAY_VERSION = VERSION; const INTERNAL_BUILD = VERSION;
     const FILE_VERSION    = VERSION; const FILE_BUILD_ID  = VERSION;
@@ -1505,6 +1506,7 @@
 
     // ── GitHub Deploy Status ──────────────────────────────────────────────────
     const GH_API = 'https://api.github.com/repos/ajani190819-ops/HSEQB/actions/runs?per_page=1';
+    const GH_COMMITS_API = 'https://api.github.com/repos/ajani190819-ops/HSEQB/commits/main';
     // GH_TOKEN is intentionally NOT stored here — it is loaded from Firebase at runtime
     // To set it: write your token string to Firebase at path: config/githubToken
     let _ghToken = null;
@@ -1512,6 +1514,22 @@
     let _ghPollTimer = null;
     let _ghLastState = null; // track previous state to detect pending→success transition
     let _ghRefreshShown = false; // only show refresh prompt once per page load
+    // Stale cache detection: compare this page's deploy SHA against latest on GitHub Pages
+    const _thisDeploySha = (document.querySelector('meta[name="deploy-sha"]')?.content || 'dev');
+    async function checkStalePage(){
+      // Only relevant on GitHub Pages and only if this page has a real SHA stamped
+      const isGitHubPages = window.location.hostname === 'ajani190819-ops.github.io';
+      if(!isGitHubPages || _thisDeploySha === 'dev' || !_ghToken) return;
+      try{
+        const res = await fetch(GH_COMMITS_API, { headers:{ Accept:'application/vnd.github+json', Authorization:'Bearer '+_ghToken } });
+        if(!res.ok) return;
+        const data = await res.json();
+        const latestSha = data.sha;
+        if(latestSha && latestSha !== _thisDeploySha){
+          _showRefreshPrompt('A newer version is available — you may be seeing a cached page.');
+        }
+      } catch(e){}
+    }
     function _setGhState(state, title){
       const badge = document.getElementById('versionBadge');
       if(!badge) return;
@@ -1519,7 +1537,7 @@
       badge.title = title ? 'Deploy: ' + title : '';
     }
     function dismissRefreshBanner(){ document.getElementById('updateBanner').classList.remove('show'); }
-    function _showRefreshPrompt(){
+    function _showRefreshPrompt(text){
       if(_ghRefreshShown) return;
       _ghRefreshShown = true;
       const banner = document.getElementById('updateBanner');
@@ -1527,7 +1545,7 @@
       const icon = document.createElement('span');
       icon.className = 'ub-icon'; icon.textContent = '🚀';
       const msg = document.createElement('span');
-      msg.className = 'ub-msg'; msg.textContent = 'The site has just been updated — refresh to load the latest version.';
+      msg.className = 'ub-msg'; msg.textContent = text || 'The site has just been updated — refresh to load the latest version.';
       const refreshBtn = document.createElement('button');
       refreshBtn.className = 'ub-btn'; refreshBtn.textContent = '↻ Refresh Now';
       refreshBtn.onclick = () => location.reload();
@@ -1576,6 +1594,7 @@
       // Load token from Firebase first, then begin polling
       db.ref('config/githubToken').once('value').then(snap =>{
         _ghToken = snap.val() || null;
+        checkStalePage(); // check immediately if page is stale/cached
         checkGhDeploy();
         _ghPollTimer = setInterval(checkGhDeploy, GH_POLL_INTERVAL);
       }).catch(()=>{
