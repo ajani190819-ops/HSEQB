@@ -771,13 +771,13 @@
                   </div>
                 </div>
                 <div style="font-size:.78em;color:var(--text2);padding:8px 12px;background:var(--sec-bg);border-radius:6px;border:1.5px solid var(--border);line-height:1.5;">
-                  <strong style="color:var(--text);">Skill Score components:</strong>
+                  <strong style="color:var(--text);">Score components:</strong>
                   <ul style="margin:6px 0 0;padding-left:16px;">
-                    <li><strong>Pot. Pts / Buzz</strong> — (15×Powered + 10×Regular + 30×Correct) / Total Buzz Attempts</li>
-                    <li><strong>Efficiency</strong> — (15×Powered − 5×Negs) / (15×Powered + 10×Regular) — point-weighted power/neg ratio</li>
-                    <li><strong>Accuracy</strong> — (Powered + Regular) / (Powered + Regular + Negs + Misses)</li>
+                    <li><strong>TU Efficiency</strong> — (15P + 10T) / (P+T) — pts per correct answer, range 10–15</li>
+                    <li><strong>Accuracy</strong> — (P+T) / (P+T+N+M) — correct buzz rate, blind to TH</li>
+                    <li><strong>Conversion Rate</strong> — (P+T) / TH — correct answers per TU heard, blind to negs/misses</li>
                   </ul>
-                  Each component is regression-adjusted then normalized to team average (100 = average).
+                  Skill Score = TU Efficiency + Accuracy. Contribution Score = Conversion Rate. Overall = 50/50. All regression-adjusted by TU Heard, normalized to team avg = 100.
                 </div>
               </div>
               <div style="margin-bottom:18px;padding-bottom:16px;border-bottom:1.5px solid var(--border);">
@@ -917,23 +917,30 @@
           <li><strong>Points</strong> — total points across all sessions</li>
           <li><strong>Toss-ups</strong> — total correct toss-up answers (powered + regular); ⚡︎ = answered before power mark for +15 instead of +10</li>
           <li><strong>Actual Pts / 20 TU</strong> — earned points per 20 toss-ups heard: <code>pts / TH × 20</code></li>
-          <li><strong>Accuracy</strong> — correct buzz rate: <code>(P+T) / (P+T+N+M) × 100</code></li>
-          <li><strong>Pot. Pts / Buzz</strong> — potential points per buzz attempt, including full bonus value unlocked by each correct answer: <code>(15P + 10T + 30×(P+T)) / (P+T+N+M)</code></li>
-          <li><strong>Efficiency</strong> — point-weighted power/neg ratio: <code>(15P − 5N) / (15P + 10T)</code>. 1.0 = all powers, no negs; 0.0 = all normals, no negs; negative = negs outweigh power contribution</li>
-          <li><strong>Skill Score</strong> — composite relative rating anchored to team avg (100), built from the three skill components above</li>
+          <li><strong>TU Efficiency</strong> — pts per correct answer: <code>(15P + 10T) / (P+T)</code>. Range 10–15. Blind to negs, misses, and TU heard.</li>
+          <li><strong>Accuracy</strong> — correct buzz rate: <code>(P+T) / (P+T+N+M) × 100</code>. Blind to TU heard and power/normal distinction.</li>
+          <li><strong>Conversion Rate</strong> — correct answers per TU heard: <code>(P+T) / TH × 100</code>. Blind to negs, misses, and power/normal distinction.</li>
+          <li><strong>Skill Score</strong> — TU Efficiency + Accuracy, normalized to team avg = 100</li>
+          <li><strong>Contribution Score</strong> — Conversion Rate, normalized to team avg = 100</li>
+          <li><strong>Overall Score</strong> — 50/50 average of Skill and Contribution, normalized to team avg = 100</li>
         </ul>
-        <h3 class="h3-primary">Skill Score</h3>
-        <p class="mb-8">Skill Score is <strong>relative to the team</strong> — the team average always equals 100. It is built from three orthogonal components, each measuring a distinct dimension of individual skill:</p>
+        <h3 class="h3-primary">Score System</h3>
+        <p class="mb-8">All three scores are <strong>relative to the team</strong> — the team average always equals 100. They are built from three independent components:</p>
         <ul class="m8-pl20" style="margin-bottom:12px;">
-          <li><strong>Pot. Pts / Buzz</strong> <code>(15P + 10T + 30×correct) / attempts</code> — the full value a correct answer delivers to the team (tossup pts + full bonus potential), spread over all buzz attempts including negs and misses</li>
-          <li><strong>Efficiency</strong> <code>(15P − 5N) / (15P + 10T)</code> — how much of your gross tossup potential you preserved: powering early helps, negging costs, never touching the tossup is neutral</li>
-          <li><strong>Accuracy</strong> <code>(P+T) / (P+T+N+M) × 100</code> — buzz discipline: what fraction of all buzz attempts were correct</li>
+          <li><strong>TU Efficiency</strong> <code>(15P+10T)/(P+T)</code> — how valuable your correct answers are. A player who powers consistently will score higher here. Denominator is correct answers only — negs and misses are invisible.</li>
+          <li><strong>Accuracy</strong> <code>(P+T)/(P+T+N+M)×100</code> — how disciplined your buzzing is. Penalizes negging and missing. Denominator is all buzz attempts — TU heard is invisible.</li>
+          <li><strong>Conversion Rate</strong> <code>(P+T)/TH×100</code> — how often you convert a heard tossup into a correct answer for your team. Captures contribution volume. Denominator is TU heard — negs and misses are invisible.</li>
         </ul>
-        <p class="mb-8">Each component is <strong>regression-adjusted</strong> (pulled toward the group average proportionally to sample size) then z-score normalized so the team mean equals 100. A player at 150 is 50% above average; a player at 50 is half the team average. Players with few buzz attempts will have scores closer to 100 until more data accumulates.</p>
-        <p style="margin-bottom:14px;font-family:monospace;font-size:.9em;background:var(--sec-bg);padding:8px 12px;border-radius:6px;border:1.5px solid var(--border);">Skill = (PotPtsPerBuzz/Avg + Efficiency/Avg + Accuracy/Avg) &times; 100 / 3</p>
-        <p class="mb-14">Players with fewer buzz answers than the low-data threshold are flagged and excluded from skill scoring by default. You can manually include or exclude flagged players in the <strong>Low-Data Players</strong> panel. Inclusions sync globally across all devices and persist across sessions.</p>
+        <p class="mb-8"><strong>Skill Score</strong> = average of TU Efficiency + Accuracy. Measures how good you are per opportunity.</p>
+        <p class="mb-8"><strong>Contribution Score</strong> = Conversion Rate. Measures how much you contribute to the team per tossup heard.</p>
+        <p class="mb-8"><strong>Overall Score</strong> = 50/50 Skill + Contribution. Balances individual quality with team contribution.</p>
+        <p class="mb-8">Each component is <strong>regression-adjusted</strong> using TU Heard — players with more TU heard have their actual numbers trusted more, while low-data players are pulled toward the group mean. A player at 150 is 50% above average; a player at 50 is half the team average.</p>
+        <p style="margin-bottom:14px;font-family:monospace;font-size:.85em;background:var(--sec-bg);padding:8px 12px;border-radius:6px;border:1.5px solid var(--border);">Skill = z(TU Efficiency) + z(Accuracy) / 2 &nbsp;·&nbsp; Contribution = z(Conversion Rate) &nbsp;·&nbsp; Overall = (Skill + Contribution) / 2</p>
+        <p class="mb-14">Players below the low-data threshold are excluded from scoring by default. Toggle inclusion in the <strong>Low-Data Players</strong> panel.</p>
+        <h3 class="h3-primary">Radar Chart</h3>
+        <p class="mb-14">Shows all three score components — TU Efficiency, Accuracy, and Conversion Rate — for the selected player vs the team average. TU Efficiency is normalized from its 10–15 range to 0–100 for display. Raw values are shown in point labels and tooltips.</p>
         <h3 class="h3-primary">Leaderboard Sorting</h3>
-        <p class="mb-14">Use the sort pills above the player list to rank by <strong>Points</strong>, <strong>Skill Score</strong>, <strong>Pot. Pts / Buzz</strong>, <strong>Actual Pts / 20 TU</strong>, <strong>Efficiency</strong>, <strong>Accuracy</strong>, <strong>Powers</strong>, <strong>Negs</strong> (fewest first), or <strong>A–Z</strong>. Ties in Points are broken by most Powers, then fewest Negs.</p>
+        <p class="mb-14">Sort by <strong>Points</strong>, <strong>Overall Score</strong>, <strong>Pts / 20 TU</strong>, <strong>Actual Pts / 20 TU</strong>, <strong>TU Efficiency</strong>, <strong>Accuracy</strong>, <strong>Powers</strong>, <strong>Negs</strong> (fewest first), or <strong>A–Z</strong>. Ties in Points are broken by most Powers, then fewest Negs.</p>
         <h3 class="h3-primary">Export &amp; Import</h3>
         <p class="mb-14">Export to <strong>CSV</strong> for spreadsheets or <strong>JSON</strong> to back up and re-import a full session. Both options are in the Data section of the sidebar.</p>
         <h3 class="h3-primary">What Syncs Globally</h3>
@@ -997,7 +1004,7 @@
       }
     }
 
-    const VERSION = '3.4.1'; // ← Change only this each release
+    const VERSION = '3.5.0'; // ← Change only this each release
     const DOWNLOAD_URL = 'https://raw.githubusercontent.com/ajani190819-ops/HSEQB/main/index.html';
     const DISPLAY_VERSION = VERSION; const INTERNAL_BUILD = VERSION;
     const FILE_VERSION    = VERSION; const FILE_BUILD_ID  = VERSION;
@@ -1732,57 +1739,53 @@
       const totalAnsweredModal = powers + tossups + negs + misses + bonuses;
       const totalBuzzAttModal = powers + tossups + negs + misses;
       const modalAccuracy     = totalBuzzAttModal > 0 ? (100 * (powers + tossups)) / totalBuzzAttModal : null;
-      const prDenomModal      = powers + negs;
-      const prValueModal      = prDenomModal > 0 ? (15 * powers - 5 * negs) / prDenomModal :null;
       const confNewDenomModal = powers + tossups;
-      const confNewModal      = confNewDenomModal > 0 ? (100 * powers) / confNewDenomModal :null;
+      const modalTUEff     = confNewDenomModal > 0 ? (15*powers + 10*tossups) / confNewDenomModal : null;
+      const modalConvRate  = playerTHeard > 0 ? (100 * (powers+tossups)) / playerTHeard : null;
       const _buzzes    = powers + tossups + negs;
       const _isLowData = (_buzzes < _MIN_BUZZ || playerTHeard === 0) && !manuallyIncluded.has(playerName);
-      // Modal skill: regression across all active players (same k=15 as main view)
       const _MODAL_K = skillRegressionK;
-      let modalSkill = null;
+      let modalSkill = null; let modalBreakdown = null;
       if (_allActive.length > 0){
-        let _avgPotm=0, _avgEffm=0, _avgAccm=0;
-        let _stdPotm=1, _stdEffm=1, _stdAccm=1;
+        let _avgEffm=0, _avgAccm=0, _avgConm=0;
+        let _stdEffm=1, _stdAccm=1, _stdConm=1;
         _allActive.forEach(q =>{
-          const qBuzzAtt=q.powers+q.tossupsCorrect+q.negs+(q.misses||0);
           const qCorrect=q.powers+q.tossupsCorrect;
-          const qTossupPts=15*q.powers+10*q.tossupsCorrect;
-          const qPotBonus=30*qCorrect;
-          _avgPotm += qBuzzAtt>0 ? (qTossupPts+qPotBonus)/qBuzzAtt : 0;
-          _avgEffm += qBuzzAtt>0 ? (15*q.powers-5*q.negs)/(15*q.powers+10*q.tossupsCorrect||1) : 0;
+          const qBuzzAtt=q.powers+q.tossupsCorrect+q.negs+(q.misses||0);
+          const qTH=q.tHeard||0;
+          _avgEffm += qCorrect>0 ? (15*q.powers+10*q.tossupsCorrect)/qCorrect : 0;
           _avgAccm += qBuzzAtt>0 ? (100*qCorrect)/qBuzzAtt : 0;
+          _avgConm += qTH>0 ? (100*qCorrect)/qTH : 0;
         });
-        _avgPotm/=_allActive.length; _avgEffm/=_allActive.length; _avgAccm/=_allActive.length;
+        _avgEffm/=_allActive.length; _avgAccm/=_allActive.length; _avgConm/=_allActive.length;
         if(_allActive.length>1){
-          let vPot=0,vEff=0,vA=0;
+          let vE=0,vA=0,vC=0;
           _allActive.forEach(q=>{
-            const qBuzzAtt=q.powers+q.tossupsCorrect+q.negs+(q.misses||0);
             const qCorrect=q.powers+q.tossupsCorrect;
-            const qTossupPts=15*q.powers+10*q.tossupsCorrect;
-            const qPotBonus=30*qCorrect;
-            const rPot=qBuzzAtt>0?(qTossupPts+qPotBonus)/qBuzzAtt:0;
-            const rEff=(15*q.powers+10*q.tossupsCorrect)>0?(15*q.powers-5*q.negs)/(15*q.powers+10*q.tossupsCorrect):0;
-            const rA=qBuzzAtt>0?(100*qCorrect)/qBuzzAtt:0;
-            vPot+=(rPot-_avgPotm)**2; vEff+=(rEff-_avgEffm)**2; vA+=(rA-_avgAccm)**2;
+            const qBuzzAtt=q.powers+q.tossupsCorrect+q.negs+(q.misses||0);
+            const qTH=q.tHeard||0;
+            vE+=((qCorrect>0?(15*q.powers+10*q.tossupsCorrect)/qCorrect:0)-_avgEffm)**2;
+            vA+=((qBuzzAtt>0?(100*qCorrect)/qBuzzAtt:0)-_avgAccm)**2;
+            vC+=((qTH>0?(100*qCorrect)/qTH:0)-_avgConm)**2;
           });
-          _stdPotm=Math.sqrt(vPot/_allActive.length)||1;
-          _stdEffm=Math.sqrt(vEff/_allActive.length)||1;
+          _stdEffm=Math.sqrt(vE/_allActive.length)||1;
           _stdAccm=Math.sqrt(vA/_allActive.length)||1;
+          _stdConm=Math.sqrt(vC/_allActive.length)||1;
         }
         const buzzAtt=powers+tossups+negs+misses;
         const correctM=powers+tossups;
-        const tossupPtsM=15*powers+10*tossups;
-        const rawPot=buzzAtt>0?(tossupPtsM+30*correctM)/buzzAtt:0;
-        const rawEff=(15*powers+10*tossups)>0?(15*powers-5*negs)/(15*powers+10*tossups):0;
+        const rawEff=correctM>0?(15*powers+10*tossups)/correctM:0;
         const rawAcc=buzzAtt>0?(100*correctM)/buzzAtt:0;
-        const _n = buzzAtt;
-        function mReg(raw,avg){ return (raw*_n+avg*_MODAL_K)/(_n+_MODAL_K); }
-        const aPot=mReg(rawPot,_avgPotm), aEff=mReg(rawEff,_avgEffm), aAcc=mReg(rawAcc,_avgAccm);
-        const mPot=Math.min(150,Math.max(50,100+((aPot-_avgPotm)/_stdPotm)*25));
+        const rawCon=playerTHeard>0?(100*correctM)/playerTHeard:0;
+        const _n = playerTHeard || 0;
+        function mReg(raw,avg){ return _n > 0 ? (raw*_n+avg*_MODAL_K)/(_n+_MODAL_K) : avg; }
+        const aEff=mReg(rawEff,_avgEffm), aAcc=mReg(rawAcc,_avgAccm), aCon=mReg(rawCon,_avgConm);
         const mEff=Math.min(150,Math.max(50,100+((aEff-_avgEffm)/_stdEffm)*25));
-        const mA  =Math.min(150,Math.max(50,100+((aAcc-_avgAccm)/_stdAccm)*25));
-        modalSkill=(mPot+mEff+mA)/3;
+        const mAcc=Math.min(150,Math.max(50,100+((aAcc-_avgAccm)/_stdAccm)*25));
+        const mCon=Math.min(150,Math.max(50,100+((aCon-_avgConm)/_stdConm)*25));
+        const mSkill=(mEff+mAcc)/2;
+        modalSkill=(mSkill+mCon)/2;
+        modalBreakdown={ skill:mSkill, contribution:mCon, overall:modalSkill };
       }
       const modalSkillColor = 'var(--primary)';
       function metricRow(value, label, type){
@@ -2269,9 +2272,9 @@
           colHeaders:['Team', 'Avg / Player'],
           rows:[
            { label:'Accuracy',               total:teamAccuracy,      avg:avgAccuracy,      totalColor:accColor(teamAccuracy),  avgColor:accColor(avgAccuracy)  },
-           { label:'Efficiency (avg)',        total:avgRate(p=>{ const g=15*p.powers+10*p.tossupsCorrect; return g>0?(15*p.powers-5*p.negs)/g:null; },false), avg:'—', totalColor:'var(--primary)', avgColor:'var(--primary)' },
+           { label:'TU Efficiency (avg)',     total:avgRate(p=>{ const c=(p.powers||0)+(p.tossupsCorrect||0); return c>0?(15*p.powers+10*p.tossupsCorrect)/c:null; },false), avg:'—', totalColor:'var(--primary)', avgColor:'var(--primary)' },
+           { label:'Conversion Rate (avg)',   total:avgRate(p=>{ const c=(p.powers||0)+(p.tossupsCorrect||0); const tH=p.tHeard||0; return tH>0?(100*c)/tH:null; },false), avg:'—', totalColor:'var(--text2)', avgColor:'var(--text2)' },
            { label:'Actual Pts / 20 TU',     total:teamActualPts20,   avg:avgActualPts20,   totalColor:'var(--primary)', avgColor:'var(--primary)' },
-           { label:'Pot. Pts / Buzz (avg)',   total:avgRate(p=>{ const b=(p.powers||0)+(p.tossupsCorrect||0)+(p.negs||0)+(p.misses||0); const c=(p.powers||0)+(p.tossupsCorrect||0); return b>0?(15*p.powers+10*p.tossupsCorrect+30*c)/b:null; },false), avg:'—', totalColor:'var(--text2)', avgColor:'var(--text2)' },
           ]
         },
       ];
@@ -2415,62 +2418,67 @@
         const tH = p.tHeard || 0;
         const totalBuzzAttempts = (p.powers||0) + (p.tossupsCorrect||0) + (p.negs||0) + (p.misses||0);
         const correctBuzzes = (p.powers||0) + (p.tossupsCorrect||0);
-        // Potential Pts / Buzz: tossup value + 30pt bonus potential per correct answer
-        // Uses 30 (full bonus) as the theoretical value unlocked by each correct tossup
-        const tossupPts = 15*(p.powers||0) + 10*(p.tossupsCorrect||0);
-        const potBonusPts = 30 * correctBuzzes;
-        const potPpb = totalBuzzAttempts > 0 ? (tossupPts + potBonusPts) / totalBuzzAttempts : 0;
-        // Efficiency: (15P - 5N) / (15P + 10T) — point-weighted power/neg ratio
-        // Powers help proportionally more than negs hurt; denominator = gross tossup potential
-        const grossTossupPts = 15*(p.powers||0) + 10*(p.tossupsCorrect||0);
-        const efficiency = grossTossupPts > 0 ? (15*(p.powers||0) - 5*(p.negs||0)) / grossTossupPts : 0;
-        // Accuracy: correct buzzes / all buzz attempts — buzz discipline
+        // Tossup Efficiency: pts per correct answer. Range 10–15. Blind to negs/misses/TH.
+        const tuEfficiency = correctBuzzes > 0 ? (15*(p.powers||0) + 10*(p.tossupsCorrect||0)) / correctBuzzes : 0;
+        // Accuracy: correct buzz rate. Blind to power/normal distinction and TH.
         const accuracy = totalBuzzAttempts > 0 ? (100 * correctBuzzes) / totalBuzzAttempts : 0;
-        return { potPpb, efficiency, accuracy, tH };
+        // Conversion Rate: correct answers per TU heard. Blind to negs/misses and power/normal distinction.
+        const convRate = tH > 0 ? (100 * correctBuzzes) / tH : 0;
+        return { tuEfficiency, accuracy, convRate, tH, totalBuzzAttempts };
       }
       function calcSkill(p){
         const m = playerMetrics(p);
-        const n = (p.powers||0) + (p.tossupsCorrect||0) + (p.negs||0) + (p.misses||0);
-        function regress(raw, avg){ return (raw*n + avg*SKILL_K) / (n + SKILL_K); }
-        const adjPot = regress(m.potPpb,    avgPot);
-        const adjEff = regress(m.efficiency, avgEff);
-        const adjAcc = regress(m.accuracy,   avgAcc);
-        const sPot = Math.min(150, Math.max(50, 100 + ((adjPot - avgPot) / stdPot) * 25));
+        const n = p.tHeard || 0;
+        function regress(raw, avg, std){ return n > 0 ? (raw*n + avg*SKILL_K) / (n + SKILL_K) : avg; }
+        // Skill Score: Tossup Efficiency + Accuracy (avg = 100 each)
+        const adjEff = regress(m.tuEfficiency, avgEff);
+        const adjAcc = regress(m.accuracy,     avgAcc);
         const sEff = Math.min(150, Math.max(50, 100 + ((adjEff - avgEff) / stdEff) * 25));
-        const sA   = Math.min(150, Math.max(50, 100 + ((adjAcc - avgAcc) / stdAcc) * 25));
-        return (sPot + sEff + sA) / 3;
+        const sAcc = Math.min(150, Math.max(50, 100 + ((adjAcc - avgAcc) / stdAcc) * 25));
+        const skillScore = (sEff + sAcc) / 2;
+        // Contribution Score: Conversion Rate (avg = 100)
+        const adjCon = regress(m.convRate, avgCon);
+        const contributionScore = Math.min(150, Math.max(50, 100 + ((adjCon - avgCon) / stdCon) * 25));
+        // Overall Score: 50/50
+        const overallScore = (skillScore + contributionScore) / 2;
+        return { skillScore, contributionScore, overallScore };
       }
-      // Group stats for z-score normalization (mean + std dev per metric)
-      let avgPot = 0, avgEff = 0, avgAcc = 0;
-      let stdPot = 1, stdEff = 1, stdAcc = 1;
+      // Group stats for z-score normalization
+      let avgEff=0, avgAcc=0, avgCon=0;
+      let stdEff=1, stdAcc=1, stdCon=1;
       if (active.length > 0){
-        active.forEach(p =>{ const m = playerMetrics(p); avgPot += m.potPpb; avgEff += m.efficiency; avgAcc += m.accuracy; });
-        avgPot /= active.length; avgEff /= active.length; avgAcc /= active.length;
+        active.forEach(p =>{ const m=playerMetrics(p); avgEff+=m.tuEfficiency; avgAcc+=m.accuracy; avgCon+=m.convRate; });
+        avgEff/=active.length; avgAcc/=active.length; avgCon/=active.length;
         if (active.length > 1){
-          let vPot=0, vEff=0, vA=0;
-          active.forEach(p =>{ const m=playerMetrics(p); vPot+=(m.potPpb-avgPot)**2; vEff+=(m.efficiency-avgEff)**2; vA+=(m.accuracy-avgAcc)**2; });
-          stdPot = Math.sqrt(vPot/active.length) || 1;
-          stdEff = Math.sqrt(vEff/active.length) || 1;
-          stdAcc = Math.sqrt(vA/active.length)   || 1;
+          let vE=0, vA=0, vC=0;
+          active.forEach(p =>{ const m=playerMetrics(p); vE+=(m.tuEfficiency-avgEff)**2; vA+=(m.accuracy-avgAcc)**2; vC+=(m.convRate-avgCon)**2; });
+          stdEff = Math.sqrt(vE/active.length) || 1;
+          stdAcc = Math.sqrt(vA/active.length) || 1;
+          stdCon = Math.sqrt(vC/active.length) || 1;
         }
       }
-      // Build rescaled skill scores so the team mean is always exactly 100
-      const _rawSkills = active.map(p => ({ name: p.name, raw: calcSkill(p) }));
-      const _rawMean = _rawSkills.length > 0
-        ? _rawSkills.reduce((s, v) => s + v.raw, 0) / _rawSkills.length : 100;
-      const _rescale = _rawMean > 0 ? 100 / _rawMean : 1;
-      const skillMap = Object.fromEntries(_rawSkills.map(e => [e.name, e.raw * _rescale]));
-      function getSkill(p){ return skillMap[p.name] ?? null; }
-      const qualifiedSkills = _rawSkills.map(e => e.raw * _rescale);
-      const avgSkillScore = 100; // always exactly 100 by construction
+      // Build rescaled scores so team mean is always exactly 100 for each
+      const _rawScores = active.map(p => ({ name: p.name, ...calcSkill(p) }));
+      const _meanSkill = _rawScores.reduce((s,v)=>s+v.skillScore,0) / (_rawScores.length||1);
+      const _meanCont  = _rawScores.reduce((s,v)=>s+v.contributionScore,0) / (_rawScores.length||1);
+      const _meanOver  = _rawScores.reduce((s,v)=>s+v.overallScore,0) / (_rawScores.length||1);
+      const _rsSkill = _meanSkill > 0 ? 100/_meanSkill : 1;
+      const _rsCont  = _meanCont  > 0 ? 100/_meanCont  : 1;
+      const _rsOver  = _meanOver  > 0 ? 100/_meanOver  : 1;
+      const skillMap = Object.fromEntries(_rawScores.map(e => [e.name, {
+        skill: e.skillScore * _rsSkill,
+        contribution: e.contributionScore * _rsCont,
+        overall: e.overallScore * _rsOver
+      }]));
+      function getSkill(p){ return skillMap[p.name]?.overall ?? null; }
+      function getSkillBreakdown(p){ return skillMap[p.name] ?? null; }
+      const avgSkillScore = 100;
       const hasQualified = qualified.length > 0;
       const lowDataList  = [...lowData].filter(n => active.find(p => p.name === n));
-      const _avgSkillCol = avgSkillScore === null ? 'var(--text3)' :avgSkillScore >= 110 ? 'var(--success)' :'var(--primary)';
-      const _avgSkillVal = avgSkillScore !== null ? avgSkillScore.toFixed(1) :'—';
       html += `<div style="background:var(--sec-bg);border:1.5px solid var(--border);border-radius:10px;margin-bottom:var(--sp);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;">
         <div style="font-size:.78em;color:var(--text3);">
-          <strong style="color:var(--text2);">Skill Score:</strong>
-          Pot. Pts/Buzz + Efficiency + Accuracy &nbsp;·&nbsp; k = ${skillRegressionK} &nbsp;·&nbsp; Threshold ${skillThresholdPct}%
+          <strong style="color:var(--text2);">Scores:</strong>
+          Skill (TU Efficiency + Accuracy) &nbsp;·&nbsp; Contribution (Conversion Rate) &nbsp;·&nbsp; Overall (50/50) &nbsp;·&nbsp; k = ${skillRegressionK} &nbsp;·&nbsp; Threshold ${skillThresholdPct}%
         </div>
         <button onclick="showSection('sec-danger')" style="font-size:.75em;font-weight:700;padding:4px 10px;border-radius:6px;border:1.5px solid var(--border);background:var(--card);color:var(--text2);cursor:pointer;white-space:nowrap;">Configure &#8599;</button>
       </div>`;
@@ -2507,10 +2515,10 @@
       }
       const sortOptions = [
        { key:'points',     label:'Points' },
-       { key:'skill',      label:'Skill' },
+       { key:'skill',      label:'Overall Score' },
        { key:'prodRate',   label:'Pts / 20 TU' },
        { key:'actualRate', label:'Actual Pts / 20 TU' },
-       { key:'powerRate',  label:'Efficiency' },
+       { key:'powerRate',  label:'TU Efficiency' },
        { key:'accuracy',   label:'Accuracy' },
        { key:'powers',     label:'⚡︎ Powered' },
        { key:'negs',       label:'Negs' },
@@ -2526,7 +2534,7 @@
         const m = playerMetrics(p);
         const actualRate = tH > 0 ? (p.points / tH) * 20 :0;
         const skill = getSkill(p) ?? -Infinity;
-        return{ ...p, _ppb:m.potPpb, _actualRate:actualRate, _powerRate:m.efficiency, _accuracy:m.accuracy, _skill:skill };
+        return{ ...p, _ppb:m.convRate, _actualRate:actualRate, _powerRate:m.tuEfficiency, _accuracy:m.accuracy, _skill:skill };
       }).sort((a, b) =>{
         switch (playerSortKey){
           case 'skill':     return b._skill      - a._skill;
@@ -2571,11 +2579,12 @@
         const totalBuzzAtt = p.powers + p.tossupsCorrect + p.negs + (p.misses||0);
         const accPct = totalBuzzAtt > 0 ? (100*(p.powers+p.tossupsCorrect))/totalBuzzAtt : 0;
         const accColor = accPct >= 80 ? 'var(--success)' :accPct >= 50 ? '#f39c12' :'var(--danger)';
-        const potVal = m_card.potPpb;
-        const potColor = potVal >= 20 ? 'var(--success)' : potVal >= 10 ? '#f39c12' : 'var(--danger)';
-        const effVal = m_card.efficiency;
-        const grossTossupPts = 15*p.powers + 10*p.tossupsCorrect;
-        const effColor = effVal >= 0.5 ? 'var(--success)' : effVal >= 0 ? '#f39c12' : 'var(--danger)';
+        const potVal = m_card.tuEfficiency;
+        const effColor = potVal >= 13 ? 'var(--success)' : potVal >= 11 ? '#f39c12' : 'var(--danger)';
+        const convVal = m_card.convRate;
+        const convColor = convVal >= 30 ? 'var(--success)' : convVal >= 15 ? '#f39c12' : 'var(--danger)';
+        const correctBuzzes_card = p.powers + p.tossupsCorrect;
+        const breakdown = getSkillBreakdown(p);
         const topCats = Object.entries(p.catMap).sort((a,b) => b[1]-a[1]).slice(0,3);
         const skillVal  = getSkill(p);
         const skillColor = skillVal === null ? 'var(--text3)' :'var(--primary)';
@@ -2617,27 +2626,40 @@
                 <div class="metric-tile"><div class="metric-lbl">Points</div><div class="metric-val" class="primary">${p.points}</div></div>
                 <div class="metric-tile"><div class="metric-lbl">Actual Pts / 20 TU</div><div class="metric-val" class="success">${fmtRate(actualRate)}</div></div>
                 <div class="metric-tile">
-                  <div class="metric-lbl">Pot. Pts / Buzz <span style="font-size:.8em;color:var(--text3);">(skill)</span></div>
-                  <div class="metric-val" style="color:${totalBuzzAtt > 0 ? potColor :'var(--text3)'};">${totalBuzzAtt > 0 ? potVal.toFixed(2) :'—'}</div>
+                  <div class="metric-lbl">TU Efficiency <span style="font-size:.8em;color:var(--text3);">(skill)</span></div>
+                  <div class="metric-val" style="color:${correctBuzzes_card > 0 ? effColor :'var(--text3)'};">${correctBuzzes_card > 0 ? potVal.toFixed(2) :'—'}</div>
                 </div>
                 <div class="metric-tile">
-                  <div class="metric-lbl">Accuracy</div>
+                  <div class="metric-lbl">Accuracy <span style="font-size:.8em;color:var(--text3);">(skill)</span></div>
                   <div class="metric-val" style="color:${accColor};margin-bottom:5px;">${totalBuzzAtt > 0 ? accPct.toFixed(1)+'%' :'—'}</div>
                   ${totalBuzzAtt > 0 ? `<div class="progress-bar"><div style="height:100%;width:${accPct.toFixed(1)}%;background:${accColor};border-radius:4px;"></div></div>` :''}
                 </div>
                 <div class="metric-tile span2">
                   <div class="flex-between">
-                    <div class="metric-lbl">Efficiency <span style="font-size:.8em;color:var(--text3);">(15P−5N)/(15P+10T)</span></div>
-                    <div class="metric-val" style="color:${effColor};">${grossTossupPts > 0 ? effVal.toFixed(3) :'—'}</div>
+                    <div class="metric-lbl">Conversion Rate <span style="font-size:.8em;color:var(--text3);">(contribution)</span></div>
+                    <div class="metric-val" style="color:${tH > 0 ? convColor :'var(--text3)'};">${tH > 0 ? convVal.toFixed(1)+'%' :'—'}</div>
                   </div>
                 </div>
-                <div class="metric-tile span2" style="border-color:${skillVal!==null?skillColor:'var(--border)'};">
+                ${breakdown ? `
+                <div class="metric-tile" style="border-color:var(--primary);">
+                  <div class="metric-lbl">Skill Score <span style="font-weight:400;font-size:.85em;color:var(--text3);">(avg=100)</span></div>
+                  <div class="metric-val" style="color:var(--primary);">${breakdown.skill.toFixed(1)}</div>
+                </div>
+                <div class="metric-tile" style="border-color:var(--success);">
+                  <div class="metric-lbl">Contribution <span style="font-weight:400;font-size:.85em;color:var(--text3);">(avg=100)</span></div>
+                  <div class="metric-val" style="color:var(--success);">${breakdown.contribution.toFixed(1)}</div>
+                </div>
+                <div class="metric-tile span2" style="border-color:var(--primary);">
                   <div class="flex-between">
-                    <div class="metric-lbl">Skill Score <span style="font-weight:400;font-size:.85em;color:var(--text3);">(avg = 100)</span></div>
-                    <div class="metric-val" style="color:${skillColor};">${skillVal!==null ? skillVal.toFixed(1) :'↓ Low data'}</div>
+                    <div class="metric-lbl">Overall Score <span style="font-weight:400;font-size:.85em;color:var(--text3);">(avg=100)</span></div>
+                    <div class="metric-val" style="color:var(--primary);">${breakdown.overall.toFixed(1)}</div>
                   </div>
-                  ${tH === 0 ? `<div style="font-size:.7em;color:var(--text3);font-style:italic;margin-top:4px;">No toss-ups heard recorded — score is estimated from group average.</div>` :''}
-                </div>
+                  ${tH === 0 ? `<div style="font-size:.7em;color:var(--text3);font-style:italic;margin-top:4px;">No toss-ups heard recorded — score estimated from group average.</div>` :''}
+                </div>` : `
+                <div class="metric-tile span2" style="border-color:var(--border);">
+                  <div class="metric-lbl">Overall Score</div>
+                  <div class="metric-val" style="color:var(--text3);">↓ Low data</div>
+                </div>`}
               </div>
               ${topCats.length ? `
               <div style="border-top:1.5px solid var(--border);padding-top:10px;">
@@ -2659,11 +2681,12 @@
         <div style="border-top:1.5px solid var(--border);padding:16px;display:grid;gap:10px;">
           ${[
             ['Actual Pts / 20 TU', '(Total Points ÷ TU Heard) × 20', 'How many points a player actually scores per 20 toss-ups heard. Primary output metric.'],
-            ['Pot. Pts / Buzz (Skill)', '(15P + 10T + 30×(P+T)) ÷ (P+T+N+M)', 'Potential value delivered per buzz attempt — tossup points earned plus full bonus potential (30 pts) unlocked by each correct answer. Rewards powering over normals and penalizes wasted attempts.'],
-            ['Efficiency (Skill)', '(15×Powers − 5×Negs) ÷ (15×Powers + 10×Regular)', 'Point-weighted power/neg ratio. 1.0 = all powers no negs; 0.0 = all normals no negs; negative = negs outweigh power contribution. Powers help more than negs hurt, matching actual scoring weights.'],
-            ['Accuracy (Skill)', '(Powered + Regular) ÷ (Powered + Regular + Negs + Misses) × 100', 'Correct buzz rate across all buzz attempts. Measures buzz discipline independent of how early or late the answer comes.'],
-            ['Skill Score', 'Regression-adjusted average of (Pot.Pts/Buzz + Efficiency + Accuracy), each z-score normalized to group avg = 100', 'Composite relative rating. 100 = team average. Each component is pulled toward the group mean based on sample size before scoring, so low-data players stay close to 100.'],
-            ['Buzz Volume', '(Powered + Regular + Negs) ÷ TU Heard × 100', 'How often the player buzzes per TU heard. Includes all toss-up attempts whether correct or not.'],
+            ['TU Efficiency (Skill)', '(15×Powers + 10×Regular) ÷ (Powers + Regular)', 'Average points earned per correct answer. Range 10–15. Completely blind to negs, misses, and TU heard — measures only the quality of correct answers.'],
+            ['Accuracy (Skill)', '(Powers + Regular) ÷ (Powers + Regular + Negs + Misses) × 100', 'Correct buzz rate across all buzz attempts. Blind to TU heard and power/normal distinction — measures buzz discipline.'],
+            ['Skill Score', 'Regression-adjusted average of (TU Efficiency + Accuracy), normalized to team avg = 100', 'How good a player is per opportunity. 100 = team average. Rewards early, clean buzzing.'],
+            ['Conversion Rate (Contribution)', '(Powers + Regular) ÷ TU Heard × 100', 'How often the player converts a heard tossup into a correct answer. Blind to negs/misses and power/normal distinction — measures contribution volume.'],
+            ['Contribution Score', 'Regression-adjusted Conversion Rate, normalized to team avg = 100', 'How much the player contributes to the team per tossup heard. 100 = team average.'],
+            ['Overall Score', '(Skill Score + Contribution Score) ÷ 2', 'Combined rating. 100 = team average. Balances per-opportunity skill with team contribution volume.'],
           ].map(([name, formula, desc]) => `
             <div style="background:var(--sec-bg);border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;">
               <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
@@ -3166,7 +3189,7 @@
           </div>
           <div style="position:relative;height:260px;"><canvas id="chart-player-radar"></canvas></div>
           <div style="font-size:.72em;color:var(--text3);margin-top:8px;line-height:1.5;text-align:center;">
-            Pot.Pts/Buzz = (15P+10T+30×correct)/attempts &nbsp;·&nbsp; Efficiency = (15P−5N)/(15P+10T) &nbsp;·&nbsp; Accuracy = correct buzzes / attempts
+            TU Efficiency = (15P+10T)/(P+T) &nbsp;·&nbsp; Accuracy = (P+T)/(P+T+N+M) &nbsp;·&nbsp; Conversion Rate = (P+T)/TH
           </div>
         </div>`;
         html += `</div>`;
@@ -3349,29 +3372,34 @@
         function chartPlayerMetrics(p){
           const bAtt = p.powers+p.tossupsCorrect+p.negs+(p.misses||0);
           const correctBuzzes = p.powers+p.tossupsCorrect;
-          const tossupPts = 15*p.powers + 10*p.tossupsCorrect;
-          const potPpb = bAtt > 0 ? (tossupPts + 30*correctBuzzes)/bAtt : 0;
-          const grossTU = tossupPts;
-          const efficiency = grossTU > 0 ? (15*p.powers - 5*p.negs) / grossTU : 0;
+          const tuEfficiency = correctBuzzes > 0 ? (15*p.powers+10*p.tossupsCorrect)/correctBuzzes : 0;
           const accuracy = bAtt > 0 ? (100*correctBuzzes)/bAtt : 0;
-          return { potPpb, efficiency, accuracy };
+          const convRate = (p.tHeard||0) > 0 ? (100*correctBuzzes)/(p.tHeard||1) : 0;
+          const volume = (p.tHeard||0) > 0 ? (bAtt/(p.tHeard||1))*100 : 0;
+          return { tuEfficiency, accuracy, convRate, volume };
         }
-        let sAvgPot=0, sAvgEff=0, sAvgAcc=0, sStdPot=1, sStdEff=1, sStdAcc=1;
+        let sAvgEff=0, sAvgAcc=0, sAvgCon=0, sStdEff=1, sStdAcc=1, sStdCon=1;
         if(activePlayers.length){
-          activePlayers.forEach(p=>{ const m=chartPlayerMetrics(p); sAvgPot+=m.potPpb; sAvgEff+=m.efficiency; sAvgAcc+=m.accuracy; });
-          sAvgPot/=activePlayers.length; sAvgEff/=activePlayers.length; sAvgAcc/=activePlayers.length;
-          if(activePlayers.length>1){let vPot=0,vEff=0,vA=0;activePlayers.forEach(p=>{const m=chartPlayerMetrics(p);vPot+=(m.potPpb-sAvgPot)**2;vEff+=(m.efficiency-sAvgEff)**2;vA+=(m.accuracy-sAvgAcc)**2;});sStdPot=Math.sqrt(vPot/activePlayers.length)||1;sStdEff=Math.sqrt(vEff/activePlayers.length)||1;sStdAcc=Math.sqrt(vA/activePlayers.length)||1;}
+          activePlayers.forEach(p=>{ const m=chartPlayerMetrics(p); sAvgEff+=m.tuEfficiency; sAvgAcc+=m.accuracy; sAvgCon+=m.convRate; });
+          sAvgEff/=activePlayers.length; sAvgAcc/=activePlayers.length; sAvgCon/=activePlayers.length;
+          if(activePlayers.length>1){
+            let vE=0,vA=0,vC=0;
+            activePlayers.forEach(p=>{ const m=chartPlayerMetrics(p); vE+=(m.tuEfficiency-sAvgEff)**2; vA+=(m.accuracy-sAvgAcc)**2; vC+=(m.convRate-sAvgCon)**2; });
+            sStdEff=Math.sqrt(vE/activePlayers.length)||1;
+            sStdAcc=Math.sqrt(vA/activePlayers.length)||1;
+            sStdCon=Math.sqrt(vC/activePlayers.length)||1;
+          }
         }
         function chartCalcSkill(p){
           const m=chartPlayerMetrics(p);
-          const _cn=(p.powers||0)+(p.tossupsCorrect||0)+(p.negs||0)+(p.misses||0);
+          const _cn=(p.tHeard||0);
           const CK=skillRegressionK;
-          function reg(raw,avg){ return (raw*_cn+avg*CK)/(_cn+CK); }
-          const aPot=reg(m.potPpb,sAvgPot), aEff=reg(m.efficiency,sAvgEff), aA=reg(m.accuracy,sAvgAcc);
-          const cPot=Math.min(150,Math.max(50,100+((aPot-sAvgPot)/sStdPot)*25));
+          function reg(raw,avg){ return _cn > 0 ? (raw*_cn+avg*CK)/(_cn+CK) : avg; }
+          const aEff=reg(m.tuEfficiency,sAvgEff), aAcc=reg(m.accuracy,sAvgAcc), aCon=reg(m.convRate,sAvgCon);
           const cEff=Math.min(150,Math.max(50,100+((aEff-sAvgEff)/sStdEff)*25));
-          const cA  =Math.min(150,Math.max(50,100+((aA-sAvgAcc)/sStdAcc)*25));
-          return (cPot+cEff+cA)/3;
+          const cAcc=Math.min(150,Math.max(50,100+((aAcc-sAvgAcc)/sStdAcc)*25));
+          const cCon=Math.min(150,Math.max(50,100+((aCon-sAvgCon)/sStdCon)*25));
+          return ((cEff+cAcc)/2 + cCon)/2;
         }
         const skillLabels=[], skillData=[], skillColors=[];
         activePlayers.forEach((p,i)=>{
@@ -3393,10 +3421,10 @@
           }
         });
         // Store skill calc data for radar chart updates
-        window._skillChartData = { activePlayers, chartPlayerMetrics, chartCalcSkill, sAvgPot, sAvgEff, sAvgAcc, sStdPot, sStdEff, sStdAcc, labelColor, baseFont, gridColor, pluginDefaults };
+        window._skillChartData = { activePlayers, chartPlayerMetrics, chartCalcSkill, sAvgEff, sAvgAcc, sAvgCon, sStdEff, sStdAcc, sStdCon, labelColor, baseFont, gridColor, pluginDefaults };
         updateRadarChart();
       } else if(activePlayers.length===1){
-        window._skillChartData = { activePlayers, chartPlayerMetrics:p=>{ const bAtt=p.powers+p.tossupsCorrect+p.negs+(p.misses||0); const tossupPts=15*p.powers+10*p.tossupsCorrect; const correctBuzzes=p.powers+p.tossupsCorrect; const potPpb=bAtt>0?(tossupPts+30*correctBuzzes)/bAtt:0; const grossTU=15*p.powers+10*p.tossupsCorrect; const efficiency=grossTU>0?(15*p.powers-5*p.negs)/grossTU:0; const accuracy=bAtt>0?(100*correctBuzzes)/bAtt:0; return{potPpb,efficiency,accuracy}; }, chartCalcSkill:()=>100, sAvgPot:0, sAvgEff:0, sAvgAcc:0, labelColor, baseFont, gridColor, pluginDefaults };
+        window._skillChartData = { activePlayers, chartPlayerMetrics:p=>{ const bAtt=p.powers+p.tossupsCorrect+p.negs+(p.misses||0); const c=p.powers+p.tossupsCorrect; const tuEfficiency=c>0?(15*p.powers+10*p.tossupsCorrect)/c:0; const accuracy=bAtt>0?(100*c)/bAtt:0; const convRate=(p.tHeard||0)>0?(100*c)/(p.tHeard||1):0; const volume=(p.tHeard||0)>0?(bAtt/(p.tHeard||1))*100:0; return{tuEfficiency,accuracy,convRate,volume}; }, chartCalcSkill:()=>100, sAvgEff:0, sAvgAcc:0, sAvgCon:0, labelColor, baseFont, gridColor, pluginDefaults };
         updateRadarChart();
       }
       Object.entries(CATEGORY_TREE).forEach(([parent, subs]) =>{
@@ -3435,38 +3463,29 @@
       const isDark = document.body.classList.contains('dark-mode');
       const gridC  = isDark?'rgba(255,255,255,.1)':'rgba(0,0,0,.08)';
       const labelC = isDark?'#9ba3c0':'#5a6178';
-      // Normalise each component relative to group avg for regression adjustment (still used for skill bar chart)
-      const _rn=(p.powers||0)+(p.tossupsCorrect||0)+(p.negs||0)+(p.misses||0); const CK2=skillRegressionK;
-      function radarReg(raw,avg){ return (raw*_rn+avg*CK2)/(_rn+CK2); }
+      // Radar: TU Efficiency (10–15 pts, normalized to 0–100), Accuracy (0–100%), Conversion Rate (0–100%)
+      const effMin=10, effMax=15;
+      const dispEff = Math.min(100, Math.max(0, ((m.tuEfficiency - effMin) / (effMax - effMin)) * 100));
+      const dispAcc = Math.min(100, Math.max(0, m.accuracy));
+      const dispCon = Math.min(100, Math.max(0, m.convRate));
+      const teamEffs = d.activePlayers.map(q => { const c=(q.powers||0)+(q.tossupsCorrect||0); return c>0?(15*q.powers+10*q.tossupsCorrect)/c:0; });
+      const teamCons = d.activePlayers.map(q => { const c=(q.powers||0)+(q.tossupsCorrect||0); return (q.tHeard||0)>0?(100*c)/(q.tHeard||1):0; });
+      const avgEff2 = teamEffs.reduce((a,b)=>a+b,0)/(teamEffs.length||1);
+      const avgAcc2 = d.sAvgAcc||0;
+      const avgCon2 = teamCons.reduce((a,b)=>a+b,0)/(teamCons.length||1);
+      const dispAvgEff = Math.min(100, Math.max(0, ((avgEff2-effMin)/(effMax-effMin))*100));
+      const dispAvgAcc = Math.min(100, Math.max(0, avgAcc2));
+      const dispAvgCon = Math.min(100, Math.max(0, avgCon2));
       destroyChart('chart-player-radar');
       const canvas = document.getElementById('chart-player-radar');
       if(!canvas) return;
-      // Use raw values on each axis with axis-appropriate scales
-      // Pot.Pts/Buzz: 0–max(45, team max rounded up to nearest 5)
-      // Efficiency: -0.5 to 1.0 (point-weighted ratio)
-      // Accuracy: 0–100%
-      // Chart.js radar requires a single shared scale, so we normalize each axis
-      // to a 0–100 display scale and show real values in tooltips + point labels
-      const teamPotMax = Math.max(45, ...d.activePlayers.map(q=>{
-        const b=(q.powers||0)+(q.tossupsCorrect||0)+(q.negs||0)+(q.misses||0);
-        const c=(q.powers||0)+(q.tossupsCorrect||0);
-        return b>0?(15*q.powers+10*q.tossupsCorrect+30*c)/b:0;
-      }));
-      const potCeil = Math.ceil(teamPotMax / 5) * 5;
-      // Normalize to 0–100 display units per axis
-      const dispPot = Math.min(100, Math.max(0, (m.potPpb / potCeil) * 100));
-      const dispEff = Math.min(100, Math.max(0, ((m.efficiency + 0.5) / 1.5) * 100)); // -0.5..1.0 → 0..100
-      const dispAcc = Math.min(100, Math.max(0, m.accuracy)); // already 0–100
-      const dispAvgPot = Math.min(100, Math.max(0, (d.sAvgPot / potCeil) * 100));
-      const dispAvgEff = Math.min(100, Math.max(0, ((d.sAvgEff + 0.5) / 1.5) * 100));
-      const dispAvgAcc = Math.min(100, Math.max(0, d.sAvgAcc));
       _chartInstances['chart-player-radar'] = new Chart(canvas.getContext('2d'),{
         type:'radar',
         data:{
-          labels:['Pot. Pts / Buzz','Efficiency','Accuracy'],
+          labels:['TU Efficiency','Accuracy','Conversion Rate'],
           datasets:[{
             label:playerName,
-            data:[dispPot, dispEff, dispAcc],
+            data:[dispEff, dispAcc, dispCon],
             backgroundColor:'rgba(102,126,234,0.2)',
             borderColor:'#667eea',
             borderWidth:2,
@@ -3476,7 +3495,7 @@
             pointRadius:5,
           },{
             label:'Team Average',
-            data:[dispAvgPot, dispAvgEff, dispAvgAcc],
+            data:[dispAvgEff, dispAvgAcc, dispAvgCon],
             backgroundColor:'rgba(155,163,184,0.08)',
             borderColor:isDark?'rgba(255,255,255,.2)':'rgba(0,0,0,.15)',
             borderWidth:1.5,
@@ -3493,10 +3512,13 @@
             tooltip:{ callbacks:{
               label: ctx => {
                 if(ctx.datasetIndex===1){
-                  const avgVals=[d.sAvgPot.toFixed(2), d.sAvgEff.toFixed(3), d.sAvgAcc.toFixed(1)+'%'];
-                  return 'Team avg: '+avgVals[ctx.dataIndex];
+                  return [
+                    'Team avg: '+avgEff2.toFixed(2)+' pts/correct',
+                    'Team avg: '+avgAcc2.toFixed(1)+'%',
+                    'Team avg: '+avgCon2.toFixed(1)+'%'
+                  ][ctx.dataIndex];
                 }
-                const vals = [m.potPpb.toFixed(2), m.efficiency.toFixed(3), m.accuracy.toFixed(1)+'%'];
+                const vals = [m.tuEfficiency.toFixed(2)+' pts/correct', m.accuracy.toFixed(1)+'%', m.convRate.toFixed(1)+'%'];
                 return playerName+': '+vals[ctx.dataIndex];
               }
             }}
@@ -3504,13 +3526,13 @@
           scales:{
             r:{
               min:0, max:100,
-              ticks:{ display:false },
+              ticks:{ stepSize:25, color:labelC, font:{...d.baseFont,size:9}, backdropColor:'transparent', callback: v => v+'%' },
               grid:{ color:gridC },
               angleLines:{ color:gridC },
               pointLabels:{
                 color:labelC, font:{...d.baseFont,size:11},
                 callback:(label, i) => {
-                  const raw=[m.potPpb.toFixed(1), m.efficiency.toFixed(3), m.accuracy.toFixed(1)+'%'];
+                  const raw=[m.tuEfficiency.toFixed(2)+' pts', m.accuracy.toFixed(1)+'%', m.convRate.toFixed(1)+'%'];
                   return [label, raw[i]];
                 }
               }
