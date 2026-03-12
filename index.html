@@ -378,10 +378,10 @@
     /* gh deploy state: changes version badge border color */
     .gh-deploy-badge{ display:none; }
     @keyframes gh-pulse{ 0%,100%{ opacity:1; } 50%{ opacity:.5; } }
-    #versionBadge.gh-state-success{ border-color:rgba(56,239,125,.9); box-shadow:0 0 6px 1px rgba(56,239,125,.45); transition:border-color .6s, box-shadow .6s; }
-    #versionBadge.gh-state-pending{ border-color:rgba(255,212,59,.9); box-shadow:0 0 6px 1px rgba(255,212,59,.45); animation:gh-pulse 1.2s ease-in-out infinite; transition:border-color .6s, box-shadow .6s; }
-    #versionBadge.gh-state-failure{ border-color:rgba(255,107,107,.9); box-shadow:0 0 6px 1px rgba(255,107,107,.45); transition:border-color .6s, box-shadow .6s; }
-    #versionBadge.gh-state-unknown{ border-color:rgba(255,255,255,.3); box-shadow:none; transition:border-color .6s, box-shadow .6s; }
+    #versionBadge.gh-state-success{ background:rgba(56,239,125,.28); border-color:rgba(56,239,125,.6); box-shadow:none; transition:background 1.4s ease, border-color 1.4s ease; }
+    #versionBadge.gh-state-pending{ background:rgba(255,212,59,.28); border-color:rgba(255,212,59,.7); box-shadow:none; animation:gh-pulse 1.2s ease-in-out infinite; transition:background 1.4s ease, border-color 1.4s ease; }
+    #versionBadge.gh-state-failure{ background:rgba(255,90,90,.25); border-color:rgba(255,90,90,.6); box-shadow:none; transition:background 1.4s ease, border-color 1.4s ease; }
+    #versionBadge.gh-state-unknown{ background:rgba(255,255,255,.18); border-color:rgba(255,255,255,.3); box-shadow:none; transition:background 1.4s ease, border-color 1.4s ease; }
     .state-error .save-label{ color:rgba(255,180,180,.85); }
     @keyframes save-spin{ to{ transform:rotate(360deg); } }
     .sidebar-nav{ display:flex; align-items:center; gap:8px; padding:8px 10px; background:linear-gradient(135deg, var(--primary), var(--secondary)); border-radius:var(--radius-sm); margin-bottom:12px; box-shadow:var(--shadow-sm); position:relative; z-index:50; flex-shrink:0; }
@@ -1014,7 +1014,7 @@
       }
     }
 
-    const VERSION = '3.5.7'; // ← Change only this each release
+    const VERSION = '3.5.8'; // ← Change only this each release
     const DOWNLOAD_URL = 'https://raw.githubusercontent.com/ajani190819-ops/HSEQB/main/index.html';
     const DISPLAY_VERSION = VERSION; const INTERNAL_BUILD = VERSION;
     const FILE_VERSION    = VERSION; const FILE_BUILD_ID  = VERSION;
@@ -1510,11 +1510,34 @@
     let _ghToken = null;
     const GH_POLL_INTERVAL = 3000; // 3s
     let _ghPollTimer = null;
+    let _ghLastState = null; // track previous state to detect pending→success transition
+    let _ghRefreshShown = false; // only show refresh prompt once per page load
     function _setGhState(state, title){
       const badge = document.getElementById('versionBadge');
       if(!badge) return;
       badge.className = 'version-badge gh-state-' + state;
       badge.title = title ? 'Deploy: ' + title : '';
+    }
+    function dismissRefreshBanner(){ document.getElementById('updateBanner').classList.remove('show'); }
+    function _showRefreshPrompt(){
+      if(_ghRefreshShown) return;
+      _ghRefreshShown = true;
+      const banner = document.getElementById('updateBanner');
+      if(!banner) return;
+      const icon = document.createElement('span');
+      icon.className = 'ub-icon'; icon.textContent = '🚀';
+      const msg = document.createElement('span');
+      msg.className = 'ub-msg'; msg.textContent = 'The site has just been updated — refresh to load the latest version.';
+      const refreshBtn = document.createElement('button');
+      refreshBtn.className = 'ub-btn'; refreshBtn.textContent = '↻ Refresh Now';
+      refreshBtn.onclick = () => location.reload();
+      const dismissBtn = document.createElement('button');
+      dismissBtn.className = 'ub-btn ub-dismiss'; dismissBtn.textContent = '✕'; dismissBtn.title = 'Dismiss';
+      dismissBtn.onclick = dismissRefreshBanner;
+      banner.innerHTML = '';
+      banner.append(icon, msg, refreshBtn, dismissBtn);
+      banner.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+      banner.classList.add('show');
     }
     async function checkGhDeploy(){
       try {
@@ -1527,15 +1550,24 @@
         const { status, conclusion, display_title, created_at } = run;
         const ago = Math.round((Date.now() - new Date(created_at).getTime()) / 60000);
         const agoStr = ago < 60 ? ago+'m ago' : Math.round(ago/60)+'h ago';
+        let newState;
         if(status === 'in_progress' || status === 'queued' || status === 'waiting'){
+          newState = 'pending';
           _setGhState('pending', `Deploying… — "${display_title}" (${agoStr})`);
         } else if(status === 'completed' && conclusion === 'success'){
+          newState = 'success';
           _setGhState('success', `Deploy succeeded — "${display_title}" (${agoStr})`);
+          // Show refresh prompt if we witnessed a pending→success transition (i.e. deploy just finished)
+          const isGitHubPages = window.location.hostname === 'ajani190819-ops.github.io';
+          if(isGitHubPages && _ghLastState === 'pending') _showRefreshPrompt();
         } else if(status === 'completed' && (conclusion === 'failure' || conclusion === 'cancelled')){
+          newState = 'failure';
           _setGhState('failure', `Deploy ${conclusion} — "${display_title}" (${agoStr})`);
         } else {
+          newState = 'unknown';
           _setGhState('unknown', `Status: ${status}/${conclusion||'—'} — "${display_title}"`);
         }
+        _ghLastState = newState;
       } catch(e){
         _setGhState('unknown', 'GitHub status unavailable');
       }
