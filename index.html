@@ -489,7 +489,7 @@
     <div class="qb-header" id="qbHeader">
       <div class="qb-header-left"><button class="header-btn sidebar-open-btn" id="sidebarOpenBtn" class="hidden">&#9654; Menu</button></div>
       <div class="qb-header-center">
-        <h1 data-short="HSE QB" data-medium="HSE QB Tracker">HSE Quiz Bowl Tracker <span class="version-badge" id="versionBadge"><span id="ghDeployStatus" class="gh-deploy-badge gh-state-unknown" title="GitHub deploy status"></span></span></h1>
+        <h1 data-short="HSE QB" data-medium="HSE QB Tracker">HSE Quiz Bowl Tracker <span class="version-badge" id="versionBadge"></span></h1>
         <div class="header-session-name" id="headerSessionName"></div>
       </div>
       <div class="header-controls">
@@ -1019,7 +1019,7 @@
       }
     }
 
-    const VERSION = '3.5.4'; // ← Change only this each release
+    const VERSION = '3.5.5'; // ← Change only this each release
     const DOWNLOAD_URL = 'https://raw.githubusercontent.com/ajani190819-ops/HSEQB/main/index.html';
     const DISPLAY_VERSION = VERSION; const INTERNAL_BUILD = VERSION;
     const FILE_VERSION    = VERSION; const FILE_BUILD_ID  = VERSION;
@@ -1166,7 +1166,7 @@
       // Set header version badge to THIS file's version immediately — never reflects Firebase label
       const badge = document.getElementById('versionBadge');
       if (badge){ 
-        badge.textContent = FILE_VERSION;
+        badge.innerHTML = FILE_VERSION + '<span id="ghDeployStatus" class="gh-deploy-badge gh-state-unknown" title="GitHub deploy status"></span>';
         badge.title = `Build: ${FILE_BUILD_ID}`;
         // Use !important to override CSS media query that hides it on mobile
         badge.style.setProperty('display', 'inline', 'important'); }
