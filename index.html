@@ -70,13 +70,14 @@
       transition:filter .3s ease; min-height:54px;
       flex-wrap:nowrap; overflow:hidden;
     }
-    .qb-header-left{ display:contents; }
-    .qb-header-center{ flex:1 1 0; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; overflow:hidden; pointer-events:none; }
+    .qb-header-left{ flex:1; display:flex; align-items:center; }
+    .qb-header-center{ flex:0 0 auto; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; pointer-events:none; }
+    .header-controls{ flex:1; display:flex; justify-content:flex-end; }
     .qb-header h1{ font-size:clamp(1em, 2.6vw, 1.55em); font-weight:700; letter-spacing:-.3px; white-space:nowrap; overflow:hidden; text-overflow:clip; max-width:100%; margin:0; line-height:1.25; text-align:center; }
-    .version-badge{ font-size:.42em; font-weight:600; background:rgba(255,255,255,.18); border:1px solid rgba(255,255,255,.3); color:rgba(255,255,255,.85); padding:2px 7px; border-radius:20px; vertical-align:middle; position:relative; top:-2px; }
+    .version-badge{ font-size:.42em; font-weight:600; background:rgba(255,255,255,.18); border:1px solid rgba(255,255,255,.3); color:rgba(255,255,255,.85); padding:2px 7px; border-radius:20px; vertical-align:middle; position:relative; top:-2px; display:inline-flex; align-items:center; gap:6px; line-height:1; }
     .header-session-name{ font-size:.72em; font-weight:500; color:rgba(255,255,255,.6); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; line-height:1; text-align:center; }
     .header-session-name::before{ content:'Session:'; opacity:.7; }
-    .header-controls{ flex-shrink:0; display:flex; gap:6px; align-items:center; }
+    .header-controls{ flex-shrink:0; display:flex; gap:6px; align-items:center; flex:1; justify-content:flex-end; }
     .qb-header-spacer{ display:none; }
     .header-toggle-label{ font-size:.82em; font-weight:700; flex-shrink:0; }
     @media (max-width:720px){
@@ -87,7 +88,7 @@
       .qb-header h1::before{ content:attr(data-medium); font-size:clamp(.82em, 4.5vw, 1em); font-weight:700; white-space:nowrap; }
     }
     @media (max-width:540px){
-      .qb-header-center{ align-items:flex-start; }
+      .qb-header-center{ align-items:center; max-width:40%; }
       .header-session-name{ display:none; }
       .header-toggle-label{ display:none; }
     }
@@ -374,19 +375,13 @@
     .state-error .save-ring svg{ animation:none; opacity:.45; }
     .state-error .save-ring-dot::after{ background:#ff6b6b; box-shadow:0 0 4px 1px rgba(255,107,107,.55); }
     /* GitHub deploy indicator — same ring style */
-    /* gh-deploy-badge: sits inline next to version badge, shows a small coloured dot */
-    .gh-deploy-badge{ display:none; align-items:center; justify-content:center; vertical-align:middle; margin-left:5px; }
-    .gh-deploy-badge::after{ content:''; width:7px; height:7px; border-radius:50%; display:inline-block; transition:background .6s, box-shadow .6s; }
-    .gh-state-unknown .gh-deploy-badge, .gh-deploy-badge.gh-state-unknown{ display:none; }
-    .gh-deploy-badge.gh-state-success{ display:inline-flex; }
-    .gh-deploy-badge.gh-state-success::after{ background:#38ef7d; box-shadow:0 0 5px 2px rgba(56,239,125,.7); }
-    .gh-deploy-badge.gh-state-pending{ display:inline-flex; }
-    .gh-deploy-badge.gh-state-pending::after{ background:#ffd43b; box-shadow:0 0 5px 2px rgba(255,212,59,.7); animation:gh-pulse 1.2s ease-in-out infinite; }
-    .gh-deploy-badge.gh-state-failure{ display:inline-flex; }
-    .gh-deploy-badge.gh-state-failure::after{ background:#ff6b6b; box-shadow:0 0 4px 2px rgba(255,107,107,.6); }
-    .gh-deploy-badge.gh-state-outdated{ display:inline-flex; }
-    .gh-deploy-badge.gh-state-outdated::after{ background:#f39c12; box-shadow:0 0 4px 2px rgba(243,156,18,.6); }
-    @keyframes gh-pulse{ 0%,100%{ opacity:1; transform:scale(1); } 50%{ opacity:.6; transform:scale(.8); } }
+    /* gh deploy state: changes version badge border color */
+    .gh-deploy-badge{ display:none; }
+    @keyframes gh-pulse{ 0%,100%{ opacity:1; } 50%{ opacity:.5; } }
+    #versionBadge.gh-state-success{ border-color:rgba(56,239,125,.9); box-shadow:0 0 6px 1px rgba(56,239,125,.45); transition:border-color .6s, box-shadow .6s; }
+    #versionBadge.gh-state-pending{ border-color:rgba(255,212,59,.9); box-shadow:0 0 6px 1px rgba(255,212,59,.45); animation:gh-pulse 1.2s ease-in-out infinite; transition:border-color .6s, box-shadow .6s; }
+    #versionBadge.gh-state-failure{ border-color:rgba(255,107,107,.9); box-shadow:0 0 6px 1px rgba(255,107,107,.45); transition:border-color .6s, box-shadow .6s; }
+    #versionBadge.gh-state-unknown{ border-color:rgba(255,255,255,.3); box-shadow:none; transition:border-color .6s, box-shadow .6s; }
     .state-error .save-label{ color:rgba(255,180,180,.85); }
     @keyframes save-spin{ to{ transform:rotate(360deg); } }
     .sidebar-nav{ display:flex; align-items:center; gap:8px; padding:8px 10px; background:linear-gradient(135deg, var(--primary), var(--secondary)); border-radius:var(--radius-sm); margin-bottom:12px; box-shadow:var(--shadow-sm); position:relative; z-index:50; flex-shrink:0; }
@@ -495,8 +490,8 @@
       <div class="header-controls">
         <div style="display:flex;align-items:center;gap:6px;user-select:none;" title="Switch between Tracker and Analytics">
           <span id="toggleLabelTracker" class="header-toggle-label" style="color:rgba(255,255,255,.95);">Tracker</span>
-          <div onclick="toggleAnalytics()" id="viewToggleSwitch" style="width:44px;height:24px;background:rgba(255,255,255,.25);border-radius:12px;border:2px solid rgba(255,255,255,.4);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;">
-            <div id="viewToggleKnob" style="width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:1px;left:2px;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,.3);"></div>
+          <div onclick="toggleAnalytics()" id="viewToggleSwitch" style="width:48px;height:24px;background:rgba(255,255,255,.25);border-radius:12px;border:2px solid rgba(255,255,255,.4);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;">
+            <div id="viewToggleKnob" style="width:16px;height:16px;background:#fff;border-radius:50%;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,.3);"></div>
           </div>
           <span id="toggleLabelAnalytics" class="header-toggle-label" style="color:rgba(255,255,255,.55);">Stats</span>
         </div>
@@ -1019,7 +1014,7 @@
       }
     }
 
-    const VERSION = '3.5.6'; // ← Change only this each release
+    const VERSION = '3.5.7'; // ← Change only this each release
     const DOWNLOAD_URL = 'https://raw.githubusercontent.com/ajani190819-ops/HSEQB/main/index.html';
     const DISPLAY_VERSION = VERSION; const INTERNAL_BUILD = VERSION;
     const FILE_VERSION    = VERSION; const FILE_BUILD_ID  = VERSION;
@@ -1166,7 +1161,7 @@
       // Set header version badge to THIS file's version immediately — never reflects Firebase label
       const badge = document.getElementById('versionBadge');
       if (badge){ 
-        badge.innerHTML = FILE_VERSION + '<span id="ghDeployStatus" class="gh-deploy-badge gh-state-unknown" title="GitHub deploy status"></span>';
+        badge.textContent = FILE_VERSION;
         badge.title = `Build: ${FILE_BUILD_ID}`;
         // Use !important to override CSS media query that hides it on mobile
         badge.style.setProperty('display', 'inline', 'important'); }
@@ -1516,10 +1511,10 @@
     const GH_POLL_INTERVAL = 3000; // 3s
     let _ghPollTimer = null;
     function _setGhState(state, title){
-      const el = document.getElementById('ghDeployStatus');
-      if(!el) return;
-      el.className = 'gh-deploy-badge gh-state-' + state;
-      el.title = title;
+      const badge = document.getElementById('versionBadge');
+      if(!badge) return;
+      badge.className = 'version-badge gh-state-' + state;
+      badge.title = title ? 'Deploy: ' + title : '';
     }
     async function checkGhDeploy(){
       try {
@@ -2183,7 +2178,7 @@
       const sw   = document.getElementById('viewToggleSwitch');
       const tl   = document.getElementById('toggleLabelTracker');
       const al   = document.getElementById('toggleLabelAnalytics');
-      if (knob) knob.style.left = on ? '24px' :'2px';
+      if (knob) knob.style.left = on ? '26px' :'2px';
       if (sw)   sw.style.background = on ? 'rgba(255,255,255,.5)' :'rgba(255,255,255,.25)';
       if (tl)   tl.style.color = on ? 'rgba(255,255,255,.55)' :'rgba(255,255,255,.95)';
       if (al)   al.style.color = on ? 'rgba(255,255,255,.95)' :'rgba(255,255,255,.55)';
