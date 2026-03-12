@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>HSE Quiz Bowl Tracker</title>
   <meta name="deploy-sha" content="dev">
+  <meta name="color-scheme" content="only light dark">
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -36,6 +37,8 @@
       --shadow-xs:0 1px 3px rgba(0,0,0,.3); --shadow-sm:0 2px 8px rgba(0,0,0,.35);
       --shadow-md:0 6px 18px rgba(0,0,0,.45); --shadow-xl:0 20px 48px rgba(0,0,0,.65);
     }
+    :root{ color-scheme: only light dark; }
+    * { -webkit-color-adjust: exact !important; color-adjust: exact !important; forced-color-adjust: none !important; }
     *, *::before, *::after{ margin:0; padding:0; box-sizing:border-box; }
     html{ height:100%; overflow:hidden; }
     ::-webkit-scrollbar{ width:8px; height:8px; }
@@ -1015,7 +1018,7 @@
       }
     }
 
-    const VERSION = '3.5.9'; // ← Change only this each release
+    const VERSION = '3.5.10'; // ← Change only this each release
     const DOWNLOAD_URL = 'https://raw.githubusercontent.com/ajani190819-ops/HSEQB/main/index.html';
     const DISPLAY_VERSION = VERSION; const INTERNAL_BUILD = VERSION;
     const FILE_VERSION    = VERSION; const FILE_BUILD_ID  = VERSION;
