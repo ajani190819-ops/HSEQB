@@ -54,7 +54,7 @@ try{ showToast('&#9888; Error in '+(label||'component')+': '+e.message.slice(0,6
 return null;
 }
 }
-const VERSION = '3.5.14'; // ← Change only this each release
+const VERSION = '3.5.15'; // ← Change only this each release
 const DOWNLOAD_URL = 'https://raw.githubusercontent.com/ajani190819-ops/HSEQB/main/index.html';
 const DISPLAY_VERSION = VERSION; const INTERNAL_BUILD = VERSION;
 const FILE_VERSION    = VERSION; const FILE_BUILD_ID  = VERSION;
@@ -542,17 +542,22 @@ _flashTimer = setTimeout(() =>{ _flashTimer = null; _setIndicatorState('idle', '
 function notifySaveError(msg){ clearTimeout(_flashTimer); _flashTimer = null; showFirebaseError(msg); }
 // ── GitHub Deploy Status ──────────────────────────────────────────────────
 const GH_API = 'https://api.github.com/repos/ajani190819-ops/HSEQB/actions/runs?per_page=1';
-const GH_TOKEN = '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';
+let GH_TOKEN = null; // fetched from Firebase at runtime
 const GH_POLL_INTERVAL = 10000; // 10s
 let _ghPollTimer = null;
 function _setGhState(state, title){
-const el = $('ghDeployStatus');
+const el = $('versionBadge');
 if(!el) return;
-el.className = 'gh-deploy-indicator gh-state-' + state;
+el.className = el.className.replace(/\bgh-state-\S+/g,'').trim() + ' gh-state-' + state;
 el.title = title;
 }
 async function checkGhDeploy(){
 try {
+if(!GH_TOKEN){
+const snap = await db.ref('config/githubToken').get();
+GH_TOKEN = snap.exists() ? snap.val() : null;
+}
+if(!GH_TOKEN){ _setGhState('unknown','GitHub token not configured'); return; }
 const res = await fetch(GH_API, { headers:{ Accept:'application/vnd.github+json', Authorization:'Bearer '+GH_TOKEN } });
 if(!res.ok){ _setGhState('unknown', 'GitHub status unavailable'); return; }
 const data = await res.json();
