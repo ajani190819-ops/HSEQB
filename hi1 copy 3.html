@@ -1,0 +1,1000 @@
+if (!panel) return;
+const open = panel.style.display === 'none';
+panel.style.display = open ? 'block' :'none';
+if (arrow) arrow.style.transform = open ? 'rotate(180deg)' :'';
+if (open) expandedTeamCards.add(id); else expandedTeamCards.delete(id); }
+function filterTeamCards(query){
+const q = query.trim().toLowerCase();
+const cards = document.querySelectorAll('.team-comp-card');
+let visible = 0;
+cards.forEach(card =>{
+const playerCountMatch = _currentTeamFilterCount === 0 || parseInt(card.dataset.playerCount) === _currentTeamFilterCount;
+const queryMatch = !q || card.dataset.search.includes(q);
+const match = playerCountMatch && queryMatch;
+card.style.display = match ? '' :'none';
+if (match) visible++; });
+const summary = $('teamCompSummary');
+if (summary){
+if (q || _currentTeamFilterCount > 0){
+const filters = [];
+if(_currentTeamFilterCount > 0) filters.push(`${_currentTeamFilterCount} player${_currentTeamFilterCount !== 1 ? 's' :''}`);
+if(q) filters.push(`"${query}"`);
+summary.textContent = visible === 0
+? `No results for ${filters.join(' + ')}`
+:`${visible} result${visible !== 1 ? 's' :''} for ${filters.join(' + ')}`;
+} else{
+const total = cards.length;
+summary.innerHTML = `${total} unique team composition${total !== 1 ? 's' :''} across all sessions`;
+}
+}
+}
+var _currentTeamFilterCount = 0;
+function filterTeamsByPlayerCount(count){
+_currentTeamFilterCount = count;
+document.querySelectorAll('[id^="tcfilter-"]').forEach(btn => btn.classList.remove('active'));
+const btn = $('tcfilter-' + (count === 0 ? 'all' : count));
+if(btn) btn.classList.add('active');
+const query = $('teamCompSearch')?.value || '';
+filterTeamCards(query); }
+var _chartInstances ={};
+var _lastChartFingerprint = null;
+function destroyChart(id){ if (_chartInstances[id]){ _chartInstances[id].destroy(); delete _chartInstances[id]; } }
+Chart.register({
+id:'doughnutGaps',
+afterDatasetsDraw(chart){
+if (chart.config.type !== 'doughnut') return;
+const meta0 = chart.getDatasetMeta(0);
+if (!meta0?.data?.length) return;
+const{ ctx } = chart;
+const isDark = document.body.classList.contains('dark-mode');
+const _isDarkNow = document.body.classList.contains('dark-mode');
+const gapCol     = _isDarkNow ? '#1c2128' :'#ffffff';
+const outlineCol = _isDarkNow ? 'rgba(255,255,255,0.55)' :'rgba(0,0,0,0.38)';
+const gapW    = 3;   // gap line width
+const borderW = 2;   // outline width
+meta0.data.forEach(arc =>{
+if (!arc || arc.hidden) return;
+const cx = arc.x, cy = arc.y;
+const inner = arc.innerRadius, outer = arc.outerRadius;
+const start = arc.startAngle, end = arc.endAngle;
+const angularInset = (gapW / 2 + borderW) / outer;
+const arcStart = start + angularInset;
+const arcEnd   = end   - angularInset;
+ctx.save();
+ctx.strokeStyle = gapCol;
+ctx.lineWidth = gapW;
+[start, end].forEach(angle =>{
+ctx.beginPath();
+ctx.moveTo(cx + inner * Math.cos(angle), cy + inner * Math.sin(angle));
+ctx.lineTo(cx + outer * Math.cos(angle), cy + outer * Math.sin(angle));
+ctx.stroke(); });
+ctx.restore();
+if (arcEnd > arcStart){
+const innerInset = inner > 4 ? inner + borderW / 2 :0;
+const outerInset = outer - borderW / 2;
+ctx.save();
+ctx.beginPath();
+ctx.arc(cx, cy, outerInset, arcStart, arcEnd);
+if (innerInset > 0){
+ctx.lineTo(cx + innerInset * Math.cos(arcEnd), cy + innerInset * Math.sin(arcEnd));
+ctx.arc(cx, cy, innerInset, arcEnd, arcStart, true);
+ctx.closePath(); }
+ctx.strokeStyle = outlineCol;
+ctx.lineWidth = borderW;
+ctx.stroke();
+ctx.restore(); }
+}); }
+});
+function makeChart(id, config){
+destroyChart(id);
+const canvas = $(id);
+if (canvas) _chartInstances[id] = new Chart(canvas.getContext('2d'), config); }
+function buildChartFingerprint(log, ps){
+const totalPts = ps.reduce((s, p) => s + p.points, 0);
+const players  = ps.filter(p => p.totalAnswers > 0).map(p => p.name).sort().join('|');
+const cats     = [...new Set(log.map(a => a.category).filter(Boolean))].sort().join('|');
+return log.length + '|' + totalPts + '|' + players + '|' + cats; }
+function renderAnalyticsCharts(allAnswers, ps, globalTHeard){
+const el = $('an-charts'); if (!el) return;
+Object.keys(_chartInstances).forEach(id => destroyChart(id));
+if (!allAnswers.length){
+el.innerHTML = '<p style="color:var(--text2);padding:20px;">No data recorded yet.</p>';
+return; }
+const cnt=t=>allAnswers.filter(a=>a.pointType===t).length;
+const powers=cnt('Power'),tossups=cnt('Toss-up'),bonuses=cnt('Bonus'),negs=cnt('Neg'),misses=cnt('Miss'),deads=cnt('Dead');
+const catAnswers ={}, catByType ={};
+allAnswers.forEach(a=>{ if(!a.category||a.category==='—') return; const cat=getParentCat(a.category); catAnswers[cat]=(catAnswers[cat]||0)+1; if(!catByType[cat])catByType[cat]={Power:0,'Toss-up':0,Bonus:0,Neg:0,Miss:0,Dead:0}; if(catByType[cat][a.pointType]!==undefined)catByType[cat][a.pointType]++; });
+const allCatsByVol = Object.keys(catAnswers).sort((a,b)=>catAnswers[b]-catAnswers[a]);
+const activePlayers=ps.filter(p=>p.totalAnswers>0);
+const playerCatPts ={};
+const allCatsSet = new Set();
+allAnswers.forEach(a=>{ if(!a.category||a.category==='—'||a.player==='— Team Bonus —') return; const cat=getParentCat(a.category); allCatsSet.add(cat); if(!playerCatPts[a.player])playerCatPts[a.player]={}; playerCatPts[a.player][cat]=(playerCatPts[a.player][cat]||0)+(a.points||0); });
+const sumCat=c=>activePlayers.reduce((s,pl)=>s+(playerCatPts[pl.name]?.[c]||0),0);
+const allCatsList=[...allCatsSet].sort((a,b)=>sumCat(b)-sumCat(a));
+const PALETTE=['#667eea','#764ba2','#11998e','#f39c12','#e74c5c','#3498db','#2ecc71','#e67e22','#9b59b6','#1abc9c','#e91e63','#00bcd4','#ff5722','#8bc34a','#ffc107','#607d8b','#795548','#ff9800','#4caf50','#2196f3'];
+const _CC={'Literature':'#3b82f6','Science':'#11998e','History':'#f97316','Social Studies':'#eab308','Pop Culture':'#a855f7','Fine Arts':'#06b6d4'};
+function catColor(p){return catColors[p]||_CC[p]||PALETTE[Object.keys(CATEGORY_TREE).indexOf(p)%PALETTE.length];}
+function mixColor(hex,bg,r){const[R,G,B]=[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16));return`rgb(${Math.round(R*r+bg[0]*(1-r))},${Math.round(G*r+bg[1]*(1-r))},${Math.round(B*r+bg[2]*(1-r))})`;}
+const isDark=document.body.classList.contains('dark-mode');
+const gridColor=isDark?'rgba(255,255,255,.08)':'rgba(0,0,0,.07)', labelColor=isDark?'#9ba3c0':'#5a6178';
+const tooltipBg=isDark?'#1c2128':'#fff', tooltipTxt=isDark?'#e6eaf4':'#1a1a2e';
+const baseFont={family:"-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif",size:12};
+const dm=()=>document.body.classList.contains('dark-mode');
+const pluginDefaults ={
+legend:{ labels:{ color:labelColor, font:baseFont, boxWidth:14, padding:12 } },
+tooltip:{
+backgroundColor:()=>dm()?'#1c2128':'#fff', titleColor:()=>dm()?'#e6eaf4':'#1a1a2e',
+bodyColor:()=>dm()?'#9ba3c0':'#5a6178', borderColor:()=>dm()?'#2d3340':'#dde1ea',
+borderWidth:1, padding:10, cornerRadius:8, position:'nearest', caretSize:6
+}
+};
+const pieOpts ={ responsive:true, maintainAspectRatio:false, plugins:{ ...pluginDefaults, legend:{ ...pluginDefaults.legend, position:allCatsByVol.length > 8 ? 'bottom' :'right' } } };
+const barScales ={
+x:{ticks:{color:labelColor,font:{...baseFont,size:11},maxRotation:40},grid:{color:gridColor}},
+y:{ticks:{color:labelColor,font:baseFont},grid:{color:gridColor},beginAtZero:true}
+};
+const barOpts ={ responsive:true, maintainAspectRatio:false, plugins:pluginDefaults, scales:barScales };
+const catBarH    = Math.max(260, allCatsByVol.length * 24 + 60);
+const PIE_H = 300;
+const catBarH_actual = catBarH;
+const CAT_COUNT   = allCatsByVol.length;
+const PLR_COUNT   = activePlayers.length;
+function barMinW(count){
+if (count <= 5)  return '280px';
+if (count <= 10) return '420px';
+return '100%'; }
+const playerPtsH_raw      = Math.max(520, activePlayers.length * 56 + 180);
+const playerBreakdownH_raw = Math.max(520, activePlayers.length * 56 + 180);
+const playerCatH_raw      = Math.max(520, activePlayers.length * 56 + 180);
+const playerSharedRow = barMinW(PLR_COUNT) !== '100%';
+const playerUnifiedH  = Math.max(playerPtsH_raw, playerBreakdownH_raw, playerCatH_raw);
+const playerPtsH      = playerSharedRow ? playerUnifiedH :playerPtsH_raw;
+const playerBreakdownH = playerSharedRow ? playerUnifiedH :playerBreakdownH_raw;
+const playerCatH      = playerSharedRow ? playerUnifiedH :playerCatH_raw;
+function chartCard(id, title, height, minWidth){
+const mw = minWidth || '280px';
+return `<div class="ch-card" style="min-width:${mw};">
+<div class="ch-title">${title}</div>
+<div style="overflow-x:auto;overflow-y:hidden;border-radius:4px;">
+<div style="position:relative;height:${height}px;min-width:${mw};"><canvas id="${id}"></canvas></div>
+</div>
+</div>`;
+}
+let html = `<style>
+.ch-grid{ display:flex; flex-wrap:wrap; gap:var(--sp); align-items:flex-start; width:100%; box-sizing:border-box; }
+.ch-player-row{ display:flex; flex-wrap:wrap; gap:var(--sp); width:100%; align-items:stretch; }
+.ch-player-row .ch-card{ display:flex; flex-direction:column; }
+.ch-player-row .ch-card > div:last-child{ flex:1; }
+.ch-card{
+background:var(--card);
+border:2px solid var(--border);
+border-radius:10px;
+padding:18px;
+box-shadow:var(--shadow-sm);
+flex:1 1 280px;
+box-sizing:border-box;
+overflow:hidden; }
+.ch-title{ font-size:.95em; font-weight:700; color:var(--primary); margin-bottom:14px; }
+.ch-section{
+width:100%;
+font-size:.75em;
+font-weight:700;
+letter-spacing:.08em;
+text-transform:uppercase;
+color:var(--text3);
+padding:4px 0 2px;
+border-bottom:1.5px solid var(--border);
+margin-bottom:2px; }
+/* Subcat doughnuts:JS sets grid-template-columns inline; cards fill columns evenly */
+.ch-subcat-row{ width:100%; box-sizing:border-box; display:grid; gap:var(--sp); align-items:start; }
+.ch-subcat-row .ch-card{ flex:none; width:100%; min-width:0; box-sizing:border-box; }
+/* On small screens override the inline repeat(N,1fr) to wrap into 2 cols then 1 col */
+@media (max-width:900px){
+.ch-subcat-row{ grid-template-columns:repeat(2, 1fr) !important; }
+}
+@media (max-width:540px){
+.ch-subcat-row{ grid-template-columns:1fr !important; }
+}
+</style>`;
+html += `<div class="ch-grid">`;
+html += `<div class="ch-section">Answer Breakdown</div>`;
+html += chartCard('chart-type-pie', 'Answer Type Breakdown', PIE_H, '260px');
+if (allCatsByVol.length) html += chartCard('chart-cat-vol', 'Category Volume', PIE_H, '260px');
+if (allCatsByVol.length){
+html += `<div class="ch-section">Categories</div>`;
+html += chartCard('chart-cat-breakdown', 'Category Answer Breakdown by Type', catBarH_actual, barMinW(CAT_COUNT));
+}
+const parentsWithSubData = Object.entries(CATEGORY_TREE).filter(([parent, subs]) =>{
+return subs.some(sub => allAnswers.some(a => a.category === sub)); });
+if (parentsWithSubData.length){
+html += `<div class="ch-section">Subcategory Breakdown</div>`;
+const subcatCount = parentsWithSubData.length;
+const subcatCols = subcatCount; // always one row — all charts same size
+const maxSubcatH = parentsWithSubData.reduce((max, [parent, subs]) =>{
+const sliceCount = subs.filter(s => allAnswers.some(a => a.category === s)).length
++ (allAnswers.some(a => a.category === parent) ? 1 :0);
+return Math.max(max, Math.min(360, Math.max(220, 220 + (sliceCount - 3) * 22)));
+}, 220);
+html += `<div class="ch-subcat-row" style="grid-template-columns:repeat(${subcatCols},1fr);">`;
+parentsWithSubData.forEach(([parent, subs]) =>{
+const id = 'chart-subcat-' + parent.replace(/\s+/g,'_');
+const activeSubs = subs.filter(s => allAnswers.some(a => a.category === s));
+const totalVol = allAnswers.length || 1;
+const pColor = catColor(parent);
+const infoRows = activeSubs.map((sub, i) =>{
+const expected   = catFreqs[sub] ?? null;
+const actualCount = allAnswers.filter(a => a.category === sub).length;
+const actualPct  = (actualCount / totalVol) * 100;
+const expStr     = expected != null ? expected.toFixed(1) + '%' :'—';
+const actStr     = actualPct.toFixed(1) + '%';
+const gap        = expected != null ? expected - actualPct :null;
+const gapColor   = gap == null ? 'var(--text3)'
+:gap > 3  ? 'var(--danger)'
+:gap > 1  ? '#f39c12'
+:gap < -1 ? 'var(--success)' :'var(--text3)';
+const bgBase = isDark ? [28,33,40] :[255,255,255];
+const ratio  = activeSubs.length === 1 ? 0.65 :0.30 + 0.55 * (i / (activeSubs.length - 1));
+const swatchCol = mixColor(pColor, bgBase, ratio);
+return `<div style="display:grid;grid-template-columns:10px 1fr auto auto auto;align-items:center;gap:5px;padding:3px 0;border-bottom:1px solid var(--border);">
+<span style="width:10px;height:10px;border-radius:2px;background:${swatchCol};flex-shrink:0;display:inline-block;"></span>
+<span style="font-size:.78em;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${sub}</span>
+<span style="font-size:.76em;color:var(--text2);font-variant-numeric:tabular-nums;text-align:right;">${actStr}</span>
+<span style="font-size:.76em;color:var(--text3);padding:0 2px;">/</span>
+<span style="font-size:.76em;color:${gapColor};font-variant-numeric:tabular-nums;text-align:right;">${expStr}</span>
+</div>`;
+}).join('');
+html += `<div class="ch-card ch-subcat-card" style="display:flex;flex-direction:column;padding:0;overflow:hidden;">
+<!-- Chart panel -->
+<div style="padding:14px 14px 10px;">
+<div class="ch-title" class="mb-10">${parent}</div>
+<div style="position:relative;height:${maxSubcatH}px;width:100%;"><canvas id="${id}"></canvas></div>
+</div>
+<!-- Info panel -->
+<div style="padding:10px 14px 12px;border-top:2px solid var(--border);background:var(--sec-bg);">
+<div style="display:grid;grid-template-columns:10px 1fr auto auto auto;gap:5px;font-size:.68em;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);padding-bottom:4px;margin-bottom:2px;border-bottom:1.5px solid var(--border);">
+<span></span><span>Subcategory</span><span class="text-right">Actual</span><span></span><span class="text-right">Exp.</span>
+</div>
+${infoRows}
+</div>
+</div>`;
+});
+html += `</div>`;
+}
+if (activePlayers.length >= 1){
+html += `<div class="ch-section">Players</div>`;
+html += `<div class="ch-player-row">`;
+if (activePlayers.length > 1)
+html += chartCard('chart-player-pts', 'Total Points by Player', playerPtsH, barMinW(PLR_COUNT));
+if (activePlayers.length > 1)
+html += chartCard('chart-player-breakdown', 'Player Answer Breakdown by Type', playerBreakdownH, barMinW(PLR_COUNT));
+if (allCatsList.length)
+html += chartCard('chart-player-cat', 'Player Points by Category', playerCatH, barMinW(PLR_COUNT));
+html += `</div>`;
+// Skill charts row
+const skillH = Math.max(280, activePlayers.length * 44 + 80);
+html += `<div class="ch-section">Skill</div>`;
+html += `<div class="ch-player-row">`;
+if (activePlayers.length > 1)
+html += chartCard('chart-player-skill', 'Skill Score by Player', skillH, barMinW(PLR_COUNT));
+// Radar card — always show if at least 1 player
+const radarOpts = activePlayers.map(p => `<option value="${p.name.replace(/"/g,'&quot;')}">${p.name}</option>`).join('');
+html += `<div class="ch-card" style="min-width:280px;flex:1 1 280px;">
+<div class="ch-title">Skill Breakdown — Radar</div>
+<div style="margin-bottom:10px;">
+<select id="radarPlayerSelect" onchange="updateRadarChart()"
+style="width:100%;padding:7px 10px;border:1.5px solid var(--input-border);border-radius:var(--radius-sm);font-size:.88em;font-family:inherit;background:var(--input-bg);color:var(--input-text);">
+${radarOpts}
+</select>
+</div>
+<div style="position:relative;height:260px;"><canvas id="chart-player-radar"></canvas></div>
+<div style="font-size:.72em;color:var(--text3);margin-top:8px;line-height:1.5;text-align:center;">
+Volume = buzz attempts/TU heard &nbsp;·&nbsp; Accuracy = correct/attempts &nbsp;·&nbsp; Efficiency = (15P+10T)/(P+T)
+</div>
+</div>`;
+html += `</div>`;
+}
+html += `</div>`;
+el.innerHTML = html;
+if (powers + tossups + bonuses + negs + misses + deads > 0){
+const typeLabels = [], typeData = [], typeColors = [];
+if (powers) { typeLabels.push('TU ⚡︎ Power'); typeData.push(powers);  typeColors.push('#11998e'); }
+if (tossups){ typeLabels.push('Toss-up');     typeData.push(tossups); typeColors.push('#667eea'); }
+if (bonuses){ typeLabels.push('Bonus');   typeData.push(bonuses); typeColors.push('#764ba2'); }
+if (negs)   { typeLabels.push('Neg');     typeData.push(negs);    typeColors.push('#e74c5c'); }
+if (misses) { typeLabels.push('Miss');    typeData.push(misses);  typeColors.push('#f39c12'); }
+if (deads)  { typeLabels.push('Dead');    typeData.push(deads);   typeColors.push('#9ba3b8'); }
+makeChart('chart-type-pie',{ type:'doughnut',
+data:{ labels:typeLabels, datasets:[{ data:typeData, backgroundColor:typeColors, borderColor:'transparent', borderWidth:0 }] },
+options:{ ...pieOpts, plugins:{ ...pieOpts.plugins, legend:{ ...pieOpts.plugins.legend, position:'right' } } }
+}); }
+if (allCatsByVol.length){
+makeChart('chart-cat-vol',{type:'doughnut',
+data:{labels:allCatsByVol,datasets:[{data:allCatsByVol.map(c=>catAnswers[c]),backgroundColor:allCatsByVol.map(c=>catColor(getParentCat(c))+'cc'),borderColor:'transparent',borderWidth:0}]},
+options:pieOpts}); }
+if (allCatsByVol.length){
+makeChart('chart-cat-breakdown',{ type:'bar',
+data:{labels:allCatsByVol,datasets:[
+{label:'Powered TUs', data:allCatsByVol.map(c=>catByType[c]?.Power||0), backgroundColor:'#11998ecc',borderColor:'#11998e',borderWidth:3,borderRadius:3},
+{label:'Toss-ups', data:allCatsByVol.map(c=>catByType[c]?.['Toss-up']||0), backgroundColor:'#667eeacc',borderColor:'#667eea',borderWidth:3,borderRadius:3},
+{label:'Bonuses',  data:allCatsByVol.map(c=>catByType[c]?.Bonus||0),       backgroundColor:'#764ba2cc',borderColor:'#764ba2',borderWidth:3,borderRadius:3},
+{label:'Negs',     data:allCatsByVol.map(c=>catByType[c]?.Neg||0),         backgroundColor:'#e74c5ccc',borderColor:'#e74c5c',borderWidth:3,borderRadius:3},
+{label:'Misses',   data:allCatsByVol.map(c=>catByType[c]?.Miss||0),        backgroundColor:'#f39c12cc',borderColor:'#f39c12',borderWidth:3,borderRadius:3},
+]},
+options:{ ...barOpts, scales:{ ...barScales, x:{ ...barScales.x, stacked:true }, y:{ ...barScales.y, stacked:true } } }
+}); }
+if (activePlayers.length > 0 && allCatsList.length){
+const pNames = activePlayers.map(p => p.name.split(' ')[0]);
+const playerParentPts ={};
+const playerSubPts ={};
+allAnswers.forEach(a =>{
+if (!a.category || a.category === '—' || a.player === '— Team Bonus —') return;
+const parent = getParentCat(a.category);
+const sub    = a.category;
+if (!playerParentPts[a.player]) playerParentPts[a.player] ={};
+playerParentPts[a.player][parent] = (playerParentPts[a.player][parent] || 0) + (a.points || 0);
+if (!playerSubPts[a.player]) playerSubPts[a.player] ={};
+if (!playerSubPts[a.player][parent]) playerSubPts[a.player][parent] ={};
+playerSubPts[a.player][parent][sub] = (playerSubPts[a.player][parent][sub] || 0) + (a.points || 0);
+});
+const parentSet = new Set();
+allAnswers.forEach(a =>{ if (a.category && a.category !== '—') parentSet.add(getParentCat(a.category)); });
+const parentList = [...parentSet].sort((a, b) =>{
+const aT = activePlayers.reduce((s, p) => s + (playerParentPts[p.name]?.[a] || 0), 0);
+const bT = activePlayers.reduce((s, p) => s + (playerParentPts[p.name]?.[b] || 0), 0);
+return bT - aT; });
+function makeHatch(hexColor, tintColor, spacing, angle){
+const size = spacing || 8;
+const c = document.createElement('canvas');
+c.width = size; c.height = size;
+const ctx = c.getContext('2d');
+ctx.fillStyle = tintColor;
+ctx.fillRect(0, 0, size, size);
+ctx.strokeStyle = hexColor;
+ctx.lineWidth = 1.5;
+ctx.beginPath();
+if (angle === 'back'){
+ctx.moveTo(size, 0);     ctx.lineTo(0, size);
+ctx.moveTo(size*2, 0);   ctx.lineTo(0, size*2);
+ctx.moveTo(size, -size); ctx.lineTo(-size, size);
+} else{
+ctx.moveTo(0, 0);     ctx.lineTo(size, size);
+ctx.moveTo(-size, 0); ctx.lineTo(size, size*2);
+ctx.moveTo(0, -size); ctx.lineTo(size*2, size); }
+ctx.stroke();
+const chartCanvas = $('chart-player-cat');
+const ref = (chartCanvas && chartCanvas.getContext) ? chartCanvas :c;
+return ref.getContext('2d').createPattern(c, 'repeat'); }
+function buildPlayerCatDatasets(expandedParents){
+const bgBase = isDark ? [28, 33, 40] :[255, 255, 255];
+const datasets = [];
+parentList.forEach(parent =>{
+const pColor = catColor(parent);
+if (expandedParents.has(parent)){
+const allSubs = CATEGORY_TREE[parent] || [];
+const hasGeneral = activePlayers.some(p => playerSubPts[p.name]?.[parent]?.[parent]);
+const subPool = [];
+if (hasGeneral) subPool.push(parent);
+allSubs.forEach(s =>{ if (activePlayers.some(p => (playerSubPts[p.name]?.[parent]?.[s] || 0) > 0)) subPool.push(s); });
+const totalSubs = subPool.length;
+subPool.forEach((sub, si) =>{
+const minMix = 0.25, maxMix = 0.75;
+const mixRatio = totalSubs === 1 ? 0.55 :minMix + (maxMix - minMix) * (si / (totalSubs - 1));
+const tintColor = mixColor(pColor, bgBase, mixRatio); // Hatch lines on every subcategory bar; alternate direction per sub
+const hatchAngle = si % 2 === 0 ? 'fwd' :'back';
+const bgFill = makeHatch(pColor, tintColor, 7, hatchAngle);
+datasets.push({
+label:sub === parent ? `${parent} (General)` :sub,
+data:activePlayers.map(p => playerSubPts[p.name]?.[parent]?.[sub] || 0),
+backgroundColor:bgFill,
+borderColor:pColor,
+borderWidth:3, borderRadius:2, _parent:parent, _expanded:true,
+}); });
+} else{
+datasets.push({
+label:parent,
+data:activePlayers.map(p => playerParentPts[p.name]?.[parent] || 0),
+backgroundColor:pColor + 'cc',
+borderColor:pColor,
+borderWidth:3, borderRadius:3, _parent:parent, _expanded:false,
+}); }
+});
+return datasets; }
+const expandedParents = new Set();
+function redrawPlayerCat(){
+const datasets = buildPlayerCatDatasets(expandedParents);
+const chart = _chartInstances['chart-player-cat'];
+if (!chart) return;
+chart.data.datasets = datasets;
+chart.update('none');
+const titleEl = chart.canvas.closest('.ch-card')?.querySelector('.ch-title');
+if (titleEl){
+titleEl.textContent = expandedParents.size
+? `Player Points by Category — click expanded segment to collapse`
+:`Player Points by Category — click a segment to expand`;
+}
+}
+makeChart('chart-player-cat',{
+type:'bar',
+data:{ labels:pNames, datasets:buildPlayerCatDatasets(expandedParents) },
+options:{
+...barOpts,
+scales:{ ...barScales, x:{ ...barScales.x, stacked:true }, y:{ ...barScales.y, stacked:true } },
+plugins:{
+...pluginDefaults,
+tooltip:{ ...pluginDefaults.tooltip, mode:'index', intersect:false, itemSort:(a, b) => b.datasetIndex - a.datasetIndex, filter:item => item.raw > 0 },
+legend:{ ...pluginDefaults.legend, position:'bottom', labels:{ ...pluginDefaults.legend.labels, padding:10, boxWidth:12 } }
+},
+onClick(evt, elements){
+if (!elements.length) return;
+const ds = this.data.datasets[elements[0].datasetIndex];
+const parent = ds._parent;
+if (!parent) return;
+if (expandedParents.has(parent)) expandedParents.delete(parent);
+else expandedParents.add(parent);
+redrawPlayerCat(); },
+onHover(evt, elements){
+evt.native.target.style.cursor = elements.length ? 'pointer' :'default'; }
+}
+});
+const titleEl = document.querySelector('#chart-player-cat')?.closest('.ch-card')?.querySelector('.ch-title');
+if (titleEl) titleEl.textContent = 'Player Points by Category — click a segment to expand';
+}
+if (activePlayers.length > 1){
+const pNames = activePlayers.map(p => p.name.split(' ')[0]);
+makeChart('chart-player-breakdown',{ type:'bar',
+data:{
+labels:pNames,
+datasets:[
+{ label:'Powered TUs', data:activePlayers.map(p => p.powers), backgroundColor:'#11998ecc', borderColor:'#11998e', borderWidth:3, borderRadius:3 },
+{ label:'Regular TUs', data:activePlayers.map(p => p.tossupsCorrect), backgroundColor:'#667eeacc', borderColor:'#667eea', borderWidth:3, borderRadius:3 },
+{ label:'Bonuses', data:activePlayers.map(p => p.bonusPoints / 10), backgroundColor:'#764ba2cc', borderColor:'#764ba2', borderWidth:3, borderRadius:3 },
+{ label:'Negs', data:activePlayers.map(p => p.negs), backgroundColor:'#e74c5ccc', borderColor:'#e74c5c', borderWidth:3, borderRadius:3 },
+{ label:'Misses', data:activePlayers.map(p => p.misses || 0), backgroundColor:'#f39c12cc', borderColor:'#f39c12', borderWidth:3, borderRadius:3 },
+]
+},
+options:{ ...barOpts, scales:{ ...barScales, x:{ ...barScales.x, stacked:true }, y:{ ...barScales.y, stacked:true } } }
+}); }
+if (activePlayers.length > 1){
+const pNames = activePlayers.map(p => p.name.split(' ')[0]);
+makeChart('chart-player-pts',{ type:'bar',
+data:{ labels:pNames, datasets:[{ label:'Points', data:activePlayers.map(p => p.points), backgroundColor:activePlayers.map((_, i) => PALETTE[i % PALETTE.length] + 'cc'), borderColor:activePlayers.map((_, i) => PALETTE[i % PALETTE.length]), borderWidth:3, borderRadius:4 }] },
+options:{ ...barOpts, plugins:{ ...barOpts.plugins, legend:{ display:false } } }
+}); }
+// ── Skill Score bar chart ──────────────────────────────────────────────
+if (activePlayers.length > 1){
+// Recompute skill scores using same logic as analytics players tab
+const skillBuzzes = activePlayers.map(p => p.powers + p.tossupsCorrect + p.negs).sort((a,b)=>a-b);
+const skillMedBuzz = skillBuzzes.length ? skillBuzzes[Math.floor(skillBuzzes.length/2)] : 0;
+const skillMinBuzz = Math.floor(skillMedBuzz * (skillThresholdPct/100));
+const skillQualified = activePlayers.filter(p =>
+(p.powers + p.tossupsCorrect + p.negs) >= skillMinBuzz && (p.tHeard||0) > 0);
+function chartPlayerMetrics(p){
+const bAtt = p.powers+p.tossupsCorrect+p.negs+(p.misses||0);
+const correctBuzzes = p.powers+p.tossupsCorrect;
+const tuEfficiency = correctBuzzes > 0 ? (15*p.powers+10*p.tossupsCorrect)/correctBuzzes : 0;
+const accuracy = bAtt > 0 ? (100*correctBuzzes)/bAtt : 0;
+const convRate = (p.tHeard||0) > 0 ? (100*correctBuzzes)/(p.tHeard||1) : 0;
+const volume = (p.tHeard||0) > 0 ? (bAtt/(p.tHeard||1))*100 : 0;
+return { tuEfficiency, accuracy, convRate, volume };
+}
+let sAvgEff=0, sAvgAcc=0, sAvgCon=0, sStdEff=1, sStdAcc=1, sStdCon=1;
+if(activePlayers.length){
+activePlayers.forEach(p=>{ const m=chartPlayerMetrics(p); sAvgEff+=m.tuEfficiency; sAvgAcc+=m.accuracy; sAvgCon+=m.convRate; });
+sAvgEff/=activePlayers.length; sAvgAcc/=activePlayers.length; sAvgCon/=activePlayers.length;
+if(activePlayers.length>1){
+let vE=0,vA=0,vC=0;
+activePlayers.forEach(p=>{ const m=chartPlayerMetrics(p); vE+=(m.tuEfficiency-sAvgEff)**2; vA+=(m.accuracy-sAvgAcc)**2; vC+=(m.convRate-sAvgCon)**2; });
+sStdEff=Math.sqrt(vE/activePlayers.length)||1;
+sStdAcc=Math.sqrt(vA/activePlayers.length)||1;
+sStdCon=Math.sqrt(vC/activePlayers.length)||1;
+}
+}
+function chartCalcSkill(p){
+const m=chartPlayerMetrics(p);
+const _cn=(p.tHeard||0);
+const CK=skillRegressionK;
+function reg(raw,avg){ return _cn > 0 ? (raw*_cn+avg*CK)/(_cn+CK) : avg; }
+const aEff=reg(m.tuEfficiency,sAvgEff), aAcc=reg(m.accuracy,sAvgAcc), aCon=reg(m.convRate,sAvgCon);
+const cEff=Math.min(150,Math.max(50,100+((aEff-sAvgEff)/sStdEff)*25));
+const cAcc=Math.min(150,Math.max(50,100+((aAcc-sAvgAcc)/sStdAcc)*25));
+const cCon=Math.min(150,Math.max(50,100+((aCon-sAvgCon)/sStdCon)*25));
+return ((cEff+cAcc)/2 + cCon)/2;
+}
+const skillLabels=[], skillData=[], skillColors=[];
+activePlayers.forEach((p,i)=>{
+const score = chartCalcSkill(p);
+skillLabels.push(p.name.split(' ')[0]);
+skillData.push(parseFloat(score.toFixed(1)));
+skillColors.push(PALETTE[i%PALETTE.length]+'cc');
+});
+const skillBorderColors = skillColors.map(c=>c.replace('cc',''));
+makeChart('chart-player-skill',{ type:'bar',
+data:{ labels:skillLabels, datasets:[{ label:'Skill Score', data:skillData, backgroundColor:skillColors, borderColor:skillBorderColors, borderWidth:3, borderRadius:4 }] },
+options:{ ...barOpts,
+plugins:{ ...barOpts.plugins, legend:{ display:false },
+tooltip:{ ...barOpts.plugins.tooltip, callbacks:{ label: ctx => ctx.raw===null ? 'Insufficient data' : 'Skill: '+ctx.raw }}
+},
+scales:{ ...barScales, y:{ ...barScales.y, beginAtZero:true,
+title:{ display:true, text:'Skill Score (100 = avg)', color:labelColor, font:{...baseFont,size:11} }
+}}
+}
+});
+// Store skill calc data for radar chart updates
+window._skillChartData = { activePlayers, chartPlayerMetrics, chartCalcSkill, sAvgEff, sAvgAcc, sAvgCon, sStdEff, sStdAcc, sStdCon, labelColor, baseFont, gridColor, pluginDefaults };
+updateRadarChart();
+} else if(activePlayers.length===1){
+window._skillChartData = { activePlayers, chartPlayerMetrics:p=>{ const bAtt=p.powers+p.tossupsCorrect+p.negs+(p.misses||0); const c=p.powers+p.tossupsCorrect; const tuEfficiency=c>0?(15*p.powers+10*p.tossupsCorrect)/c:0; const accuracy=bAtt>0?(100*c)/bAtt:0; const convRate=(p.tHeard||0)>0?(100*c)/(p.tHeard||1):0; const volume=(p.tHeard||0)>0?(bAtt/(p.tHeard||1))*100:0; return{tuEfficiency,accuracy,convRate,volume}; }, chartCalcSkill:()=>100, sAvgEff:0, sAvgAcc:0, sAvgCon:0, labelColor, baseFont, gridColor, pluginDefaults };
+updateRadarChart();
+}
+Object.entries(CATEGORY_TREE).forEach(([parent, subs]) =>{
+const subCounts ={};
+let hasData = false;
+subs.forEach(sub =>{
+const cnt = allAnswers.filter(a => a.category === sub).length;
+if (cnt > 0){ subCounts[sub] = cnt; hasData = true; }
+});
+const generalCnt = allAnswers.filter(a => a.category === parent).length;
+if (generalCnt > 0){ subCounts['General'] = generalCnt; hasData = true; }
+if (!hasData) return;
+const labels = Object.keys(subCounts);
+const data   = Object.values(subCounts);
+const pColor = catColor(parent);
+const bgBase = isDark ? [28, 33, 40] :[255, 255, 255];
+const colors = labels.map((_, i) =>{
+const ratio = labels.length === 1 ? 0.65 :0.30 + 0.55 * (i / (labels.length - 1));
+return mixColor(pColor, bgBase, ratio); });
+makeChart('chart-subcat-' + parent.replace(/\s+/g,'_'),{
+type:'doughnut',
+data:{ labels, datasets:[{ data, backgroundColor:colors, borderColor:'transparent', borderWidth:0 }] },
+options:{ ...pieOpts, maintainAspectRatio:false, plugins:{ ...pieOpts.plugins,
+legend:{ display:false }
+} }
+}); });
+}
+function updateRadarChart(){
+const d = window._skillChartData;
+if(!d) return;
+const sel = $('radarPlayerSelect');
+const playerName = sel ? sel.value : (d.activePlayers[0]?.name || '');
+const p = d.activePlayers.find(pl => pl.name === playerName);
+if(!p) return;
+const m = d.chartPlayerMetrics(p);
+const isDark = document.body.classList.contains('dark-mode');
+const gridC  = isDark?'rgba(255,255,255,.1)':'rgba(0,0,0,.08)';
+const labelC = isDark?'#9ba3c0':'#5a6178';
+// Radar: Overall Score Breakdown — TU Efficiency, Accuracy, Conversion Rate each normalized to avg=100
+const _cn = p.tHeard||0; const CK = skillRegressionK;
+function radarReg(r,a){ return _cn>0?(r*_cn+a*CK)/(_cn+CK):a; }
+// Radar uses normalised scores from skillMap (same as player cards)
+const _rBd = skillMap[playerName];
+const sVol = _rBd ? _rBd.volScore : 0;
+const sAcc = _rBd ? _rBd.accScore : 0;
+const sEff = _rBd ? _rBd.effScore : 0;
+destroyChart('chart-player-radar');
+const canvas = $('chart-player-radar');
+if(!canvas) return;
+_chartInstances['chart-player-radar'] = new Chart(canvas.getContext('2d'),{
+type:'radar',
+data:{
+labels:['Buzz Volume','Accuracy','Efficiency'],
+datasets:[{
+label:playerName,
+data:[sVol, sAcc, sEff],
+backgroundColor:'rgba(102,126,234,0.2)',
+borderColor:'#667eea',
+borderWidth:2,
+pointBackgroundColor:'#667eea',
+pointBorderColor:'#fff',
+pointBorderWidth:2,
+pointRadius:5,
+},{
+label:'Team Average (100)',
+data:[100, 100, 100],
+backgroundColor:'rgba(155,163,184,0.08)',
+borderColor:isDark?'rgba(255,255,255,.2)':'rgba(0,0,0,.15)',
+borderWidth:1.5,
+borderDash:[4,4],
+pointRadius:3,
+pointBackgroundColor:isDark?'rgba(255,255,255,.3)':'rgba(0,0,0,.2)',
+}]
+},
+options:{
+responsive:true, maintainAspectRatio:false,
+plugins:{
+...d.pluginDefaults,
+title:{ display:true, text:'Volume · Accuracy · Efficiency', color:labelC, font:{...d.baseFont, size:13, weight:'700'}, padding:{bottom:8} },
+legend:{ labels:{ color:labelC, font:d.baseFont, boxWidth:12, padding:10 } },
+tooltip:{ callbacks:{
+label: ctx => {
+if(ctx.datasetIndex===1) return 'Team avg: 100';
+const vals=[sVol,sAcc,sEff];
+return playerName+': '+vals[ctx.dataIndex].toFixed(1);
+}
+}}
+},
+scales:{
+r:{
+min:50, max:150,
+ticks:{ stepSize:25, color:labelC, font:{...d.baseFont,size:9}, backdropColor:'transparent' },
+grid:{ color:gridC },
+angleLines:{ color:gridC },
+pointLabels:{
+color:labelC, font:{...d.baseFont,size:11},
+callback:(label,i) => {
+const vals=[sEff,sAcc,sCon];
+const vals3=[sVol,sAcc,sEff]; return [label, vals3[i] !== undefined ? vals3[i].toFixed(1) : ''];
+}
+}
+}
+}
+}
+});
+}
+function setupSectionToggle(){
+document.querySelectorAll('.qb-section h2').forEach(h2=>h2.addEventListener('click',function(){
+this.querySelector('.toggle-icon')?.classList.toggle('collapsed');
+this.nextElementSibling?.classList.toggle('collapsed');
+})); }
+const SECTION_LABELS={'sec-session':'Setup','sec-players':'Setup','sec-teams':'Setup','sec-categories':'Setup','sec-export':'Session & Data','sec-userid':'Settings','sec-visual':'Settings','sec-admin':'Admin Panel','sec-danger':'Session & Data','sec-debug':'Session & Data'};
+function showSection(id){
+document.querySelectorAll('.qb-sidebar .qb-section').forEach(s=>s.classList.remove('active-section'));
+const el=$(id);
+if(el){ el.classList.add('active-section'); el.querySelector('.collapsible-content')?.classList.remove('collapsed'); el.querySelector('.toggle-icon')?.classList.remove('collapsed'); }
+localStorage.setItem('activeSidebarSection',id);
+updateJumpDropdown(id);
+$('sidebarJumpWrapper')?.classList.remove('open'); }
+function updateJumpDropdown(activeId){
+const labelEl=$('sidebarJumpLabel');
+if(labelEl&&SECTION_LABELS[activeId]) labelEl.textContent=SECTION_LABELS[activeId];
+document.querySelectorAll('.sidebar-jump-menu button').forEach(btn=>btn.classList.toggle('active-item',(btn.getAttribute('onclick')||'').includes(activeId)));
+}
+function toggleJumpDropdown(){ $('sidebarJumpWrapper')?.classList.toggle('open'); }
+function toggleDangerZone(){
+const body=$('dangerZoneBody'), arrow=$('dangerZoneArrow');
+if(!body) return;
+const open=body.style.display==='none';
+body.style.display=open?'':'none';
+if(arrow) arrow.style.transform=open?'':'rotate(-90deg)'; }
+const isMobile = () => !isIframe && window.innerWidth <= 900;
+if (isIframe){
+const _memStore ={};
+const _safeLS ={
+getItem:   k => (_memStore[k] !== undefined ? _memStore[k] :null),
+setItem:   (k, v) =>{ _memStore[k] = String(v); },
+removeItem:k =>{ delete _memStore[k]; },
+clear:     () =>{ Object.keys(_memStore).forEach(k => delete _memStore[k]); },
+key:       i => Object.keys(_memStore)[i] || null,
+get length(){ return Object.keys(_memStore).length; }
+};
+try{ Object.defineProperty(window, 'localStorage',{ get:() => _safeLS }); } catch(e){}
+document.body.classList.add('dark-mode'); }
+var _iframeDebugActive = false;
+function toggleSidebar(){
+const sidebar=$('mainSidebar');
+const scroll=$('qbScroll');
+const ascroll=$('analyticsScroll');
+if(!sidebar) return;
+if(isMobile()){
+const opening=!sidebar.classList.contains('mobile-open');
+sidebar.classList.toggle('mobile-open',opening);
+scroll?.classList.toggle('menu-blurred',opening);
+ascroll?.classList.toggle('menu-blurred',opening);
+document.body.classList.toggle('menu-open',opening);
+updateMobileBtn(opening);
+} else{
+const collapsed=sidebar.classList.toggle('collapsed');
+if (!isIframe) localStorage.setItem('sidebarCollapsed',collapsed);
+updateDesktopBtn(collapsed); }
+}
+function updateDesktopBtn(collapsed){
+const btn = $('sidebarOpenBtn'); if (!btn) return;
+btn.style.display = (!isMobile() && !isIframe && !collapsed) ? 'none' :'inline-flex';
+}
+function updateMobileBtn(open){ const btn=$('sidebarOpenBtnMobile'); if(btn) btn.innerHTML=open?'&#9664; Hide':'&#9654; Menu'; }
+function applySidebarState(){
+const sidebar=$('mainSidebar');
+const scroll=$('qbScroll');
+const ascroll=$('analyticsScroll');
+if(!sidebar) return;
+sidebar.classList.remove('mobile-open');
+scroll?.classList.remove('menu-blurred');
+ascroll?.classList.remove('menu-blurred');
+document.body.classList.remove('menu-open');
+updateMobileBtn(false);
+if(isMobile()){sidebar.classList.remove('collapsed');updateDesktopBtn(false);}
+else{const c=isIframe?false:localStorage.getItem('sidebarCollapsed')==='true';sidebar.classList.toggle('collapsed',c);updateDesktopBtn(c);}
+}
+function toggleDarkMode(){
+const on=document.body.classList.toggle('dark-mode');
+localStorage.setItem('darkMode',on);
+const el=$('darkModeToggle2'); if(el) el.checked=on;
+Object.values(_chartInstances).forEach(c => c.update()); }
+function setAccentColor(color){ document.documentElement.style.setProperty('--primary',color); localStorage.setItem('accentColor',color); }
+function changeSkillK(delta){
+const oldK = skillRegressionK;
+skillRegressionK = Math.max(1, Math.min(60, skillRegressionK + delta));
+saveGlobalSettings();
+updateSkillThresholdUI();
+if(analyticsOpen) renderAnalyticsPlayersUniversal();
+showToast(`Regression k changed from ${oldK} to ${skillRegressionK}`, 'success', 3000, () => {
+skillRegressionK = oldK;
+saveGlobalSettings();
+updateSkillThresholdUI();
+if(analyticsOpen) renderAnalyticsPlayersUniversal(); });
+}
+function changeSkillThreshold(delta){
+const oldThreshold = skillThresholdPct;
+skillThresholdPct = Math.max(0, Math.min(80, skillThresholdPct + delta));
+saveGlobalSettings();
+updateSkillThresholdUI();
+if(analyticsOpen) renderAnalyticsPlayersUniversal();
+showToast(`Skill threshold changed from ${oldThreshold}% to ${skillThresholdPct}%`, 'success', 3000, () => {
+skillThresholdPct = oldThreshold;
+saveGlobalSettings();
+updateSkillThresholdUI();
+if(analyticsOpen) renderAnalyticsPlayersUniversal(); });
+}
+function updateSkillThresholdUI(){
+const display = $('skillThresholdDisplay');
+const bar = $('skillThresholdBar');
+if(display) display.textContent = skillThresholdPct + '%';
+if(bar) bar.style.width = skillThresholdPct + '%';
+const kDisplay = $('skillKDisplay');
+const kBar = $('skillKBar');
+const kHelp = $('skillKHelp');
+if(kDisplay) kDisplay.textContent = skillRegressionK;
+if(kBar) kBar.style.width = Math.min(100,(skillRegressionK/60)*100) + '%';
+if(kHelp) kHelp.textContent = 'At k='+skillRegressionK+': score is 50% raw at '+skillRegressionK+' TU heard, 75% raw at '+(skillRegressionK*3)+' TU heard'; }
+function initSkillThresholdUI(){
+updateSkillThresholdUI(); }
+function toggleScrollbars(){
+const on=document.body.classList.toggle('hide-scrollbars'); localStorage.setItem('hideScrollbars',on);
+const el=$('hideScrollbarsToggle'); if(el) el.checked=on; }
+function restoreVisualSettings(){
+const ls=window.LOCAL_SETTINGS||{}; const get=(k,fb)=>ls[k]!==undefined?ls[k]:(localStorage.getItem(k)??fb);
+if(get('darkMode','false')==='true'||get('darkMode',false)===true){document.body.classList.add('dark-mode');const e=$('darkModeToggle2');if(e)e.checked=true;}
+if(get('hideScrollbars','false')==='true'||get('hideScrollbars',false)===true){document.body.classList.add('hide-scrollbars');const e=$('hideScrollbarsToggle');if(e)e.checked=true;}
+const ac=get('accentColor',null); if(ac){document.documentElement.style.setProperty('--primary',ac);const e=$('accentColorSelect');if(e)e.value=ac;}
+}
+function renderAll(){
+renderSessionInfo(); renderPlayerPool(); renderPlayerMgmt(); renderPlayerButtons(); renderSubPanel();
+renderPointTypeButtons(); renderTeams(); renderCategories(); renderAnswerLog(); renderStatistics(); renderTHeard();
+if(analyticsOpen) renderAnalytics();
+if($('sessionsModal')?.classList.contains('open')) renderSessionsList();
+setTimeout(updateFadeMasks,50); }
+function renderSessionInfo(){
+const s = getCurrentSession();
+if (!s) return;
+const set=(id,val)=>{const el=$(id);if(el)el.textContent=val;};
+set('sessionName',s.name);
+set('headerSessionName',  s.name);
+set('headerSessionNameMobile', s.name);
+set('sessionCreated',     new Date(s.created).toLocaleString());
+set('sessionLastUpdated', new Date(s.lastUpdated).toLocaleString());
+set('sessionAnswerCount', (s.answerLog || []).length); }
+function addToPlayerPool(){
+const input  = $('playerInput');
+const player = input.value.trim();
+if (!player){ showToast('Please enter a player name.'); return; }
+const id = state.currentSessionId;
+if (!id) return;
+updateSessionAtomic(id, s =>{
+if (!s.players) s.players ={};
+if (!s.players[player]) s.players[player] ={ name:player, points:0, answers:[] };
+}).then(() =>{
+input.value = '';
+saveGlobalPlayers([player]); });
+withWriteLock(id, () =>{
+const s = getCurrentSession();
+if (!s.players) s.players ={};
+if (!s.players[player]) s.players[player] ={ name:player, points:0, answers:[] };
+});
+renderPlayerPool();
+renderPlayerButtons();
+renderSubPanel();
+renderTeams(); }
+function removeFromPlayerPool(player){
+const id = state.currentSessionId;
+if (!id) return;
+updateSessionAtomic(id, s =>{
+if (s.players) delete s.players[player];
+(s.teams || []).forEach(t =>{ t.playerMembers = (t.playerMembers || []).filter(p => p !== player); });
+});
+removeGlobalPlayer(player);
+withWriteLock(id, () =>{
+const s = getCurrentSession();
+if (!s) return;
+if (s.players) delete s.players[player];
+(s.teams || []).forEach(t =>{ t.playerMembers = (t.playerMembers || []).filter(p => p !== player); });
+});
+renderPlayerPool();
+renderPlayerButtons();
+renderSubPanel();
+renderTeams(); }
+function clearPlayerPool(){
+showConfirm('Clear all players?', 'Clear').then(ok =>{
+if (!ok) return;
+const id = state.currentSessionId;
+if (!id) return;
+const reset = s =>{
+s.players  ={};
+(s.teams || []).forEach(t =>{ t.playerMembers = []; });
+s.answerLog = [];
+s.answers   = []; };
+updateSessionAtomic(id, reset);
+withWriteLock(id, () =>{ const s = getCurrentSession(); if (s) reset(s); });
+renderPlayerPool();
+renderPlayerButtons();
+renderSubPanel();
+renderTeams();
+renderAnswerLog();
+renderStatistics();
+renderSessionInfo(); });
+}
+function renderPlayerMgmt(){
+const s = getCurrentSession();
+const el = $('playerMgmtContainer');
+if(!el || !s) return;
+const players = Object.keys(s.players || {});
+if(players.length === 0){
+el.innerHTML = '<p class="text-2" style="font-size:.8em;">Add players first.</p>';
+return; }
+let html = '';
+players.forEach(player => {
+const safe = player.replace(/'/g, "\\'");
+html += `<div style="display:flex;gap:6px;align-items:center;">
+<span style="flex:1;font-size:.82em;overflow:hidden;text-overflow:ellipsis;">${player}</span>
+<button class="button" onclick="startRenamePlayer('${safe}')" style="width:70px;padding:4px 8px;font-size:.75em;">Rename</button>
+<button class="button" onclick="startMergePlayer('${safe}')" style="width:70px;padding:4px 8px;font-size:.75em;">Merge</button>
+</div>`;
+});
+el.innerHTML = html; }
+function startRenamePlayer(oldName){
+const modal = $('playerActionModal');
+const title = $('pamTitle');
+const body  = $('pamBody');
+if(!modal||!title||!body) return;
+title.textContent = 'Rename Player';
+body.innerHTML = `
+<p style="font-size:.85em;color:var(--text2);margin-bottom:12px;">Renaming <strong>${oldName}</strong> will update their name everywhere in this session.</p>
+<label style="font-size:.85em;font-weight:600;color:var(--text2);display:block;margin-bottom:6px;">New Name</label>
+<input id="pamRenameInput" type="text" value="${oldName.replace(/"/g,'&quot;')}"
+style="width:100%;padding:9px 12px;border:1.5px solid var(--input-border);border-radius:var(--radius-sm);font-size:.95em;font-family:inherit;background:var(--input-bg);color:var(--input-text);box-sizing:border-box;margin-bottom:14px;"
+onkeydown="if(event.key==='Enter')confirmRenamePlayer('${oldName.replace(/'/g,"\'")}')"/>
+<div style="display:flex;gap:8px;">
+<button class="button button-success" style="flex:1;" onclick="confirmRenamePlayer('${oldName.replace(/'/g,"\'")}')">Rename</button>
+<button class="button" style="flex:1;background:var(--sec-bg);color:var(--text2);" onclick="closePlayerActionModal()">Cancel</button>
+</div>`;
+modal.style.display = 'flex';
+setTimeout(()=>{ const inp=$('pamRenameInput'); if(inp){inp.focus();inp.select();} },50); }
+function confirmRenamePlayer(oldName){
+const inp = $('pamRenameInput');
+if(!inp) return;
+const newName = inp.value.trim();
+if(!newName){ showToast('Name cannot be empty.','warn'); return; }
+if(newName === oldName){ closePlayerActionModal(); return; }
+closePlayerActionModal();
+renamePlayer(oldName, newName); }
+function renamePlayer(oldName, newName){
+const newNameTrimmed = newName.trim();
+if(!newNameTrimmed){ showToast('Player name cannot be empty.','warn'); return; }
+const id = state.currentSessionId;
+if(!id) return;
+const s = getCurrentSession();
+if(!s?.players?.[oldName]){ showToast('Player not found.','warn'); return; }
+// Mutate local state immediately
+const oldData = JSON.parse(JSON.stringify(s.players[oldName]));
+oldData.name = newNameTrimmed;
+s.players[newNameTrimmed] = oldData;
+delete s.players[oldName];
+(s.teams || []).forEach(t =>{
+if(t.playerMembers){
+const idx = t.playerMembers.indexOf(oldName);
+if(idx !== -1) t.playerMembers[idx] = newNameTrimmed; }
+});
+(s.answerLog || []).forEach(a =>{ if(a.player === oldName) a.player = newNameTrimmed; });
+if(s.answers) Object.values(s.answers).forEach(a =>{ if(a.player === oldName) a.player = newNameTrimmed; });
+s.lastUpdated = new Date().toISOString();
+s.updatedBy = clientId;
+// Hold writeInFlight for 2s — long enough to block applyGlobalPlayersToSession
+// from re-adding the old name before globalPlayersRef is updated
+writeInFlight.add(id);
+notifySaveStart();
+Promise.all([
+sessionsRef.child(id).set(s),
+globalPlayersRef.child(newNameTrimmed).set(true),
+globalPlayersRef.child(oldName).remove()
+])
+.then(()=>{
+notifySaveComplete();
+setTimeout(()=>writeInFlight.delete(id), 2000);
+showToast(`Renamed "${oldName}" → "${newNameTrimmed}"`, 'success', 3000, () => renamePlayer(newNameTrimmed, oldName));
+})
+.catch(e =>{
+notifySaveComplete();
+writeInFlight.delete(id);
+showFirebaseError('Rename failed: ' + e.message);
+});
+renderPlayerPool(); renderPlayerMgmt(); renderPlayerButtons(); renderTeams(); renderAnswerLog(); renderStatistics(); }
+function startMergePlayer(player1){
+const s = getCurrentSession();
+if(!s?.players) return;
+const otherPlayers = Object.keys(s.players).filter(p => p !== player1).sort();
+if(otherPlayers.length === 0){ showToast('No other players to merge with.','warn'); return; }
+const modal = $('playerActionModal');
+const title = $('pamTitle');
+const body  = $('pamBody');
+if(!modal||!title||!body) return;
+title.textContent = 'Merge Players';
+const opts = otherPlayers.map(p => `<option value="${p.replace(/"/g,'&quot;')}">${p}</option>`).join('');
+body.innerHTML = `
+<p style="font-size:.85em;color:var(--text2);margin-bottom:12px;">
+Merge <strong>${player1}</strong> into another player. All answers and points will be combined. This can be undone.
+</p>
+<label style="font-size:.85em;font-weight:600;color:var(--text2);display:block;margin-bottom:6px;">Search &amp; select player to merge into</label>
+<input id="pamMergeSearch" type="text" placeholder="Type to filter..."
+style="width:100%;padding:8px 12px;border:1.5px solid var(--input-border);border-radius:var(--radius-sm) var(--radius-sm) 0 0;border-bottom:none;font-size:.9em;font-family:inherit;background:var(--input-bg);color:var(--input-text);box-sizing:border-box;"
+oninput="filterMergeList()" />
+<select id="pamMergeSelect" size="5"
+style="width:100%;padding:4px;border:1.5px solid var(--input-border);border-radius:0 0 var(--radius-sm) var(--radius-sm);font-size:.9em;font-family:inherit;background:var(--input-bg);color:var(--input-text);box-sizing:border-box;margin-bottom:14px;">${opts}</select>
+<div style="display:flex;gap:8px;">
+<button class="button button-success" style="flex:1;" onclick="confirmMergePlayer('${player1.replace(/'/g,"\'")}')">Merge</button>
+<button class="button" style="flex:1;background:var(--sec-bg);color:var(--text2);" onclick="closePlayerActionModal()">Cancel</button>
+</div>`;
+modal.style.display = 'flex';
+setTimeout(()=>$('pamMergeSearch')?.focus(), 50); }
+function filterMergeList(){
+const q = ($('pamMergeSearch')?.value || '').toLowerCase();
+const sel = $('pamMergeSelect');
+if(!sel) return;
+Array.from(sel.options).forEach(o =>{
+o.style.display = o.text.toLowerCase().includes(q) ? '' : 'none'; }); }
+function confirmMergePlayer(player1){
+const sel = $('pamMergeSelect');
+if(!sel) return;
+const player2 = sel.value;
+if(!player2){ showToast('Select a player to merge into.','warn'); return; }
+closePlayerActionModal();
+mergePlayers(player1, player2); }
+function closePlayerActionModal(){
+const m = $('playerActionModal');
+if(m) m.style.display = 'none'; }
+function fuzzyPlayerMatch(name, candidates){
+// Exact match first
+if(candidates.includes(name)) return name;
+const nl = name.toLowerCase().trim();
+// Case-insensitive exact
+const ci = candidates.find(c => c.toLowerCase().trim() === nl);
+if(ci) return ci;
+// First name match
+const firstName = nl.split(/\s+/)[0];
+const fnMatch = candidates.find(c => c.toLowerCase().trim().split(/\s+/)[0] === firstName);
+if(fnMatch) return fnMatch;
+// One contains the other
+const containsMatch = candidates.find(c => c.toLowerCase().includes(nl) || nl.includes(c.toLowerCase().trim()));
+if(containsMatch) return containsMatch;
+return null; }
+function mergePlayers(player1, player2){
+const id = state.currentSessionId;
+if(!id) return;
+const s = getCurrentSession();
+const allPlayers = Object.keys(s?.players || {});
+const resolved1 = fuzzyPlayerMatch(player1, allPlayers) || player1;
+const resolved2 = fuzzyPlayerMatch(player2, allPlayers) || player2;
+const p1Data = s?.players?.[resolved1];
+const p2Data = s?.players?.[resolved2];
+if(!p1Data || !p2Data){ showToast('Could not find both players to merge.','warn'); return; }
+const mergedData = {
+name: resolved2,
+points: (p1Data.points || 0) + (p2Data.points || 0),
+answers: [...(p1Data.answers || []), ...(p2Data.answers || [])]
+};
+// Mutate local state immediately
+s.players[resolved2] = JSON.parse(JSON.stringify(mergedData));
+delete s.players[resolved1];
+(s.teams || []).forEach(t =>{
+if(t.playerMembers){
+const idx = t.playerMembers.indexOf(resolved1);
+if(idx !== -1){
+t.playerMembers.splice(idx, 1);
+if(!t.playerMembers.includes(resolved2)) t.playerMembers.push(resolved2); }

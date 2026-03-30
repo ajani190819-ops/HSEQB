@@ -1,0 +1,813 @@
+}
+});
+(s.answerLog || []).forEach(a =>{ if(a.player === resolved1) a.player = resolved2; });
+if(s.answers) Object.values(s.answers).forEach(a =>{ if(a.player === resolved1) a.player = resolved2; });
+s.lastUpdated = new Date().toISOString();
+s.updatedBy = clientId;
+writeInFlight.add(id);
+notifySaveStart();
+Promise.all([
+sessionsRef.child(id).set(s),
+globalPlayersRef.child(resolved1).remove()
+])
+.then(()=>{
+notifySaveComplete();
+setTimeout(()=>writeInFlight.delete(id), 2000);
+showToast(`Merged "${resolved1}" into "${resolved2}"`, 'success', 4000, () => splitPlayers(resolved1, resolved2, p1Data, p2Data));
+})
+.catch(e =>{
+notifySaveComplete();
+writeInFlight.delete(id);
+showFirebaseError('Merge failed: ' + e.message);
+});
+renderPlayerPool(); renderPlayerMgmt(); renderPlayerButtons(); renderTeams(); renderAnswerLog(); renderStatistics(); }
+function splitPlayers(player1, player2, p1Data, p2Data){
+const id = state.currentSessionId;
+if(!id) return;
+updateSessionAtomic(id, s =>{
+if(s.players?.[player2]){
+s.players[player1] = p1Data;
+s.players[player2] = p2Data;
+(s.answerLog || []).forEach(a =>{
+if(a.player === player2 && p1Data.answers.some(ans => ans === a)) a.player = player1;
+});
+if(s.answers){
+Object.keys(s.answers).forEach(key =>{
+if(s.answers[key].player === player2 && p1Data.answers.some(ans => ans === s.answers[key])){
+s.answers[key].player = player1; }
+}); }
+}
+});
+withWriteLock(id, () =>{
+const s = getCurrentSession();
+if(!s?.players) return;
+s.players[player1] = p1Data;
+s.players[player2] = p2Data; });
+renderPlayerPool();
+renderPlayerMgmt();
+renderPlayerButtons();
+renderTeams();
+renderAnswerLog();
+renderStatistics(); }
+function renderPlayerPool(){
+const s  = getCurrentSession();
+const el = $('playerPoolDisplay');
+if (!el || !s) return;
+const players = Object.keys(s.players ||{});
+el.innerHTML = players.length
+? players.map(p =>
+`<span class="player-pool-item">${p}<span class="remove" onclick="removeFromPlayerPool('${p}')">&#215;</span></span>`
+).join('') :'<p class="text-2">No players added yet.</p>'; }
+function getDisplayName(full,all){
+const parts=full.trim().split(/\s+/),first=parts[0];
+return (all.some(n=>n!==full&&n.trim().split(/\s+/)[0]===first)&&parts.length>1)?first+' '+parts[parts.length-1][0]+'.':first;
+}
+function renderPlayerButtons(){
+const s = getCurrentSession();
+const el = $('playerButtonsContainer');
+if (!el || !s) return;
+const teams = (s.teams || []).filter(t => (t.playerMembers||[]).length > 0);
+if (!teams.length){ el.innerHTML = '<p class="text-2">No players in any team yet.</p>'; return; }
+const allPlayers = Object.keys(s.players ||{});
+const isBonus = state.selectedPointType === 'Bonus';
+let html = '';
+teams.forEach(team =>{
+const teamSentinel = '__team__' + team.id;
+const teamSel = state.selectedPlayer === teamSentinel;
+if (isBonus){
+html += `<button class="button-player${teamSel ? ' selected' :''}" onclick="selectPlayer('${teamSentinel.replace(/'/g,"\\'")}');" style="font-weight:800;width:100%;text-align:left;opacity:1;border-style:dashed;" title="Bonus for ${team.name}">${team.name}</button>`;
+} else{
+html += `<div class="fs-7-fw8-upper">${team.name}</div>`;
+}
+(team.playerMembers || []).forEach(p =>{
+const disp = getDisplayName(p, allPlayers);
+const sel  = state.selectedPlayer === p ? ' selected' :'';
+html += `<button class="button-player${sel}" onclick="selectPlayer('${p.replace(/'/g,"\\'")}');" title="${p}">${disp}</button>`;
+}); });
+el.innerHTML = html; }
+let _subOut = null, _subIn = null;
+let _qlPending = null; //{ player, type, cat } waiting for optional category
+function renderQuickLog(){
+const el = $('quickLogContainer');
+const s  = getCurrentSession();
+if (!el || !s) return;
+const players = [...new Set((s.teams||[]).flatMap(t=>t.playerMembers||[]))];
+if (!players.length){
+el.innerHTML = '<p style="color:var(--text2);font-size:.85em;margin-bottom:10px;">Add players to a team to use quick-log.</p>';
+return; }
+const allPlayers = Object.keys(s.players||{});
+const cats = (s.categories||[]);
+const hasCats = cats.length > 0;
+el.innerHTML = players.map(p =>{
+const disp = getDisplayName(p, allPlayers);
+const safe = p.replace(/'/g,"\\'");
+const pid  = 'ql_' + p.replace(/[^a-zA-Z0-9]/g,'_');
+const pending = _qlPending && _qlPending.player === p;
+const catRowOpen = pending && hasCats ? 'open' :'';
+const catChips = hasCats
+? cats.slice(0,16).map(c =>{
+const cSafe = c.replace(/'/g,"\\'");
+const sel = pending && _qlPending.cat === c ? 'selected' :'';
+return `<span class="ql-cat-chip ${sel}" onclick="qlSelectCat('${safe}','${cSafe}')">${c}</span>`;
+}).join('')
++ `<button class="ql-confirm-btn" onclick="qlConfirm('${safe}')">✔ Log</button>`
++ `<button class="ql-cancel-btn" onclick="qlCancel()">✕</button>` :'';
+const pendingTag = pending ? `<span style="font-size:.68em;font-weight:700;color:var(--primary);margin-left:3px;white-space:nowrap;">${_qlPending.type}</span>` :'';
+return `<div class="ql-row" id="${pid}_row">
+<div class="ql-name" title="${p}">${disp}${pendingTag}</div>
+<div class="ql-btns">
+<button class="ql-btn ql-power"  onclick="qlTap('${safe}','Power')"   title="Toss-up ⚡︎ Power (+15)">⚡︎<br>+15</button>
+<button class="ql-btn ql-tu"     onclick="qlTap('${safe}','Toss-up')" title="Toss-up (+10)">✔<br>+10</button>
+<button class="ql-btn ql-bonus"  onclick="qlTap('${safe}','Bonus')"   title="Bonus (+10)">★<br>+10</button>
+<button class="ql-btn ql-miss"   onclick="qlTap('${safe}','Miss')"    title="Miss (0)">○<br>0</button>
+<button class="ql-btn ql-neg"    onclick="qlTap('${safe}','Neg')"     title="Neg (−5)">✗<br>−5</button>
+</div>
+</div>
+<div class="ql-cat-row ${catRowOpen}" id="${pid}_cats">${catChips}</div>`;
+}).join(''); }
+function qlTap(player, type){
+const s = getCurrentSession();
+const hasCats = s && (s.categories||[]).length > 0;
+if (hasCats){
+_qlPending ={ player, type, cat:null };
+renderQuickLog();
+} else{
+qlQuickRecord(player, type, null); }
+}
+function qlSelectCat(player,cat){ if(_qlPending&&_qlPending.player===player){_qlPending.cat=_qlPending.cat===cat?null:cat;renderQuickLog();} }
+function qlConfirm(player){
+if (!_qlPending || _qlPending.player !== player) return;
+qlQuickRecord(_qlPending.player, _qlPending.type, _qlPending.cat); }
+function qlCancel(){ _qlPending = null; renderQuickLog(); }
+function qlQuickRecord(player, type, cat){
+_qlPending = null;
+const id = state.currentSessionId; if (!id) return;
+const pointMap ={'Toss-up':10,'Bonus':10,'Neg':-5,'Power':15,'Miss':0,'Dead':0};
+const points   = pointMap[type];
+const isBuzzIn = ['Toss-up','Power','Neg','Miss','Dead'].includes(type);
+const recordedPlayer = player || '— Team Bonus —';
+const effectiveCategory = cat || '—';
+const answer ={id:Date.now().toString(),player:recordedPlayer,pointType:type,category:effectiveCategory,points,timestamp:new Date().toISOString()};
+const applyAnswer = s =>{
+s.answerLog = toArray(s.answerLog);
+if (isBuzzIn){
+const prev = s.answerLog.length > 0 ? s.answerLog[s.answerLog.length-1] :null;
+const prevWasWrong = prev && (prev.pointType === 'Neg' || prev.pointType === 'Miss');
+const thisIsFollowup = prevWasWrong && (type === 'Toss-up' || type === 'Power');
+if (!thisIsFollowup) s.tHeard = (s.tHeard||0) + 1; }
+s.answerLog.push(answer);
+if (!s.players) s.players ={};
+if (player){
+const pl = s.players[player]||(s.players[player]={name:player,points:0,answers:[]});
+pl.answers = toArray(pl.answers); pl.answers.push(answer); pl.points = (pl.points||0)+points;
+}
+if (type === 'Bonus' && !player) s.teamBonusPoints = (s.teamBonusPoints||0)+points; };
+updateSessionAtomic(id, applyAnswer);
+withWriteLock(id, ()=>{ const s=getCurrentSession(); if(s) applyAnswer(s); });
+const s2 = getCurrentSession();
+const allP = s2 ? Object.keys(s2.players||{}) :[];
+const dispName = player ? getDisplayName(player, allP) :'Team';
+const ptSign   = points > 0 ? '+'+points :(points < 0 ? ''+points :'0');
+const toastCls = type === 'Neg' ? 'neg' :(type === 'Miss' || type === 'Dead' ? 'miss' :(points >= 15 ? 'pts' :''));
+showRecordToast(dispName + ' — ' + type + ' (' + ptSign + ' pts)', toastCls);
+renderAll(); }
+function showRecordToast(msg, cls){
+const t = $('recordToast');
+if (!t) return;
+t.textContent = msg;
+t.className = 'show' + (cls ? ' '+cls :'');
+clearTimeout(t._timer);
+t._timer = setTimeout(() =>{ t.className = ''; }, 1700);
+}
+function recomputeAdmin(){
+if (isIframe && _iframeDebugActive) return; // preserve temp admin grant in preview
+const name = localStorage.getItem('qb_userName') || '';
+if (adminList.includes(name)) _adminToken.grant(); else _adminToken.revoke();
+applyAdminUI(); }
+function applyAdminUI(){
+const ccs = $('catColorSection');
+if (ccs) ccs.style.display = isAdmin ? '' :'none';
+const cfs = $('catFreqSection');
+if (cfs) cfs.style.display = isAdmin ? '' :'none';
+if (isAdmin){ renderCatColorPickers(); renderCatFreqPickers(); }
+const dangerEl = $('sec-danger');
+const adminEl  = $('sec-admin');
+const dangerBtn = $('jumpBtn-sec-danger');
+const adminBtn  = $('jumpBtn-sec-admin');
+if (dangerEl)  dangerEl.style.display  = isAdmin ? '' :'none';
+if (adminEl)   adminEl.style.display   = isAdmin ? '' :'none';
+if (dangerBtn) dangerBtn.style.display  = isAdmin ? '' :'none';
+if (adminBtn)  adminBtn.style.display   = isAdmin ? '' :'none';
+applyDebugMenuVisibility();
+document.querySelectorAll('.session-invalid-toggle').forEach(el =>{ el.style.display = isAdmin ? '' :'none'; });
+document.querySelectorAll('.ld-admin-btn').forEach(el =>{ el.style.display = isAdmin ? '' :'none'; });
+renderAdminPanel(); }
+function showToast(msg, type, duration, undoCallback){
+const t = $('appToast');
+if (!t){ alert(msg); return; }
+t.innerHTML = '';
+const msgEl = document.createElement('span');
+msgEl.textContent = msg;
+t.appendChild(msgEl);
+if(undoCallback){
+const space = document.createElement('span');
+space.textContent = ' ';
+t.appendChild(space);
+const undoBtn = document.createElement('button');
+undoBtn.textContent = 'Undo';
+undoBtn.style.cssText = 'background:rgba(255,255,255,.25);border:1px solid rgba(255,255,255,.4);color:#fff;padding:2px 8px;border-radius:4px;cursor:pointer;font-weight:700;font-family:inherit;font-size:.9em;margin-left:8px;';
+undoBtn.onclick = () => {
+undoCallback();
+t.className = '';
+showToast('Undone', 'info', 1500); };
+t.appendChild(undoBtn); }
+t.className   = 'show' + (type ? ' toast-' + type :'');
+clearTimeout(t._timer);
+t._timer = setTimeout(() =>{ t.className = ''; }, duration || 2800);
+}
+var _confirmResolve = null;
+function showConfirm(msg, okLabel, warnStyle){
+return new Promise(resolve =>{
+_confirmResolve = resolve;
+const el    = $('confirmToast');
+const msgEl = $('confirmToastMsg');
+const okEl  = $('confirmToastOk');
+if (!el){ resolve(confirm(msg)); return; }
+msgEl.textContent = msg;
+okEl.textContent  = okLabel || 'Confirm';
+okEl.className    = 'ct-ok' + (warnStyle === 'warn' ? ' warn-ok' :'');
+el.classList.add('show'); });
+}
+function resolveConfirmToast(result){
+const el = $('confirmToast');
+if (el) el.classList.remove('show');
+if (_confirmResolve){ _confirmResolve(result); _confirmResolve = null; }
+}
+function renderSubPanel(){
+const s = getCurrentSession();
+const el = $('subPanelContent');
+if (!el || !s) return;
+const activePlayers = [...new Set((s.teams||[]).flatMap(t=>t.playerMembers||[]))];
+const poolPlayers   = Object.keys(s.players||{});
+const bench         = poolPlayers.filter(p => !activePlayers.includes(p));
+if (!activePlayers.length){
+el.innerHTML = '<p style="color:var(--text2);font-size:.88em;">No active players yet. Add players to a team first.</p>';
+return; }
+if (_subOut && !activePlayers.includes(_subOut)) _subOut = null;
+if (_subIn  && !bench.includes(_subIn))          _subIn  = null;
+const chipStyle = (sel) =>
+`display:inline-block;padding:5px 11px;border-radius:20px;cursor:pointer;font-size:.85em;font-weight:600;border:2px solid ${sel ? 'var(--primary)' :'var(--border)'};background:${sel ? 'var(--primary)' :'var(--sec-bg)'};color:${sel ? '#fff' :'var(--text1)'};transition:all .15s;user-select:none;`;
+const outChips = activePlayers.map(p =>{
+const sel = _subOut === p;
+return `<span style="${chipStyle(sel)}" onclick="subPickOut('${p.replace(/'/g,"\\'")}');return false;">${getDisplayName(p, Object.keys(s.players||{}))}</span>`;
+}).join('');
+const inChips = bench.length
+? bench.map(p =>{
+const sel = _subIn === p;
+return `<span style="${chipStyle(sel)}" onclick="subPickIn('${p.replace(/'/g,"\\'")}');return false;">${getDisplayName(p, Object.keys(s.players||{}))}</span>`;
+}).join('') :'<span style="color:var(--text2);font-size:.82em;">No bench players available</span>';
+const canSub = _subOut && _subIn;
+const btnStyle = `width:100%;margin-top:4px;opacity:${canSub?1:.45};cursor:${canSub?'pointer':'not-allowed'};`;
+el.innerHTML = `
+<div style="display:flex;flex-direction:column;gap:8px;">
+<div style="display:flex;align-items:baseline;gap:6px;margin-bottom:2px;">
+<span style="font-size:.75em;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);min-width:52px;">Sub Out</span>
+<div class="flex-wrap-gap">${outChips}</div>
+</div>
+<div style="display:flex;align-items:baseline;gap:6px;">
+<span style="font-size:.75em;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);min-width:52px;">Sub In</span>
+<div class="flex-wrap-gap">${inChips}</div>
+</div>
+<button onclick="executeSubFromPanel2();" class="button button-success" style="${btnStyle}" ${canSub?'':'disabled'}>
+${_subOut && _subIn ? `⇄ ${getDisplayName(_subOut, Object.keys(s.players||{}))} → ${getDisplayName(_subIn, Object.keys(s.players||{}))}` :'⇄ Make Substitution'}
+</button>
+</div>
+`;
+}
+function subPickOut(p){ _subOut = (_subOut === p) ? null :p; renderSubPanel(); }
+function subPickIn(p) { _subIn  = (_subIn  === p) ? null :p; renderSubPanel(); }
+function executeSubFromPanel(outPlayer){
+const sel = $('subSelect_' + outPlayer);
+if (!sel || !sel.value){ showToast('Select a bench player to swap in.', 'warn'); return; }
+executeSubstitution(outPlayer, sel.value);
+renderSubPanel(); }
+function executeSubFromPanel2(){
+if (!_subOut){ showToast('Please select the active player to substitute out.', 'warn'); return; }
+if (!_subIn) { showToast('Please select the bench player to substitute in.', 'warn'); return; }
+executeSubstitution(_subOut, _subIn);
+_subOut = null; _subIn = null;
+renderSubPanel(); }
+function selectPlayer(p){state.selectedPlayer=state.selectedPlayer===p?null:p;renderPlayerButtons();}
+function handlePlayerImport(event){
+const file=event.target.files[0]; if(!file) return;
+const reader=new FileReader();
+reader.onload=e=>{
+const players=e.target.result.replace(/\r\n?/g,'\n').split('\n').flatMap(l=>l.split(/[,;]+/)).map(p=>p.trim()).filter(Boolean);
+const id=state.currentSessionId; if(!id) return;
+updateSessionAtomic(id,s=>{if(!s.players) s.players={};players.forEach(p=>{if(!s.players[p]) s.players[p]={name:p,points:0,answers:[]};});}).then(()=>saveGlobalPlayers(players));
+withWriteLock(id,()=>{const s=getCurrentSession();if(!s.players) s.players={};players.forEach(p=>{if(!s.players[p]) s.players[p]={name:p,points:0,answers:[]};});});
+renderPlayerPool(); renderPlayerButtons(); renderSubPanel(); renderTeams(); };
+reader.readAsText(file); event.target.value=''; }
+function addTeam(){
+const input=$('teamNameInput');
+const name=input.value.trim(); if(!name){showToast('Please enter a team name.');return;}
+const id=state.currentSessionId; if(!id) return;
+const team={id:Date.now().toString(),name,playerMembers:[]};
+updateSessionAtomic(id,s=>{s.teams=toArray(s.teams);s.teams.push(team);});
+withWriteLock(id,()=>{const s=getCurrentSession();s.teams=toArray(s.teams);s.teams.push(team);});
+input.value=''; renderTeams(); }
+function removeTeam(teamId){
+const id=state.currentSessionId; if(!id) return;
+const filter=s=>{s.teams=toArray(s.teams).filter(t=>t.id!==teamId);};
+updateSessionAtomic(id,filter);
+withWriteLock(id,()=>{const s=getCurrentSession();if(s) filter(s);});
+renderTeams(); renderPlayerButtons(); renderSubPanel(); }
+function updateTeamName(teamId,newName){
+const id=state.currentSessionId; if(!id) return;
+const update=s=>{const t=toArray(s.teams).find(t=>t.id===teamId);if(t) t.name=newName;};
+updateSessionAtomic(id,update);
+withWriteLock(id,()=>{const s=getCurrentSession();if(s) update(s);});
+}
+function togglePlayerInTeam(teamId,player){
+const id=state.currentSessionId; if(!id) return;
+const toggle=s=>{const t=toArray(s.teams).find(t=>t.id===teamId);if(!t) return;t.playerMembers=toArray(t.playerMembers);const i=t.playerMembers.indexOf(player);if(i>-1) t.playerMembers.splice(i,1);else t.playerMembers.push(player);};
+updateSessionAtomic(id,toggle);
+withWriteLock(id,()=>{const s=getCurrentSession();if(s) toggle(s);});
+renderTeams(); renderPlayerButtons(); renderSubPanel(); }
+function renderTeams(){
+const s=getCurrentSession(); const el=$('teamsContainer');
+if(!el||!s) return;
+const teams=s.teams||[];
+if(!teams.length){el.innerHTML='<p class="text-2">No teams created yet.</p>';return;}
+const players=Object.keys(s.players||{});
+el.innerHTML=teams.map(team=>`
+<div class="team-section">
+<input type="text" value="${team.name}" onchange="updateTeamName('${team.id}',this.value)" />
+<div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;">
+${players.length?players.map(p=>`<button class="button-category ${team.playerMembers.includes(p)?'selected':''}" onclick="togglePlayerInTeam('${team.id}','${p}')">${p}</button>`).join(''):'<p class="text-2">No players available.</p>'}
+</div>
+<button class="button button-danger" onclick="removeTeam('${team.id}')" class="mt-10">Remove Team</button>
+</div>`).join('');
+}
+function renderCategoryTreeDisplay(){
+const el = $('categoryTreeDisplay'); if (!el) return;
+el.innerHTML = Object.entries(CATEGORY_TREE).map(([parent, subs]) =>
+`<div class="mb-8">
+<div style="font-size:.78em;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);margin-bottom:4px;">${parent}</div>
+<div style="display:flex;flex-wrap:wrap;gap:4px;">${subs.map(s=>`<span style="font-size:.8em;padding:2px 8px;border-radius:10px;background:var(--sec-bg);border:1.5px solid var(--border);color:var(--text1);">${s}</span>`).join('')}</div>
+</div>`
+).join(''); }
+var _selectedParentCat = null;
+function renderCategories(){
+const el = $('categoryButtonsContainer');
+const group = $('categoryInputGroup');
+if (!el) return;
+const noCategory = state.selectedPointType === 'Neg' || state.selectedPointType === 'Dead';
+if (group) group.style.display = noCategory ? 'none' :'';
+if (noCategory){ el.innerHTML = ''; return; }
+let html = '';
+Object.entries(CATEGORY_TREE).forEach(([parent, subs]) =>{
+const parentSel = state.selectedCategory === parent;
+html += `<div class="cat-group">`;
+html += `<button class="cat-group-label${parentSel ? ' selected' :''}" onclick="selectCategory('${parent.replace(/'/g,"\\'")}');" title="General ${parent}">${parent}</button>`;
+subs.forEach(sub =>{
+const sel = state.selectedCategory === sub;
+html += `<button class="cat-group-chip${sel ? ' selected' :''}" onclick="selectCategory('${sub.replace(/'/g,"\\'")}');">${sub}</button>`;
+});
+html += `</div>`;
+});
+el.innerHTML = html; }
+function selectCategory(c){
+state.selectedCategory = state.selectedCategory === c ? null :c;
+_selectedParentCat = state.selectedCategory ? (CAT_PARENT[state.selectedCategory] || state.selectedCategory) :null;
+renderCategories(); }
+function selectPointType(type){
+state.selectedPointType = state.selectedPointType === type ? null :type;
+if (state.selectedPointType === 'Neg' || state.selectedPointType === 'Dead'){
+state.selectedCategory = null; _selectedParentCat = null; }
+renderPointTypeButtons();
+renderPlayerButtons();
+renderCategories();
+const playerHint = $('playerOptionalHint');
+if (playerHint) playerHint.style.display =
+(state.selectedPointType === 'Bonus' || state.selectedPointType === 'Dead' || state.selectedPointType === 'Miss') ? 'inline' :'none';
+}
+function renderPointTypeButtons(){
+document.querySelectorAll('.button-point-type').forEach(btn=>{
+btn.classList.toggle('selected',!!state.selectedPointType&&btn.getAttribute('onclick').includes("'"+state.selectedPointType+"'"));
+}); }
+function renderTHeard(){
+const el = $('tHeardDisplay');
+if (el) el.textContent = (getCurrentSession()?.tHeard) || 0; }
+function adjustTHeard(delta){
+const id = state.currentSessionId; if (!id) return;
+const apply = s =>{ s.tHeard = Math.max(0, (s.tHeard || 0) + delta); };
+updateSessionAtomic(id, apply);
+withWriteLock(id, () =>{ const s = getCurrentSession(); if (s) apply(s); });
+renderTHeard();
+if (analyticsOpen) renderAnalytics(); }
+function recordAnswer(){
+const id = state.currentSessionId; if (!id) return;
+const isBonus = state.selectedPointType === 'Bonus';
+const isDead  = state.selectedPointType === 'Dead';
+const isMiss = state.selectedPointType === 'Miss';
+if (!state.selectedPlayer && !isBonus && !isDead && !isMiss){ showToast('Please select a player.'); return; }
+if (!state.selectedPointType){ showToast('Please select a point type.'); return; }
+const isTeamBonus = isBonus && state.selectedPlayer && state.selectedPlayer.startsWith('__team__');
+const teamBonusId = isTeamBonus ? state.selectedPlayer.replace('__team__','') :null;
+const s0 = getCurrentSession();
+const bonusTeam = teamBonusId ? (s0.teams||[]).find(t => t.id === teamBonusId) :null;
+const recordedPlayer = isTeamBonus
+? ('— ' + (bonusTeam ? bonusTeam.name :'Team') + ' Bonus —')
+:(state.selectedPlayer || (isMiss ? '— Miss —' :'— Team Bonus —'));
+const pointMap ={'Toss-up':10,'Bonus':10,'Neg':-5,'Power':15,'Miss':0,'Dead':0};
+const points   = pointMap[state.selectedPointType];
+const isBuzzIn = ['Toss-up','Power','Neg','Miss','Dead'].includes(state.selectedPointType);
+const effectiveCategory = state.selectedCategory || _selectedParentCat || '—';
+const answer ={id:Date.now().toString(),player:recordedPlayer,pointType:state.selectedPointType,category:effectiveCategory,points,timestamp:new Date().toISOString()};
+const applyAnswer = s =>{
+s.answerLog = toArray(s.answerLog);
+if (isBuzzIn){
+const prev = s.answerLog.length > 0 ? s.answerLog[s.answerLog.length - 1] :null;
+const prevWasWrong = prev && (prev.pointType === 'Neg' || prev.pointType === 'Miss');
+const thisIsFollowup = prevWasWrong && (state.selectedPointType === 'Toss-up' || state.selectedPointType === 'Power');
+if (!thisIsFollowup) s.tHeard = (s.tHeard || 0) + 1; }
+s.answerLog.push(answer);
+if (!s.players) s.players ={};
+const realPlayer = !isTeamBonus && state.selectedPlayer && !state.selectedPlayer.startsWith('— ');
+if (realPlayer){
+const p = s.players[answer.player] || (s.players[answer.player] ={name:answer.player,points:0,answers:[]});
+p.answers = toArray(p.answers); p.answers.push(answer); p.points = (p.points||0) + points;
+}
+if (isBonus && !realPlayer){ s.teamBonusPoints = (s.teamBonusPoints || 0) + points; }
+};
+updateSessionAtomic(id, applyAnswer);
+withWriteLock(id, () =>{ const s = getCurrentSession(); if (s) applyAnswer(s); });
+const allP = Object.keys((s0||{}).players ||{});
+const dispName = isTeamBonus
+? (bonusTeam ? bonusTeam.name + ' Bonus' :'Team Bonus')
+:(state.selectedPlayer ? getDisplayName(state.selectedPlayer, allP) :'Team');
+const ptSign   = points > 0 ? '+'+points :(points < 0 ? ''+points :'0');
+const toastCls = state.selectedPointType === 'Neg' ? 'neg'
+:(state.selectedPointType === 'Miss' || state.selectedPointType === 'Dead') ? 'miss' :points >= 15 ? 'pts' :'';
+showRecordToast(dispName + ' — ' + state.selectedPointType + ' (' + ptSign + ' pts)', toastCls);
+state.selectedPlayer = null; state.selectedPointType = null; state.selectedCategory = null; _selectedParentCat = null;
+const playerHint = $('playerOptionalHint');
+if (playerHint) playerHint.style.display = 'none';
+renderAll(); }
+document.addEventListener('keydown', e =>{
+const tag = document.activeElement && document.activeElement.tagName;
+if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+if (document.activeElement && document.activeElement.isContentEditable) return;
+const keyMap ={'1':'Power','2':'Toss-up','3':'Bonus','4':'Miss','5':'Neg','6':'Dead'};
+if (keyMap[e.key]){
+e.preventDefault();
+selectPointType(keyMap[e.key]);
+} else if (e.key === 'Enter'){
+const btn = $('recordAnswerBtn');
+if (btn && btn.offsetParent !== null){ e.preventDefault(); recordAnswer(); }
+}
+});
+function recordTeamBonus(teamId){
+const id = state.currentSessionId; if (!id) return;
+const s0 = getCurrentSession(); if (!s0) return;
+const team = (s0.teams||[]).find(t => t.id === teamId);
+const label = '— ' + (team ? team.name :'Team') + ' Bonus —';
+const answer ={id:Date.now().toString(),player:label,pointType:'Bonus',category:'—',points:10,timestamp:new Date().toISOString()};
+const apply = s =>{
+s.answerLog = toArray(s.answerLog); s.answerLog.push(answer);
+s.teamBonusPoints = (s.teamBonusPoints||0) + 10; };
+updateSessionAtomic(id, apply);
+withWriteLock(id, () =>{ const s = getCurrentSession(); if (s) apply(s); });
+showRecordToast((team ? team.name :'Team') + ' Bonus (+10 pts)', '');
+renderAll(); }
+function deleteAnswer(answerId){
+const id=state.currentSessionId; if(!id) return;
+const del=s=>{
+s.answerLog=toArray(s.answerLog);
+const idx = s.answerLog.findIndex(x=>x.id===answerId);
+if(idx === -1) return;
+const a = s.answerLog[idx];
+const isBuzzIn = ['Toss-up','Power','Neg','Miss','Dead'].includes(a.pointType);
+if (isBuzzIn){
+const prev = idx > 0 ? s.answerLog[idx - 1] :null;
+const prevWasWrong = prev && (prev.pointType === 'Neg' || prev.pointType === 'Miss');
+const wasFollowup = prevWasWrong && (a.pointType === 'Toss-up' || a.pointType === 'Power');
+if (!wasFollowup){ s.tHeard = Math.max(0, (s.tHeard || 0) - 1); }
+}
+s.answerLog = s.answerLog.filter(x=>x.id!==answerId);
+if (a.player === '— Team Bonus —'){ s.teamBonusPoints = Math.max(0, (s.teamBonusPoints || 0) - (a.points || 0)); } else if(s.players?.[a.player]){
+s.players[a.player].answers=toArray(s.players[a.player].answers).filter(x=>x.id!==answerId);
+s.players[a.player].points=(s.players[a.player].points||0)-(a.points||0); }
+};
+updateSessionAtomic(id,del);
+withWriteLock(id,()=>{const s=getCurrentSession();if(s) del(s);});
+renderAll(); }
+function clearAnswerLog(){
+showConfirm('Clear all answers?', 'Clear').then(ok =>{
+if (!ok) return;
+const id=state.currentSessionId; if(!id) return;
+const clear=s=>{s.answerLog=[];s.tHeard=0;Object.values(s.players||{}).forEach(p=>{p.points=0;p.answers=[];});};
+updateSessionAtomic(id,clear);
+withWriteLock(id,()=>{const s=getCurrentSession();if(s) clear(s);});
+renderAll(); });
+}
+function renderAnswerLog(){
+const s=getCurrentSession(); const el=$('answerLog');
+if(!el||!s) return;
+const answers=s.answerLog||[];
+el.innerHTML=answers.length
+?[...answers].reverse().map((a,i)=>`
+<div class="log-entry">
+<span><strong>${answers.length-i}. ${a.player === '— Team Bonus —' ? (a.pointType === 'Dead' ? '<span class="text-3">Dead TU</span>' :'<span class="warning">Team Bonus</span>') :a.player}</strong> &mdash; ${a.pointType==='Power'?'TU ⚡︎ Power':a.pointType} (${a.points>0?'+':''}${a.points} Pts) &mdash; ${a.category}</span>
+<button class="button button-danger" onclick="deleteAnswer('${a.id}')" style="padding:4px 8px;font-size:.8em;">Delete</button>
+</div>`).join('') :'<p class="text-2">No answers recorded yet.</p>';
+el.onscroll=updateFadeMasks;
+setTimeout(updateFadeMasks,20); }
+function calculatePlayerStats(){
+return Object.values(getCurrentSession()?.players||{}).map(p=>{
+const a=p.answers||[];
+return{name:p.name,points:p.points,totalAnswers:a.length,tossupsCorrect:a.filter(x=>x.pointType==='Toss-up').length,bonusPoints:a.filter(x=>x.pointType==='Bonus').length*10,negs:a.filter(x=>x.pointType==='Neg').length,misses:a.filter(x=>x.pointType==='Miss').length,powers:a.filter(x=>x.pointType==='Power').length};
+}).sort((a,b)=>b.points!==a.points?b.points-a.points:b.powers!==a.powers?b.powers-a.powers:a.negs-b.negs);
+}
+function calculateTeamStats(){
+const s=getCurrentSession();
+return (s?.teams||[]).map(team=>{
+let pts=0,ans=0;
+team.playerMembers.forEach(n=>{const p=s.players[n];if(p){pts+=p.points;ans+=(p.answers||[]).length;}});
+return{name:team.name,totalPoints:pts,totalAnswers:ans,members:team.playerMembers,averagePerMember:team.playerMembers.length?(pts/team.playerMembers.length).toFixed(2):0};
+}).sort((a,b)=>b.totalPoints-a.totalPoints); }
+function buildRankingList(players){
+let html='',rank=1;
+players.forEach((s,i)=>{
+const prev=players[i-1];
+const tied=prev&&prev.points===s.points&&prev.powers===s.powers&&prev.negs===s.negs;
+if(i>0&&!tied) rank=i+1;
+const sfx=['st','nd','rd'][rank-1]||'th';
+html+=`<li style="padding:6px 0;border-bottom:1.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;"><span><strong style="color:var(--primary);min-width:42px;display:inline-block;">${rank}${sfx}</strong> ${s.name}</span><span style="color:var(--text2);font-size:.92em;">${s.points} Pts${s.powers?' &middot; '+s.powers+'⚡︎ Powered':''}${s.negs?' &middot; '+'-'+s.negs+' Neg':''}${s.misses?' &middot; '+s.misses+' Miss':''}</span></li>`;
+});
+return html; }
+function renderStatistics(){
+const el=$('statisticsContainer'); if(!el) return;
+const open=new Set();
+el.querySelectorAll('.stat-card:not(.collapsed),.team-stat-card:not(.collapsed)').forEach(c=>{const n=c.querySelector('.player-name,.team-name');if(n) open.add(n.textContent.trim());});
+const ps=calculatePlayerStats(),ts=calculateTeamStats(),active=ps.filter(s=>s.totalAnswers>0);
+let html='<div class="stats-grid">';
+ts.forEach(t=>{html+=`<div class="team-stat-card collapsed"><h3 onclick="toggleStatCard(event)"><span class="team-name">${t.name}</span><span class="team-score">${t.totalPoints} Pts</span></h3><div class="stat-details"><div class="stat-row"><span class="stat-label">Total Points:</span><span class="stat-value">${t.totalPoints}</span></div><div class="stat-row"><span class="stat-label">Total Answers:</span><span class="stat-value">${t.totalAnswers}</span></div><div class="stat-row"><span class="stat-label">Avg per Member:</span><span class="stat-value">${t.averagePerMember}</span></div><div class="stat-row"><span class="stat-label">Members:</span><span>${t.members.join(', ')||'None'}</span></div></div></div>`;});
+if(active.length){
+active.forEach(s=>{html+=`<div class="stat-card collapsed"><h3 onclick="toggleStatCard(event)"><span class="player-name">${s.name}</span><span class="player-score">${s.points} Pts</span></h3><div class="stat-details"><div class="stat-row"><span class="stat-label">Total Points:</span><span class="stat-value">${s.points}</span></div><div class="stat-row"><span class="stat-label">Answers:</span><span class="stat-value">${s.totalAnswers}</span></div><div class="stat-row"><span class="stat-label">Toss-ups:</span><span class="stat-value">${s.tossupsCorrect+s.powers}${s.powers?` (${s.powers}⚡︎)`:''}</span></div><div class="stat-row"><span class="stat-label">Bonus Pts:</span><span class="stat-value">${s.bonusPoints}</span></div><div class="stat-row"><span class="stat-label">Negs:</span><span class="stat-value">${s.negs}</span></div><div class="stat-row"><span class="stat-label">Misses:</span><span class="stat-value">${s.misses}</span></div></div></div>`;});
+html+=`<div class="overall-ranking"><h3 style="margin-top:0;">Player Rankings</h3><ol style="list-style:none;margin:12px 0 0;padding:0;">${buildRankingList(active)}</ol></div>`;
+} else{html+='<p class="text-2">No statistics available yet.</p>';}
+html+='</div>';
+el.innerHTML=html;
+if(open.size){el.querySelectorAll('.stat-card,.team-stat-card').forEach(c=>{const n=c.querySelector('.player-name,.team-name');if(n&&open.has(n.textContent.trim())) c.classList.remove('collapsed');});}
+}
+function toggleStatCard(e){e.currentTarget.closest('.stat-card,.team-stat-card')?.classList.toggle('collapsed');}
+function importFromJSON(event){
+const file=event.target.files[0]; if(!file) return;
+const statusEl=$('importStatus');
+statusEl.style.display='block'; statusEl.style.color='var(--text2)'; statusEl.textContent='Reading file…';
+const reader=new FileReader();
+reader.onload=e=>{
+try{
+const data=JSON.parse(e.target.result);
+if(!data.sessionName||(!data.players&&!data.answerLog)) throw new Error('Not a valid export.');
+const existingId=Object.keys(state.sessions).find(id=>state.sessions[id].name===data.sessionName);
+const doImport = () =>{
+const sid=existingId||Date.now().toString();
+const imported={id:sid,name:data.sessionName,created:data.created||new Date().toISOString(),lastUpdated:new Date().toISOString(),players:data.players||{},teams:data.teams||[],categories:data.categories||[],answers:data.answers||[],answerLog:data.answerLog||[]};
+Object.keys(imported.players).forEach(name=>{imported.players[name].answers=imported.answerLog.filter(a=>a.player===name);imported.players[name].points=imported.players[name].answers.reduce((s,a)=>s+(a.points||0),0);});
+state.sessions[sid]=imported; state.currentSessionId=sid;
+loadSessionData(); saveAllData(); renderAll();
+statusEl.style.color='var(--success)'; statusEl.textContent='Imported "'+imported.name+'" with '+imported.answerLog.length+' answers.';
+};
+if(existingId){
+showConfirm('Session "'+data.sessionName+'" exists. Overwrite?','Overwrite','warn').then(ok=>{
+if(!ok){statusEl.textContent='Cancelled.';event.target.value='';return;}
+doImport(); });
+} else{ doImport(); }
+} catch(err){statusEl.style.color='var(--danger)';statusEl.textContent='Import failed:'+err.message;}
+event.target.value=''; };
+reader.onerror=()=>{statusEl.style.color='var(--danger)';statusEl.textContent='Failed to read file.';};
+reader.readAsText(file); }
+function exportToExcel(){
+const s=getCurrentSession(); if(!s) return;
+const ps=calculatePlayerStats(),ts=calculateTeamStats(),csv=[];
+if($('exportPlayers').classList.contains('selected')){csv.push('Player Statistics','Player Name,Total Points,Total Answers,Total TUs,Powered TUs,Bonuses,Negs,Misses');ps.forEach(p=>csv.push([p.name,p.points,p.totalAnswers,p.powers+p.tossupsCorrect,p.powers,p.bonusPoints/10,p.negs,p.misses].join(',')));csv.push('');}
+if($('exportTeamStats').classList.contains('selected')&&ts.length){csv.push('Team Statistics','Team Name,Total Points,Total Answers,Members');ts.forEach(t=>csv.push([t.name,t.totalPoints,t.totalAnswers,'"'+t.members.join(', ')+'"'].join(',')));csv.push('');}
+if($('exportAnswerLog').classList.contains('selected')){csv.push('Answer Log','Player,Point Type,Category,Points,Timestamp');(s.answerLog||[]).forEach(a=>csv.push([a.player,a.pointType,a.category,a.points,new Date(a.timestamp).toLocaleString()].join(',')));}
+downloadFile(csv.join('\n'),'quiz-bowl-'+s.name+'-'+new Date().toISOString().split('T')[0]+'.csv','text/csv');
+}
+function exportAllData(format){
+const allSessions = Object.values(state.sessions||{});
+if (!allSessions.length){ showToast('No data to export.', 'warn'); return; }
+const date = new Date().toISOString().split('T')[0];
+if (format === 'json'){
+const payload = { exportedAt: new Date().toISOString(), sessions: allSessions };
+downloadFile(JSON.stringify(payload, null, 2), 'hse-qb-all-sessions-'+date+'.json', 'application/json');
+showToast('All sessions exported as JSON.', 'success');
+} else if (format === 'xlsx'){
+if (typeof XLSX === 'undefined'){ showToast('Excel library not loaded yet — try again.', 'warn'); return; }
+const wb = XLSX.utils.book_new();
+// Sheet 1: Answer Log (all sessions)
+const logRows = [['Session','Player','Point Type','Category','Points','Timestamp']];
+allSessions.forEach(s =>{
+(s.answerLog||[]).forEach(a =>{
+logRows.push([s.name||'', a.player||'', a.pointType||'', a.category||'', a.points, new Date(a.timestamp).toLocaleString()]);
+});
+});
+XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(logRows), 'Answer Log');
+// Sheet 2: Player Stats (per session)
+const playerRows = [['Session','Player','Points','Total TUs','Powered TUs','Bonuses','Negs','Misses','Total Answers']];
+allSessions.forEach(s =>{
+Object.values(s.players||{}).forEach(p =>{
+const ans = (p.answers||[]);
+playerRows.push([
+s.name||'', p.name||'', p.points||0,
+ans.filter(a=>a.pointType==='Toss-up'||a.pointType==='Power').length,
+ans.filter(a=>a.pointType==='Power').length,
+ans.filter(a=>a.pointType==='Bonus').length,
+ans.filter(a=>a.pointType==='Neg').length,
+ans.filter(a=>a.pointType==='Miss').length,
+ans.length
+]);
+});
+});
+XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(playerRows), 'Player Stats');
+// Sheet 3: Session Summary
+const summaryRows = [['Session','Created','Answer Count','Toss-Ups Heard']];
+allSessions.forEach(s =>{
+summaryRows.push([s.name||'', s.created ? new Date(s.created).toLocaleString() : '', (s.answerLog||[]).length, s.tHeard||0]);
+});
+XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(summaryRows), 'Session Summary');
+XLSX.writeFile(wb, 'hse-qb-all-sessions-'+date+'.xlsx');
+showToast('All sessions exported as Excel.', 'success');
+} else {
+const rows = ['Session,Player,Point Type,Category,Points,Timestamp'];
+allSessions.forEach(s =>{
+(s.answerLog||[]).forEach(a =>{
+rows.push([
+'"'+(s.name||'').replace(/"/g,'""')+'"',
+'"'+(a.player||'').replace(/"/g,'""')+'"',
+a.pointType, '"'+(a.category||'').replace(/"/g,'""')+'"',
+a.points, new Date(a.timestamp).toLocaleString()
+].join(','));
+});
+});
+downloadFile(rows.join('\n'), 'hse-qb-all-sessions-'+date+'.csv', 'text/csv');
+showToast('All sessions exported as CSV.', 'success');
+}
+}
+function exportToJSON(){
+const s=getCurrentSession(); if(!s) return;
+downloadFile(JSON.stringify({sessionName:s.name,created:s.created,lastUpdated:s.lastUpdated,players:s.players,teams:s.teams,answerLog:s.answerLog,categories:state.categories},null,2),'quiz-bowl-'+s.name+'-'+new Date().toISOString().split('T')[0]+'.json','application/json');
+}
+function downloadFile(content,filename,mimeType){
+const a=document.createElement('a');
+a.href='data:'+mimeType+';charset=utf-8,'+encodeURIComponent(content);
+a.download=filename; a.style.display='none';
+document.body.appendChild(a); a.click(); document.body.removeChild(a); }
+function injectDebugData(){
+const s = getCurrentSession(); if (!s){ showToast('No active session.', 'warn'); return; }
+const scenario = $('debugScenario')?.value || 'mid';
+const statusEl = $('debugStatus');
+const team1Players = ['Alex Carter', 'Jordan Lee', 'Sam Rivera', 'Morgan Chen'];
+const team2Players = ['Taylor Brooks', 'Casey Kim', 'Riley Patel', 'Drew Nguyen'];
+const allPlayers   = [...team1Players, ...team2Players];
+const cats = DEFAULT_CATEGORIES;
+const rng = (arr) => arr[Math.floor(Math.random() * arr.length)];
+const profiles ={
+'Alex Carter':{power:25,tossup:40,bonus:20,neg:8, miss:7},
+'Jordan Lee':{power:10,tossup:35,bonus:25,neg:10,miss:20},
+'Sam Rivera':{power:5, tossup:25,bonus:20,neg:5, miss:45},
+'Morgan Chen':{power:15,tossup:35,bonus:20,neg:12,miss:18},
+'Taylor Brooks':{power:20,tossup:38,bonus:20,neg:10,miss:12},
+'Casey Kim':{power:8, tossup:30,bonus:22,neg:8, miss:32},
+'Riley Patel':{power:6, tossup:28,bonus:18,neg:6, miss:42},
+'Drew Nguyen':{power:12,tossup:32,bonus:20,neg:15,miss:21},
+};
+const pointMap ={ 'Power':15, 'Toss-up':10, 'Bonus':10, 'Neg':-5, 'Miss':0, 'Dead':0 };
+const tuHeard = scenario === 'full' ? 30 :scenario === 'blowout' ? 30 :20;
+function pickType(player){
+const p = scenario === 'blowout' && team2Players.includes(player)
+?{ power:3, tossup:15, bonus:10, neg:18, miss:54 }  // team 2 struggles in blowout
+:(profiles[player] ||{ power:10, tossup:30, bonus:20, neg:10, miss:30 });
+const pool = [];
+for (let i=0; i<p.power;   i++) pool.push('Power');
+for (let i=0; i<p.tossup;  i++) pool.push('Toss-up');
+for (let i=0; i<p.bonus;   i++) pool.push('Bonus');
+for (let i=0; i<p.neg;     i++) pool.push('Neg');
+for (let i=0; i<p.miss;    i++) pool.push('Miss');
+return rng(pool); }
+const log = [];
+let tHeardCount = 0;
+const baseTime = new Date('2025-11-01T14:00:00Z').getTime();
+let t = baseTime;
+const playerAnswers ={}; //{ name:[answers] }
+allPlayers.forEach(n =>{ playerAnswers[n] = []; });
+for (let q = 0; q < tuHeard; q++){
+t += 35000 + Math.floor(Math.random() * 40000); // 35–75s per question
+const buzzPool = [...allPlayers, 'Alex Carter', 'Taylor Brooks', 'Morgan Chen'];
+const buzzer = rng(buzzPool);
+const type = pickType(buzzer);
+const cat  = rng(cats);
+const ts   = new Date(t).toISOString();
+const buzzAnswer ={
+id:(t).toString(),
+player:buzzer,
+pointType:type,
+category:cat,
+points:pointMap[type],
+timestamp:ts,
+};
+log.push(buzzAnswer);
+playerAnswers[buzzer].push(buzzAnswer);
+const isBuzz = ['Toss-up','Power','Neg','Miss','Dead'].includes(type);
+if (isBuzz){
+const prev = log[log.length - 2] || null;
+const prevWasWrong = prev && (prev.pointType === 'Neg' || prev.pointType === 'Miss');
+const isFollowup = prevWasWrong && (type === 'Toss-up' || type === 'Power');
+if (!isFollowup) tHeardCount++; }
+if ((type === 'Power' || type === 'Toss-up') && Math.random() < 0.65){
+t += 20000 + Math.floor(Math.random() * 15000);
+const bonusCat = Math.random() < 0.7 ? cat :rng(cats); // usually same category
+const bonusTs  = new Date(t).toISOString();
+const teammates = (team1Players.includes(buzzer) ? team1Players :team2Players).filter(p => p !== buzzer);
+const bonusPlayer = Math.random() < 0.4 ? rng(teammates) :null; // 40% attributed to a teammate
+const bonusAnswer ={
+id:(t + 1).toString(),
+player:bonusPlayer || '— Team Bonus —',
+pointType:'Bonus',
+category:bonusCat,
+points:10,
+timestamp:bonusTs,
+};
+log.push(bonusAnswer);
+if (bonusPlayer) playerAnswers[bonusPlayer].push(bonusAnswer); }
+}
+const players ={};
+allPlayers.forEach(name =>{
+const answers = playerAnswers[name];
+const points  = answers.reduce((sum, a) => sum + a.points, 0);
+players[name] ={ name, points, answers };
+});
+const teams = [
+{ name:'Team Alpha', playerMembers:team1Players, id:'debug-team-1' },
+{ name:'Team Beta',  playerMembers:team2Players, id:'debug-team-2' },
+];
+const id = state.currentSessionId; void id; // kept for reference only, never written to Firebase
+const sess = getCurrentSession(); if (!sess){ showToast('No session.', 'warn'); return; }
+sess.players    = players;
+sess.teams      = teams;
+sess.answerLog  = log;
+sess.tHeard     = tHeardCount;
+sess.categories = [...DEFAULT_CATEGORIES];
+sess.lastUpdated = new Date().toISOString();
+const totalAnswers = log.length;
+const totalPts = allPlayers.reduce((s, n) => s + (players[n]?.points || 0), 0);
+if (statusEl) statusEl.textContent = `✔ Injected ${totalAnswers} answers across ${tuHeard} questions. ${allPlayers.length} players, 2 teams, ${totalPts} total points.`;
+showToast('Debug data injected.', 'success'); }
+function clearDebugData(){
+showConfirm('Clear all data in the current session?', 'Clear').then(ok =>{
+if (!ok) return;
+const s = getCurrentSession(); if (!s) return;
+s.players   ={};
+s.teams     = [];
+s.answerLog = [];
+s.tHeard    = 0;
+loadSessionData(); renderAll();
+const statusEl = $('debugStatus');
+if (statusEl) statusEl.textContent = '✔ Session data cleared.';
+showToast('Session cleared.'); });
+}
+function resetAllData(){
+if (!isAdmin){ showToast('Not authorised.', 'warn'); return; }
+showConfirm('Enter the admin password to proceed:', 'Verify', 'warn').then(ok =>{
+if (!ok) return;
+const ct = $('confirmToast');
+const msgEl = $('confirmToastMsg');
+const okEl  = $('confirmToastOk');
+if (!ct) return;
+msgEl.innerHTML = 'Admin password:<input id="resetPwInput" type="password" placeholder="Password" style="margin-top:8px;display:block;width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:.95em;background:var(--card);color:var(--text);" />';
+okEl.textContent = 'Submit';
+okEl.className = 'ct-ok';
+ct.classList.add('show');
+setTimeout(() => $('resetPwInput')?.focus(), 80);
+_confirmResolve = (confirmed) =>{
+_confirmResolve = null;
+ct.classList.remove('show');
+if (!confirmed) return;
+const pw = $('resetPwInput')?.value;
+if (pw !== 'Neg 5'){ showToast('Incorrect password.'); return; }
+showConfirm('Delete ALL sessions and data? This cannot be undone.', 'Delete Everything').then(final =>{
+if (!final) return;
+sessionsRef.remove().catch(e=>showFirebaseError(e.message));
+globalPlayersRef.remove().catch(e=>showFirebaseError(e.message));
+localStorage.setItem(CURRENT_SESSION_KEY,'');
+state.sessions={}; state.currentSessionId=null;
+createNewSession(); renderAll(); });
+}; });
+}
+document.addEventListener('DOMContentLoaded', initFirebase);</script><div id="recordToast"></div><div id="appToast"></div><div id="confirmToast"><div class="ct-msg" id="confirmToastMsg"></div><div class="ct-btns"><button class="ct-cancel" onclick="resolveConfirmToast(false)">Cancel</button><button class="ct-ok" id="confirmToastOk" onclick="resolveConfirmToast(true)">Confirm</button></div></div><div id="welcomeToast"><div class="wt-title">Welcome to HSE Quiz Bowl Tracker!</div><div class="wt-sub">New here? The Help guide covers everything — players, teams, recording answers, and analytics.</div><div class="wt-btns"><button class="wt-btn-primary" onclick="dismissWelcomeToast(true)">Open Help Guide</button><button class="wt-btn-dismiss" onclick="dismissWelcomeToast(false)">Maybe Later</button></div></div>
+</body>
+</html>

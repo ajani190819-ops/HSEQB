@@ -1,0 +1,1000 @@
+<span class="pd-chip" style="background:rgba(243,156,18,.1);color:var(--warning);border:1px solid rgba(243,156,18,.35);">${misses} Miss${misses !== 1 ? 'es' :''}</span>
+<span class="pd-chip" style="background:rgba(102,126,234,.1);color:var(--primary);">${tHeardLabel}</span>
+</div>
+<div class="pd-section-title">Performance Metrics</div>
+<div style="background:var(--sec-bg);border:1.5px solid var(--border);border-radius:10px;padding:6px 16px;margin-bottom:var(--sp);">
+${metricRow(player.points, 'Total Points', 'raw')}
+${actualPts20 !== null ? metricRow(fmtPts20(actualPts20), 'Actual Pts / 20 TU Heard', 'pts20') :''}
+${playerTHeard > 0 ? metricRow(fmtPts20(((15*powers+10*tossups-5*negs)/playerTHeard)*20), 'Pts / 20 TU Heard (skill)', 'pts20') :''}
+${actualizedPot !== null ? metricRow(actualizedPot, 'Player Potential (actual / possible)', 'pct') :''}
+${metricRow(modalAccuracy, 'Accuracy', 'pct')}
+${metricRow(!confZeroModal ? confValueModal :null, 'Buzz Volume (buzz rate)', 'pct')}
+</div>
+<div class="pd-section-title">Category Rankings &mdash; All ${catArr.length} Categor${catArr.length !== 1 ? 'ies' :'y'}</div>
+<div style="overflow-x:auto;border-radius:8px;border:1.5px solid var(--border);">
+<table class="pd-cat-table">
+<thead>
+<tr>
+<th style="width:42px;">#</th>
+<th>Category</th>
+<th class="right">Points</th>
+<th class="right">Answers</th>
+<th class="right" class="success">Correct</th>
+<th class="right" class="danger">Negs</th>
+<th class="right" class="warning">Misses</th>
+</tr>
+</thead>
+<tbody>${catRows}</tbody>
+</table>
+</div>
+`;
+$('playerDetailModal').classList.add('open'); }
+function closePlayerDetailModal(){ $('playerDetailModal').classList.remove('open'); }
+function renderAdminPanel(){
+const el = $('adminListDisplay');
+if (!el) return;
+if (!isAdmin){ el.innerHTML = ''; return; }
+el.innerHTML = adminList.map(function(name){
+const isOwner = name === 'Kamau Elston';
+const action = isOwner ? '<span class="fs-75-text3">Owner</span>'
+:'<button onclick="removeAdmin(\'' + name.replace(/\\/g,'\\\\').replace(/'/g,"\\'") + '\')" style="background:none;border:1px solid var(--danger);color:var(--danger);border-radius:5px;padding:2px 9px;font-size:.8em;cursor:pointer;font-family:inherit;">Remove</button>';
+return '<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:.88em;">' + '<span style="font-weight:600;">' + name + '</span>' + action + '</div>';
+}).join(''); }
+function addAdmin(){
+if (!isAdmin){ showToast('Not authorised.', 'warn'); return; }
+const input = $('adminAddInput');
+const name  = (input?.value || '').trim();
+if (!name){ showToast('Enter a full name to add.'); return; }
+if (adminList.includes(name)){ showToast(name + ' is already an admin.', 'warn'); return; }
+adminListRef.set([...adminList, name]).catch(e => showFirebaseError(e.message));
+if (input) input.value = ''; }
+function removeAdmin(name){
+if (!isAdmin){ showToast('Not authorised.', 'warn'); return; }
+showConfirm('Remove ' + name + ' from admins?', 'Remove').then(ok =>{
+if (!ok) return;
+adminListRef.set(adminList.filter(n => n !== name)).catch(e => showFirebaseError(e.message));
+}); }
+const CAT_COLOR_DEFAULTS ={'Literature':'#3b82f6','Science':'#11998e','History':'#f97316','Social Studies':'#eab308','Pop Culture':'#a855f7','Fine Arts':'#06b6d4'};
+const CAT_ORDER = ['Literature', 'Science', 'History', 'Social Studies', 'Fine Arts', 'Pop Culture'];
+const CAT_FREQ_DEFAULTS ={
+'Poetry':3.1, 'Theater':1.8, 'Fiction':8.1, 'Nonfiction':2.2,
+'Biology':3.7, 'Chemistry':2.6, 'Physics':4.5, 'Math':7.5,
+'Astronomy':1.1, 'Computer Science':0.4, 'Earth Science':1.1,
+'Ancient History':1.5, 'American History':7.8, 'European History':4.5, 'World History':3.4,
+'Philosophy':1.5, 'Geography':8.6, 'Religion':6.7, 'Mythology':7.5, 'Social Sciences':2.6,
+'Visual Arts':4.1, 'Music':2.2, 'Musicals':0.4, 'Opera':1.1,
+'Popular Media':5.6, 'Sports':1.9, 'Current Events':4.5,
+};
+var catFreqs ={ ...CAT_FREQ_DEFAULTS };
+function renderCatFreqPickers(){
+const container=$('catFreqPickers'); if(!container) return;
+let html = '';
+Object.entries(CATEGORY_TREE).forEach(([parent, subs]) =>{
+html += `<div style="font-size:.78em;font-weight:700;color:var(--text2);margin-top:8px;margin-bottom:2px;text-transform:uppercase;letter-spacing:.05em;">${parent}</div>`;
+subs.forEach(sub =>{
+const val = catFreqs[sub] ?? CAT_FREQ_DEFAULTS[sub] ?? 0;
+html += `<div class="flex-center-8">
+<label style="flex:1;font-size:.82em;color:var(--text);">${sub}</label>
+<div style="display:flex;align-items:center;gap:4px;">
+<input type="number" id="catfreq_${sub.replace(/\s+/g,'_')}" value="${val}" min="0" max="100" step="0.5"
+style="width:64px;padding:4px 6px;border:1.5px solid var(--input-border);border-radius:var(--radius-sm);font-size:.85em;font-family:inherit;background:var(--input-bg);color:var(--input-text);text-align:right;" />
+<span style="font-size:.8em;color:var(--text3);">%</span>
+</div>
+</div>`;
+}); });
+container.innerHTML = html; }
+function saveCatFreqs(){
+const statusEl = $('catFreqStatus');
+Object.entries(CATEGORY_TREE).forEach(([, subs]) =>{
+subs.forEach(sub =>{
+const input = $('catfreq_' + sub.replace(/\s+/g,'_'));
+if (input) catFreqs[sub] = parseFloat(input.value) || 0; });
+});
+if (!isIframe && globalSettingsRef){
+globalSettingsRef.child('catFreqs').set(catFreqs)
+.catch(e => showFirebaseError('Frequency save failed:' + e.message)); }
+if (statusEl){ statusEl.textContent = '✔ Saved'; setTimeout(() =>{ statusEl.textContent = ''; }, 2000); }
+if (analyticsOpen) renderAnalytics(); }
+function resetCatFreqs(){ catFreqs={...CAT_FREQ_DEFAULTS}; renderCatFreqPickers(); saveCatFreqs(); }
+function renderCatColorPickers(){
+const el = $('catColorPickers');
+if (!el) return;
+el.innerHTML = CAT_ORDER.map(cat =>{
+const color = catColors[cat] || CAT_COLOR_DEFAULTS[cat] || '#667eea';
+return `<div style="display:flex;align-items:center;gap:10px;">
+<input type="color" value="${color}" id="catColorInput_${cat.replace(/\s+/g,'_')}"
+style="width:36px;height:28px;border:1.5px solid var(--border);border-radius:5px;padding:1px;cursor:pointer;background:none;">
+<span style="font-size:.88em;font-weight:600;color:var(--text);flex:1;">${cat}</span>
+<button onclick="resetOneCatColor('${cat}')" title="Reset to default"
+style="font-size:.75em;background:none;border:1.5px solid var(--border);color:var(--text2);border-radius:5px;padding:2px 8px;cursor:pointer;">Reset</button>
+</div>`;
+}).join(''); }
+function saveCatColors(){
+if (!isAdmin){ showToast('Not authorised.', 'warn'); return; }
+CAT_ORDER.forEach(cat =>{
+const input = $('catColorInput_' + cat.replace(/\s+/g,'_'));
+if (input) catColors[cat] = input.value; });
+const statusEl = $('catColorStatus');
+if (!isIframe){
+globalSettingsRef.child('catColors').set(catColors)
+.then(() =>{ if (statusEl){ statusEl.textContent = '✔ Saved!'; setTimeout(() => statusEl.textContent = '', 2000); } })
+.catch(e => showFirebaseError(e.message));
+} else{
+if (statusEl){ statusEl.textContent = '✔ Applied (preview only — not saved).'; setTimeout(() => statusEl.textContent = '', 2500); }
+}
+if (analyticsOpen) renderAnalytics(); }
+function resetCatColors(){
+if (!isAdmin){ showToast('Not authorised.', 'warn'); return; }
+catColors ={ ...CAT_COLOR_DEFAULTS };
+renderCatColorPickers();
+saveCatColors(); }
+function resetOneCatColor(cat){
+catColors[cat] = CAT_COLOR_DEFAULTS[cat];
+const input = $('catColorInput_' + cat.replace(/\s+/g,'_'));
+if (input) input.value = CAT_COLOR_DEFAULTS[cat]; }
+function renamePlayer(oldName){
+const input = $('renamePlayerInput');
+const newName = (input?.value || '').trim();
+if (!newName){ showToast('Enter a new name.'); return; }
+if (newName === oldName){ showToast('Name is the same.', 'warn'); return; }
+Object.values(state.sessions).forEach(sess =>{
+if (sess.players?.[oldName]){
+sess.players[newName] ={ ...sess.players[oldName], name:newName };
+delete sess.players[oldName]; }
+(sess.answerLog || []).forEach(a =>{ if (a.player === oldName) a.player = newName; });
+(sess.teams || []).forEach(t =>{ t.playerMembers = (t.playerMembers || []).map(p => p === oldName ? newName :p); });
+});
+saveAllData();
+globalPlayersRef.once('value').then(snap =>{
+const gp = snap.val() ||{};
+if (gp[oldName]){
+gp[newName] ={ ...gp[oldName], name:newName };
+delete gp[oldName];
+globalPlayersRef.set(gp).catch(e => showFirebaseError(e.message)); }
+});
+renderAll();
+closePlayerDetailModal();
+showToast('Renamed to ' + newName, 'success'); }
+function executeSubstitution(outPlayer, inPlayer){
+const id = state.currentSessionId; if (!id) return;
+const apply = s =>{
+(s.teams||[]).forEach(t =>{
+const members = t.playerMembers || [];
+const idx = members.indexOf(outPlayer);
+if (idx > -1){
+members.splice(idx, 1, inPlayer);
+t.playerMembers = members; }
+});
+if (!s.players) s.players ={};
+if (!s.players[inPlayer]) s.players[inPlayer] ={ name:inPlayer, points:0, answers:[] };
+};
+updateSessionAtomic(id, apply);
+withWriteLock(id, () =>{ const s = getCurrentSession(); if (s) apply(s); });
+if (state.selectedPlayer === outPlayer) state.selectedPlayer = null;
+closeSubModal();
+renderAll();
+const notify = document.createElement('div');
+notify.textContent = `✔ ${inPlayer} in for ${outPlayer}`;
+notify.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--success);color:#fff;padding:10px 20px;border-radius:10px;font-weight:700;font-size:.92em;z-index:9999;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.25);';
+document.body.appendChild(notify);
+setTimeout(() => notify.remove(), 2800); }
+function setToggleSwitchState(on){
+const knob = $('viewToggleKnob');
+const sw   = $('viewToggleSwitch');
+const tl   = $('toggleLabelTracker');
+const al   = $('toggleLabelAnalytics');
+if (knob) knob.style.left = on ? '24px' :'2px';
+if (sw)   sw.style.background = on ? 'rgba(255,255,255,.5)' :'rgba(255,255,255,.25)';
+if (tl)   tl.style.color = on ? 'rgba(255,255,255,.55)' :'rgba(255,255,255,.95)';
+if (al)   al.style.color = on ? 'rgba(255,255,255,.95)' :'rgba(255,255,255,.55)';
+const mknob = $('viewToggleKnobMobile');
+const mlbl  = $('toggleLabelMobile');
+if (mknob) mknob.style.left = on ? '20px' :'2px';
+if (mlbl)  mlbl.textContent = on ? 'Stats' :'Tracker'; }
+function toggleAnalytics(){
+analyticsOpen=!analyticsOpen;
+localStorage.setItem('analyticsOpen', analyticsOpen);
+const tv=$('trackerView');
+const av=$('analyticsView');
+if(analyticsOpen){
+tv.style.display='none'; av.style.display='flex';
+renderAnalytics();
+} else{
+tv.style.display='flex'; av.style.display='none'; }
+setToggleSwitchState(analyticsOpen);
+setTimeout(updateFadeMasks,50); }
+function switchAnalyticsTab(tab, el){
+currentAnalyticsTab=tab;
+localStorage.setItem('analyticsTab', tab);
+if (tab !== 'charts'){
+Object.keys(_chartInstances).forEach(id => destroyChart(id));
+_lastChartFingerprint = null; }
+document.querySelectorAll('.analytics-tab').forEach(b=>b.classList.remove('active'));
+el.classList.add('active');
+document.querySelectorAll('.analytics-panel').forEach(p=>p.classList.remove('active'));
+$('an-'+tab)?.classList.add('active');
+renderAnalytics(tab === 'charts');
+const scrollEl = $('analyticsScroll');
+if (scrollEl){
+const saved = parseInt(localStorage.getItem('analyticsScroll_'+tab)||'0', 10);
+scrollEl.scrollTop = saved; }
+}
+function validSessions(){ return Object.values(state.sessions).filter(s => !sessionInvalidFlags[s.id]); }
+function buildGlobalAnswerLog(){
+const all = [];
+validSessions().forEach(s => all.push(...toArray(s.answerLog)));
+return all; }
+function buildGlobalTHeard(){ return validSessions().reduce((sum, s) => sum + (s.tHeard || 0), 0); }
+function renderAnalytics(forceCharts){
+const s=getCurrentSession(); if(!s) return;
+const tab=currentAnalyticsTab;
+const globalPs = buildUniversalPlayerStats();
+const globalLog = buildGlobalAnswerLog();
+const globalTHeard = buildGlobalTHeard();
+const sessionCount = validSessions().length;
+if(tab==='overview') renderAnalyticsOverview(globalLog, globalPs, globalTHeard, sessionCount);
+else if(tab==='players') renderAnalyticsPlayersUniversal();
+else if(tab==='charts'){
+const fp = buildChartFingerprint(globalLog, globalPs);
+if (forceCharts || fp !== _lastChartFingerprint){
+_lastChartFingerprint = fp;
+renderAnalyticsCharts(globalLog, globalPs, globalTHeard); }
+}
+else if(tab==='teams') renderAnalyticsTeamCompositions(); }
+function renderAnalyticsOverview(allAnswers, ps, globalTHeard, sessionCount){
+const el=$('an-overview'); if(!el) return;
+const totalPts=ps.reduce((sum,p)=>sum+p.points,0);
+const totalAns=allAnswers.length;
+const totalNegs=allAnswers.filter(a=>a.pointType==='Neg').length;
+const totalMisses=allAnswers.filter(a=>a.pointType==='Miss').length;
+const totalDeads=allAnswers.filter(a=>a.pointType==='Dead').length;
+const totalPowers=allAnswers.filter(a=>a.pointType==='Power').length;
+const totalTossups=allAnswers.filter(a=>a.pointType==='Toss-up').length;
+const totalBonuses=allAnswers.filter(a=>a.pointType==='Bonus').length;
+const wrongAns=totalNegs+totalMisses;
+const correctAns=totalAns-wrongAns-totalDeads;
+const activePlayers=ps.filter(p=>p.totalAnswers>0);
+const catMap={};
+allAnswers.forEach(a=>{
+const raw=a.category||'—'; if(raw==='—') return;
+const cat=getParentCat(raw); // roll up to parent
+if(!catMap[cat]) catMap[cat]={pts:0,count:0,negs:0,misses:0};
+catMap[cat].pts+=(a.points||0); catMap[cat].count++;
+if(a.pointType==='Neg') catMap[cat].negs++;
+else if(a.pointType==='Miss') catMap[cat].misses++; });
+const catArr=Object.keys(catMap).map(c=>({name:c,pts:catMap[c].pts,count:catMap[c].count,negs:catMap[c].negs,misses:catMap[c].misses}));
+catArr.sort((a,b)=>b.pts-a.pts);
+const strengths=catArr.slice(0,5);
+let html='';
+const n = activePlayers.length || 1;
+const teamUPoints       = 30 * (totalPowers + totalTossups);
+const teamActualPts20   = globalTHeard > 0 ? ((totalPts / globalTHeard) * 20).toFixed(1) :'—';
+const teamPotPts20      = globalTHeard > 0 ? ((teamUPoints / globalTHeard) * 20).toFixed(1) :'—';
+const teamActualizedPot = teamUPoints > 0 ? ((totalPts / teamUPoints) * 100).toFixed(1) + '%' :'—';
+const totalBuzzes       = totalPowers + totalTossups + totalNegs;
+const teamConf          = globalTHeard > 0 ? ((100 * totalBuzzes / globalTHeard)).toFixed(1) + '%' :'—';
+const teamPowerRate     = (totalPowers + totalNegs) > 0
+? ((100 * totalPowers) / (totalPowers + totalNegs)).toFixed(1) + '%' :'—';
+const teamConfNew       = (totalPowers + totalTossups) > 0
+? ((100 * totalPowers) / (totalPowers + totalTossups)).toFixed(1) + '%' :'—';
+const teamAccuracy      = (() =>{
+const correct = totalPowers + totalTossups;
+const denom   = correct + totalNegs + totalMisses;
+return denom > 0 ? ((correct / denom) * 100).toFixed(1) + '%' :'—';
+})();
+function avg(total){ return (total / n).toFixed(1); }
+function avgRate(fn, asPct){
+const vals = activePlayers.map(p => fn(p)).filter(v => v !== null);
+if (!vals.length) return '—';
+const mean = vals.reduce((s, v) => s + v, 0) / vals.length;
+return asPct ? (mean * 100).toFixed(1) + '%' :mean.toFixed(1); }
+const avgAccuracy      = avgRate(p =>{
+const correct = (p.powers||0) + (p.tossupsCorrect||0) + (p.bonusPoints > 0 ? p.bonusPoints/10 :0);
+const denom   = correct + (p.negs||0) + (p.misses||0);
+return denom > 0 ? correct / denom :null;
+}, true);
+const avgPowerRate     = avgRate(p =>{
+const d = (p.powers||0) + (p.negs||0);
+return d > 0 ? (p.powers||0) / d :null;
+}, true);
+const avgConf          = avgRate(p =>{
+const tH = p.tHeard || 0;
+const buzzes = (p.powers||0) + (p.tossupsCorrect||0) + (p.negs||0);
+return tH > 0 ? buzzes / tH :null;
+}, true);
+const avgNetRiskHSE    = avgRate(p =>{
+const d = (p.powers||0) + (p.tossupsCorrect||0);
+return d > 0 ? (100 * (p.powers||0)) / d :null;
+}, true);
+const avgActualizedPot = avgRate(p =>{
+const pot = 30 * ((p.powers||0) + (p.tossupsCorrect||0));
+return pot > 0 ? p.points / pot :null;
+}, true);
+const avgActualPts20 = avgRate(p =>{
+const tH = p.tHeard || 0;
+return tH > 0 ? (p.points / tH) * 20 :null;
+}, false);
+const avgPotPts20 = avgRate(p =>{
+const tH = p.tHeard || 0;
+const pot = 30 * ((p.powers||0) + (p.tossupsCorrect||0));
+return tH > 0 ? (pot / tH) * 20 :null;
+}, false);
+const accColor = v => v === '—' ? 'var(--primary)' :parseFloat(v) >= 80 ? 'var(--success)' :parseFloat(v) >= 50 ? '#f39c12' :'var(--danger)';
+const _ovGroups = [
+{
+label:'Team Totals',
+twoCol:false,
+rows:[
+{ label:'Active Players', val:activePlayers.length, color:'var(--primary)' },
+{ label:'Toss-ups Heard', val:globalTHeard,         color:'var(--primary)' },
+{ label:'Total Points',   val:totalPts,             color:'var(--primary)' },
+{ label:'Total Answers',  val:totalAns,             color:'var(--text2)'   },
+]
+},
+{
+label:'Answer Breakdown',
+twoCol:true,
+colHeaders:['Total', 'Avg / Player'],
+rows:[
+{ label:'Toss-ups', total:totalPowers+totalTossups, avg:avg(totalPowers+totalTossups), totalColor:'var(--success)', avgColor:'var(--success)' },
+{ label:'⚡︎ Powered', total:totalPowers, avg:avg(totalPowers), totalColor:'var(--primary)', avgColor:'var(--primary)' },
+{ label:'Bonuses',  total:totalBonuses, avg:avg(totalBonuses), totalColor:'var(--primary)', avgColor:'var(--primary)' },
+{ label:'Points',   total:totalPts,     avg:avg(totalPts),     totalColor:'var(--primary)', avgColor:'var(--primary)' },
+{ label:'Negs',     total:totalNegs,    avg:avg(totalNegs),    totalColor:'var(--danger)',  avgColor:'var(--danger)'  },
+{ label:'Misses',   total:totalMisses,  avg:avg(totalMisses),  totalColor:'var(--warning)', avgColor:'var(--warning)' },
+{ label:'Dead TUs', total:totalDeads,   avg:avg(totalDeads),   totalColor:'var(--text3)',   avgColor:'var(--text3)'   },
+]
+},
+{
+label:'Performance Rates',
+twoCol:true,
+colHeaders:['Team', 'Avg / Player'],
+rows:[
+{ label:'Accuracy',               total:teamAccuracy,      avg:avgAccuracy,      totalColor:accColor(teamAccuracy),  avgColor:accColor(avgAccuracy)  },
+{ label:'TU Efficiency (avg)',     total:avgRate(p=>{ const c=(p.powers||0)+(p.tossupsCorrect||0); return c>0?(15*p.powers+10*p.tossupsCorrect)/c:null; },false), avg:'—', totalColor:'var(--primary)', avgColor:'var(--primary)' },
+{ label:'Conversion Rate (avg)',   total:avgRate(p=>{ const c=(p.powers||0)+(p.tossupsCorrect||0); const tH=p.tHeard||0; return tH>0?(100*c)/tH:null; },false), avg:'—', totalColor:'var(--text2)', avgColor:'var(--text2)' },
+{ label:'Actual Pts / 20 TU',     total:teamActualPts20,   avg:avgActualPts20,   totalColor:'var(--primary)', avgColor:'var(--primary)' },
+]
+},
+];
+const _secHdr = `font-size:.65em;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--text3);padding:8px 0 4px;margin-bottom:4px;border-bottom:1.5px solid var(--border);`;
+const [_totalsGroup, _breakdownGroup, _ratesGroup] = _ovGroups;
+html += `<div style="background:var(--card);border:2px solid var(--border);border-radius:10px;padding:16px 18px;margin-bottom:var(--sp);box-shadow:var(--shadow-sm);">
+<h3 class="m12-fs11">HSE Team Overview</h3>`;
+html += `<div style="${_secHdr}">${_totalsGroup.label}</div>`;
+html += `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">`;
+_totalsGroup.rows.forEach(r =>{
+html += `<div style="display:flex;align-items:center;gap:6px;background:var(--sec-bg);border:1.5px solid var(--border);border-radius:20px;padding:5px 12px;white-space:nowrap;">
+<span style="font-size:.72em;font-weight:600;color:var(--text2);">${r.label}</span>
+<span style="font-size:.92em;font-weight:800;color:${r.color};">${r.val}</span>
+</div>`;
+});
+html += `</div>`;
+html += `<div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;">`;
+[_breakdownGroup, _ratesGroup].forEach(({label, colHeaders, rows}) =>{
+html += `<div style="flex:1;min-width:180px;">`;
+html += `<div style="${_secHdr}">${label}</div>`;
+html += `<div style="display:grid;grid-template-columns:1fr auto auto;gap:0;margin-bottom:3px;padding:0 2px;">
+<div></div>
+<div style="font-size:.58em;font-weight:700;color:var(--text3);width:56px;text-align:right;padding-right:10px;">${colHeaders[0]}</div>
+<div style="font-size:.58em;font-weight:700;color:var(--text3);width:56px;text-align:right;">${colHeaders[1]}</div>
+</div>`;
+rows.forEach(r =>{
+html += `<div style="display:grid;grid-template-columns:1fr auto auto;align-items:center;padding:4px 2px;border-bottom:1.5px solid var(--border);">
+<span style="font-size:.82em;color:var(--text2);">${r.label}</span>
+<span style="width:56px;text-align:right;padding-right:10px;font-weight:700;font-size:.88em;color:${r.totalColor};">${r.total}</span>
+<span style="width:56px;text-align:right;font-weight:700;font-size:.88em;color:${r.avg !== null ? r.avgColor :'var(--text3)'};">${r.avg !== null ? r.avg :'—'}</span>
+</div>`;
+});
+html += `</div>`;
+});
+html += `</div>`;
+html += `</div>`; // end panel
+if (strengths.length){
+html += '<div style="background:var(--card);border:2px solid var(--border);border-radius:10px;padding:16px;margin-bottom:var(--sp);box-shadow:var(--shadow-sm);">';
+html += '<h3 class="m12-fs95">&#9650; Category Strengths</h3>';
+strengths.forEach(c =>{ html += '<div class="stat-row"><span class="stat-label">'+c.name+'</span><span class="stat-value" style="color:var(--success)">'+c.pts+' Pts</span></div>'; });
+html += '</div>'; }
+const subcatVolMap ={};
+allAnswers.forEach(a =>{
+const raw = a.category || ''; if (!raw) return;
+subcatVolMap[raw] = (subcatVolMap[raw] || 0) + 1; });
+const totalSubcatVol = Object.values(subcatVolMap).reduce((s, v) => s + v, 0);
+const subcatGaps = [];
+Object.entries(CATEGORY_TREE).forEach(([parent, subs]) =>{
+subs.forEach(sub =>{
+const expected = catFreqs[sub];
+if (expected == null || expected <= 0) return;
+const actual = totalSubcatVol > 0 ? (subcatVolMap[sub] || 0) / totalSubcatVol * 100 :0;
+const gap = expected - actual; // positive = under-covered
+subcatGaps.push({ sub, parent, expected, actual, gap });
+}); });
+const parentOrder = Object.keys(CATEGORY_TREE);
+const needsWork = subcatGaps
+.filter(x => x.gap > 0.5) // only show meaningful gaps
+.sort((a, b) =>{
+const pi = parentOrder.indexOf(a.parent) - parentOrder.indexOf(b.parent);
+if (pi !== 0) return pi;
+return b.gap - a.gap; // within parent:biggest gap first
+});
+if (needsWork.length){
+html += '<div style="background:var(--card);border:2px solid var(--border);border-radius:10px;padding:16px;margin-bottom:var(--sp);box-shadow:var(--shadow-sm);">';
+html += '<h3 class="m4-fs95-danger">&#9660; Categories to Work On</h3>';
+html += '<p class="fs-76-text3">Subcategories where your heard volume is below the expected tournament frequency, grouped by category.</p>';
+let lastParent = null;
+needsWork.forEach(({ sub, parent, expected, actual, gap }) =>{
+if (parent !== lastParent){
+if (lastParent !== null) html += '<div style="height:6px;"></div>';
+html += '<div style="font-size:.72em;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);padding:4px 0 2px;border-bottom:1.5px solid var(--border);margin-bottom:4px;">' + parent + '</div>';
+lastParent = parent; }
+const gapColor = gap > 3 ? 'var(--danger)' :gap > 1.5 ? '#f39c12' :'var(--text2)';
+html += '<div class="stat-row">'
++ '<span class="stat-label">' + sub + '</span>'
++ '<span style="font-size:.8em;color:var(--text3);flex:1;padding:0 8px;">'
++ actual.toFixed(1) + '% heard vs ' + expected.toFixed(1) + '% expected'
++ '</span>' + '<span class="stat-value" style="color:' + gapColor + ';">&minus;' + gap.toFixed(1) + '%</span>' + '</div>';
+});
+html += '</div>'; }
+if(!totalAns) html+='<p class="text-2">No answers recorded yet. Start tracking to see your team overview!</p>';
+el.innerHTML=html; }
+function buildUniversalPlayerStats(){
+const playerMap ={};
+validSessions().forEach(session =>{
+const sessionTHeard = session.tHeard || 0;
+Object.values(session.players ||{}).forEach(p =>{
+if (p.name === '— Team Bonus —') return; // skip team bonus sentinel
+const answers = toArray(p.answers);
+if (!answers.length) return;
+if (!playerMap[p.name]) playerMap[p.name] ={
+name:p.name, points:0, totalAnswers:0,
+tossupsCorrect:0, bonusPoints:0, negs:0, misses:0, powers:0,
+sessions:0, catMap:{}, tHeard:0
+};
+const u = playerMap[p.name];
+u.points += (p.points || 0);
+u.totalAnswers += answers.length;
+u.tossupsCorrect += answers.filter(a => a.pointType === 'Toss-up').length;
+u.bonusPoints += answers.filter(a => a.pointType === 'Bonus').length * 10;
+u.negs += answers.filter(a => a.pointType === 'Neg').length;
+u.misses += answers.filter(a => a.pointType === 'Miss').length;
+u.powers += answers.filter(a => a.pointType === 'Power').length;
+u.tHeard += sessionTHeard;
+u.sessions++;
+u._tHeardBase = (u._tHeardBase || 0) + sessionTHeard;
+answers.forEach(a =>{
+if (a.category && a.category !== '—'){ const pc = getParentCat(a.category); u.catMap[pc] = (u.catMap[pc] || 0) + 1; }
+}); });
+});
+return Object.values(playerMap)
+.map(p =>{
+const delta = playerTHeardOverrides[p.name] || 0;
+p.tHeard = Math.max(0, (p._tHeardBase || 0) + delta);
+p.tHeardDelta = delta;
+return p; })
+.sort((a, b) => b.points !== a.points ? b.points - a.points :b.powers !== a.powers ? b.powers - a.powers :a.negs - b.negs);
+}
+function renderAnalyticsPlayersUniversal(){
+const el = $('an-players'); if (!el) return;
+const allPlayers = buildUniversalPlayerStats();
+const active = allPlayers.filter(p => p.totalAnswers > 0);
+const validCount = validSessions().length;
+let html = '';
+if (!active.length){ el.innerHTML = '<p class="text-2">No player data yet.</p>'; return; }
+const allBuzzCounts = active.map(p => p.powers + p.tossupsCorrect + p.negs).sort((a,b) => a - b);
+const medBuzz = allBuzzCounts.length > 0
+? allBuzzCounts[Math.floor(allBuzzCounts.length / 2)] :0;
+const MIN_BUZZ = Math.floor(medBuzz * (skillThresholdPct / 100));
+const qualified = active.filter(p =>{
+const tH = p.tHeard || 0;
+const buzzes = p.powers + p.tossupsCorrect + p.negs;
+return (buzzes >= MIN_BUZZ && tH > 0) || manuallyIncluded.has(p.name); });
+const lowData = new Set(active.filter(p =>{
+const buzzes = p.powers + p.tossupsCorrect + p.negs;
+return buzzes < MIN_BUZZ || (p.tHeard || 0) === 0;
+}).map(p => p.name));
+const SKILL_K = skillRegressionK; // use global setting
+function playerMetrics(p){
+const tH = p.tHeard || 0;
+const totalBuzzAttempts = (p.powers||0) + (p.tossupsCorrect||0) + (p.negs||0) + (p.misses||0);
+const correctBuzzes = (p.powers||0) + (p.tossupsCorrect||0);
+// Buzz Volume: how actively did you engage per TU heard? (all buzz attempts / TH)
+const buzzVolume = tH > 0 ? (100 * totalBuzzAttempts) / tH : 0;
+// Accuracy: of your buzz attempts, how many were correct?
+const accuracy = totalBuzzAttempts > 0 ? (100 * correctBuzzes) / totalBuzzAttempts : 0;
+// Efficiency: of your correct answers, how well did you score? (power vs regular)
+const efficiency = correctBuzzes > 0 ? (15*(p.powers||0) + 10*(p.tossupsCorrect||0)) / correctBuzzes : 0;
+return { buzzVolume, accuracy, efficiency, tH, totalBuzzAttempts, correctBuzzes };
+}
+// ── Confidence-weighted 3-component scoring ──────────────────────────────────
+// Buzz Volume : (P+T+N+M) / TH × 100   — engagement per TU heard   (33%)
+// Accuracy    : (P+T) / (P+T+N+M) × 100 — correct buzz rate         (33%)
+// Efficiency  : (15P+10T) / (P+T)       — pts per correct answer     (33%)
+// Each normalised 0-100 vs team max, averaged equally,
+// then × confidence = TH / (TH + k),  k = avgTH / 2
+// Chain: Volume → Accuracy → Efficiency (each layer builds on previous)
+// ─────────────────────────────────────────────────────────────────────────────
+const _avgTH = active.length > 0 ? active.reduce((s,p)=>s+(p.tHeard||0),0)/active.length : 20;
+const _confK = Math.max(1, _avgTH / 2);
+let maxVol=1, maxAcc=1, maxEff=1;
+if (active.length > 0){
+  maxVol = Math.max(...active.map(p=>playerMetrics(p).buzzVolume), 1);
+  maxAcc = Math.max(...active.map(p=>playerMetrics(p).accuracy),   1);
+  maxEff = Math.max(...active.map(p=>playerMetrics(p).efficiency),  1);
+}
+// Tier thresholds (absolute 0-100 scale; bottom tier = Unranked)
+function tierFromScore(s){
+  if (s >= 80) return { label:'S', color:'#a8d8f0', bg:'rgba(168,216,240,.15)', border:'rgba(168,216,240,.5)' };
+  if (s >= 65) return { label:'A',     color:'#ffd700', bg:'rgba(255,215,0,.15)',   border:'rgba(255,215,0,.5)'   };
+  if (s >= 50) return { label:'B',   color:'#b0b8c8', bg:'rgba(176,184,200,.15)', border:'rgba(176,184,200,.5)' };
+  if (s >= 35) return { label:'C',   color:'#cd7f32', bg:'rgba(205,127,50,.15)',  border:'rgba(205,127,50,.5)'  };
+  if (s >= 20) return { label:'D',     color:'#8a9bb0', bg:'rgba(138,155,176,.12)', border:'rgba(138,155,176,.4)' };
+  return              { label:'U', color:'var(--text3)', bg:'var(--sec-bg)',     border:'var(--border)'        };
+}
+function calcSkill(p){
+  const m = playerMetrics(p);
+  const tH = p.tHeard || 0;
+  const normVol = Math.max(0, Math.min(100, (m.buzzVolume / maxVol) * 100));
+  const normAcc = Math.max(0, Math.min(100, (m.accuracy   / maxAcc) * 100));
+  const normEff = Math.max(0, Math.min(100, (m.efficiency / maxEff) * 100));
+  const rawScore = (normVol + normAcc + normEff) / 3;
+  const confidence = tH / (tH + _confK);
+  const overall = rawScore * confidence;
+  return { volScore:normVol, accScore:normAcc, effScore:normEff, rawScore, confidence, overall };
+}
+const skillMap = Object.fromEntries(active.map(p => [p.name, calcSkill(p)]));
+function getSkill(p){ return skillMap[p.name]?.overall ?? null; }
+function getSkillBreakdown(p){ return skillMap[p.name] ?? null; }
+const avgSkillScore = 100;
+const hasQualified = qualified.length > 0;
+const lowDataList  = [...lowData].filter(n => active.find(p => p.name === n));
+html += `<div style="background:var(--sec-bg);border:1.5px solid var(--border);border-radius:10px;margin-bottom:var(--sp);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;">
+<div style="font-size:.78em;color:var(--text3);">
+<strong style="color:var(--text2);">Scores:</strong>
+Volume → Accuracy → Efficiency &nbsp;·&nbsp; Equal weights × confidence &nbsp;·&nbsp; k = ${Math.round(_confK)} TU &nbsp;·&nbsp; Threshold ${skillThresholdPct}%
+</div>
+<button onclick="showSection('sec-danger')" style="font-size:.75em;font-weight:700;padding:4px 10px;border-radius:6px;border:1.5px solid var(--border);background:var(--card);color:var(--text2);cursor:pointer;white-space:nowrap;">Configure &#8599;</button>
+</div>`;
+if (lowDataList.length > 0){
+const isCollapsed = lowDataPanelCollapsed;
+html += `<div style="background:var(--card);border:2px solid rgba(243,156,18,.4);border-radius:10px;margin-bottom:var(--sp);box-shadow:var(--shadow-sm);overflow:hidden;">
+<div onclick="lowDataPanelCollapsed=!lowDataPanelCollapsed;localStorage.setItem('lowDataPanelCollapsed',lowDataPanelCollapsed);renderAnalyticsPlayersUniversal();" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;user-select:none;">
+<span style="font-size:.9em;font-weight:700;color:#f39c12;">↓ Low-Data Players (${lowDataList.length})</span>
+<div class="flex-center-8">
+<div style="display:flex;gap:6px;" onclick="event.stopPropagation();">
+<button onclick="includeLowDataAll()" style="font-size:.75em;font-weight:700;padding:4px 10px;border-radius:6px;border:1px solid var(--success);background:rgba(40,167,69,.1);color:var(--success);cursor:pointer;">Include All</button>
+<button onclick="excludeLowDataAll()" style="font-size:.75em;font-weight:700;padding:4px 10px;border-radius:6px;border:1px solid var(--danger);background:rgba(220,53,69,.1);color:var(--danger);cursor:pointer;">Exclude All</button>
+</div>
+<span style="font-size:.8em;color:var(--text2);transition:transform .2s;display:inline-block;transform:${isCollapsed ? '' :'rotate(180deg)'};">&#9660;</span>
+</div>
+</div>
+${isCollapsed ? '' :`
+<div style="border-top:1px solid rgba(243,156,18,.3);padding:12px 16px;">
+<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
+${lowDataList.map(name =>{
+const inc = manuallyIncluded.has(name);
+const safeName = name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+return `<div style="display:flex;align-items:center;gap:6px;background:var(--sec-bg);border:1px solid ${inc ? 'var(--success)' :'var(--border)'};border-radius:20px;padding:5px 10px 5px 8px;cursor:pointer;user-select:none;" onclick="toggleLowDataInclude('${safeName}')">
+<div style="width:14px;height:14px;border-radius:3px;border:2px solid ${inc ? 'var(--success)' :'var(--text3)'};background:${inc ? 'var(--success)' :'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+${inc ? '<span style="color:#fff;font-size:10px;line-height:1;">✔</span>' :''}
+</div>
+<span style="font-size:.8em;font-weight:600;color:${inc ? 'var(--success)' :'var(--text2)'};">${name}</span>
+</div>`;
+}).join('')}
+</div>
+<div style="font-size:.72em;color:var(--text3);font-style:italic;">Click a player to toggle inclusion. Threshold:≥${MIN_BUZZ} buzz answers (${skillThresholdPct}% of team median ${medBuzz}).</div>
+</div>`}
+</div>`;
+}
+const sortOptions = [
+{ key:'points',    label:'Points' },
+{ key:'skill',     label:'Overall Score' },
+{ key:'prodRate',  label:'Pts / 20 TU' },
+{ key:'volume',    label:'Buzz Volume' },
+{ key:'accuracy',  label:'Accuracy' },
+{ key:'efficiency',label:'Efficiency' },
+{ key:'powers',    label:'⚡︎ Powered' },
+{ key:'negs',      label:'Negs' },
+{ key:'alpha',     label:'A–Z' },
+];
+if (['buzzVol','aggression','precision','netRisk','actualRate','powerRate','tuEff','convRate'].includes(playerSortKey)) playerSortKey = 'points';
+html += `<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:14px;padding-bottom:14px;border-bottom:1.5px solid var(--border);">
+<span style="font-size:.75em;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;flex-shrink:0;margin-right:2px;">Sort</span>
+${sortOptions.map(o => `<button class="sort-pill${playerSortKey===o.key?' active':''}" onclick="playerSortKey='${o.key}';renderAnalyticsPlayersUniversal();">${o.label}</button>`).join('')}
+</div>`;
+const playersSorted = active.map(p =>{
+const tH = p.tHeard || 0;
+const m = playerMetrics(p);
+const actualRate = tH > 0 ? (p.points / tH) * 20 :0;
+const skill = getSkill(p) ?? -Infinity;
+return{ ...p, _ppb:m.buzzVolume, _volume:m.buzzVolume, _accuracy:m.accuracy, _efficiency:m.efficiency, _skill:skill };
+}).sort((a, b) =>{
+switch (playerSortKey){
+case 'skill':      return b._skill      - a._skill;
+case 'prodRate':   return b._ppb        - a._ppb;
+case 'volume':     return b._volume     - a._volume;
+case 'accuracy':   return b._accuracy   - a._accuracy;
+case 'efficiency': return b._efficiency - a._efficiency;
+case 'powers':     return b.powers     - a.powers;
+case 'negs':       return a.negs       - b.negs;
+case 'alpha':      return a.name.localeCompare(b.name);
+default:          return b.points !== a.points ? b.points - a.points
+:b.powers !== a.powers ? b.powers - a.powers :a.negs - b.negs; }
+});
+let rank = 1;
+html += playersSorted.map((p, i) =>{
+if (i > 0){
+const prev = playersSorted[i-1];
+const sameRank = playerSortKey === 'alpha' ? false
+:playerSortKey === 'points'
+? (prev.points === p.points && prev.powers === p.powers && prev.negs === p.negs)
+:playerSortKey === 'skill'      ? prev._skill      === p._skill
+:playerSortKey === 'prodRate'   ? prev._ppb        === p._ppb
+:playerSortKey === 'volume'     ? prev._volume     === p._volume
+:playerSortKey === 'accuracy'   ? prev._accuracy   === p._accuracy
+:playerSortKey === 'efficiency' ? prev._efficiency === p._efficiency
+:playerSortKey === 'powers'     ? prev.powers     === p.powers
+:playerSortKey === 'negs'       ? prev.negs       === p.negs :false;
+if (!sameRank) rank = i + 1; }
+const sfx = ['st','nd','rd'][rank-1] || 'th';
+const rankLabel = playerSortKey === 'alpha' ? '' :`${rank}${sfx}`;
+const acc = p.totalAnswers ? Math.round(((p.totalAnswers - p.negs - (p.misses||0)) / p.totalAnswers) * 100) :0;
+const cardId = 'pcard_' + p.name.replace(/\W/g, '_');
+const safeName = p.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+const tH = p.tHeard || 0;
+const bonuses = p.bonusPoints / 10;
+const totalBuzzes = p.powers + p.tossupsCorrect + p.negs;
+const m_card = playerMetrics(p);
+const actualRate = tH > 0 ? (p.points / tH) * 20 :null;
+const fmtRate = v => v === null ? '—' :(v % 1 === 0 ? v :v.toFixed(1));
+const confRaw   = tH > 0 ? (100 * totalBuzzes) / tH :0;
+const confZero  = tH === 0 && totalBuzzes === 0;
+const totalBuzzAtt = p.powers + p.tossupsCorrect + p.negs + (p.misses||0);
+const accPct = totalBuzzAtt > 0 ? (100*(p.powers+p.tossupsCorrect))/totalBuzzAtt : 0;
+const accColor = accPct >= 80 ? 'var(--success)' :accPct >= 50 ? '#f39c12' :'var(--danger)';
+const potVal = m_card.tuEfficiency;
+const effColor = potVal >= 13 ? 'var(--success)' : potVal >= 11 ? '#f39c12' : 'var(--danger)';
+const convVal = m_card.convRate;
+const convColor = convVal >= 30 ? 'var(--success)' : convVal >= 15 ? '#f39c12' : 'var(--danger)';
+const correctBuzzes_card = p.powers + p.tossupsCorrect;
+const breakdown = getSkillBreakdown(p);
+const topCats = Object.entries(p.catMap).sort((a,b) => b[1]-a[1]).slice(0,3);
+const skillVal  = getSkill(p);
+const skillColor = skillVal === null ? 'var(--text3)' :'var(--primary)';
+return `
+<div class="player-card-wrap">
+<div class="player-card-header" onclick="togglePlayerCard('${cardId}')">
+<div class="player-card-rank">${rankLabel}</div>
+<div class="flex-1-min0">
+<div style="font-weight:700;font-size:.95em;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.name}</div>
+<div style="font-size:.75em;color:var(--text3);margin-top:1px;">${p.sessions} Session${p.sessions!==1?'s':''} &bull; ${p.powers+p.tossupsCorrect} TU${(p.powers+p.tossupsCorrect)!==1?'s':''} correct${p.powers?` (${p.powers}⚡︎)`:''} &bull; ${acc}% Acc</div>
+</div>
+<div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
+${(p.powers||p.tossupsCorrect) ? `<span style="font-size:.72em;background:rgba(17,153,142,.12);color:var(--success);padding:2px 7px;border-radius:20px;font-weight:700;border:1px solid var(--success);">${p.powers+p.tossupsCorrect} TU${(p.powers+p.tossupsCorrect)!==1?'s':''}${p.powers?` (${p.powers}⚡︎)`:''}</span>` :''}
+${p.negs   ? `<span style="font-size:.72em;background:rgba(220,53,69,.1);color:var(--danger);padding:2px 7px;border-radius:20px;font-weight:700;border:1px solid var(--danger);">−${p.negs} Neg${p.negs!==1?'s':''}</span>` :''}
+`+(() => {
+const _bd = getSkillBreakdown(p);
+const _tier = _bd ? tierFromScore(_bd.overall) : null;
+return `<span style="font-size:1em;font-weight:800;color:var(--primary);min-width:52px;text-align:right;">${p.points} Pts</span>
+${_tier && _tier.label !== 'Unranked' ? `<span style="font-size:.72em;font-weight:800;color:${_tier.color};background:${_tier.bg};border:1.5px solid ${_tier.border};border-radius:5px;padding:1px 8px;white-space:nowrap;">${_tier.label}</span>` : ''}
+<span id="${cardId}_arrow" style="font-size:.75em;color:var(--text3);transition:transform .2m;margin-left:2px;">&#9660;</span>`;
+})()+`
+</div>
+</div>
+<div id="${cardId}" class="hidden">
+<div class="player-card-body">
+<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:12px;">
+<div class="flex-wrap-gap">
+<span style="background:rgba(17,153,142,.08);border:1px solid rgba(17,153,142,.3);color:var(--success);border-radius:6px;padding:3px 9px;font-size:.77em;font-weight:600;">${p.powers+p.tossupsCorrect} TU${(p.powers+p.tossupsCorrect)!==1?'s':''}</span>
+${p.powers ? `<span style="background:rgba(102,126,234,.08);border:1px solid rgba(102,126,234,.3);color:var(--primary);border-radius:6px;padding:3px 9px;font-size:.77em;font-weight:600;">⚡︎ ${p.powers} Power${p.powers!==1?'s':''}</span>` :''}
+<span style="background:var(--sec-bg);border:1.5px solid var(--border);border-radius:6px;padding:3px 9px;font-size:.77em;font-weight:600;">${bonuses} Bonus${bonuses!==1?'es':''}</span>
+<span style="background:rgba(220,53,69,.08);border:1px solid rgba(220,53,69,.3);color:var(--danger);border-radius:6px;padding:3px 9px;font-size:.77em;font-weight:600;">${p.negs} Neg${p.negs!==1?'s':''}</span>
+${(p.misses||0) > 0 ? `<span style="background:rgba(243,156,18,.08);border:1px solid rgba(243,156,18,.35);color:var(--warning);border-radius:6px;padding:3px 9px;font-size:.77em;font-weight:600;">${p.misses} Miss${p.misses!==1?'es':''}</span>` :''}
+</div>
+<div style="display:flex;align-items:center;gap:5px;flex-shrink:0;background:var(--sec-bg);border:1.5px solid var(--border);border-radius:8px;padding:4px 8px;" title="Manually adjust Toss-Ups Heard for this player">
+<button onclick="event.stopPropagation();adjustPlayerTHeard('${safeName}',-1);" class="btn-icon-20">−</button>
+<div style="text-align:center;min-width:36px;">
+<div style="font-size:.7em;font-weight:700;color:var(--text3);line-height:1;margin-bottom:1px;">TU Heard</div>
+<div style="font-size:.88em;font-weight:800;color:${tH > 0 ? 'var(--primary)' :'var(--text3)'};">${tH}${p.tHeardDelta ? `<span style="font-size:.75em;color:${p.tHeardDelta > 0 ? 'var(--success)' :'var(--danger)'};">(${p.tHeardDelta > 0 ? '+' :''}${p.tHeardDelta})</span>` :''}</div>
+</div>
+<button onclick="event.stopPropagation();adjustPlayerTHeard('${safeName}',1);" class="btn-icon-20">+</button>
+</div>
+</div>
+`+(() => {
+const bd = getSkillBreakdown(p);
+const tier = bd ? tierFromScore(bd.overall) : null;
+const confPct = bd ? (bd.confidence * 100).toFixed(0) : 0;
+const m2 = playerMetrics(p);
+const volColor  = m2.buzzVolume >= 60 ? 'var(--success)' : m2.buzzVolume >= 30 ? '#f39c12' : 'var(--danger)';
+const accColor2 = m2.accuracy   >= 70 ? 'var(--success)' : m2.accuracy   >= 45 ? '#f39c12' : 'var(--danger)';
+const effColor2 = m2.efficiency >= 13 ? 'var(--success)' : m2.efficiency >= 11 ? '#f39c12' : 'var(--danger)';
+const pts20 = tH > 0 ? ((15*(p.powers||0)+10*(p.tossupsCorrect||0))/tH)*20 : null;
+return `<div class="metric-grid">
+<div class="metric-tile"><div class="metric-lbl">Points</div><div class="metric-val" style="color:var(--primary);">${p.points}</div></div>
+<div class="metric-tile"><div class="metric-lbl">Pts / 20 TU</div><div class="metric-val" style="color:var(--success);">${fmtRate(pts20)}</div></div>
+<div class="metric-tile">
+  <div class="metric-lbl">Buzz Volume</div>
+  <div class="metric-val" style="color:${volColor};margin-bottom:5px;">${tH > 0 ? m2.buzzVolume.toFixed(1)+'%' : '—'}</div>
+  ${tH > 0 ? `<div class="progress-bar"><div style="height:100%;width:${Math.min(100,m2.buzzVolume).toFixed(1)}%;background:${volColor};border-radius:4px;"></div></div>` : ''}
+  <div style="font-size:.68em;color:var(--text3);margin-top:3px;">buzz attempts / TU heard</div>
+</div>
+<div class="metric-tile">
+  <div class="metric-lbl">Accuracy</div>
+  <div class="metric-val" style="color:${accColor2};margin-bottom:5px;">${totalBuzzAtt > 0 ? m2.accuracy.toFixed(1)+'%' : '—'}</div>
+  ${totalBuzzAtt > 0 ? `<div class="progress-bar"><div style="height:100%;width:${m2.accuracy.toFixed(1)}%;background:${accColor2};border-radius:4px;"></div></div>` : ''}
+  <div style="font-size:.68em;color:var(--text3);margin-top:3px;">correct / all buzz attempts</div>
+</div>
+<div class="metric-tile span2">
+  <div class="metric-lbl">Efficiency</div>
+  <div class="metric-val" style="color:${effColor2};">${(p.powers||0)+(p.tossupsCorrect||0) > 0 ? m2.efficiency.toFixed(2) : '—'}<span style="font-size:.72em;color:var(--text3);font-weight:400;"> pts/correct</span></div>
+  <div style="font-size:.68em;color:var(--text3);margin-top:3px;">(15×Powers + 10×Regular) ÷ correct answers · range 10–15</div>
+</div>
+${tier ? `
+<div class="metric-tile" style="border-color:${tier.border};background:${tier.bg};">
+  <div class="metric-lbl">Volume Score</div>
+  <div class="metric-val" style="color:${tier.color};">${bd.volScore.toFixed(1)}<span style="font-size:.7em;color:var(--text3);font-weight:400;"> /100</span></div>
+</div>
+<div class="metric-tile" style="border-color:${tier.border};background:${tier.bg};">
+  <div class="metric-lbl">Accuracy Score</div>
+  <div class="metric-val" style="color:${tier.color};">${bd.accScore.toFixed(1)}<span style="font-size:.7em;color:var(--text3);font-weight:400;"> /100</span></div>
+</div>
+<div class="metric-tile" style="border-color:${tier.border};background:${tier.bg};">
+  <div class="metric-lbl">Efficiency Score</div>
+  <div class="metric-val" style="color:${tier.color};">${bd.effScore.toFixed(1)}<span style="font-size:.7em;color:var(--text3);font-weight:400;"> /100</span></div>
+</div>
+<div class="metric-tile" style="border-color:${tier.border};background:${tier.bg};">
+  <div class="metric-lbl">Confidence</div>
+  <div class="metric-val" style="color:${tier.color};">${confPct}%</div>
+</div>
+<div class="metric-tile span2" style="border-color:${tier.border};background:${tier.bg};">
+  <div class="flex-between" style="margin-bottom:6px;">
+    <div class="metric-lbl">Overall Score</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div class="metric-val" style="color:${tier.color};">${bd.overall.toFixed(1)}</div>
+      <div style="font-size:.82em;font-weight:800;color:${tier.color};background:${tier.bg};border:1.5px solid ${tier.border};border-radius:6px;padding:1px 10px;white-space:nowrap;">${tier.label}</div>
+    </div>
+  </div>
+  <div class="progress-bar"><div style="height:100%;width:${Math.min(100,bd.overall).toFixed(1)}%;background:${tier.color};border-radius:4px;transition:width .4s;"></div></div>
+</div>` : `
+<div class="metric-tile span2" style="border-color:var(--border);">
+  <div class="metric-lbl">Overall Score</div>
+  <div class="metric-val" style="color:var(--text3);">No TU heard data yet</div>
+</div>`}
+</div>`;
+})()+`
+${topCats.length ? `
+<div style="border-top:1.5px solid var(--border);padding-top:10px;">
+<div style="font-size:.7em;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;">Top Categories</div>
+${topCats.map(([cat, cnt]) => `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:.82em;border-bottom:1.5px solid var(--border);"><span style="color:var(--text2);font-weight:500;">${catLabel(cat)}</span><span style="font-weight:700;color:var(--primary);">${cnt}</span></div>`).join('')}
+</div>` :''}
+</div>
+</div>
+</div>`;
+}).join('');
+html += `<div style="background:var(--card);border:1.5px solid var(--border);border-radius:10px;margin-top:var(--sp);overflow:hidden;box-shadow:var(--shadow-xs);">
+<div onclick="formulasPanelCollapsed=!formulasPanelCollapsed;localStorage.setItem('formulasPanelCollapsed',formulasPanelCollapsed);renderAnalyticsPlayersUniversal();"
+style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;user-select:none;"
+onmouseover="this.style.background='var(--hover)';" onmouseout="this.style.background='';">
+<span class="fs-85-fw7">📐 Metric Formulas</span>
+<span style="font-size:.75em;color:var(--text3);transition:transform .25s;display:inline-block;transform:${formulasPanelCollapsed?'':'rotate(180deg)'};">&#9660;</span>
+</div>
+${formulasPanelCollapsed ? '' :`
+<div style="border-top:1.5px solid var(--border);padding:16px;display:grid;gap:10px;">
+${[
+['Buzz Volume', '(Powers + Regular + Negs + Misses) ÷ TU Heard × 100', 'How actively a player engages per tossup heard. Measures participation — the foundation all other metrics build on.'],
+['Accuracy', '(Powers + Regular) ÷ (Powers + Regular + Negs + Misses) × 100', 'Of all buzz attempts, how many were correct. Rewards clean buzzing, penalises negs and misses.'],
+['Efficiency', '(15×Powers + 10×Regular) ÷ (Powers + Regular)', 'Of correct answers, how well did they score. Rewards powering. Range 10–15 — 15 means every correct answer was a power.'],
+['Confidence', 'TU Heard ÷ (TU Heard + k), where k = avg team TU heard ÷ 2', 'Trust weight applied to the score. Starts at 0, grows toward 1. At k TUs a player is 50% trusted — new players earn their score gradually.'],
+['Overall Score', '((Volume Score + Accuracy Score + Efficiency Score) ÷ 3) × Confidence', 'Equal-weighted composite of all three components, scaled 0–100, multiplied by confidence.'],
+['Tier', 'S ≥ 80 · A ≥ 65 · B ≥ 50 · C ≥ 35 · D ≥ 20 · U < 20', 'Tier based on absolute Overall Score. Unranked simply means insufficient data — not a quality judgement.'],
+].map(([name, formula, desc]) => `
+<div style="background:var(--sec-bg);border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;">
+<div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
+<span style="font-size:.82em;font-weight:800;color:var(--primary);">${name}</span>
+<code style="font-size:.72em;color:var(--text2);background:var(--hover);border-radius:4px;padding:2px 6px;white-space:nowrap;">${formula}</code>
+</div>
+<div style="font-size:.76em;color:var(--text3);line-height:1.45;">${desc}</div>
+</div>`).join('')}
+</div>`}
+</div>`;
+el.innerHTML = html;
+expandedPlayerCards.forEach(id =>{
+const panel = $(id);
+const arrow = $(id + '_arrow');
+if (panel){ panel.style.display = 'block'; }
+if (arrow){ arrow.style.transform = 'rotate(180deg)'; }
+}); }
+function togglePlayerCard(id){
+const panel = $(id);
+const arrow = $(id + '_arrow');
+if (!panel) return;
+const open = panel.style.display === 'none';
+panel.style.display = open ? 'block' :'none';
+if (arrow) arrow.style.transform = open ? 'rotate(180deg)' :'';
+if (open) expandedPlayerCards.add(id);
+else expandedPlayerCards.delete(id); }
+function toggleLowDataInclude(playerName){
+if (manuallyIncluded.has(playerName)) manuallyIncluded.delete(playerName); else manuallyIncluded.add(playerName);
+saveManualInclusions(); renderAnalyticsPlayersUniversal(); }
+function _getLowDataThresh(){
+const all = buildUniversalPlayerStats();
+const counts = all.map(p => p.powers + p.tossupsCorrect + p.negs).sort((a,b)=>a-b);
+const med = counts[Math.floor(counts.length/2)] || 0;
+return Math.floor(med * (skillThresholdPct / 100)); }
+function includeLowDataAll(){
+const thresh = _getLowDataThresh();
+buildUniversalPlayerStats().forEach(p =>{
+const buzzes = p.powers + p.tossupsCorrect + p.negs;
+if (buzzes < thresh || (p.tHeard || 0) === 0) manuallyIncluded.add(p.name); });
+saveManualInclusions();
+renderAnalyticsPlayersUniversal(); }
+function excludeLowDataAll(){
+const thresh = _getLowDataThresh();
+buildUniversalPlayerStats().forEach(p =>{
+const buzzes = p.powers + p.tossupsCorrect + p.negs;
+if (buzzes < thresh || (p.tHeard || 0) === 0) manuallyIncluded.delete(p.name); });
+saveManualInclusions();
+renderAnalyticsPlayersUniversal(); }
+function calcTeamEfficiency(team, sessionTHeard){
+const{ tossups, bonuses, powers, negs } = team;
+const eBonus = (tossups + powers) > 0 ? (100 * (10 * bonuses)) / (30 * (tossups + powers)) :null;
+const tHeard = sessionTHeard > 0 ? sessionTHeard :Math.max(20, tossups + negs);
+const numerator = 15 * powers + 10 * tossups + 10 * bonuses - 5 * negs;
+const eTotal = tHeard > 0 ? (100 * numerator) / (45 * tHeard) :null;
+return{ eBonus, eTotal, tHeard, tHeardIsReal:sessionTHeard > 0 };
+}
+function effBar(value, color, label, tooltip){
+if (value === null) return '';
+const pct = Math.min(Math.max(value, 0), 100);
+const barColor = pct >= 66 ? 'var(--success)' :pct >= 33 ? '#f39c12' :'var(--danger)';
+return `<div class="mb-10" title="${tooltip}">
+<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;">
+<span style="font-size:.78em;font-weight:700;color:var(--text2);">${label}</span>
+<span style="font-size:.9em;font-weight:700;color:${barColor};">${value.toFixed(1)}%</span>
+</div>
+<div style="height:8px;background:var(--border);border-radius:8px;overflow:hidden;">
+<div style="height:100%;width:${pct}%;background:${barColor};border-radius:8px;transition:width .4s ease;"></div>
+</div></div>`;
+}
+function renderAnalyticsTeamCompositions(){
+const el = $('an-teams'); if (!el) return;
+const sessions = validSessions();
+const teamMap = {};
+const allTeamCards = [];
+sessions.forEach(session =>{
+const dateStr = new Date(session.created).toLocaleDateString([],{ month:'short', day:'numeric', year:'numeric' });
+const teams = toArray(session.teams).filter(t => toArray(t.playerMembers).length > 0);
+teams.forEach(team =>{
+const members = toArray(team.playerMembers).slice().sort();
+const key = members.join('|');
+const data = {
+teamName:team.name,
+members,
+dateStr,
+sessionDate:session.created,
+sessionId:session.id,
+isCurrent:session.id === state.currentSessionId
+};
+let pts = 0, answers = 0, powers = 0, negs = 0, misses = 0, tossups = 0, bonuses = 0;
+members.forEach(name =>{
+const p = (session.players ||{})[name];
+if (!p) return;
+const a = toArray(p.answers);
+pts     += (p.points || 0);
+answers += a.length;
+powers  += a.filter(x => x.pointType === 'Power').length;
+negs    += a.filter(x => x.pointType === 'Neg').length;
+misses  += a.filter(x => x.pointType === 'Miss').length;
+tossups += a.filter(x => x.pointType === 'Toss-up').length;
+bonuses += a.filter(x => x.pointType === 'Bonus').length; });
+const eff = calcTeamEfficiency({ tossups, bonuses, powers, negs, answers }, session.tHeard || 0);
+Object.assign(data, { pts, answers, powers, negs, misses, tossups, bonuses, ...eff });
+if(!teamMap[key]){ teamMap[key] = { ...data, appearances: 1 }; }
+else{
+teamMap[key].appearances++;
+teamMap[key].pts += pts;
+teamMap[key].answers += answers;
+teamMap[key].powers += powers;
+teamMap[key].negs += negs;
+teamMap[key].misses += misses;
+teamMap[key].tossups += tossups;
+teamMap[key].bonuses += bonuses;
+teamMap[key].teamName = data.teamName;
+teamMap[key].dateStr = data.dateStr;
+if(new Date(data.sessionDate) > new Date(teamMap[key].sessionDate)) teamMap[key].sessionDate = data.sessionDate;
+}
+}); });
+Object.values(teamMap).forEach(team => allTeamCards.push(team));
+allTeamCards.sort((a, b) => new Date(b.sessionDate) - new Date(a.sessionDate));
+if (!allTeamCards.length){
+el.innerHTML = '<p class="text-2">No team compositions found. Create teams and assign players to sessions to see them here.</p>';
+return; }
+const sessionCount = validSessions().length;
+const playerCounts = [...new Set(allTeamCards.map(t => t.members.length))].sort((a,b) => a-b);
+let html = `
+<div style="margin-bottom:12px;">
+<div style="margin-bottom:10px;position:relative;">
+<input
+id="teamCompSearch"
+type="text"
+placeholder="Search by team name, player, or date…"
+oninput="filterTeamCards(this.value)"
+style="width:100%;padding:10px 36px 10px 13px;border:2px solid var(--input-border);border-radius:var(--radius-sm);font-size:.92em;font-family:inherit;background:var(--input-bg);color:var(--input-text);transition:border-color .2s;"
+onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--input-border)'"
+/>
+<span style="position:absolute;right:11px;top:50%;transform:translateY(-50%);font-size:1em;color:var(--text3);pointer-events:none;">🔍</span>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:6px;">
+<button class="button" onclick="filterTeamsByPlayerCount(0)" id="tcfilter-all" style="font-size:.8em;padding:4px 10px;background:var(--primary);color:#fff;">Show All (${allTeamCards.length})</button>`;
+playerCounts.forEach(count => {
+const cnt = allTeamCards.filter(t => t.members.length === count).length;
+html += `<button class="button" onclick="filterTeamsByPlayerCount(${count})" id="tcfilter-${count}" style="font-size:.8em;padding:4px 10px;">${count} Player${count !== 1 ? 's' :''} (${cnt})</button>`;
+});
+html += `  </div>
+</div>
+<div id="teamCompSummary" style="background:rgba(118,75,162,.08);border:1px solid var(--secondary);border-radius:8px;padding:10px 14px;margin-bottom:var(--sp);font-size:.85em;color:var(--secondary);font-weight:600;">
+${allTeamCards.length} unique team composition${allTeamCards.length !== 1 ? 's' :''} across <strong>${sessionCount} session${sessionCount !== 1 ? 's' :''}</strong>
+</div>
+<div id="teamCompList">`;
+const accentColors = ['var(--primary)', 'var(--secondary)', 'var(--success)', '#e67e22', '#e74c3c'];
+allTeamCards.forEach((team, ti) =>{
+const color = accentColors[ti % accentColors.length];
+const cardId = 'tcomp_' + team.members.join('_').replace(/\W/g, '_');
+const acc = team.answers ? Math.round(((team.answers - team.negs - (team.misses||0)) / team.answers) * 100) :0;
+const memberTitle = team.members.join(' / ');
+const eBonusTooltip = `Capitalization = 100 × (10 × bonuses) / (30 × (toss-ups + powers)). How well the team capitalized on the bonuses available after winning toss-ups.`;
+const eTotalTooltip = `Point Control = 100 × (15P + 10T + 10B − 5N) / (45 × questions heard).`;
+const statChips = [
+['Points',   team.pts,      color],
+['Toss-ups', team.tossups,  'var(--success)'],
+['Bonuses',  team.bonuses,  'var(--primary)'],
+['Powers',   team.powers,   '#9b59b6'],
+['Negs',     team.negs,     'var(--danger)'],
+['Misses',   team.misses,   'var(--warning)'],
+['Accuracy', acc + '%',     'var(--text2)'],
+].filter(([, v]) => v !== 0 && v !== '0%').map(([label, val, c]) =>
+`<div style="text-align:center;background:var(--sec-bg);border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;flex:1;min-width:64px;">
+<div style="font-size:.72em;color:var(--text2);font-weight:600;margin-bottom:3px;">${label}</div>
+<div style="font-size:.95em;font-weight:700;color:${c};">${val}</div>
+</div>`
+).join('');
+html += `
+<div class="team-comp-card" data-player-count="${team.members.length}" data-search="${[team.teamName, ...team.members, team.dateStr].join(' ').toLowerCase()}" style="background:var(--card);border:2px solid var(--border);border-left:4px solid ${color};border-radius:10px;margin-bottom:10px;overflow:hidden;box-shadow:var(--shadow-sm);">
+<div onclick="toggleTeamCard('${cardId}')" style="display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;user-select:none;">
+<div class="flex-1-min0">
+<div style="font-weight:700;font-size:1em;color:${color};display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+${team.teamName}
+${team.appearances > 1 ? `<span style="font-size:.7em;background:var(--success);color:#fff;padding:2px 8px;border-radius:8px;font-weight:700;">${team.appearances} Appearances</span>` :''}
+</div>
+<div style="font-size:.82em;color:var(--text);font-weight:600;margin-top:2px;">${memberTitle}</div>
+<div style="font-size:.75em;color:var(--text2);margin-top:1px;">${team.dateStr} &bull; ${team.answers} Answers</div>
+</div>
+<div style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
+<span style="font-size:1.05em;font-weight:700;color:var(--primary);">${team.pts} Pts</span>
+<span id="${cardId}_arrow" style="font-size:.8em;color:var(--text2);transition:transform .2s;">&#9660;</span>
+</div>
+</div>
+<div id="${cardId}" style="display:none;border-top:1.5px solid var(--border);">
+<div style="padding:14px 16px;">
+<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
+${statChips}
+</div>
+<div style="border-top:1.5px solid var(--border);padding-top:12px;">
+${effBar(team.eBonus, color, 'Capitalization', eBonusTooltip)}
+${effBar(team.eTotal, color, 'Point Control', eTotalTooltip)}
+${(team.eBonus === null && team.eTotal === null) ? '<div style="font-size:.8em;color:var(--text2);font-style:italic;">No Toss-Up Answers Recorded Yet.</div>' :''}
+</div>
+</div>
+</div>
+</div>`;
+});
+html += '</div>';
+el.innerHTML = html;
+expandedTeamCards.forEach(id =>{
+const panel = $(id);
+const arrow = $(id + '_arrow');
+if (panel) panel.style.display = 'block';
+if (arrow) arrow.style.transform = 'rotate(180deg)'; });
+}
+function toggleTeamCard(id){
+const panel = $(id);
+const arrow = $(id + '_arrow');

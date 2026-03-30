@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>HSE Quiz Bowl Tracker</title><meta name="deploy-sha" content="dev"><meta name="color-scheme" content="only light dark"><script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script><style>:root{--sp:18px;--hsp:14px;--primary:#667eea;--primary-light:#8fa3f5;--primary-dark:#5568d3;--secondary:#764ba2;--success:#11998e;--success2:#38ef7d;--danger:#dc3545;--danger2:#e74c5c;--warning:#f39c12;--bg:#f4f6fb;--text:#1a1a2e;--text2:#5a6178;--text3:#9ba3b8;--sec-bg:#eef1f8;--card:#ffffff;--input-bg:#fff;--input-border:#dde1ea;--input-text:#1a1a2e;--hover:#edf0f8;--border:#b8bfd0;--shadow-xs:0 1px 3px rgba(60,70,100,.07);--shadow-sm:0 2px 8px rgba(60,70,100,.1);--shadow-md:0 6px 18px rgba(60,70,100,.14);--shadow-xl:0 20px 48px rgba(60,70,100,.18);--radius:12px;--radius-sm:8px}.dark-mode{--danger:#ff6b6b;--warning:#ffd43b;--bg:#0d1117;--text:#e6eaf4;--text2:#9ba3c0;--text3:#606880;--sec-bg:#161b22;--card:#1c2128;--input-bg:#0d1117;--input-border:#2d3340;--input-text:#e6eaf4;--hover:#1e2530;--border:#444e63;--shadow-xs:0 1px 3px rgba(0,0,0,.3);--shadow-sm:0 2px 8px rgba(0,0,0,.35);--shadow-md:0 6px 18px rgba(0,0,0,.45);--shadow-xl:0 20px 48px rgba(0,0,0,.65)}:root{color-scheme:only light dark}*{-webkit-color-adjust:exact !important;color-adjust:exact !important;forced-color-adjust:none !important}*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}html{height:100%;overflow:hidden}::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-button{display:none}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--primary);border-radius:10px}::-webkit-scrollbar-thumb:hover{background:var(--primary-dark)}*{scrollbar-width:thin;scrollbar-color:var(--primary) transparent}.qb-scroll,.sidebar-sections,.log-container{scrollbar-gutter:stable}body.hide-scrollbars::-webkit-scrollbar-thumb,body.hide-scrollbars::-webkit-scrollbar-track{background:transparent !important}body.hide-scrollbars *{scrollbar-color:transparent transparent !important}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);height:100vh;overflow:hidden;color:var(--text);display:flex;flex-direction:column}.qb-container{width:100%;flex:1;display:flex;flex-direction:column;background:var(--bg);overflow:hidden}#updateBanner{max-height:0;overflow:hidden;display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:linear-gradient(135deg,#11998e 0%,#38ef7d 100%);color:#fff;padding:0 16px;font-size:.88em;font-weight:600;box-shadow:0 2px 10px rgba(17,153,142,.35);position:relative;z-index:150;flex-shrink:0;transition:max-height .3s ease,padding .3s ease}#updateBanner.show{max-height:60px;padding:9px 16px}.ub-icon{font-size:1.1em;flex-shrink:0}.ub-msg{flex:1;min-width:0}.ub-btn{background:rgba(255,255,255,.22);border:1.5px solid rgba(255,255,255,.45);color:#fff;border-radius:6px;padding:5px 13px;font-size:.85em;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;transition:background .15s}.ub-btn:hover{background:rgba(255,255,255,.38)}.ub-dismiss{padding:4px 9px}.qb-header{background:linear-gradient(135deg,var(--primary) 0%,var(--secondary) 100%);color:#fff;padding:0 12px;display:flex;align-items:center;gap:8px;box-shadow:0 2px 16px rgba(102,126,234,.28);border-bottom:2px solid rgba(0,0,0,0.25);position:relative;z-index:200;flex-shrink:0;transition:filter .3s ease;min-height:54px;flex-wrap:nowrap;overflow:hidden}.qb-header-left{flex:1;display:flex;align-items:center}.qb-header-center{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;pointer-events:none}.header-controls{flex:1;display:flex;justify-content:flex-end}.qb-header h1{font-size:clamp(1em,2.6vw,1.55em);font-weight:700;letter-spacing:-.3px;white-space:nowrap;overflow:hidden;text-overflow:clip;max-width:100%;margin:0;line-height:1.25;text-align:center}.version-badge{font-size:.42em;font-weight:600;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.85);padding:2px 7px;border-radius:20px;vertical-align:middle;position:relative;top:-2px;display:inline-flex;align-items:center;gap:6px;line-height:1}.header-session-name{font-size:.72em;font-weight:500;color:rgba(255,255,255,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;line-height:1;text-align:center}.header-session-name::before{content:'Session:';opacity:.7}.header-controls{flex-shrink:0;display:flex;gap:6px;align-items:center;flex:1;justify-content:flex-end}.qb-header-spacer{display:none}.header-toggle-label{font-size:.82em;font-weight:700;flex-shrink:0}@media (max-width:720px){.qb-header h1>.version-badge{display:none}}@media (max-width:640px){.qb-header h1{font-size:0}.qb-header h1::before{content:attr(data-medium);font-size:clamp(.82em,4.5vw,1em);font-weight:700;white-space:nowrap}}@media (max-width:540px){.qb-header-center{align-items:center;max-width:40%}.header-session-name{display:none}.header-toggle-label{display:none}}@media (max-width:360px){.qb-header h1{font-size:0}.qb-header h1::before{content:attr(data-short);font-size:1rem;font-weight:700;white-space:nowrap}}.header-btn{background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.28);border-radius:var(--radius-sm);padding:6px 12px;font-size:.82em;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;transition:background .2s;flex-shrink:0}.header-btn:hover{background:rgba(255,255,255,.26)}.header-btn.round{border-radius:50%;width:30px;height:30px;padding:0;justify-content:center;font-size:1em}.header-btn.active{background:rgba(255,255,255,.32);box-shadow:0 0 0 2px rgba(255,255,255,.45)}.sidebar-open-btn{display:none}.mobile-subrow{display:none !important}.qb-body{flex:1;display:flex;overflow:hidden;position:relative}.qb-sidebar{width:300px;flex-shrink:0;display:flex;flex-direction:column;padding:var(--sp) var(--hsp);background:var(--card);border-right:1.5px solid var(--border);overflow:visible;position:relative;z-index:100;transition:width .3s ease,padding .3s ease}.qb-sidebar.collapsed{width:0;padding:0;overflow:hidden;border-right:none}.qb-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:var(--sp) var(--hsp);transition:filter .3s ease;background:var(--bg)}#trackerView{display:flex;flex-direction:column;height:100%}#analyticsView{display:none;flex-direction:column;height:100%}#analyticsView.active{display:flex}.analytics-header{padding:12px var(--hsp);border-bottom:1.5px solid var(--border);background:var(--card);flex-shrink:0}.analytics-tabs{display:flex;gap:6px;flex-wrap:wrap}.analytics-tab{background:var(--sec-bg);color:var(--text2);border:2px solid var(--border);border-radius:20px;padding:6px 16px;font-size:.82em;font-weight:600;cursor:pointer;font-family:inherit;transition:border-color .15s,color .15s,background .15s,box-shadow .15s}.analytics-tab:hover{background:var(--hover);color:var(--primary);border-color:var(--primary-light)}.analytics-tab.active{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;border-color:var(--primary-dark);box-shadow:0 2px 8px rgba(102,126,234,.3)}.analytics-scroll{flex:1;overflow-y:auto;padding:var(--sp) var(--hsp);scrollbar-gutter:stable;background:var(--bg)}.analytics-panel{display:none}.analytics-panel.active{display:block}.an-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:var(--sp);margin-bottom:var(--sp)}.an-stat-box{background:var(--card);border:2px solid var(--border);border-radius:10px;padding:16px;text-align:center;box-shadow:var(--shadow-sm)}.an-stat-box .an-val{font-size:2em;font-weight:700;color:var(--primary)}.an-stat-box .an-lbl{font-size:.82em;color:var(--text2);margin-top:4px}.an-player-card{background:var(--card);border:2px solid var(--border);border-radius:10px;padding:18px;margin-bottom:var(--sp);box-shadow:var(--shadow-sm)}.an-player-card:hover{border-color:var(--primary-light)}.an-player-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.an-player-name{font-size:1.1em;font-weight:700;color:var(--primary);cursor:pointer;text-decoration:underline;text-underline-offset:3px;transition:color .15s}.an-player-name:hover{color:var(--primary-dark)}.an-player-pts{font-size:1.2em;font-weight:700;color:var(--primary)}.an-player-meta{font-size:.82em;color:var(--text2);margin-bottom:12px}.an-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:.85em}.an-bar-label{width:110px;flex-shrink:0;color:var(--text2);font-weight:600}.an-bar-track{flex:1;height:10px;background:var(--sec-bg);border-radius:10px;overflow:hidden;border:2px solid var(--border)}.an-bar-fill{height:100%;border-radius:10px;background:linear-gradient(90deg,var(--primary),var(--secondary));transition:width .4s ease}.an-bar-fill.neg{background:linear-gradient(90deg,var(--danger),var(--danger2))}.an-bar-val{width:36px;text-align:right;font-weight:700;color:var(--text);flex-shrink:0}.an-cat-card{background:var(--card);border:2px solid var(--border);border-radius:10px;padding:16px;margin-bottom:var(--sp);box-shadow:var(--shadow-sm)}.an-cat-title{font-weight:700;font-size:1em;color:var(--primary);margin-bottom:10px}.an-cat-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1.5px solid var(--border);font-size:.88em;align-items:center}.an-cat-row:last-child{border-bottom:none}.an-lb-row{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--card);border:2px solid var(--border);border-radius:10px;margin-bottom:10px;box-shadow:var(--shadow-xs);font-size:.92em}.an-lb-rank{font-size:1.2em;font-weight:700;color:var(--primary);min-width:42px}.an-lb-name{flex:1;font-weight:600}.an-lb-pts{font-weight:700;color:var(--primary);margin-right:8px}.pwr-bolt{font-style:normal;font-variant-emoji:text}.an-lb-chip{font-size:.75em;padding:2px 8px;border-radius:10px;font-weight:700;background:var(--sec-bg);color:var(--text2);border:2px solid var(--border)}.an-lb-chip.power{background:rgba(102,126,234,.12);color:var(--primary);border-color:var(--primary)}.an-lb-chip.neg{background:rgba(220,53,69,.1);color:var(--danger);border-color:var(--danger)}.an-team-card{background:var(--card);border:2px solid var(--border);border-left:5px solid var(--secondary);border-radius:10px;padding:16px;margin-bottom:var(--sp);box-shadow:var(--shadow-sm)}.an-team-name{font-weight:700;font-size:1.05em;margin-bottom:8px}.an-team-pts{color:var(--primary);font-weight:700;font-size:1.3em}@media (max-width:900px){.qb-sidebar{position:fixed;top:0;left:0;right:0;bottom:0;width:100% !important;height:100vh;max-height:100vh;overflow-y:auto;padding:12px 16px 20px !important;border-right:none;border-bottom:none;background:rgba(255,255,255,0.18) !important;-webkit-backdrop-filter:blur(28px) saturate(1.8);backdrop-filter:blur(28px) saturate(1.8);box-shadow:0 8px 32px rgba(0,0,0,.22);z-index:6000;transform:translateY(-110%);visibility:hidden;transition:transform .35s cubic-bezier(.4,0,.2,1),visibility .35s ease;pointer-events:none}.dark-mode .qb-sidebar{background:rgba(13,17,23,0.6) !important}.qb-sidebar.mobile-open{transform:translateY(0) !important;visibility:visible !important;pointer-events:auto !important}.qb-sidebar.mobile-open *{pointer-events:auto !important}.qb-scroll.menu-blurred,.analytics-scroll.menu-blurred{filter:blur(3px);pointer-events:none}body.menu-open{overflow:hidden}.mobile-subrow{display:none !important}}body.is-iframe .qb-sidebar{position:relative !important;transform:none !important;visibility:visible !important;width:300px !important;height:auto !important;max-height:none !important;padding:var(--sp) var(--hsp) !important;background:var(--card) !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important;box-shadow:none !important;pointer-events:auto !important;transition:width .3s ease,padding .3s ease !important}body.is-iframe .qb-sidebar.collapsed{width:0 !important;padding:0 !important;overflow:hidden !important}body.is-iframe .mobile-subrow{display:none !important}body.is-iframe .header-controls{display:flex !important}body.is-iframe .header-session-name{display:block !important}body.is-iframe .qb-scroll.menu-blurred,body.is-iframe .analytics-scroll.menu-blurred{filter:none !important;pointer-events:auto !important}.qb-section{margin-bottom:14px;padding:clamp(16px,4vw,20px);background:var(--card);border-radius:var(--radius);border:2px solid var(--border);overflow:visible;box-shadow:var(--shadow-xs)}.qb-section:hover{border-color:var(--primary-light)}.qb-section h2{color:var(--text);margin-bottom:var(--sp);font-size:clamp(1.05em,3vw,1.25em);cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none;font-weight:700;transition:color .2s}.qb-section h2:hover{color:var(--primary)}.toggle-icon{font-size:.75em;transition:transform .3s cubic-bezier(.4,0,.2,1);display:inline-block;color:var(--text3)}.toggle-icon.collapsed{transform:rotate(-90deg)}.collapsible-content{max-height:2000px;overflow:visible;transition:max-height .3s ease-out}.collapsible-content.collapsed{max-height:0 !important;overflow:hidden}.input-group{margin-bottom:var(--sp)}.input-group label{display:block;margin-bottom:6px;font-weight:600;font-size:clamp(.85em,2vw,.95em);color:var(--text2)}.input-group input,.input-group textarea,.input-group select{width:100%;padding:10px 13px;border:2px solid var(--input-border);border-radius:var(--radius-sm);font-size:.95em;font-family:inherit;background:var(--input-bg);color:var(--input-text);transition:border-color .2s,box-shadow .2s}.input-group input::placeholder,.input-group textarea::placeholder{color:var(--text3)}.input-group input:focus,.input-group textarea:focus,.input-group select:focus{border-color:var(--primary);outline:none;box-shadow:0 0 0 3px rgba(102,126,234,.12)}input[type="file"]{width:100%;padding:9px 12px;border-radius:var(--radius-sm);border:2px solid var(--input-border);background:var(--card);color:var(--input-text);cursor:pointer;font-family:inherit;font-size:.9em}input[type="file"]::file-selector-button{margin-right:10px;padding:6px 12px;border-radius:6px;border:none;background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;font-weight:700;cursor:pointer;font-size:.9em}#newSessionName{font-weight:600}.button{background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;border:none;padding:clamp(9px,2vw,12px) clamp(16px,3vw,24px);border-radius:var(--radius-sm);font-size:clamp(.85em,2vw,.95em);font-family:inherit;cursor:pointer;font-weight:600;white-space:nowrap;box-shadow:0 2px 8px rgba(102,126,234,.25);transition:transform .15s,box-shadow .15s,opacity .15s}.button:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(102,126,234,.35)}.button:active{transform:translateY(0);opacity:.92}.button:disabled{opacity:.55;cursor:not-allowed;transform:none}.button-secondary{background:linear-gradient(135deg,#6c757d,#5a6268);box-shadow:0 2px 8px rgba(108,117,125,.2)}.button-danger{background:linear-gradient(135deg,var(--danger),var(--danger2));box-shadow:0 2px 8px rgba(220,53,69,.25)}.button-success{background:linear-gradient(135deg,var(--success),var(--success2));box-shadow:0 2px 8px rgba(17,153,142,.25)}.button-point-type,.button-category,.button-player{background:var(--card);color:var(--text2);border:1.5px solid var(--border);padding:clamp(9px,2vw,12px) clamp(12px,2.5vw,18px);border-radius:var(--radius-sm);font-size:clamp(.82em,1.8vw,.95em);font-family:inherit;cursor:pointer;font-weight:600;transition:border-color .15s,color .15s,background .15s,box-shadow .15s;box-shadow:none}.button-point-type:hover,.button-category:hover,.button-player:hover{border-color:var(--primary-light);color:var(--primary);background:rgba(102,126,234,.05);box-shadow:none}.button-point-type.selected,.button-category.selected,.button-player.selected{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;border:1.5px solid transparent;box-shadow:0 2px 8px rgba(102,126,234,.25)}.point-type-buttons,.category-buttons{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;padding:2px}.player-buttons{display:flex;flex-wrap:wrap;gap:8px;padding:2px}.button-group{display:flex;gap:10px;flex-wrap:wrap}.player-pool-item{display:inline-flex;align-items:center;margin:4px;padding:7px 12px;background:var(--sec-bg);border-radius:20px;font-size:.88em;border:2px solid var(--border);box-shadow:var(--shadow-xs);transition:border-color .15s}.player-pool-item:hover{border-color:var(--primary)}.player-pool-item .remove{cursor:pointer;margin-left:8px;color:var(--text3);font-weight:bold;padding:2px 6px;border-radius:4px;border:2px solid var(--border);transition:border-color .15s,background .15s,color .15s}.player-pool-item .remove:hover{background:var(--danger);color:#fff;border-color:var(--danger)}#playerPoolDisplay{padding:10px;min-height:40px;background:var(--sec-bg);border:2px solid var(--border);border-radius:var(--radius-sm)}.team-section{margin-bottom:12px;padding:14px 16px;background:var(--sec-bg);border-radius:var(--radius-sm);border:2px solid var(--border);box-shadow:var(--shadow-xs)}.team-section input[type="text"]{padding:9px 12px;border:2px solid var(--input-border);border-radius:6px;width:100%;background:var(--input-bg);color:var(--input-text);font-weight:600;font-family:inherit}.team-section input[type="text"]:focus{border-color:var(--primary);outline:none}.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-top:12px}.stat-card,.team-stat-card{background:var(--card);padding:16px;border-radius:var(--radius-sm);border:2px solid var(--border);box-shadow:var(--shadow-xs);transition:border-color .15s,box-shadow .15s,transform .15s;cursor:pointer;font-size:clamp(.85em,2vw,1em)}.stat-card:hover,.team-stat-card:hover{border-color:var(--primary-light);box-shadow:var(--shadow-sm);transform:translateY(-1px)}.team-stat-card{border-left:4px solid var(--secondary);grid-column:1/-1}.stat-card h3,.team-stat-card h3{display:flex;align-items:center;justify-content:space-between;user-select:none;margin:0;font-size:1em;font-weight:700}.stat-details{max-height:1000px;overflow:hidden;transition:max-height .3s ease-out,opacity .3s ease-out;opacity:1}.stat-card.collapsed .stat-details,.team-stat-card.collapsed .stat-details{max-height:0;opacity:0;pointer-events:none}.player-score,.team-score{color:var(--primary);font-weight:700}.stat-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1.5px solid var(--border);align-items:center}.stat-row:last-child{border-bottom:none}.stat-label{font-weight:500;color:var(--text2);font-size:.9em}.stat-value{color:var(--primary);font-weight:700;font-size:1em}.overall-ranking{grid-column:1/-1;background:var(--card);padding:16px;border-radius:var(--radius-sm);border:2px solid var(--border);box-shadow:var(--shadow-xs);margin-top:12px}.log-entry{padding:10px 12px;background:var(--sec-bg);margin:8px 0;border-radius:var(--radius-sm);border-left:3px solid var(--primary);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;font-size:clamp(.8em,2vw,.9em);box-shadow:var(--shadow-xs)}.log-container{max-height:420px;overflow-y:auto;border:2px solid var(--border);border-radius:var(--radius-sm);padding:10px;background:var(--card)}.log-container-wrap{position:relative;margin-top:12px}.switch{position:relative;display:inline-block;width:52px;height:26px;flex-shrink:0}.switch input{opacity:0;width:0;height:0}.slider{position:absolute;cursor:pointer;inset:0;background:var(--border);transition:.3s;border-radius:26px}.slider:before{position:absolute;content:"";height:20px;width:20px;left:3px;bottom:3px;background:#fff;transition:.3s;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.2)}input:checked+.slider{background:linear-gradient(135deg,var(--primary),var(--secondary))}input:checked+.slider:before{transform:translateX(26px)}.button-point-type kbd,#recordAnswerBtn kbd{display:inline-block;font-family:inherit;font-size:.72em;font-weight:600;padding:1px 5px;border-radius:4px;border:1px solid currentColor;opacity:.6;margin-left:4px;vertical-align:middle;line-height:1.4}#welcomeToast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(30px);background:var(--card);color:var(--text);border:2px solid var(--border);border-radius:14px;padding:16px 20px;box-shadow:var(--shadow-xl);z-index:99998;opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;min-width:280px;max-width:380px;text-align:center}#welcomeToast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}#welcomeToast .wt-title{font-size:1.05em;font-weight:700;color:var(--text);margin-bottom:6px}#welcomeToast .wt-sub{font-size:.85em;color:var(--text2);margin-bottom:14px;line-height:1.5}#welcomeToast .wt-btns{display:flex;gap:8px;justify-content:center}#welcomeToast .wt-btn-primary{background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:.88em;font-weight:700;cursor:pointer;font-family:inherit}#welcomeToast .wt-btn-dismiss{background:var(--sec-bg);color:var(--text2);border:2px solid var(--border);border-radius:8px;padding:8px 14px;font-size:.88em;font-weight:600;cursor:pointer;font-family:inherit}.user-id-status{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--sec-bg);border-radius:var(--radius-sm);border:2px solid var(--border);margin-bottom:12px}#categoryButtonsContainer{display:flex;flex-direction:column;gap:3px}.cat-group{display:flex;flex-wrap:wrap;align-items:center;gap:4px;padding:5px 6px;background:var(--sec-bg);border-radius:8px;border:1.5px solid var(--border)}.cat-group-label{padding:4px 10px;border-radius:5px;font-size:.63em;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--primary);background:rgba(102,126,234,.12);border:1.5px solid rgba(102,126,234,.3);cursor:pointer;font-family:inherit;transition:color .15s,background .15s,border-color .15s;white-space:nowrap}.cat-group-label:hover{background:rgba(102,126,234,.2);border-color:var(--primary)}.cat-group-label.selected{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;border-color:transparent;box-shadow:0 2px 8px rgba(102,126,234,.3)}.cat-group-chip{padding:4px 10px;border-radius:5px;font-size:.78em;font-weight:600;border:1.5px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-family:inherit;transition:border-color .15s,color .15s,background .15s}.cat-group-chip:hover{border-color:var(--primary-light);color:var(--primary);background:rgba(102,126,234,.08)}.cat-group-chip.selected{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;border-color:transparent;box-shadow:0 2px 8px rgba(102,126,234,.25)}#recordToast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--success);color:#fff;padding:10px 22px;border-radius:28px;font-size:.92em;font-weight:700;box-shadow:0 4px 18px rgba(0,0,0,.22);pointer-events:none;opacity:0;transition:opacity .18s,transform .18s;z-index:99999;white-space:nowrap;letter-spacing:.01em}#recordToast.show{opacity:1;transform:translateX(-50%) translateY(0)}#recordToast.neg{background:var(--danger)}#recordToast.miss{background:#888}#recordToast.pts{background:var(--primary)}#appToast{position:fixed;bottom:70px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--danger);color:#fff;padding:11px 22px;border-radius:28px;font-size:.9em;font-weight:700;box-shadow:0 4px 20px rgba(0,0,0,.28);pointer-events:none;opacity:0;transition:opacity .2s,transform .2s;z-index:100000;max-width:88vw;text-align:center;letter-spacing:.01em;line-height:1.4}#appToast.show{opacity:1;transform:translateX(-50%) translateY(0)}#appToast.toast-warn{background:#e67e22}#appToast.toast-success{background:var(--success)}#appToast.toast-info{background:var(--primary)}#confirmToast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--card);color:var(--text);padding:16px 20px;border-radius:14px;font-size:.9em;box-shadow:0 8px 32px rgba(0,0,0,.32);border:1.5px solid var(--border);opacity:0;transition:opacity .2s,transform .2s;z-index:100001;max-width:340px;width:90vw;text-align:center;pointer-events:none}#confirmToast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:all}#confirmToast .ct-msg{font-weight:600;margin-bottom:14px;line-height:1.45;color:var(--text)}#confirmToast .ct-btns{display:flex;gap:10px;justify-content:center}#confirmToast .ct-ok{background:var(--danger);color:#fff;border:none;border-radius:8px;padding:8px 22px;font-weight:700;cursor:pointer;font-family:inherit;font-size:.95em}#confirmToast .ct-ok.warn-ok{background:#e67e22}#confirmToast .ct-cancel{background:var(--sec-bg);color:var(--text2);border:1.5px solid var(--border);border-radius:8px;padding:8px 18px;font-weight:600;cursor:pointer;font-family:inherit;font-size:.95em}.ql-row{display:flex;align-items:center;gap:0;background:var(--card);border:1.5px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:6px;transition:border-color .12s}.ql-row:hover{border-color:var(--primary-light)}.ql-name{flex:0 0 auto;min-width:80px;max-width:120px;padding:0 12px;font-size:.82em;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-right:1.5px solid var(--border);height:44px;display:flex;align-items:center;background:var(--sec-bg)}.ql-btns{display:flex;flex:1}.ql-btn{flex:1;height:44px;border:none;border-right:1.5px solid var(--border);background:transparent;cursor:pointer;font-size:.75em;font-weight:700;color:var(--text2);transition:background .12s,color .12s;display:flex;align-items:center;justify-content:center;gap:3px;line-height:1.1;text-align:center;padding:0 4px}.ql-btn:last-child{border-right:none}.ql-btn:hover{background:var(--hover);color:var(--text)}.ql-btn.ql-power:hover{background:rgba(17,153,142,.12);color:var(--success)}.ql-btn.ql-tu:hover{background:rgba(102,126,234,.1);color:var(--primary)}.ql-btn.ql-bonus:hover{background:rgba(102,126,234,.06);color:var(--primary)}.ql-btn.ql-neg:hover{background:rgba(220,53,69,.08);color:var(--danger)}.ql-btn.ql-miss:hover{background:rgba(200,200,200,.1);color:var(--text3)}.ql-cat-row{display:none;padding:8px 12px;border-top:1.5px solid var(--border);background:var(--sec-bg);border-radius:0 0 10px 10px}.ql-cat-row.open{display:flex;flex-wrap:wrap;gap:5px;align-items:center}.ql-cat-chip{padding:3px 10px;border-radius:16px;font-size:.74em;font-weight:600;border:1.5px solid var(--border);background:var(--card);color:var(--text2);cursor:pointer;transition:all .1s}.ql-cat-chip:hover{border-color:var(--primary);color:var(--primary)}.ql-cat-chip.selected{background:var(--primary);border-color:var(--primary);color:#fff}.ql-confirm-btn{padding:3px 12px;border-radius:16px;font-size:.74em;font-weight:700;background:var(--success);color:#fff;border:none;cursor:pointer;margin-left:4px}.ql-cancel-btn{padding:3px 10px;border-radius:16px;font-size:.74em;font-weight:600;background:transparent;color:var(--text3);border:1.5px solid var(--border);cursor:pointer}.session-info{background:var(--sec-bg);padding:14px 16px;border-radius:var(--radius-sm);border:2px solid var(--border);margin-bottom:var(--sp);font-size:clamp(.82em,2vw,.95em)}.session-info-row{display:flex;justify-content:space-between;align-items:center;margin:10px 0;flex-wrap:wrap;gap:6px;padding-bottom:8px;border-bottom:1.5px solid var(--border)}.session-info-row:last-child{border-bottom:none;margin-bottom:0}.session-info-row span:first-child{font-weight:500;color:var(--text2);font-size:.9em}.session-info-row strong{color:var(--primary);font-weight:700}.session-controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:var(--sp)}.qb-modal{display:none;position:fixed;z-index:9999;inset:0;background:rgba(15,20,40,.55);backdrop-filter:blur(6px)}.qb-modal.open{display:block}.modal-content{background:var(--card);margin:50px auto;padding:24px 28px;border-radius:var(--radius);width:90%;max-width:550px;max-height:80vh;overflow-y:auto;box-shadow:var(--shadow-xl);border:2px solid var(--border)}.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;padding-bottom:14px;border-bottom:1.5px solid var(--border)}.modal-header h2{color:var(--text);margin:0;font-weight:700;font-size:1.3em}.close-modal{background:none;border:none;font-size:24px;cursor:pointer;color:var(--text3);width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:6px;transition:background .15s,color .15s}.close-modal:hover{background:var(--sec-bg);color:var(--primary)}.sessions-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:14px}.session-card{background:var(--sec-bg);padding:14px;border-radius:var(--radius-sm);border:2px solid var(--border);transition:transform .15s,box-shadow .15s,border-color .15s;box-shadow:var(--shadow-xs)}.session-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-md);border-color:var(--primary)}.session-card-title{color:var(--primary);font-weight:700;margin-bottom:8px;font-size:clamp(.95em,2vw,1.05em)}.session-card-details{font-size:.8em;color:var(--text2);margin-bottom:10px;line-height:1.5}.session-card-actions{display:flex;gap:6px;flex-wrap:wrap}.session-card-actions button{flex:1;min-width:60px;font-size:.82em;padding:7px 10px}.skill-panel-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;user-select:none;transition:background .15s}.skill-panel-header:hover{background:var(--hover)}.sort-pill{font-size:.75em;font-weight:600;padding:5px 12px;border-radius:20px;cursor:pointer;border:1.5px solid var(--border);background:var(--card);color:var(--text2);transition:all .15s;white-space:nowrap}.sort-pill:hover{border-color:var(--primary);color:var(--primary)}.sort-pill.active{border-color:transparent;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;box-shadow:0 2px 6px rgba(102,126,234,.3)}.player-card-wrap{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-sm);margin-bottom:6px;overflow:hidden;box-shadow:var(--shadow-xs);transition:border-color .15s,box-shadow .15s}.player-card-wrap:hover{border-color:var(--primary-light);box-shadow:var(--shadow-sm)}.player-card-header{display:flex;align-items:center;gap:12px;padding:11px 15px;cursor:pointer;user-select:none}.player-card-rank{font-size:.9em;font-weight:800;color:var(--primary);min-width:30px;text-align:center}.player-card-body{padding:13px 15px;border-top:1.5px solid var(--border);background:var(--sec-bg)}.metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px}.metric-tile{background:var(--card);border:1.5px solid var(--border);border-radius:7px;padding:9px 11px}.metric-tile.span2{grid-column:span 2}.metric-lbl{font-size:.67em;font-weight:700;color:var(--text3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px}.metric-val{font-size:1.05em;font-weight:700}#playerDetailModal .modal-content{max-width:620px}.pd-hero{background:linear-gradient(135deg,var(--primary),var(--secondary));border-radius:var(--radius-sm);padding:18px 20px;color:#fff;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}.pd-hero-name{font-size:1.4em;font-weight:700}.pd-hero-sub{font-size:.85em;opacity:.8;margin-top:3px}.pd-hero-pts{font-size:2em;font-weight:700}.pd-section-title{font-size:.75em;font-weight:700;color:var(--text3);margin:16px 0 8px;text-transform:uppercase;letter-spacing:.5px}.pd-stat-chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px}.pd-chip{padding:5px 13px;border-radius:20px;font-size:.82em;font-weight:600;background:var(--sec-bg);color:var(--text2);border:2px solid var(--border)}.pd-chip.power{background:rgba(102,126,234,.1);color:var(--primary);border-color:rgba(102,126,234,.35)}.pd-chip.neg{background:rgba(220,53,69,.08);color:var(--danger);border-color:rgba(220,53,69,.3)}.pd-chip.tossup{background:rgba(17,153,142,.08);color:var(--success);border-color:rgba(17,153,142,.3)}.pd-cat-table{width:100%;border-collapse:collapse;font-size:.88em}.pd-cat-table th{text-align:left;padding:7px 10px;background:var(--sec-bg);border-bottom:1.5px solid var(--border);color:var(--text3);font-weight:700;font-size:.78em;text-transform:uppercase;letter-spacing:.4px}.pd-cat-table th.right,.pd-cat-table td.right{text-align:right}.pd-cat-table td{padding:8px 10px;border-bottom:1.5px solid var(--border)}.pd-cat-table tr:last-child td{border-bottom:none}.pd-cat-table tr:hover td{background:var(--hover)}.pd-rank-badge{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;font-size:.76em;font-weight:700;background:var(--sec-bg);color:var(--text3);border:2px solid var(--border)}.pd-rank-badge.gold{background:#ffd700;color:#7a5800;border-color:#c8a600}.pd-rank-badge.silver{background:#c0c0c0;color:#5a5a5a;border-color:#a0a0a0}.pd-rank-badge.bronze{background:#cd7f32;color:#fff;border-color:#a06020}.pd-bar-mini{height:5px;border-radius:5px;background:linear-gradient(90deg,var(--primary),var(--secondary));min-width:4px}.pd-bar-mini.neg-bar{background:linear-gradient(90deg,var(--danger),var(--danger2))}.pd-recent-log{max-height:200px;overflow-y:auto;border:2px solid var(--border);border-radius:var(--radius-sm)}.pd-log-row{display:flex;justify-content:space-between;align-items:center;padding:7px 12px;border-bottom:1.5px solid var(--border);font-size:.83em}.pd-log-row:last-child{border-bottom:none}.pd-log-row:hover{background:var(--hover)}.pd-pts-pos{color:var(--primary);font-weight:700}.pd-pts-neg{color:var(--danger);font-weight:700}.pd-no-data{color:var(--text2);font-style:italic;font-size:.88em;padding:10px 0}.auto-save-indicator{width:30px;height:30px;padding:0;border-radius:50%;flex-shrink:0;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);display:inline-flex;align-items:center;justify-content:center;overflow:hidden;transition:background 1.4s ease,border-color 1.4s ease,box-shadow 1.4s ease}.save-label{display:none}.save-ring{position:relative;flex-shrink:0;width:20px;height:20px}.save-ring svg{width:20px;height:20px;display:block;animation:save-spin 2.8s linear infinite;transition:opacity 1.4s ease}.save-ring-dot{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}.save-ring-dot::after{content:'';width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.35);transition:background 1.4s ease,box-shadow 1.4s ease,transform 1s ease}.state-connecting .save-ring svg{opacity:.4}.state-connecting .save-ring-dot::after{background:#ffd43b;box-shadow:0 0 4px 1px rgba(255,212,59,.55)}.state-idle .save-ring svg{opacity:.45}.state-idle .save-ring-dot::after{background:rgba(255,255,255,.3);box-shadow:none;transform:scale(1)}.state-flash{background:rgba(56,239,125,.14);border-color:rgba(56,239,125,.3);box-shadow:0 0 7px rgba(56,239,125,.18)}.state-flash .save-ring svg{opacity:.9}.state-flash .save-ring-dot::after{background:#38ef7d;box-shadow:0 0 5px 2px rgba(56,239,125,.6);transform:scale(1.2)}.state-error{background:rgba(255,90,90,.1);border-color:rgba(255,90,90,.28);cursor:help}.state-error .save-ring svg{animation:none;opacity:.45}.state-error .save-ring-dot::after{background:#ff6b6b;box-shadow:0 0 4px 1px rgba(255,107,107,.55)}.gh-deploy-badge{display:none}@keyframes gh-pulse{0%,100%{opacity:1}50%{opacity:.5}}#versionBadge.gh-state-success{background:rgba(56,239,125,.28);border-color:rgba(56,239,125,.6);box-shadow:none;transition:background 1.4s ease,border-color 1.4s ease}#versionBadge.gh-state-pending{background:rgba(255,212,59,.28);border-color:rgba(255,212,59,.7);box-shadow:none;animation:gh-pulse 1.2s ease-in-out infinite;transition:background 1.4s ease,border-color 1.4s ease}#versionBadge.gh-state-failure{background:rgba(255,90,90,.25);border-color:rgba(255,90,90,.6);box-shadow:none;transition:background 1.4s ease,border-color 1.4s ease}#versionBadge.gh-state-unknown{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.3);box-shadow:none;transition:background 1.4s ease,border-color 1.4s ease}.state-error .save-label{color:rgba(255,180,180,.85)}@keyframes save-spin{to{transform:rotate(360deg)}}.sidebar-nav{display:flex;align-items:center;gap:8px;padding:8px 10px;background:linear-gradient(135deg,var(--primary),var(--secondary));border-radius:var(--radius-sm);margin-bottom:12px;box-shadow:var(--shadow-sm);position:relative;z-index:50;flex-shrink:0}.sidebar-jump-wrapper{flex:1;position:relative}.sidebar-jump-btn{width:100%;padding:7px 10px;border-radius:6px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.13);color:#fff;font-weight:600;font-size:.84em;cursor:pointer;font-family:inherit;display:flex;justify-content:space-between;align-items:center;gap:8px}.sidebar-jump-btn:hover{background:rgba(255,255,255,.22)}.sidebar-jump-arrow{font-size:.8em;opacity:.8;transition:transform .2s}.sidebar-jump-wrapper.open .sidebar-jump-arrow{transform:rotate(180deg)}.sidebar-jump-menu{display:none;position:absolute;top:calc(100%+5px);left:0;right:0;background:var(--card);border:2.5px solid var(--border);border-radius:var(--radius-sm);box-shadow:0 8px 24px rgba(0,0,0,.15);z-index:9999;overflow:hidden}.sidebar-jump-wrapper.open .sidebar-jump-menu{display:block}.sidebar-jump-menu button{display:block;width:100%;padding:9px 14px;text-align:left;background:none;border:none;border-bottom:1.5px solid var(--border);color:var(--text);font-size:.86em;font-weight:500;cursor:pointer;font-family:inherit;transition:background .12s}.sidebar-jump-menu button:last-child{border-bottom:none}.sidebar-jump-menu button:hover{background:var(--hover)}.sidebar-jump-menu button.active-item{color:var(--primary);font-weight:700;background:var(--sec-bg)}.sidebar-close-btn{background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.25);color:#fff;padding:7px 10px;border-radius:6px;font-size:.82em;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;flex-shrink:0}.sidebar-close-btn:hover{background:rgba(255,255,255,.24)}.sidebar-sections{flex:1;overflow-y:auto;overflow-x:visible}.qb-sidebar .qb-section{display:none}.qb-sidebar .qb-section.active-section{display:block}@media (max-width:768px){.qb-header{padding:0 10px}.qb-scroll,.analytics-scroll{padding:16px}.qb-section{padding:16px}.point-type-buttons,.category-buttons{grid-template-columns:repeat(2,1fr);gap:8px}.stats-grid{grid-template-columns:1fr}.button-group{flex-direction:column}.button-group button,.button{width:100%}.log-container{max-height:350px}.sessions-list{grid-template-columns:1fr}.modal-content{margin:20px auto;width:95%;padding:20px}.an-grid{grid-template-columns:repeat(2,1fr)}}.h3-primary{color:var(--primary);margin:0 0 6px}.cell-pad{padding:6px 10px;border:1.5px solid var(--border)}.mb-14{margin-bottom:14px}.text-2{color:var(--text2)}.text-3{color:var(--text3)}.mb-10{margin-bottom:10px}.sec-bg{background:var(--sec-bg)}.mb-8{margin-bottom:8px}.fs-75-fw4{font-size:.75em;font-weight:400;color:var(--text2)}.mb-6{margin-bottom:6px}.mono-primary{font-family:monospace;color:var(--primary)}.flex-between{display:flex;justify-content:space-between;align-items:center}.flex-wrap-gap{display:flex;flex-wrap:wrap;gap:5px}.flex-center-8{display:flex;align-items:center;gap:8px}.warning{color:var(--warning)}.primary{color:var(--primary)}.hidden{display:none}.mt-10{margin-top:10px}.mt-20{margin-top:20px}.ml-6{margin-left:6px}.mt-6{margin-top:6px}.fs-82-text2{font-size:.82em;color:var(--text2)}.fs-82{font-size:.82em}.card-border{border:2px solid var(--border)}.fs-78{font-size:.78em;color:var(--text2)}.fw-600{font-weight:600}.fw-700{font-weight:700}.text-center{text-align:center}.text-right{text-align:right}.text-left{text-align:left}.btn-icon-32{width:32px;height:32px;border-radius:8px;border:2px solid var(--border);background:var(--card);color:var(--text2);font-size:1.1em;font-weight:700;cursor:pointer;font-family:inherit}.btn-icon-20{width:20px;height:20px;border-radius:5px;border:1.5px solid var(--border);background:var(--card);color:var(--text2);font-size:.85em;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0}.fw4-82-ml6{font-weight:400;font-size:.82em;color:var(--text2);margin-left:6px}.fs-85-fw7{font-size:.85em;font-weight:700;color:var(--text)}.fs-82-fw6-text2{font-size:.82em;font-weight:600;color:var(--text2)}.fs-75-fw7{font-size:.75em;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);min-width:52px}.fs-75-text3{font-size:.75em;color:var(--text3)}.avatar-lg{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--secondary));display:flex;align-items:center;justify-content:center;font-size:1.4em;font-weight:700;color:#fff;flex-shrink:0}.fs-76-text3{font-size:.76em;color:var(--text3);margin:0 0 12px;line-height:1.5}.fs-7-fw8-upper{font-size:.7em;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin:8px 0 4px;width:100%}.fw6-m10-8{font-weight:600;margin:10px 0 8px}.m12-fs95{margin:0 0 10px;font-size:.95em;color:var(--success)}.m12-fs11{margin:0 0 12px;font-size:1.1em;color:var(--primary)}.m14-pl20{margin:0 0 14px;padding-left:20px}.m4-fs95-danger{margin:0 0 4px;font-size:.95em;color:var(--danger)}.m8-pl20{margin:0 0 8px;padding-left:20px}.m6-ml16{margin:6px 0 0 16px;padding:0}.cell-pad-left{padding:6px 10px;text-align:left;border:1.5px solid var(--border)}.progress-bar{height:4px;background:var(--border);border-radius:4px;overflow:hidden}.fs-8-success-mt6{font-size:.8em;color:var(--success);margin-top:6px;min-height:1.2em}.flex-1-min0{flex:1;min-width:0}.success{color:var(--success)}.danger{color:var(--danger)}.text-2-p16{color:var(--text2);padding:16px}.inp-std{width:100%;padding:9px 12px;border:1.5px solid var(--input-border);border-radius:var(--radius-sm);font-size:.95em;font-family:inherit;background:var(--input-bg);color:var(--input-text);box-sizing:border-box}.inp-sm{width:100%;padding:7px 10px;border:1.5px solid var(--input-border);border-radius:var(--radius-sm);font-size:.88em;font-family:inherit;background:var(--input-bg);color:var(--input-text)}.inp-mb{margin-bottom:14px}.row-card{background:var(--sec-bg);border:1.5px solid var(--border);border-radius:10px;margin-bottom:var(--sp);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px}.btn-sm-primary{padding:5px 12px;border:1.5px solid var(--primary);border-radius:6px;font-size:.8em;font-weight:700;color:var(--primary);background:rgba(102,126,234,.07);cursor:pointer;font-family:inherit}.btn-icon-success{width:34px;height:34px;border-radius:8px;border:2px solid var(--success);background:var(--card);color:var(--success);font-size:1.2em;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center}.btn-icon-danger{width:34px;height:34px;border-radius:8px;border:2px solid var(--danger);background:var(--card);color:var(--danger);font-size:1.2em;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center}.avatar-circle{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--secondary));display:flex;align-items:center;justify-content:center;font-size:1.4em;font-weight:700;color:#fff;flex-shrink:0}.sidebar-sec-hdr{font-weight:700;font-size:.75em;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:8px 12px 4px;margin:6px 0 4px;border-bottom:1.5px solid var(--border)}</style>
+</head>
+<body><div class="qb-container"><div id="sandboxWarning" style="display:none;background:#7c4dff;color:#fff;padding:8px 16px;font-size:.82em;font-weight:600;text-align:center;flex-shrink:0;z-index:300;line-height:1.4;">
+      ↓ Running inside Claude's preview — Firebase sync is blocked by the sandbox.
+      <strong>Download the file and open it in your browser for live sync.</strong><button onclick="document.getElementById('sandboxWarning').style.display='none';" style="margin-left:12px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.5);color:#fff;padding:3px 10px;border-radius:6px;cursor:pointer;font-weight:700;font-family:inherit;font-size:.9em;">Dismiss</button></div><script>
+      try{ if (window.self !== window.top){ document.getElementById('sandboxWarning').style.display = 'block'; document.body.classList.add('is-iframe'); } } catch(e){ document.getElementById('sandboxWarning').style.display = 'block'; document.body.classList.add('is-iframe'); }
+    </script><div class="qb-header" id="qbHeader"><div class="qb-header-left"><button class="header-btn sidebar-open-btn hidden" id="sidebarOpenBtn" >&#9654; Menu</button></div><div class="qb-header-center"><h1 data-short="HSE QB" data-medium="HSE QB Tracker">HSE Quiz Bowl Tracker <span class="version-badge" id="versionBadge"></span></h1><div class="header-session-name" id="headerSessionName"></div></div><div class="header-controls"><div style="display:flex;align-items:center;gap:6px;user-select:none;" title="Switch between Tracker and Analytics"><span id="toggleLabelTracker" class="header-toggle-label" style="color:rgba(255,255,255,.95);">Tracker</span><div onclick="toggleAnalytics()" id="viewToggleSwitch" style="width:48px;height:24px;background:rgba(255,255,255,.25);border-radius:12px;border:2px solid rgba(255,255,255,.4);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;"><div id="viewToggleKnob" style="width:16px;height:16px;background:#fff;border-radius:50%;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,.3);"></div></div><span id="toggleLabelAnalytics" class="header-toggle-label" style="color:rgba(255,255,255,.55);">Stats</span></div><button class="header-btn round" onclick="openHelpModal()" title="Help / Tutorial">?</button><span id="autosaveStatus" class="auto-save-indicator state-connecting"><span class="save-ring"><svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="8" r="6" stroke="rgba(255,255,255,0.25)" stroke-width="2"/><path d="M8 2 A6 6 0 0 1 14 8" stroke="white" stroke-width="2" stroke-linecap="round"/></svg><span class="save-ring-dot"></span></span><span class="save-label">Connecting…</span></span></div></div><div id="updateBanner"></div><div class="qb-body"><aside class="qb-sidebar" id="mainSidebar"><div class="sidebar-nav"><div class="sidebar-jump-wrapper" id="sidebarJumpWrapper"><button class="sidebar-jump-btn" onclick="toggleJumpDropdown()" type="button"><span id="sidebarJumpLabel">Setup</span><span class="sidebar-jump-arrow">&#9662;</span></button><div class="sidebar-jump-menu"><div class="sidebar-sec-hdr">Setup</div><button onclick="showSection('sec-session')">Session</button><button onclick="showSection('sec-players')">Players</button><button onclick="showSection('sec-teams')">Teams</button><button onclick="showSection('sec-categories')">Categories</button><div class="sidebar-sec-hdr">Settings</div><button onclick="showSection('sec-userid')">User ID</button><button onclick="showSection('sec-visual')">Visual Settings</button><button id="jumpBtn-sec-admin" onclick="showSection('sec-admin')" class="hidden">Admin Panel</button><div class="sidebar-sec-hdr">Session & Data</div><button onclick="showSection('sec-export')">Export / Import</button><button id="jumpBtn-sec-danger" onclick="showSection('sec-danger')" class="hidden">Data Management</button><button id="jumpBtn-sec-debug" onclick="showSection('sec-debug')" class="hidden">Debug Menu</button></div></div><button class="sidebar-close-btn" onclick="toggleSidebar()">&#9664; Hide</button></div><div class="sidebar-sections"><div class="qb-section" id="sec-session"><h2>Session <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div class="session-info"><div class="session-info-row"><span>Name:</span><strong id="sessionName">&#8212;</strong></div><div class="session-info-row"><span>Created:</span><strong id="sessionCreated">&#8212;</strong></div><div class="session-info-row"><span>Last Updated:</span><strong id="sessionLastUpdated">&#8212;</strong></div><div class="session-info-row"><span>Answers:</span><strong id="sessionAnswerCount">0</strong></div></div><div class="input-group"><label>New Session Name:</label><input type="text" id="newSessionName" placeholder="Session name..." /></div><div class="session-controls"><button class="button button-success" onclick="createNewSession()">+ New Session</button><button class="button" onclick="openSessionsModal()">Load</button></div></div></div><div class="qb-section" id="sec-players"><h2>Players <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div class="input-group"><label>Add Player:</label><input type="text" id="playerInput" placeholder="Player name..." onkeydown="if(event.key==='Enter') addToPlayerPool()" /></div><div class="button-group mb-14" ><button class="button" onclick="addToPlayerPool()">Add Player</button><button class="button button-danger" onclick="clearPlayerPool()">Clear All</button></div><div style="padding-bottom:14px;border-bottom:1.5px solid var(--border);margin-bottom:14px;"><div style="font-weight:600;font-size:.85em;margin-bottom:8px;color:var(--text);">Player Management</div><div style="font-size:.78em;color:var(--text2);margin-bottom:10px;">Rename players to fix typos. To merge, click <strong>Merge</strong> on the player you want to <em>remove</em> — their stats will be combined into whichever player you select next.</div><div id="playerMgmtContainer" style="display:flex;flex-direction:column;gap:8px;"></div></div><div class="input-group"><label>Import from File (CSV/TXT):</label><input type="file" accept=".csv,.txt" onchange="handlePlayerImport(event)" /></div><div id="playerPoolDisplay"></div></div></div><div class="qb-section" id="sec-teams"><h2>Teams <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div class="input-group"><label>Team Name:</label><input type="text" id="teamNameInput" placeholder="Team name..." /></div><button class="button" onclick="addTeam()">Add Team</button><div id="teamsContainer" style="margin-top:20px;"></div></div></div><div class="qb-section" id="sec-categories"><h2>Categories <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><p style="font-size:.85em;color:var(--text2);margin-bottom:10px;">Categories and subcategories are fixed. Select a parent category when recording answers to reveal its subcategories.</p><div style="display:flex;flex-direction:column;gap:6px;"></div><div id="categoryTreeDisplay"></div><div id="catFreqSection" style="display:none;margin-top:16px;padding-top:14px;border-top:1.5px solid var(--border);"><div style="font-weight:600;font-size:.85em;margin-bottom:4px;color:var(--text);">Expected Subcategory Frequencies <span class="fw4-82-ml6">Admin only — synced for all users</span></div><p style="font-size:.76em;color:var(--text3);margin-bottom:10px;line-height:1.5;">Enter the expected % of tossups for each subcategory at a typical tournament. Shown under each subcategory breakdown chart.</p><div id="catFreqPickers" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;"></div><div class="button-group"><button class="button" onclick="saveCatFreqs()">Save Frequencies</button><button class="button" style="background:var(--sec-bg);color:var(--text2);border:1.5px solid var(--border);" onclick="resetCatFreqs()">Reset Defaults</button></div><div id="catFreqStatus" class="fs-8-success-mt6"></div></div></div></div><div class="qb-section" id="sec-export"><h2>Export Data <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><p style="margin-bottom:8px;font-weight:600;">Select what to include:</p><div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:var(--sp);"><button class="button-category selected" id="exportPlayers" onclick="this.classList.toggle('selected')">Players &amp; Scores</button><button class="button-category selected" id="exportAnswerLog" onclick="this.classList.toggle('selected')">Answer Log</button><button class="button-category selected" id="exportTeamStats" onclick="this.classList.toggle('selected')">Team Statistics</button></div><div class="button-group"><button class="button button-success" onclick="exportToExcel()">Export to Excel</button><button class="button button-secondary" onclick="exportToJSON()">Export as JSON</button></div><div style="margin-top:22px;padding-top:18px;border-top:1.5px solid var(--border);"><p style="font-weight:600;margin-bottom:6px;">Import Session</p><p style="font-size:.85em;color:var(--text2);margin-bottom:12px;">Load a previously exported JSON file.</p><div class="input-group"><label>Select JSON file:</label><input type="file" id="importSessionFile" accept=".json" onchange="importFromJSON(event)" /></div><div id="importStatus" style="font-size:.85em;margin-top:8px;display:none;"></div></div></div></div><div class="qb-section" id="sec-userid"><h2>User ID <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><p style="font-size:.82em;color:var(--text2);margin-bottom:14px;line-height:1.5;">Set your full name to sync your identity across devices. Used to distinguish users with the same first name.</p><div class="user-id-status" id="userIdStatus"><div><div style="font-weight:700;font-size:.9em;color:var(--text);" id="userIdDisplayName">Not set</div><div class="fs-75-text3" id="userIdSubtitle">Enter your first and last name below</div></div></div><div class="input-group"><label>First Name:</label><input type="text" id="userIdFirstName" placeholder="e.g. Alex" maxlength="30"
+                  onkeydown="if(event.key==='Enter') document.getElementById('userIdLastName').focus()" /></div><div class="input-group"><label>Last Name:</label><input type="text" id="userIdLastName" placeholder="e.g. Smith" maxlength="30"
+                  onkeydown="if(event.key==='Enter') saveUserId()" /></div><div id="userIdLoadStatus" style="font-size:.8em;min-height:1.2em;margin-bottom:6px;color:var(--text2);"></div><div class="button-group"><button class="button button-success" onclick="saveUserId()" title="Save name to this device and sync to Firebase">Save</button><button class="button" style="background:var(--sec-bg);color:var(--text);border:1.5px solid var(--border);" onclick="loadExistingAccount()" title="Load your photo and data from an existing account with this name">Load Existing</button><button class="button" style="background:var(--sec-bg);color:var(--text);border:1.5px solid var(--border);" onclick="newAccount()" title="Generate a fresh client ID for a brand-new account">New Account</button><button class="button button-secondary" onclick="clearUserId()">Clear</button></div><p style="font-size:.75em;color:var(--text3);margin-top:12px;padding-top:10px;border-top:1.5px solid var(--border);">Your client ID:<span id="userClientIdDisplay" style="font-family:monospace;font-size:.95em;word-break:break-all;"></span></p></div></div><div class="qb-section" id="sec-visual"><h2>Visual Settings <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><p style="font-size:.78em;color:var(--text2);margin-bottom:14px;padding:8px 10px;background:var(--hover);border-radius:6px;border:1.5px solid var(--border);"><strong>Local settings</strong> &#8212; Saved to this device only, do not sync.
+              </p><div class="input-group"><label>Theme</label><div style="display:flex;align-items:center;gap:12px;"><label class="switch"><input type="checkbox" id="darkModeToggle2" onchange="toggleDarkMode()"><span class="slider"></span></label><span>Dark Mode</span></div></div><div class="input-group"><label>Scrollbars</label><div style="display:flex;align-items:center;gap:12px;"><label class="switch"><input type="checkbox" id="hideScrollbarsToggle" onchange="toggleScrollbars()"><span class="slider"></span></label><span>Hide Scrollbars</span></div></div><div class="input-group"><label>Accent Color</label><select id="accentColorSelect" onchange="setAccentColor(this.value)"><option value="#667eea">Indigo</option><option value="#11998e">Teal</option><option value="#dc3545">Red</option><option value="#764ba2">Purple</option></select></div><div id="catColorSection" style="display:none;padding-top:14px;border-top:1.5px solid var(--border);"><div style="font-weight:600;font-size:.85em;margin-bottom:8px;color:var(--text);">Category Colors <span class="fw4-82-ml6">Admin only — synced for all users</span></div><div id="catColorPickers" style="display:flex;flex-direction:column;gap:7px;margin-bottom:10px;"></div><div class="button-group"><button class="button" onclick="saveCatColors()">Save Colors</button><button class="button" style="background:var(--sec-bg);color:var(--text2);border:1.5px solid var(--border);" onclick="resetCatColors()">Reset Defaults</button></div><div id="catColorStatus" class="fs-8-success-mt6"></div></div></div></div>
+<div class="qb-section" id="sec-admin" style="border:2px solid var(--primary);display:none;"><h2 class="primary">Admin Panel <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><p style="font-size:.82em;color:var(--text2);margin-bottom:12px;line-height:1.5;">Admins can access Data Management and control low-data player flagging. Add by exact full name.</p><div id="adminListDisplay" style="border:1.5px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:12px;background:var(--card);"></div><div class="input-group" style="margin-bottom:0;"><label>Add Admin (exact full name):</label><input type="text" id="adminAddInput" placeholder="e.g. Jane Smith" maxlength="61"
+                  onkeydown="if(event.key==='Enter') addAdmin()" /></div><div class="button-group" style="margin-top:10px;margin-bottom:18px;"><button class="button button-success" onclick="addAdmin()">Add Admin</button></div><div style="border-top:1.5px solid var(--border);padding-top:16px;"><div style="background:var(--sec-bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:12px;font-size:.8em;color:var(--text2);line-height:1.6;">
+                  This file (display):<span class="mono-primary" id="displayVersionDisplay"></span><br>
+                  This file (internal):<span class="mono-primary" id="internalVersionDisplay"></span><br>
+                  Published in Firebase:<span style="font-family:monospace;color:var(--success);" id="liveFirebaseBuildDisplay">—</span> <span style="font-family:monospace;color:var(--text3);" id="liveFirebaseLabelDisplay"></span><br>
+                  Published on GitHub:<span id="githubPublishedDisplay" style="font-family:monospace;color:var(--text3);">—</span></div><div id="releasePrompt" class="hidden"><div style="background:rgba(17,153,142,.08);border:1.5px solid rgba(17,153,142,.35);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:12px;"><div style="font-weight:700;font-size:.88em;color:var(--success);margin-bottom:6px;">New build detected</div><div style="font-size:.78em;color:var(--text2);line-height:1.6;"><div class="mb-8">This file has a new version that hasn't been published yet.</div><div class="fw6-m10-8">Workflow:</div><div style="margin-left:8px;border-left:2px solid var(--primary);padding-left:8px;">
+                        1. Upload this file to GitHub first<br>
+                        2. Add release notes below and click "Publish Release"<br>
+                        3. Users on older versions will see the update banner
+                      </div></div></div><div class="input-group mb-10" ><label>Release Notes <span class="fs-75-fw4">— shown to users in update notification</span></label><input type="text" id="releaseNotesInput" placeholder="e.g. Fixed analytics, added export" /></div><div class="input-group mb-14" ><label>Admin Comments <span class="fs-75-fw4">— internal notes (not shown to users)</span></label><input type="text" id="adminCommentsInput" placeholder="e.g. Tested with large datasets, ready for production" /></div><button class="button button-success" onclick="publishRelease()" style="width:100%;">Update Release Info</button></div><div id="releaseUpToDate" style="display:none;font-size:.82em;color:var(--success);font-weight:600;">✔ This file is already the published version.</div></div></div></div><div class="qb-section" id="sec-danger" style="border:2px solid var(--danger);display:none;"><h2 class="danger">Data Management <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div style="margin-bottom:18px;padding-bottom:16px;border-bottom:1.5px solid var(--border);"><div style="font-weight:700;font-size:.92em;color:var(--text);margin-bottom:10px;">&#9881; Skill Score Settings</div><p style="font-size:.78em;color:var(--text2);margin-bottom:12px;padding:8px 10px;background:var(--hover);border-radius:6px;border:1.5px solid var(--border);"><strong>Global settings</strong> &#8212; Synced across all devices and sessions.</p><label style="font-size:.85em;font-weight:600;color:var(--text2);display:block;margin-bottom:8px;">Low-Data Threshold <span class="fw4-82-ml6">Flag players below this buzz count</span></label><div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;"><div style="display:flex;flex-direction:column;gap:4px;"><button class="button" onclick="changeSkillThreshold(-5)" style="width:36px;padding:4px 0;font-size:.8em;">−5</button><button class="button" onclick="changeSkillThreshold(-1)" style="width:36px;padding:4px 0;font-size:.8em;">−1</button></div><div style="flex:1;display:flex;flex-direction:column;gap:4px;"><div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:.85em;color:var(--text);">Threshold:</span><span style="font-size:.85em;font-weight:700;color:var(--primary);" id="skillThresholdDisplay">40%</span></div><div style="height:8px;background:var(--sec-bg);border-radius:4px;overflow:hidden;border:1.5px solid var(--border);"><div style="height:100%;width:40%;background:var(--primary);border-radius:4px;transition:width .2s;" id="skillThresholdBar"></div></div><div style="font-size:.75em;color:var(--text2);line-height:1.4;" id="skillThresholdHelp">Players flagged when buzz count &lt; threshold % of team median</div></div><div style="display:flex;flex-direction:column;gap:4px;"><button class="button" onclick="changeSkillThreshold(1)" style="width:36px;padding:4px 0;font-size:.8em;">+1</button><button class="button" onclick="changeSkillThreshold(5)" style="width:36px;padding:4px 0;font-size:.8em;">+5</button></div></div><label style="font-size:.85em;font-weight:600;color:var(--text2);display:block;margin-bottom:8px;margin-top:14px;">Regression Strength (k) <span class="fw4-82-ml6">TU heard needed before raw score is trusted</span></label><div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;"><div style="display:flex;flex-direction:column;gap:4px;"><button class="button" onclick="changeSkillK(-5)" style="width:36px;padding:4px 0;font-size:.8em;">−5</button><button class="button" onclick="changeSkillK(-1)" style="width:36px;padding:4px 0;font-size:.8em;">−1</button></div><div style="flex:1;display:flex;flex-direction:column;gap:4px;"><div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:.85em;color:var(--text);">k =</span><span style="font-size:.85em;font-weight:700;color:var(--primary);" id="skillKDisplay">15</span></div><div style="height:8px;background:var(--sec-bg);border-radius:4px;overflow:hidden;border:1.5px solid var(--border);"><div style="height:100%;width:25%;background:var(--primary);border-radius:4px;transition:width .2s;" id="skillKBar"></div></div><div style="font-size:.75em;color:var(--text2);line-height:1.4;" id="skillKHelp">At k=15: score is 50% raw at 15 TU heard, 75% raw at 45 TU heard</div></div><div style="display:flex;flex-direction:column;gap:4px;"><button class="button" onclick="changeSkillK(1)" style="width:36px;padding:4px 0;font-size:.8em;">+1</button><button class="button" onclick="changeSkillK(5)" style="width:36px;padding:4px 0;font-size:.8em;">+5</button></div></div><div style="font-size:.78em;color:var(--text2);padding:8px 12px;background:var(--sec-bg);border-radius:6px;border:1.5px solid var(--border);line-height:1.5;"><strong style="color:var(--text);">Score components:</strong><ul style="margin:6px 0 0;padding-left:16px;"><li><strong>TU Efficiency</strong> — (15P + 10T) / (P+T) — pts per correct answer, range 10–15</li><li><strong>Accuracy</strong> — (P+T) / (P+T+N+M) — correct buzz rate, blind to TH</li><li><strong>Conversion Rate</strong> — (P+T) / TH — correct answers per TU heard, blind to negs/misses</li></ul>
+                  Skill Score = TU Efficiency + Accuracy. Contribution Score = Conversion Rate. Overall = 50/50. All regression-adjusted by TU Heard, normalized to team avg = 100.
+                </div></div><div style="margin-bottom:18px;padding-bottom:16px;border-bottom:1.5px solid var(--border);"><div style="font-weight:700;font-size:.92em;color:var(--text);margin-bottom:6px;">Expected Subcategory Frequencies <span class="fw4-82-ml6">Admin only — synced for all users</span></div><p style="font-size:.78em;color:var(--text2);margin-bottom:12px;line-height:1.4;">Set how often each subcategory should appear. Used to calculate expected bonus opportunities.</p><div id="catFreqPickers" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;"></div><div class="button-group"><button class="button" onclick="saveCatFreqs()">Save Frequencies</button><button class="button" style="background:var(--sec-bg);color:var(--text2);border:1.5px solid var(--border);" onclick="resetCatFreqs()">Reset Defaults</button></div><div id="catFreqStatus" class="fs-8-success-mt6"></div></div><div style="border:2px solid var(--danger);border-radius:var(--radius-sm);overflow:hidden;"><div id="dangerZoneHeader" onclick="toggleDangerZone()" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(220,53,69,.07);cursor:pointer;user-select:none;"><span style="font-weight:700;font-size:.9em;color:var(--danger);">&#9888; Danger Zone</span><span id="dangerZoneArrow" style="font-size:.8em;color:var(--danger);transition:transform .25s;transform:rotate(-90deg);">&#9660;</span></div><div id="dangerZoneBody" style="display:none;padding:14px;border-top:1.5px solid rgba(220,53,69,.25);"><p style="font-size:.82em;color:var(--text2);margin-bottom:12px;line-height:1.5;">This permanently deletes <strong>all sessions and all data</strong> across every device. There is no undo. Export your data first.</p><div style="margin-bottom:10px;"><div style="font-weight:600;font-size:.82em;color:var(--text2);margin-bottom:6px;">Export format before deleting:</div><div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="button button-success" style="flex:1;" onclick="exportAllData('xlsx')">&#8595; Export All as Excel</button><button class="button button-success" style="flex:1;" onclick="exportAllData('csv')">&#8595; Export All as CSV</button><button class="button button-success" style="flex:1;" onclick="exportAllData('json')">&#8595; Export All as JSON</button></div></div><button class="button button-danger" style="width:100%;" onclick="resetAllData()">Delete All Data</button></div></div></div></div><div class="qb-section" id="sec-debug" style="border:2px solid var(--warning);display:none;"><h2 class="warning">[ Debug Menu <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><p style="font-size:.82em;color:var(--text2);margin-bottom:14px;line-height:1.5;">Inject realistic placeholder data into the current session to simulate a Firebase-populated game. Useful for testing UI, stats, and analytics without a live connection.</p><label style="font-size:.85em;font-weight:600;color:var(--text2);display:block;margin-bottom:6px;">Scenario</label><select id="debugScenario" class="inp-std inp-mb"><option value="mid">Mid-game (~20 questions)</option><option value="full">Full game (~30 questions)</option><option value="blowout">Blowout (one team dominant)</option></select><button class="button" style="width:100%;background:linear-gradient(135deg,var(--warning),#e67e22);" onclick="injectDebugData();loadSessionData();renderAll();">Inject Debug Data</button><button class="button button-secondary" style="width:100%;margin-top:8px;" onclick="clearDebugData()">Clear Session Data</button><div id="debugStatus" style="margin-top:10px;font-size:.82em;color:var(--text2);min-height:1.4em;"></div></div></div></div></aside><div id="trackerView" style="flex:1;display:flex;flex-direction:column;overflow:hidden;"><div class="qb-scroll" id="qbScroll"><div class="qb-section" style="overflow:visible;"><h2>Record Answer <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div class="input-group"><label>Select Player:<span id="playerOptionalHint" style="font-weight:400;font-size:.85em;color:var(--text2);display:none;">(Optional for Miss — click a team name for bonus)</span></label><div id="playerButtonsContainer" class="player-buttons"></div></div><div class="input-group"><label>Point Type:<span style="font-weight:400;font-size:.8em;color:var(--text3);">1–6 keys</span></label><div class="point-type-buttons"><button class="button-point-type" onclick="selectPointType('Power')"   data-key="1">Toss-up <span class="pwr-bolt">&#9889;</span> Power (+15) <kbd>1</kbd></button><button class="button-point-type" onclick="selectPointType('Toss-up')" data-key="2">Toss-up (+10) <kbd>2</kbd></button><button class="button-point-type" onclick="selectPointType('Bonus')"   data-key="3">Bonus (+10) <kbd>3</kbd></button><button class="button-point-type" onclick="selectPointType('Miss')"    data-key="4">Miss (0) <kbd>4</kbd></button><button class="button-point-type" onclick="selectPointType('Neg')"     data-key="5">Neg (-5) <kbd>5</kbd></button><button class="button-point-type" onclick="selectPointType('Dead')"    data-key="6">Dead (0) <kbd>6</kbd></button></div></div><div class="input-group" id="categoryInputGroup"><label>Category:<span style="font-weight:400;font-size:.85em;color:var(--text2);">(Optional)</span></label><div id="categoryButtonsContainer"></div></div><div style="display:flex;align-items:center;gap:12px;margin-top:14px;padding:12px 14px;background:var(--sec-bg);border:2px solid var(--border);border-radius:8px;"><div style="flex:1;"><div style="font-weight:700;font-size:.9em;color:var(--text2);margin-bottom:2px;">Toss-Ups Heard <span style="font-weight:400;font-size:.85em;">(Auto-tracks on TU / Power / Neg)</span></div><div style="font-size:1.6em;font-weight:700;color:var(--primary);" id="tHeardDisplay">0</div></div><div style="display:flex;gap:6px;align-items:center;"><button onclick="adjustTHeard(-1)" class="btn-icon-danger">−</button><button onclick="adjustTHeard(1)" class="btn-icon-success">+</button></div></div><button class="button button-success" id="recordAnswerBtn" onclick="recordAnswer()" style="width:100%;margin-top:10px;padding:16px;font-size:1.05em;">Record Answer <kbd style="font-size:.75em;opacity:.7;margin-left:6px;">Enter</kbd></button></div></div><div class="qb-section"><h2>Substitutions <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div id="subPanelContent"></div></div></div><div class="qb-section"><h2>Statistics <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div id="statisticsContainer"></div></div></div><div class="qb-section"><h2>Answer Log <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><button class="button button-danger" onclick="clearAnswerLog()">Clear Log</button><div class="log-container-wrap"><div id="answerLog" class="log-container"></div></div></div></div></div></div><div id="analyticsView" style="flex:1;display:none;flex-direction:column;overflow:hidden;"><div style="padding:10px var(--hsp);border-bottom:1.5px solid var(--border);background:var(--card);flex-shrink:0;display:flex;gap:6px;flex-wrap:wrap;"><button class="analytics-tab active" onclick="switchAnalyticsTab('overview',this)">Overview</button><button class="analytics-tab" onclick="switchAnalyticsTab('players',this)">Players</button><button class="analytics-tab" onclick="switchAnalyticsTab('charts',this)">Charts</button><button class="analytics-tab" onclick="switchAnalyticsTab('teams',this)">Team Compositions</button></div><div class="analytics-scroll" id="analyticsScroll"><div id="an-overview" class="analytics-panel active"></div><div id="an-players" class="analytics-panel"></div><div id="an-charts" class="analytics-panel"></div><div id="an-teams" class="analytics-panel"></div></div></div></div></div><div id="helpModal" class="qb-modal"><div class="modal-content" style="max-width:640px;"><div class="modal-header"><h2>Help &amp; Tutorial</h2><button class="close-modal" onclick="closeHelpModal()">&#215;</button></div><div style="line-height:1.7;color:var(--text);font-size:.95em;"><h3 class="h3-primary">Getting Started</h3><p class="mb-14">Open the sidebar and work through each section in order: <strong>Session &rarr; Players &rarr; Teams &rarr; Categories</strong>. Once configured, use the <strong>Record Answer</strong> panel to log answers in real time. All data syncs automatically across connected devices via Firebase.</p><h3 class="h3-primary">Sessions</h3><p class="mb-14">Each match is a <strong>Session</strong>. Create one with a descriptive name before recording answers. Use <strong>Load Session</strong> to switch between matches. Sessions can be excluded from analytics &mdash; excluded sessions are dimmed and ignored in all Stats calculations.</p><h3 class="h3-primary">Players &amp; Teams</h3><p class="mb-14">Add players in the <strong>Players</strong> section, then create teams in <strong>Teams</strong> and assign players to them. Only players assigned to a team are selectable when recording answers. Players are stored globally and available across all sessions.</p><h3 class="h3-primary">Recording Answers</h3><p class="mb-8">Select a <strong>Player</strong>, then a <strong>Point Type</strong>, then a <strong>Category</strong> (optional for Neg), then press <strong>Record Answer</strong>. Use the answer log to delete mistakes.</p><table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:.9em;"><tr class="sec-bg"><th class="cell-pad-left">Type</th><th class="cell-pad-left">Points</th><th class="cell-pad-left">Notes</th></tr><tr><td class="cell-pad">Toss-up Power</td><td class="cell-pad">+15</td><td class="cell-pad">Answered correctly before the power mark</td></tr><tr class="sec-bg"><td class="cell-pad">Toss-up</td><td class="cell-pad">+10</td><td class="cell-pad">Answered correctly after the power mark</td></tr><tr><td class="cell-pad">Bonus</td><td class="cell-pad">+10</td><td class="cell-pad">Follow-up bonus after a correct toss-up</td></tr><tr class="sec-bg"><td class="cell-pad">Neg</td><td class="cell-pad">&minus;5</td><td class="cell-pad">Incorrect interrupt &mdash; category optional</td></tr><tr><td class="cell-pad">Miss</td><td class="cell-pad">0</td><td class="cell-pad">No answer or incorrect after power mark</td></tr><tr class="sec-bg"><td class="cell-pad">Dead</td><td class="cell-pad">0</td><td class="cell-pad">No team buzzed on the toss-up</td></tr></table><h3 class="h3-primary">Toss-Ups Heard Counter</h3><p class="mb-14">Tracks how many toss-up questions have been read. Increments automatically on every Power, Toss-up, or Neg (a Neg immediately followed by a correct answer counts as one question). Use the +/&minus; buttons to correct it manually. Required for all per-player efficiency metrics.</p><h3 class="h3-primary">Stats (Analytics)</h3><p class="mb-6">Toggle to the <strong>Stats</strong> view using the switch in the header. Stats are aggregated across all non-excluded sessions and organized into four tabs:</p><ul class="m14-pl20"><li><strong>Overview</strong> &mdash; totals, category breakdowns, top performers</li><li><strong>Players</strong> &mdash; ranked leaderboard; expand for metrics or click name for detail</li><li><strong>Charts</strong> &mdash; visual breakdown of answer types, categories, and trends</li><li><strong>Team Compositions</strong> &mdash; per-team stats per session</li></ul><h3 class="h3-primary">Player Metrics</h3><p class="mb-6">Expand any player row to see individual metrics. Per-TU-heard stats require toss-ups heard data to be set.</p><ul class="m14-pl20"><li><strong>Points</strong> &mdash; total points across all sessions</li><li><strong>Toss-ups</strong> &mdash; total correct answers (powered counts as Power, marked with a bolt); Power = +15 before the mark, regular = +10 after</li><li><strong>Actual Pts / 20 TU</strong> &mdash; earned points per 20 toss-ups heard: <code>pts / TH &times; 20</code></li><li><strong>TU Efficiency</strong> &mdash; pts per correct answer: <code>(15P + 10T) / (P+T)</code>. Range 10&ndash;15. Blind to negs, misses, and TU heard.</li><li><strong>Accuracy</strong> &mdash; correct buzz rate: <code>(P+T) / (P+T+N+M) &times; 100</code>. Blind to TU heard.</li><li><strong>Conversion Rate</strong> &mdash; correct answers per TU heard: <code>(P+T) / TH &times; 100</code></li><li><strong>Skill Score</strong> &mdash; TU Efficiency + Accuracy, normalized so team avg = 100</li><li><strong>Contribution Score</strong> &mdash; Conversion Rate, normalized so team avg = 100</li><li><strong>Overall Score</strong> &mdash; 50/50 average of Skill and Contribution</li></ul><h3 class="h3-primary">Score System</h3><p class="mb-8">All scores are <strong>relative to the team</strong> &mdash; the team average always equals 100. A player at 150 is 50% above average; a player at 50 is half the team average. Each score is regression-adjusted using TU Heard &mdash; players with more data have their numbers trusted more.</p><p style="margin-bottom:14px;font-family:monospace;font-size:.85em;background:var(--sec-bg);padding:8px 12px;border-radius:6px;border:1.5px solid var(--border);">Skill = (TU Efficiency + Accuracy) / 2 &nbsp;&middot;&nbsp; Contribution = Conversion Rate &nbsp;&middot;&nbsp; Overall = (Skill + Contribution) / 2</p><p class="mb-14">Players below the low-data threshold are excluded from scoring by default. Toggle inclusion in the <strong>Low-Data Players</strong> panel in the sidebar.</p><h3 class="h3-primary">Leaderboard Sorting</h3><p class="mb-14">Sort by Points, Overall Score, Pts / 20 TU, Actual Pts / 20 TU, TU Efficiency, Accuracy, Powers, Negs (fewest first), or A&ndash;Z. Ties in Points are broken by most Powers, then fewest Negs.</p><h3 class="h3-primary">Export &amp; Import</h3><p class="mb-14">Export to <strong>CSV</strong> for spreadsheets or <strong>JSON</strong> to back up and re-import a full session. Both options are in the Data section of the sidebar.</p><h3 class="h3-primary">What Syncs Globally</h3><p class="mb-6">Stored in Firebase and synced instantly across all connected devices:</p><ul class="m8-pl20"><li>All session data (answers, scores, toss-ups heard)</li><li>Global player pool</li><li>Skill score settings and low-data overrides</li><li>App version and update info</li></ul><p class="mb-14">Stored <strong>locally only</strong> (not synced): Dark mode, accent color, scrollbar visibility, sidebar state.</p><h3 class="h3-primary">Version Badge &amp; Deploy Indicator</h3><p class="mb-14">The version badge in the header shows the current file version. When viewed on the live GitHub Pages site, its border changes color to reflect the latest deploy status &mdash; <strong style="color:var(--success)">green</strong> = deployed successfully, <strong style="color:var(--warning)">yellow pulsing</strong> = deploy in progress, <strong style="color:var(--danger)">red</strong> = deploy failed. If a new deploy completes while you have the page open, a banner will appear prompting you to refresh.</p><h3 class="h3-primary">Updates (Local File)</h3><p class="mb-14">If you are running a local copy of the file, an update banner will appear when a newer version has been published. Click <strong>Download Update</strong> to get the latest file. Users on the GitHub Pages site receive updates automatically on refresh.</p><h3 class="h3-primary">Visual Settings</h3><p>Toggle <strong>Dark Mode</strong>, change the <strong>Accent Color</strong>, or hide scrollbars in the Visual Settings section of the sidebar.</p><p class="mb-14"><strong>Loading source:</strong> <span id="helpLoadingSource" class="mono-primary">&mdash;</span></p></div></div></div><div id="sessionsModal" class="qb-modal"><div class="modal-content"><div class="modal-header"><h2>Load Session</h2><button class="close-modal" onclick="closeSessionsModal()">&#215;</button></div><div style="display:flex;gap:8px;flex-wrap:wrap;padding:12px 16px;border-bottom:1.5px solid var(--border);background:var(--sec-bg);"><input type="text" id="sessionsSearchInput" placeholder="Search sessions..." style="flex:1;min-width:150px;padding:8px 12px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:.95em;background:var(--input-bg);color:var(--input-text);" /><select id="sessionsSortSelect" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:.95em;background:var(--input-bg);color:var(--input-text);"><option value="date-desc">Newest First</option><option value="date-asc">Oldest First</option><option value="name">Alphabetical (A-Z)</option><option value="answers-desc">Most Answers</option><option value="answers-asc">Least Answers</option></select></div><div id="sessionsList" class="sessions-list"></div></div></div></div><div id="playerActionModal" class="qb-modal" onclick="if(event.target===this)closePlayerActionModal()"><div class="modal-content" style="max-width:420px;"><div class="modal-header"><h2 id="pamTitle">Player Action</h2><button class="close-modal" onclick="closePlayerActionModal()">&#215;</button></div><div style="padding:16px;"><div id="pamBody"></div></div></div></div><div id="playerDetailModal" class="qb-modal"><div class="modal-content" style="max-width:620px;"><div class="modal-header"><h2 id="pdModalTitle">Player Details</h2><button class="close-modal" onclick="closePlayerDetailModal()">&#215;</button></div><div id="pdModalBody"></div></div></div><script src="local-settings.js" onerror="void 0"></script><script>const $=id=>document.getElementById(id);
+const isIframe = (() =>{
+try{
+if (window.self === window.top) return false; // not in an iframe at all
+try{
+const parentHref = window.parent.location.href; // throws on cross-origin
+return parentHref.includes('claude.ai');
+} catch(crossOriginErr){
+const ref = document.referrer || '';
+return ref.includes('claude.ai') || ref === ''; }
+} catch(e){ return false; }
+})();
+// Global error resilience — catch JS errors and show a non-fatal warning
+window.addEventListener('error', function(e){
+const msg=(e&&e.message)?e.message:'Unknown error';
+console.error('[HSE QB]', msg, e&&e.error);
+if (!e.filename||e.filename===window.location.href||e.filename===''){
+try{ showToast('&#9888; JS error: '+msg.slice(0,70),'warn',5000); }catch(_){}
+}
+});
+window.addEventListener('unhandledrejection', function(e){
+console.error('[HSE QB Promise]', e.reason);
+try{ showToast('&#9888; Async error — check console','warn',4000); }catch(_){}
+});
+// _safe(fn, label): run fn(), catch+log errors, show toast. Returns null on error.
+function _safe(fn,label){
+try{ return fn(); }
+catch(e){
+console.error('[_safe:'+(label||'?')+']',e);
+try{ showToast('&#9888; Error in '+(label||'component')+': '+e.message.slice(0,60),'warn',4000); }catch(_){}
+return null;
+}
+}
+const VERSION = '3.5.18'; // ← Change only this each release
+const DOWNLOAD_URL = 'https://raw.githubusercontent.com/ajani190819-ops/HSEQB/main/index.html';
+const DISPLAY_VERSION = VERSION; const INTERNAL_BUILD = VERSION;
+const FILE_VERSION    = VERSION; const FILE_BUILD_ID  = VERSION;
+var db, sessionsRef, globalPlayersRef, versionRef, globalSettingsRef, userIdentitiesRef, adminListRef, adminList = [];
+const _adminToken = (()=>{
+let _tok = null;
+const _secret = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+return{
+grant() { _tok = _secret; },
+revoke(){ _tok = null; },
+check() { return _tok === _secret; },
+};
+})();
+Object.defineProperty(window, 'isAdmin',{ get:() => _adminToken.check(), set:() =>{}, configurable:false });
+function _noopRef(){
+const noop = () => _noopRef();
+const p = () => Promise.resolve({ val:() => null });
+return{ on:noop, off:noop, once:p, set:p, update:p, remove:p, child:noop, transaction:p };
+}
+function initFirebase(){
+if (isIframe){
+db=null; sessionsRef=_noopRef(); globalPlayersRef=_noopRef(); versionRef=_noopRef(); globalSettingsRef=_noopRef(); userIdentitiesRef=_noopRef(); adminListRef=_noopRef();
+startApp();
+return; }
+if (typeof firebase === 'undefined'){ setTimeout(initFirebase, 50); return; }
+const firebaseConfig ={apiKey:"AIzaSyCRkK3IpRXeQC9JH73iC0tC-mjq5nulaAo",authDomain:"hse-quiz-bowl.firebaseapp.com",databaseURL:"https://hse-quiz-bowl-default-rtdb.firebaseio.com",projectId:"hse-quiz-bowl",storageBucket:"hse-quiz-bowl.firebasestorage.app",messagingSenderId:"676670239956",appId:"1:676670239956:web:9c569fc74ecf21de25f741"};
+try{ firebase.app(); } catch(e){ firebase.initializeApp(firebaseConfig); }
+db=firebase.database();
+sessionsRef=db.ref('sessions'); globalPlayersRef=db.ref('globalPlayers'); versionRef=db.ref('appVersion');
+globalSettingsRef=db.ref('globalSettings'); userIdentitiesRef=db.ref('userIdentities'); adminListRef=db.ref('adminList');
+adminListRef.on('value', snap =>{ adminList=snap.val()||[]; recomputeAdmin(); });
+startApp(); }
+function startApp(){
+versionRef.on('value', snap =>{
+const data = snap.val();
+if (!data){ checkReleasePrompt(''); return; }
+// Support both old string format and new object format
+const remoteBuild = (typeof data === 'object') ? (data.buildId || '')      :'';
+const downloadUrl = (typeof data === 'object') ? (data.downloadUrl || '')  :'';
+const releaseNotes= (typeof data === 'object') ? (data.releaseNotes || '') :'';
+const remoteLabel = (typeof data === 'object') ? (data.label || '')         :'';
+// Badge always reflects FILE_VERSION — intentionally not set from Firebase
+// Pre-fill URL, version label, and release notes inputs if admin hasn't typed in them yet
+const rnInput = $('releaseNotesInput');
+if (rnInput && document.activeElement !== rnInput && !rnInput.value) rnInput.value = releaseNotes;
+// Populate version preview label
+// Update live build display in admin panel
+const liveDisp = $('liveFirebaseBuildDisplay');
+if (liveDisp) liveDisp.textContent = remoteBuild || '(none)';
+const liveLabelDisp = $('liveFirebaseLabelDisplay');
+if (liveLabelDisp) liveLabelDisp.textContent = remoteLabel ? '('+remoteLabel+')' : '';
+// GitHub published: file is on GitHub when its build ID matches the Firebase-published build
+const ghDisp = $('githubPublishedDisplay');
+if (ghDisp){
+const onGitHub = remoteBuild && remoteBuild === FILE_BUILD_ID;
+ghDisp.textContent = onGitHub ? '✔ Yes' : remoteBuild ? '✗ Not yet' : '—';
+ghDisp.style.color = onGitHub ? 'var(--success)' : remoteBuild ? 'var(--danger)' : 'var(--text3)';
+}
+// Show/hide the release prompt for admins
+checkReleasePrompt(remoteBuild);
+// Only check for updates if the user is running a local file, not the live GitHub Pages site or online deployment
+const isGitHubPages = window.location.hostname === 'ajani190819-ops.github.io';
+const isLocalFile = window.location.protocol === 'file:';
+const isOtherOnline = window.location.protocol === 'https:' || window.location.protocol === 'http:';
+const shouldCheckUpdates = isLocalFile && !isGitHubPages;
+// Only show update if remote build is actually published AND is different from local
+// Don't show if local build is unpublished (same as remote build but not yet on GitHub)
+// Compare versions numerically so "3.1.0" is correctly seen as newer than "1.5.46"
+function parseVer(v){ return (v||'').split('.').map(n=>parseInt(n,10)||0); }
+function isNewer(remote, local){
+const r=parseVer(remote), l=parseVer(local);
+for(let i=0;i<Math.max(r.length,l.length);i++){
+if((r[i]||0)>(l[i]||0)) return true;
+if((r[i]||0)<(l[i]||0)) return false;
+}
+return false;
+}
+const remoteIsNewer  = remoteBuild && remoteLabel && isNewer(remoteBuild, FILE_BUILD_ID);
+const localIsNewer   = remoteBuild && isNewer(FILE_BUILD_ID, remoteBuild);
+const isUnpublishedLocal = !remoteBuild || localIsNewer || FILE_BUILD_ID === remoteBuild;
+if (shouldCheckUpdates && remoteIsNewer){
+showUpdateBanner(remoteLabel, downloadUrl, releaseNotes);
+} else if (shouldCheckUpdates && (localIsNewer || !remoteBuild)){
+showDevBanner();
+} else{
+hideUpdateBanner(); }
+// Store loading source for help menu
+const loadingSource = isLocalFile ? 'Local File' :isGitHubPages ? 'GitHub Pages' :isOtherOnline ? 'Online' :'Unknown';
+localStorage.setItem('qb_loadingSource', loadingSource); });
+globalSettingsRef.on('value', snap =>{
+const s = snap.val(); if (!s) return;
+let changed = false;
+if(typeof s.skillThresholdPct==='number'&&s.skillThresholdPct!==skillThresholdPct){skillThresholdPct=s.skillThresholdPct;changed=true;}
+if(typeof s.skillRegressionK==='number'&&s.skillRegressionK!==skillRegressionK){skillRegressionK=s.skillRegressionK;changed=true;}
+if(Array.isArray(s.manuallyIncluded)){const inc=new Set(s.manuallyIncluded);if(inc.size!==manuallyIncluded.size||![...inc].every(n=>manuallyIncluded.has(n))){manuallyIncluded=inc;changed=true;}}
+if(s.playerTHeardOverrides&&typeof s.playerTHeardOverrides==='object'){playerTHeardOverrides=s.playerTHeardOverrides;changed=true;}
+if(s.sessionInvalidFlags&&typeof s.sessionInvalidFlags==='object'){sessionInvalidFlags=s.sessionInvalidFlags;changed=true;}
+if(s.catColors&&typeof s.catColors==='object'){catColors={...catColors,...s.catColors};renderCatColorPickers();changed=true;}
+if(s.catFreqs&&typeof s.catFreqs==='object'){catFreqs={...CAT_FREQ_DEFAULTS,...s.catFreqs};renderCatFreqPickers();changed=true;}
+if (changed){ updateSkillThresholdUI(); if(analyticsOpen) renderAnalytics(); if($('sessionsModal')?.classList.contains('open')) renderSessionsList(); }
+});
+restoreVisualSettings();
+updateHeaderHeight();
+window.addEventListener('resize',()=>{ updateHeaderHeight(); applySidebarState(); updateFadeMasks(); });
+['qbScroll','analyticsScroll'].forEach(id=>$(id)?.addEventListener('scroll',updateFadeMasks));
+document.querySelector('.sidebar-sections')?.addEventListener('scroll',updateFadeMasks);
+setTimeout(() =>{
+const qbs = $('qbScroll');
+if (qbs){
+const saved = parseInt(localStorage.getItem('trackerScroll')||'0', 10);
+if (saved) qbs.scrollTop = saved;
+qbs.addEventListener('scroll', () => localStorage.setItem('trackerScroll', qbs.scrollTop));
+}
+}, 400);
+loadAllData();
+setupGlobalPlayers();
+setInterval(() =>{ saveAllData(); }, 5000);
+setupSectionToggle();
+applySidebarState();
+const savedSection=localStorage.getItem('activeSidebarSection')||'sec-session';
+const _wasAnalyticsOpen = localStorage.getItem('analyticsOpen') === 'true';
+const _savedAnalyticsTab = localStorage.getItem('analyticsTab') || 'overview';
+if (_wasAnalyticsOpen){
+analyticsOpen = true;
+$('trackerView').style.display = 'none';
+$('analyticsView').style.display = 'flex';
+setToggleSwitchState(true);
+currentAnalyticsTab = _savedAnalyticsTab;
+document.querySelectorAll('.analytics-tab').forEach(b =>{
+const matches = b.getAttribute('onclick')?.includes("'"+_savedAnalyticsTab+"'");
+b.classList.toggle('active', !!matches); });
+document.querySelectorAll('.analytics-panel').forEach(p => p.classList.remove('active'));
+$('an-'+_savedAnalyticsTab)?.classList.add('active');
+setTimeout(() =>{
+const scrollEl = $('analyticsScroll');
+if (scrollEl) scrollEl.scrollTop = parseInt(localStorage.getItem('analyticsScroll_'+_savedAnalyticsTab)||'0', 10);
+}, 600); }
+$('analyticsScroll')?.addEventListener('scroll',function(){localStorage.setItem('analyticsScroll_'+currentAnalyticsTab,this.scrollTop);});
+showSection(savedSection);
+document.addEventListener('click',e=>{ const w=$('sidebarJumpWrapper'); if(w&&!w.contains(e.target)) w.classList.remove('open'); ['helpModal','sessionsModal','playerDetailModal'].forEach(id=>{const m=$(id);if(m&&e.target===m)m.classList.remove('open');}); });
+loadUserId();
+recomputeAdmin();
+// Set header version badge to THIS file's version immediately — never reflects Firebase label
+const badge = $('versionBadge');
+if (badge){
+badge.textContent = FILE_VERSION;
+badge.title = `Build: ${FILE_BUILD_ID}`;
+// Use !important to override CSS media query that hides it on mobile
+badge.style.setProperty('display', 'inline', 'important'); }
+// Populate version displays in admin panel
+const displayVerDisp = $('displayVersionDisplay');
+const internalVerDisp = $('internalVersionDisplay');
+if (displayVerDisp) displayVerDisp.textContent = DISPLAY_VERSION;
+if (internalVerDisp) internalVerDisp.textContent = INTERNAL_BUILD;
+// FIX:Check if elements exist before setting onclick
+const sidebarOpenBtn = $('sidebarOpenBtn');
+if (sidebarOpenBtn) sidebarOpenBtn.onclick = toggleSidebar;
+const sidebarOpenBtnMobile = $('sidebarOpenBtnMobile');
+if (sidebarOpenBtnMobile) sidebarOpenBtnMobile.onclick = toggleSidebar;
+if (!isIframe) maybeShowWelcomeToast();
+if (!isIframe) startGhPolling();
+if (isIframe){
+setTimeout(() =>{
+if (_iframeDebugActive) return; // already ran — never run twice
+_iframeDebugActive = true;
+_adminToken.grant();
+applyAdminUI();
+applyDebugMenuVisibility();
+const sess = getCurrentSession();
+if (sess) injectDebugData();
+renderAll();
+const chartsBtn = document.querySelector('.analytics-tab[onclick*="charts"]');
+if (chartsBtn){
+if (!analyticsOpen) toggleAnalytics();
+chartsBtn.click(); }
+}, 0); }
+}
+function saveGlobalSettings(){
+if (isIframe || !globalSettingsRef) return;
+globalSettingsRef.set({ skillThresholdPct, skillRegressionK, manuallyIncluded:[...manuallyIncluded], playerTHeardOverrides, sessionInvalidFlags, catColors, catFreqs }).catch(e => showFirebaseError('Settings save failed:' + e.message));
+}
+function saveManualInclusions(){
+if (isIframe || !globalSettingsRef) return;
+globalSettingsRef.child('manuallyIncluded').set([...manuallyIncluded]).catch(e => showFirebaseError('Inclusion save failed:' + e.message));
+}
+function adjustPlayerTHeard(playerName, delta){
+playerTHeardOverrides[playerName] = (playerTHeardOverrides[playerName] || 0) + delta;
+if (playerTHeardOverrides[playerName] === 0) delete playerTHeardOverrides[playerName];
+if (globalSettingsRef) globalSettingsRef.child('playerTHeardOverrides').set(playerTHeardOverrides).catch(e => showFirebaseError('TH save failed:' + e.message));
+renderAnalyticsPlayersUniversal(); }
+function saveVersion(){ publishRelease(); } // legacy alias
+function checkReleasePrompt(remoteBuild){
+if (!isAdmin) return;
+const prompt   = $('releasePrompt');
+const upToDate = $('releaseUpToDate');
+if (!prompt || !upToDate) return;
+const isUnpublished = !remoteBuild || remoteBuild !== FILE_BUILD_ID;
+if (isUnpublished){ prompt.classList.remove('hidden'); upToDate.classList.add('hidden'); }
+else { prompt.classList.add('hidden'); upToDate.classList.remove('hidden'); }
+}
+function publishRelease(){
+if (!isAdmin){ showToast('Not authorised.', 'warn'); return; }
+const notes    = ($('releaseNotesInput')?.value || '').trim();
+const comments = ($('adminCommentsInput')?.value || '').trim();
+const payload  = { label:FILE_VERSION, buildId:FILE_BUILD_ID, downloadUrl:DOWNLOAD_URL, releaseNotes:notes, adminComments:comments, lastUpdated:new Date().toISOString() };
+versionRef.set(payload)
+.then(() =>{
+showToast('Published v'+FILE_VERSION, 'success');
+hideUpdateBanner();
+checkReleasePrompt(FILE_BUILD_ID); })
+.catch(e => showFirebaseError(e.message)); }
+function showUpdateBanner(newLabel, downloadUrl, notes){
+const banner = $('updateBanner');
+if (!banner) return;
+const hasUrl = downloadUrl && downloadUrl.startsWith('http');
+banner.innerHTML =
+`<span class="ub-icon">▲</span>` +
+`<span class="ub-msg">This file is <strong>outdated / unpublished</strong> — published version is <strong>${newLabel}</strong> (you have ${FILE_VERSION})${notes ? ` — ${notes}` :''}.</span>` +
+(hasUrl ? `<button class="ub-btn ub-download" onclick="downloadUpdate('${downloadUrl}')">↓ Download Update</button>` :'') +
+`<button class="ub-btn ub-dismiss" onclick="hideUpdateBanner()" title="Dismiss">✕</button>`;
+banner.classList.add('show'); }
+function hideUpdateBanner(){
+const banner = $('updateBanner');
+if (banner) banner.classList.remove('show'); }
+function showDevBanner(){
+const banner = $('updateBanner');
+if (!banner) return;
+banner.style.background = 'linear-gradient(135deg, #5568d3 0%, #764ba2 100%)';
+banner.innerHTML =
+`<span class="ub-icon">🛠</span>` +
+`<span class="ub-msg"><strong>Dev / Unpublished — v${FILE_VERSION}</strong> &nbsp;This build hasn't been published to Firebase yet.</span>` +
+`<button class="ub-btn ub-dismiss" onclick="hideUpdateBanner()" title="Dismiss">✕</button>`;
+banner.classList.add('show'); }
+function downloadUpdate(url){
+if (!url){ showToast('No download URL configured for this release.', 'warn'); return; }
+showToast('Fetching update…');
+fetch(url)
+.then(r =>{
+if (!r.ok) throw new Error('HTTP ' + r.status);
+return r.blob(); })
+.then(blob =>{
+const a = document.createElement('a');
+a.href = URL.createObjectURL(blob);
+a.download = 'hse-quiz-bowl-tracker.html';
+document.body.appendChild(a);
+a.click();
+document.body.removeChild(a);
+setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+showToast('Downloaded! Replace your existing file with the new one.', 'success'); })
+.catch(err =>{
+showToast('Download failed:' + err.message, 'warn'); });
+}
+function loadUserId(){
+const stored = localStorage.getItem('qb_userName') || '';
+const display = $('userIdDisplayName');
+const sub     = $('userIdSubtitle');
+const fnInput = $('userIdFirstName');
+const lnInput = $('userIdLastName');
+const cid     = $('userClientIdDisplay');
+if (cid) cid.textContent = clientId;
+if (stored){
+if (display) display.textContent = stored;
+if (sub) sub.textContent = 'Synced across devices with this ID';
+const spaceIdx = stored.indexOf(' ');
+if (fnInput) fnInput.value = spaceIdx > -1 ? stored.slice(0, spaceIdx) :stored;
+if (lnInput) lnInput.value = spaceIdx > -1 ? stored.slice(spaceIdx + 1) :'';
+} else{
+if (display) display.textContent = 'Not set';
+if (sub) sub.textContent = 'Enter your first and last name below'; }
+}
+function saveUserId(){
+const fn = ($('userIdFirstName')?.value || '').trim();
+const ln = ($('userIdLastName')?.value  || '').trim();
+if (!fn){ showToast('Please enter your first name.'); $('userIdFirstName')?.focus(); return; }
+if (!ln){ showToast('Please enter your last name.');  $('userIdLastName')?.focus();  return; }
+const name = (fn + ' ' + ln).slice(0, 61);
+localStorage.setItem('qb_userName', name);
+recomputeAdmin();
+if (userIdentitiesRef){
+const photo = localStorage.getItem('qb_userPhoto') || null;
+const payload ={ name, lastSeen:new Date().toISOString() };
+if (photo) payload.photo = photo;
+userIdentitiesRef.child(clientId).set(payload)
+.catch(e => showFirebaseError('User ID save failed:' + e.message)); }
+loadUserId();
+const sub = $('userIdSubtitle');
+if (sub){ sub.textContent = '✔ Saved!'; setTimeout(() => loadUserId(), 1800); }
+}
+function clearUserId(){
+showConfirm('Clear your saved name from this device?', 'Clear').then(ok =>{
+if (!ok) return;
+localStorage.removeItem('qb_userName');
+const fn = $('userIdFirstName');
+const ln = $('userIdLastName');
+if (fn) fn.value = '';
+if (ln) ln.value = '';
+loadUserId();
+recomputeAdmin(); });
+}
+function loadExistingAccount(){
+const fn = ($('userIdFirstName')?.value || '').trim();
+const ln = ($('userIdLastName')?.value  || '').trim();
+const statusEl = $('userIdLoadStatus');
+const setStatus = (msg, color) =>{ if (statusEl){ statusEl.textContent = msg; statusEl.style.color = color || 'var(--text2)'; } };
+if (!fn || !ln){ showToast('Enter your first and last name first.'); return; }
+const name = (fn + ' ' + ln).slice(0, 61);
+const match = Object.values(userIdentitiesCache).find(u => u.name === name);
+if (!match){
+setStatus('No existing account found for "' + name + '". Use Save to create one.', 'var(--warning)');
+return; }
+localStorage.setItem('qb_userName', name);
+recomputeAdmin();
+if (!isIframe && userIdentitiesRef){
+const payload ={ name, lastSeen:new Date().toISOString() };
+userIdentitiesRef.child(clientId).set(payload)
+.catch(e => showFirebaseError('Account load failed:' + e.message)); }
+loadUserId();
+setStatus('✔ Account loaded.', 'var(--success)');
+setTimeout(() => setStatus(''), 3000); }
+function newAccount(){
+showConfirm('This will generate a new client ID and clear your local identity. Continue?', 'New Account').then(ok =>{
+if (!ok) return;
+localStorage.removeItem('qb_clientId');
+localStorage.removeItem('qb_userName');
+location.reload(); });
+}
+const WELCOME_LAST_SHOWN_KEY = 'qb_welcomeLastShown';
+const WELCOME_RESHOW_MS = 60 * 24 * 60 * 60 * 1000; // 60 days
+function maybeShowWelcomeToast(){
+const last = parseInt(localStorage.getItem(WELCOME_LAST_SHOWN_KEY) || '0', 10);
+const now  = Date.now();
+const isNew = last === 0;
+const isReturning = last > 0 && (now - last) > WELCOME_RESHOW_MS;
+if (!isNew && !isReturning) return;
+setTimeout(() =>{
+const toast = $('welcomeToast');
+if (!toast) return;
+const title = document.querySelector('#welcomeToast .wt-title');
+const sub   = document.querySelector('#welcomeToast .wt-sub');
+if (isReturning && title && sub){
+title.textContent = '▸ Welcome back!';
+sub.textContent   = "It's been a while — want a refresher? The Help guide has everything you need.";
+}
+toast.classList.add('show');
+}, 1200); }
+function dismissWelcomeToast(openHelp){
+const toast = $('welcomeToast');
+if (toast) toast.classList.remove('show');
+localStorage.setItem(WELCOME_LAST_SHOWN_KEY, Date.now().toString());
+if (openHelp) openHelpModal(); }
+const clientId = (() =>{
+try{
+const k='qb_clientId', e=localStorage.getItem(k); if (e) return e;
+const f=crypto?.randomUUID?.()??Date.now().toString(36)+Math.random().toString(36).slice(2);
+localStorage.setItem(k,f); return f;
+} catch{ return Date.now().toString(36)+Math.random().toString(36).slice(2); }
+})();
+const writeInFlight = new Set();
+function withWriteLock(id, fn){
+writeInFlight.add(id);
+try{ return fn(); } finally{ setTimeout(()=>writeInFlight.delete(id), 300); }
+}
+function updateSessionAtomic(id, mutator){
+if (isIframe) return Promise.resolve(); // blocked in preview
+writeInFlight.add(id);
+notifySaveStart();
+return sessionsRef.child(id).transaction(
+cur =>{
+if (!cur) return cur;
+const n = normalizeSession(cur);
+mutator(n);
+n.lastUpdated = new Date().toISOString();
+n.updatedBy = clientId;
+return n; },
+err =>{
+setTimeout(() => writeInFlight.delete(id), 300);
+notifySaveComplete(); // decrement counter; error already shown by caller
+if (err) showFirebaseError('Save failed:' + err.message); },
+false
+).then(() =>{
+setTimeout(() => writeInFlight.delete(id), 300);
+notifySaveComplete(); });
+}
+function setSessionNonAtomic(id, value){
+if (isIframe) return Promise.resolve();
+writeInFlight.add(id); notifySaveStart();
+return sessionsRef.child(id).set(value)
+.then(()=>notifySaveComplete())
+.catch(e=>{notifySaveComplete();throw e;})
+.finally(()=>setTimeout(()=>writeInFlight.delete(id),300)); }
+function toArray(val){
+if (!val) return [];
+if (Array.isArray(val)) return val;
+return Object.keys(val).sort((a,b)=>+a-+b).map(k=>val[k]); }
+function normalizeSession(s){
+if (!s) return s;
+s.teams=toArray(s.teams); s.answerLog=toArray(s.answerLog);
+s.answers=toArray(s.answers); s.categories=toArray(s.categories);
+if (s.players) Object.values(s.players).forEach(p=>{p.answers=toArray(p.answers);});
+s.teams.forEach(t=>{t.playerMembers=toArray(t.playerMembers);});
+if (typeof s.tHeard!=='number') s.tHeard=0;
+return s; }
+const CURRENT_SESSION_KEY='currentSession';
+const CATEGORY_TREE ={
+'Literature':    ['Poetry','Theater','Fiction','Nonfiction'],
+'Science':       ['Biology','Chemistry','Physics','Math','Astronomy','Computer Science','Earth Science'],
+'History':       ['Ancient History','American History','European History','World History'],
+'Social Studies':['Philosophy','Geography','Religion','Mythology','Social Sciences'],
+'Fine Arts':     ['Visual Arts','Music','Musicals','Opera'],
+'Pop Culture':   ['Popular Media','Sports','Current Events'],
+};
+const DEFAULT_CATEGORIES = Object.values(CATEGORY_TREE).flat();
+const CAT_PARENT ={};
+Object.entries(CATEGORY_TREE).forEach(([parent, subs]) => subs.forEach(s => CAT_PARENT[s] = parent));
+function getParentCat(cat){
+if (CAT_PARENT[cat]) return CAT_PARENT[cat];  // subcategory → its parent
+if (CATEGORY_TREE[cat]) return cat;            // already a parent (general)
+return cat;                                    // unknown
+}
+function catLabel(cat){
+const p = CAT_PARENT[cat];
+if (p) return `${p} › ${cat}`;          // subcategory:"Science › Biology"
+if (CATEGORY_TREE[cat]) return cat;      // parent used as general:just "Science"
+return cat;                              // unknown / legacy
+}
+const state={sessions:{},currentSessionId:null,selectedPlayer:null,selectedPointType:null,selectedCategory:null,categories:[]};
+let firebaseUnsubscribe=null, playersUnsubscribe=null;
+var analyticsOpen=false, currentAnalyticsTab='overview';
+var userIdentitiesCache ={};
+var playerSortKey = 'points';
+var lowDataPanelCollapsed = localStorage.getItem('lowDataPanelCollapsed') !== 'false';
+var formulasPanelCollapsed  = localStorage.getItem('formulasPanelCollapsed')  !== 'false';
+var skillThresholdPct = 40;
+var skillRegressionK = 15; // regression prior weight (toss-ups heard)
+var catColors ={'Literature':'#3b82f6','Science':'#11998e','History':'#f97316','Social Studies':'#eab308','Pop Culture':'#a855f7','Fine Arts':'#06b6d4'};
+var expandedPlayerCards = new Set();
+var expandedTeamCards = new Set();
+var manuallyIncluded = new Set();
+var playerTHeardOverrides ={};
+var sessionInvalidFlags ={};
+let _flashTimer  = null;
+let _connected   = false;
+const SAVE_INDICATOR_IDS = ['autosaveStatus', 'autosaveStatusMobile'];
+const ALL_INDICATOR_STATES  = ['state-connecting', 'state-idle', 'state-flash', 'state-error'];
+function _setIndicatorState(stateName, labelText, title){
+SAVE_INDICATOR_IDS.forEach(id =>{
+const el = $(id);
+if (!el) return;
+el.classList.remove(...ALL_INDICATOR_STATES);
+el.classList.add('state-' + stateName);
+const label = el.querySelector('.save-label');
+if (label) label.textContent = labelText;
+if (title) el.title = title; else el.removeAttribute('title'); });
+}
+function applyDebugMenuVisibility(){
+const show = !_connected;
+const debugEl  = $('sec-debug');
+const debugBtn = $('jumpBtn-sec-debug');
+if (debugEl)  debugEl.style.display  = show ? '' :'none';
+if (debugBtn) debugBtn.style.display = show ? '' :'none'; }
+const setLoadingState = () =>{
+_connected = false;
+_setIndicatorState('connecting', 'Connecting…');
+applyDebugMenuVisibility(); };
+const updateAutoSave = () =>{
+_connected = true;
+if (!_flashTimer) _setIndicatorState('idle', 'Synced');
+applyDebugMenuVisibility(); };
+const showFirebaseError = msg =>{
+_connected = false;
+clearTimeout(_flashTimer);
+_flashTimer = null;
+_setIndicatorState('error', 'Offline', msg || 'Connection issue — changes may not be saved');
+applyDebugMenuVisibility(); };
+function notifySaveStart(){
+if (!_connected) return;
+clearTimeout(_flashTimer);
+_setIndicatorState('flash', 'Syncing…'); }
+function notifySaveComplete(){
+if (!_connected) return;
+clearTimeout(_flashTimer);
+_setIndicatorState('flash', 'Synced');
+_flashTimer = setTimeout(() =>{ _flashTimer = null; _setIndicatorState('idle', 'Synced'); }, 2000);
+}
+function notifySaveError(msg){ clearTimeout(_flashTimer); _flashTimer = null; showFirebaseError(msg); }
+// ── GitHub Deploy Status ──────────────────────────────────────────────────
+const GH_API = 'https://api.github.com/repos/ajani190819-ops/HSEQB/actions/runs?per_page=1';
+let GH_TOKEN = null; // fetched from Firebase at runtime
+const GH_POLL_INTERVAL = 10000; // 10s
+let _ghPollTimer = null;
+function _setGhState(state, title){
+const el = $('versionBadge');
+if(!el) return;
+el.className = el.className.replace(/\bgh-state-\S+/g,'').trim() + ' gh-state-' + state;
+el.title = title;
+}
+async function checkGhDeploy(){
+try {
+if(!GH_TOKEN){
+const snap = await db.ref('config/githubToken').get();
+GH_TOKEN = snap.exists() ? snap.val() : null;
+}
+if(!GH_TOKEN){ _setGhState('unknown','GitHub token not configured'); return; }
+const res = await fetch(GH_API, { headers:{ Accept:'application/vnd.github+json', Authorization:'Bearer '+GH_TOKEN } });
+if(!res.ok){ _setGhState('unknown', 'GitHub status unavailable'); return; }
+const data = await res.json();
+const run = data.workflow_runs?.[0];
+if(!run){ _setGhState('unknown', 'No deploy runs found'); return; }
+const { status, conclusion, display_title, created_at } = run;
+const ago = Math.round((Date.now() - new Date(created_at).getTime()) / 60000);
+const agoStr = ago < 60 ? ago+'m ago' : Math.round(ago/60)+'h ago';
+if(status === 'in_progress' || status === 'queued' || status === 'waiting'){
+_setGhState('pending', `Deploying… — "${display_title}" (${agoStr})`);
+} else if(status === 'completed' && conclusion === 'success'){
+_setGhState('success', `Deploy succeeded — "${display_title}" (${agoStr})`);
+} else if(status === 'completed' && (conclusion === 'failure' || conclusion === 'cancelled')){
+_setGhState('failure', `Deploy ${conclusion} — "${display_title}" (${agoStr})`);
+} else {
+_setGhState('unknown', `Status: ${status}/${conclusion||'—'} — "${display_title}"`);
+}
+} catch(e){
+_setGhState('unknown', 'GitHub status unavailable');
+}
+}
+function startGhPolling(){
+checkGhDeploy();
+_ghPollTimer = setInterval(checkGhDeploy, GH_POLL_INTERVAL);
+}
+const getCurrentSession = ()=>state.sessions[state.currentSessionId]||null;
+function updateFadeMasks(){
+const F=28; ['.qb-scroll','.sidebar-sections','.log-container','.analytics-scroll'].forEach(sel=>{
+const el=document.querySelector(sel); if(!el) return;
+const up=el.scrollTop>2, dn=el.scrollHeight>el.scrollTop+el.clientHeight+2;
+const mask=up&&dn?`linear-gradient(to bottom,transparent 0,black ${F}px,black calc(100% - ${F}px),transparent 100%)`:up?`linear-gradient(to bottom,transparent 0,black ${F}px,black 100%)`:dn?`linear-gradient(to bottom,black 0%,black calc(100% - ${F}px),transparent 100%)`:'none';
+el.style.webkitMaskImage=el.style.maskImage=mask; });
+}
+function updateHeaderHeight(){ const h=$('qbHeader'); if(h) document.documentElement.style.setProperty('--header-height',h.offsetHeight+'px'); }
+function setupGlobalPlayers(){
+if (isIframe) return; // no Firebase in preview
+if (playersUnsubscribe) playersUnsubscribe();
+playersUnsubscribe = globalPlayersRef.on('value', snap =>{
+if (!state.currentSessionId) return;
+applyGlobalPlayersToSession(snap.val() ||{});
+});
+userIdentitiesRef.on('value', snap =>{
+userIdentitiesCache = snap.val() ||{};
+}); }
+function applyGlobalPlayersToSession(data){
+const s = getCurrentSession(); if (!s) return;
+let changed = false;
+Object.keys(data).forEach(name =>{ if (!s.players[name]){ s.players[name] ={ name, points:0, answers:[] }; changed = true; } });
+if (changed){
+sessionsRef.child(state.currentSessionId).set(s).catch(e => showFirebaseError(e.message));
+renderPlayerPool(); renderPlayerButtons(); renderSubPanel(); renderTeams(); }
+}
+function saveGlobalPlayers(names){
+if (isIframe) return;
+const updates ={}; names.forEach(n =>{ if (n) updates[n] = true; });
+if (Object.keys(updates).length) globalPlayersRef.update(updates).catch(e => showFirebaseError(e.message));
+}
+function removeGlobalPlayer(name){ globalPlayersRef.child(name).remove().catch(e => showFirebaseError(e.message)); }
+function loadAllData(){
+if (isIframe){ // In preview:create a bare local session; do NOT renderAll yet —
+const id = 'preview-' + Date.now();
+state.sessions[id] ={
+id, name:'Preview Session',
+created:new Date().toISOString(), lastUpdated:new Date().toISOString(),
+updatedBy:'preview', players:{}, teams:[],
+categories:[...DEFAULT_CATEGORIES], answers:[], answerLog:[], tHeard:0
+};
+state.currentSessionId = id;
+loadSessionData();
+return; // renderAll happens after inject, not here
+}
+setLoadingState();
+if (firebaseUnsubscribe) firebaseUnsubscribe();
+firebaseUnsubscribe = sessionsRef.on('value', snap =>{
+const incoming = snap.val() ||{};
+if (state.currentSessionId && writeInFlight.has(state.currentSessionId)){
+Object.keys(incoming).forEach(id =>{
+if (id !== state.currentSessionId){ state.sessions[id] = normalizeSession(incoming[id]); }
+});
+} else{
+state.sessions = incoming;
+Object.keys(state.sessions).forEach(id =>{ state.sessions[id] = normalizeSession(state.sessions[id]); });
+}
+const savedId = localStorage.getItem(CURRENT_SESSION_KEY);
+if (savedId && state.sessions[savedId]){ state.currentSessionId = savedId; } else if (Object.keys(state.sessions).length){
+state.currentSessionId = Object.keys(state.sessions)[0];
+localStorage.setItem(CURRENT_SESSION_KEY, state.currentSessionId);
+} else{
+updateAutoSave();
+createNewSession();
+return; }
+loadSessionData();
+globalPlayersRef.once('value').then(s => applyGlobalPlayersToSession(s.val() ||{}));
+updateAutoSave();
+renderAll();
+if ($('sessionsModal')?.classList.contains('open')){
+renderSessionsList(); }
+}, err => showFirebaseError('Connection failed:' + err.message)); }
+function loadSessionData(){
+const s=getCurrentSession(); if(!s){createNewSession();return;}
+state.categories = s.categories = [...DEFAULT_CATEGORIES];
+setTimeout(renderCategoryTreeDisplay, 0); }
+function saveAllData(){
+if (isIframe) return;
+const s = getCurrentSession();
+if (s){ s.categories = state.categories; s.lastUpdated = new Date().toISOString(); s.updatedBy = clientId; }
+localStorage.setItem(CURRENT_SESSION_KEY, state.currentSessionId);
+if (s) setSessionNonAtomic(state.currentSessionId, s).catch(e => showFirebaseError(e.message));
+}
+function createNewSession(){
+const id=Date.now().toString();
+const nameInput=$('newSessionName');
+const name=nameInput?.value.trim()||('Session '+new Date().toLocaleDateString());
+const session={id,name,created:new Date().toISOString(),lastUpdated:new Date().toISOString(),updatedBy:clientId,players:{},teams:[],categories:[...DEFAULT_CATEGORIES],answers:[],answerLog:[]};
+state.sessions[id]=session; state.currentSessionId=id; loadSessionData();
+globalPlayersRef.once('value').then(snap=>{
+Object.keys(snap.val()||{}).forEach(n=>{if(!session.players[n]) session.players[n]={name:n,points:0,answers:[]};});
+setSessionNonAtomic(id,session).catch(e=>showFirebaseError(e.message));
+localStorage.setItem(CURRENT_SESSION_KEY,id);
+if(nameInput) nameInput.value='';
+closeSessionsModal(); renderAll();
+showToast(`Session "${name}" created and loaded`, 'success');
+}).catch(()=>{ setSessionNonAtomic(id,session).catch(e=>showFirebaseError(e.message)); localStorage.setItem(CURRENT_SESSION_KEY,id); if(nameInput) nameInput.value=''; closeSessionsModal(); renderAll(); showToast(`Session "${name}" created and loaded`, 'success'); });
+}
+function openSessionsModal() {
+$('sessionsModal').classList.add('open');
+$('sessionsSearchInput').value = '';
+$('sessionsSortSelect').value = 'date-desc';
+renderSessionsList();
+// Add event listeners for search and sort
+$('sessionsSearchInput').addEventListener('input', renderSessionsList);
+$('sessionsSortSelect').addEventListener('change', renderSessionsList);
+}
+function closeSessionsModal(){ $('sessionsModal').classList.remove('open'); }
+function openHelpModal(){
+const loadingSource = localStorage.getItem('qb_loadingSource') || 'Unknown';
+const sourceEl = $('helpLoadingSource');
+if (sourceEl) sourceEl.textContent = loadingSource;
+$('helpModal').classList.add('open'); }
+function closeHelpModal()    { $('helpModal').classList.remove('open'); }
+function renderSessionsList(){
+const list = $('sessionsList');
+const searchInput = $('sessionsSearchInput');
+const sortSelect = $('sessionsSortSelect');
+let sessions = Object.values(state.sessions);
+const searchTerm = (searchInput?.value || '').toLowerCase().trim();
+const sortMode = sortSelect?.value || 'date-desc';
+// Filter by search term
+if (searchTerm){
+sessions = sessions.filter(s =>
+s.name.toLowerCase().includes(searchTerm) ||
+(s.created && new Date(s.created).toLocaleString().toLowerCase().includes(searchTerm))
+); }
+// Sort sessions
+sessions.sort((a, b) =>{
+switch(sortMode){
+case 'date-asc':
+return new Date(a.created) - new Date(b.created);
+case 'name':
+return a.name.localeCompare(b.name);
+case 'answers-desc':
+return ((b.answerLog||[]).length) - ((a.answerLog||[]).length);
+case 'answers-asc':
+return ((a.answerLog||[]).length) - ((b.answerLog||[]).length);
+case 'date-desc':
+default:
+return new Date(b.created) - new Date(a.created); }
+});
+if(!sessions.length){
+list.innerHTML = searchTerm
+? `<p class="text-2-p16">No sessions match "${searchTerm}".`
+:'<p class="text-2-p16">No sessions found.</p>';
+return; }
+list.innerHTML = sessions.map(s=>{
+const isInvalid = !!sessionInvalidFlags[s.id];
+const isCurrent = s.id === state.currentSessionId;
+return `
+<div class="session-card" style="${isInvalid ? 'opacity:.6;border-color:var(--danger);' :''}">
+<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+<div>
+<div class="session-card-title" style="${isInvalid ? 'text-decoration:line-through;color:var(--text2);' :''}">${s.name}${isCurrent ? ' <span style="font-size:.7em;background:var(--primary);color:#fff;padding:2px 7px;border-radius:8px;font-weight:700;vertical-align:middle;">Active</span>' :''}</div>
+<div class="session-card-details">
+<div>Created:${new Date(s.created).toLocaleString()}</div>
+<div>${(s.answerLog||[]).length} Answers &bull; ${s.tHeard||0} Questions Heard</div>
+</div>
+${isInvalid ? '<div style="font-size:.78em;color:var(--danger);font-weight:700;margin-top:4px;">! Excluded From Analytics</div>' :''}
+</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0;padding-top:2px;">
+<span style="font-size:.7em;font-weight:700;color:var(--text2);">Analytics</span>
+<div onclick="toggleSessionInvalid('${s.id}')" style="width:38px;height:20px;background:${isInvalid ? 'var(--danger)' :'var(--success)'};border-radius:10px;cursor:pointer;position:relative;transition:background .2s;" title="${isInvalid ? 'Session Excluded — click to include' :'Session Included — click to exclude'}">
+<div style="width:14px;height:14px;background:#fff;border-radius:50%;position:absolute;top:3px;${isInvalid ? 'left:3px' :'left:21px'};transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3);"></div>
+</div>
+<span style="font-size:.68em;font-weight:700;color:${isInvalid ? 'var(--danger)' :'var(--success)'};">${isInvalid ? 'OFF' :'ON'}</span>
+</div>
+</div>
+<div class="session-card-actions" class="mt-10">
+<button class="button" onclick="loadSession('${s.id}')">Load</button>
+<button class="button button-danger" onclick="deleteSession('${s.id}')">Delete</button>
+</div>
+</div>`;
+}).join(''); }
+function toggleSessionInvalid(id){
+const s = state.sessions[id]; if (!s) return;
+if (sessionInvalidFlags[id]) delete sessionInvalidFlags[id]; else sessionInvalidFlags[id]=true;
+globalSettingsRef.child('sessionInvalidFlags').set(sessionInvalidFlags).catch(e=>showFirebaseError('Analytics toggle failed:'+e.message));
+renderSessionsList();
+if (analyticsOpen) renderAnalytics(); }
+function loadSession(id){ state.currentSessionId=id; loadSessionData(); globalPlayersRef.once('value').then(s=>applyGlobalPlayersToSession(s.val()||{})); saveAllData(); renderAll(); closeSessionsModal(); }
+function deleteSession(id){
+showConfirm('Delete session "'+state.sessions[id].name+'"?', 'Delete').then(ok =>{
+if (!ok) return;
+sessionsRef.child(id).remove().catch(e=>showFirebaseError(e.message));
+delete state.sessions[id];
+if(state.currentSessionId===id){
+state.currentSessionId=Object.keys(state.sessions)[0]||null;
+if(!state.currentSessionId) createNewSession(); else{localStorage.setItem(CURRENT_SESSION_KEY,state.currentSessionId);loadSessionData();}
+}
+renderSessionsList(); renderAll(); });
+}
+function openPlayerDetailModal(playerName){
+let totalPoints = 0;
+const answers = [];
+const sessionNames = [];
+let playerTHeard = 0;
+const _allPlayers = buildUniversalPlayerStats();
+const _allBuzzCounts = _allPlayers.map(p => p.powers + p.tossupsCorrect + p.negs).sort((a,b) => a - b);
+const _medBuzz = _allBuzzCounts.length > 0 ? _allBuzzCounts[Math.floor(_allBuzzCounts.length / 2)] :0;
+const _MIN_BUZZ = Math.floor(_medBuzz * (skillThresholdPct / 100));
+const _qualified  = _allPlayers.filter(p =>{
+const buzzes = p.powers + p.tossupsCorrect + p.negs;
+return (buzzes >= _MIN_BUZZ && (p.tHeard || 0) > 0) || manuallyIncluded.has(p.name); });
+validSessions().forEach(sess =>{
+const p = (sess.players ||{})[playerName];
+if (!p) return;
+const a = toArray(p.answers);
+if (!a.length) return;
+totalPoints += (p.points || 0);
+answers.push(...a);
+sessionNames.push(sess.name);
+playerTHeard += (sess.tHeard || 0); });
+if (!answers.length){ showToast('No data found for ' + playerName, 'warn'); return; }
+const player ={ name:playerName, points:totalPoints };
+const sessionCount = sessionNames.length;
+const sessionLabel = sessionCount > 1 ? `${sessionCount} sessions` :sessionNames[0] || 'No session';
+if (playerTHeard === 0) playerTHeard = Math.max(20 * Math.max(sessionCount, 1), answers.filter(a=>['Toss-up','Power','Neg'].includes(a.pointType)).length);
+const catMap ={};
+answers.forEach(a =>{
+const cat = a.category || '—';
+if (!catMap[cat]) catMap[cat] ={ pts:0, correct:0, neg:0, miss:0, tossup:0, bonus:0, power:0 };
+catMap[cat].pts += (a.points || 0);
+if (a.pointType === 'Neg')      catMap[cat].neg++;
+else if (a.pointType === 'Miss') catMap[cat].miss++;
+else if (a.pointType === 'Power') { catMap[cat].power++; catMap[cat].correct++; }
+else if (a.pointType === 'Toss-up'){ catMap[cat].tossup++; catMap[cat].correct++; }
+else if (a.pointType === 'Bonus') { catMap[cat].bonus++; catMap[cat].correct++; }
+});
+const catArr = Object.entries(catMap)
+.map(([name, d]) => ({ name, ...d, total:d.correct + d.neg + d.miss }))
+.sort((a, b) => b.pts !== a.pts ? b.pts - a.pts :b.correct - a.correct);
+const maxPts = Math.max(...catArr.map(c => Math.abs(c.pts)), 1);
+const powers     = answers.filter(a => a.pointType === 'Power').length;
+const tossups    = answers.filter(a => a.pointType === 'Toss-up').length;
+const bonuses    = answers.filter(a => a.pointType === 'Bonus').length;
+const negs       = answers.filter(a => a.pointType === 'Neg').length;
+const misses     = answers.filter(a => a.pointType === 'Miss').length;
+const correct    = powers + tossups + bonuses;
+const total      = answers.length;
+const acc        = total ? Math.round((correct / total) * 100) :0;
+const ppa        = total ? (player.points / total).toFixed(1) :'0.0';
+const uPoints    = 30 * (powers + tossups);
+const uRate      = playerTHeard > 0 ? (uPoints / playerTHeard) * 20 :null;
+const actualPts20 = playerTHeard > 0 ? (totalPoints / playerTHeard) * 20 :null;
+const fmtPts20   = v => v === null ? null :(v % 1 === 0 ? v :parseFloat(v.toFixed(1)));
+const actualizedPot = (uRate !== null && uRate > 0 && actualPts20 !== null)
+? Math.min(100, (actualPts20 / uRate) * 100) :null;
+const totalBuzzesModal  = powers + tossups + negs;
+const confValueModal    = playerTHeard > 0 ? (100 * totalBuzzesModal) / playerTHeard :null;
+const confZeroModal     = playerTHeard === 0 && totalBuzzesModal === 0;
+const totalAnsweredModal = powers + tossups + negs + misses + bonuses;
+const totalBuzzAttModal = powers + tossups + negs + misses;
+const modalAccuracy     = totalBuzzAttModal > 0 ? (100 * (powers + tossups)) / totalBuzzAttModal : null;
+const confNewDenomModal = powers + tossups;
+const modalTUEff     = (powers+tossups+negs+misses) > 0 ? (15*powers + 10*tossups - 5*negs) / (powers+tossups+negs+misses) : null;
+const modalConvRate  = playerTHeard > 0 ? (100 * (powers+tossups)) / playerTHeard : null;
+const _buzzes    = powers + tossups + negs;
+const _isLowData = (_buzzes < _MIN_BUZZ || playerTHeard === 0) && !manuallyIncluded.has(playerName);
+// Confidence-weighted modal score — same 3-component model as players tab
+let modalSkill = null; let modalBreakdown = null;
+if (_allActive.length > 0){
+  const _mAvgTH = _allActive.reduce((s,q)=>s+(q.tHeard||0),0) / _allActive.length;
+  const _mK = Math.max(1, _mAvgTH / 2);
+  const _mMaxVol = Math.max(..._allActive.map(q=>{ const tH=q.tHeard||0; const ba=(q.powers||0)+(q.tossupsCorrect||0)+(q.negs||0)+(q.misses||0); return tH>0?(100*ba)/tH:0; }), 1);
+  const _mMaxAcc = Math.max(..._allActive.map(q=>{ const ba=(q.powers||0)+(q.tossupsCorrect||0)+(q.negs||0)+(q.misses||0); const c=(q.powers||0)+(q.tossupsCorrect||0); return ba>0?(100*c)/ba:0; }), 1);
+  const _mMaxEff = Math.max(..._allActive.map(q=>{ const c=(q.powers||0)+(q.tossupsCorrect||0); return c>0?(15*(q.powers||0)+10*(q.tossupsCorrect||0))/c:0; }), 1);
+  const buzzAtt = powers+tossups+negs+misses;
+  const correctM = powers+tossups;
+  const rawVol = playerTHeard > 0 ? (100*buzzAtt)/playerTHeard : 0;
+  const rawAcc = buzzAtt > 0 ? (100*correctM)/buzzAtt : 0;
+  const rawEff = correctM > 0 ? (15*powers+10*tossups)/correctM : 0;
+  const normVol = Math.max(0, Math.min(100, (rawVol/_mMaxVol)*100));
+  const normAcc = Math.max(0, Math.min(100, (rawAcc/_mMaxAcc)*100));
+  const normEff = Math.max(0, Math.min(100, (rawEff/_mMaxEff)*100));
+  const rawScore = (normVol+normAcc+normEff)/3;
+  const confidence = playerTHeard / (playerTHeard + _mK);
+  modalSkill = rawScore * confidence;
+  modalBreakdown = { volScore:normVol, accScore:normAcc, effScore:normEff, rawScore, confidence, overall:modalSkill };
+}
+const modalSkillColor = 'var(--primary)';
+function metricRow(value, label, type){
+const ROW_PLAIN = (valStr, color) =>
+`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1.5px solid var(--border);">
+<span class="fs-82-fw6-text2">${label}</span>
+<span style="font-size:.92em;font-weight:700;color:${color};">${valStr}</span>
+</div>`;
+const ROW_BAR = (valStr, color, barPct) =>
+`<div style="padding:7px 0;border-bottom:1.5px solid var(--border);">
+<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;">
+<span class="fs-82-fw6-text2">${label}</span>
+<span style="font-size:.92em;font-weight:700;color:${color};">${valStr}</span>
+</div>
+<div style="height:5px;background:var(--border);border-radius:4px;overflow:hidden;">
+<div style="height:100%;width:${Math.min(100,Math.max(0,barPct))}%;background:${color};border-radius:4px;transition:width .3s;"></div>
+</div>
+</div>`;
+if (value === null || value === undefined)
+return ROW_PLAIN('N/A', 'var(--text3)');
+if (type === 'raw')
+return ROW_PLAIN(typeof value === 'number' ? (value % 1 === 0 ? value :value.toFixed(1)) :value, 'var(--text2)');
+if (type === 'pts20'){
+const color = value >= 20 ? 'var(--success)' :value >= 10 ? '#f39c12' :'var(--danger)';
+return ROW_PLAIN(value % 1 === 0 ? value :value.toFixed(1), color); }
+if (type === 'pts'){
+const color = value >= 8 ? 'var(--success)' :value >= 2 ? '#f39c12' :'var(--danger)';
+return ROW_PLAIN(value.toFixed(2) + ' pts', color); }
+if (type === 'bq'){
+const color = value >= 0.15 ? 'var(--success)' : value >= 0 ? '#f39c12' : 'var(--danger)';
+return ROW_PLAIN(value.toFixed(3), color); }
+const pct = Math.min(Math.max(value, 0), 100);
+const color = pct >= 66 ? 'var(--success)' :pct >= 33 ? '#f39c12' :'var(--danger)';
+return ROW_BAR(value.toFixed(1) + '%', color, pct); }
+function playerMetricBar(value, label, isRatio){
+return metricRow(value, label, value===null?'raw':isRatio?'pts20':'pct'); }
+function rankBadge(i){
+if (i === 0) return '<span class="pd-rank-badge gold">1</span>';
+if (i === 1) return '<span class="pd-rank-badge silver">2</span>';
+if (i === 2) return '<span class="pd-rank-badge bronze">3</span>';
+return `<span class="pd-rank-badge">${i+1}</span>`;
+}
+let catRows = '';
+if (catArr.length === 0){
+catRows = '<tr><td colspan="6" style="color:var(--text2);font-style:italic;padding:12px 10px;">No category data yet.</td></tr>';
+} else{
+const parentGroups ={};
+catArr.forEach(c =>{
+const parent = getParentCat(c.name);
+if (!parentGroups[parent]) parentGroups[parent] = [];
+parentGroups[parent].push(c); });
+const sortedParents = Object.entries(parentGroups).sort((a, b) =>{
+const aSum = a[1].reduce((s, c) => s + c.pts, 0);
+const bSum = b[1].reduce((s, c) => s + c.pts, 0);
+return bSum - aSum; });
+let rowIdx = 0;
+sortedParents.forEach(([parent, cats]) =>{
+const parentPts = cats.reduce((s, c) => s + c.pts, 0);
+const parentTotal = cats.reduce((s, c) => s + c.total, 0);
+const parentCorrect = cats.reduce((s, c) => s + c.correct, 0);
+const parentNeg = cats.reduce((s, c) => s + c.neg, 0);
+const parentMiss = cats.reduce((s, c) => s + c.miss, 0);
+const isParentNeg = parentPts < 0;
+catRows += `<tr class="sec-bg">
+<td colspan="2" style="font-weight:700;font-size:.88em;color:var(--text2);padding:6px 10px;">${parent}</td>
+<td class="right" style="color:${isParentNeg?'var(--danger)':'var(--primary)'};font-weight:700;font-size:.88em;">${parentPts>0?'+':''}${parentPts}</td>
+<td class="right" style="font-size:.88em;color:var(--text2);">${parentTotal}</td>
+<td class="right" style="color:var(--success);font-weight:600;font-size:.88em;">${parentCorrect||'—'}</td>
+<td class="right" style="color:var(--danger);font-weight:600;font-size:.88em;">${parentNeg||'—'}</td>
+<td class="right" style="color:var(--warning);font-weight:600;font-size:.88em;">${parentMiss||'—'}</td>
+</tr>`;
+const showSubs = cats.length > 1 || cats[0].name !== parent;
+if (showSubs){
+cats.forEach((c) =>{
+const barWidth = Math.max(2, (Math.abs(c.pts) / maxPts) * 100);
+const isNeg = c.pts < 0;
+const isSubcat = CAT_PARENT[c.name];
+catRows += `
+<tr>
+<td style="padding-left:18px;color:var(--text3);font-size:.8em;">${isSubcat ? '↳' :rankBadge(rowIdx)}</td>
+<td style="font-weight:600;font-size:.9em;color:var(--text1);">${c.name}</td>
+<td class="right" style="color:${isNeg ? 'var(--danger)' :'var(--primary)'};font-weight:700;">${c.pts > 0 ? '+' :''}${c.pts}</td>
+<td class="right">${c.total}</td>
+<td class="right" style="color:var(--success);font-weight:600;">${c.correct||'—'}</td>
+<td class="right" style="color:var(--danger);font-weight:600;">${c.neg || '—'}</td>
+<td class="right" style="color:var(--warning);font-weight:600;">${c.miss || '—'}</td>
+</tr>
+<tr>
+<td colspan="6" style="padding:0 10px 6px 28px;">
+<div style="background:var(--sec-bg);border-radius:6px;height:5px;overflow:hidden;border:1.5px solid var(--border);">
+<div class="pd-bar-mini ${isNeg ? 'neg-bar' :''}" style="width:${barWidth}%;"></div>
+</div>
+</td>
+</tr>`;
+rowIdx++; });
+}
+}); }
+const tHeardLabel = playerTHeard > 0 ? `${playerTHeard} Toss-Ups Heard` :'No Toss-Ups-Heard Data';
+const _mTier = modalSkill !== null ? tierFromScore(modalSkill) : null;
+const skillHeroColor = _mTier ? _mTier.color : 'var(--text3)';
+const skillHeroVal   = modalSkill !== null ? modalSkill.toFixed(1) : '—';
+const skillAvgNote   = _mTier ? `<div style="font-size:.82em;font-weight:800;color:${_mTier.color};background:${_mTier.bg};border:1.5px solid ${_mTier.border};border-radius:6px;padding:1px 10px;display:inline-block;margin-top:3px;">${_mTier.label}</div>` : '';
+$('pdModalTitle').textContent = playerName;
+const playerPhoto = null; // Avatars removed - keeping for potential future use
+const avatarHtml = `<div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--secondary));display:flex;align-items:center;justify-content:center;font-size:1.4em;font-weight:700;color:#fff;flex-shrink:0;">${playerName.charAt(0).toUpperCase()}</div>`;
+$('pdModalBody').innerHTML = `
+<div class="pd-hero">
+<div style="display:flex;align-items:center;gap:14px;flex:1;min-width:0;">
+${avatarHtml}
+<div style="min-width:0;">
+<div class="pd-hero-name">${playerName}</div>
+<div class="pd-hero-sub">${sessionLabel} &bull; ${powers+tossups} TU${(powers+tossups)!==1?'s':''} correct${powers?` (${powers}⚡︎)`:'' } &bull; ${acc}% Accuracy &bull; ${ppa} Pts/Answer</div>
+<div style="display:flex;align-items:center;gap:6px;margin-top:8px;">
+<input id="renamePlayerInput" type="text" placeholder="Rename player…" value="${playerName}" maxlength="40"
+onkeydown="if(event.key==='Enter') renamePlayer('${playerName.replace(/'/g,"\\'")}');"
+style="padding:5px 9px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:.82em;background:var(--card);color:var(--text);width:160px;" />
+<button onclick="renamePlayer('${playerName.replace(/'/g,"\\'")}');"
+style="padding:5px 12px;border:1.5px solid var(--primary);border-radius:6px;font-size:.8em;font-weight:700;color:var(--primary);background:rgba(102,126,234,.07);cursor:pointer;font-family:inherit;">Rename</button>
+</div>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
+<div class="pd-hero-pts">${player.points} Pts</div>
+<div style="font-size:.75em;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;">Skill Score</div>
+<div style="font-size:1.1em;font-weight:800;color:${skillHeroColor};">${skillHeroVal}</div>
+${skillAvgNote}
+</div>
+</div>
+<div class="pd-section-title">Answer Breakdown</div>
+<div class="pd-stat-chips">
+<span class="pd-chip tossup">${powers + tossups} Toss-up${(powers+tossups) !== 1 ? 's' :''}</span>
+${powers ? `<span class="pd-chip power">⚡︎ ${powers} Powered</span>` :''}
+<span class="pd-chip">&#43; ${bonuses} Bonus${bonuses !== 1 ? 'es' :''}</span>
+<span class="pd-chip neg">&#8722; ${negs} Neg${negs !== 1 ? 's' :''}</span>
