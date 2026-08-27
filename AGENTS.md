@@ -82,7 +82,9 @@ Firebase RTDB (root `qb/…` under the app's nodes):
   - `players` is a **map keyed by player name**: `{ powers, tossupsCorrect, negs, misses, tHeard, totalAnswers, answers[], … }`
   - `teams`: `{ id, name, playerMembers[] }`
   - `answerLog`: ordered recording of every outcome (drives the log view and THeard logic)
-- **globalPlayers**, **version** (published build info), **globalSettings**
+- **globalPlayers**, **version** (published build info), **releaseHtml** (full
+  `index.html` string published by admins so local-file users download updates
+  straight from Firebase — no GitHub request), **globalSettings**
   (category frequencies/colors, skill threshold, manual analytics inclusions),
   **userIdentities** (display names), **userProfiles** (per-user visual settings),
   **adminList**, per-user **clientId**.
@@ -135,7 +137,12 @@ Score and are excluded from the team average and automatic `k`.
 - **Versioning/deploy**: `VERSION` lives in `01-constants.js`. The header
   badge polls GitHub Actions runs for deploy status; admins publish a build
   to Firebase (`publishRelease`), which drives the update banner shown to
-  local-file users.
+  local-file users. `publishRelease` uploads the new `index.html` string to
+  the `releaseHtml` node and keeps `appVersion` lightweight (label, buildId,
+  releaseNotes, downloadUrl fallback, `hasFirebasePayload` flag); regular app
+  loads only read `appVersion`, and `downloadUpdate` pulls the HTML payload
+  from `releaseHtml` in-memory (Blob download) before falling back to the
+  GitHub raw URL for older releases.
 - **`local-settings.js`** is an *optional* local-only override file
   (loaded with `onerror="void 0"`); it is intentionally not in the repo.
   `window.LOCAL_SETTINGS` can pre-seed visual settings.

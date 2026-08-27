@@ -1,8 +1,8 @@
-const VERSION = '3.6.1'; // ← Change only this each release
+const VERSION = '3.7.0'; // ← Change only this each release
 const DOWNLOAD_URL = 'https://raw.githubusercontent.com/ajani190819-ops/HSEQB/main/index.html';
 const DISPLAY_VERSION = VERSION; const INTERNAL_BUILD = VERSION;
 const FILE_VERSION    = VERSION; const FILE_BUILD_ID  = VERSION;
-var db, sessionsRef, globalPlayersRef, versionRef, globalSettingsRef, userIdentitiesRef, userProfilesRef, userProfileRef, adminListRef, adminList = [];
+var db, sessionsRef, globalPlayersRef, versionRef, releaseHtmlRef, globalSettingsRef, userIdentitiesRef, userProfilesRef, userProfileRef, adminListRef, adminList = [];
 const _adminToken = (()=>{
 let _tok = null;
 const _secret = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);

@@ -18,6 +18,10 @@
       ".read": "auth != null",
       ".write": "auth != null"
     },
+    "releaseHtml": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
     "userIdentities": {
       ".read": "auth != null",
       ".write": "auth != null"
