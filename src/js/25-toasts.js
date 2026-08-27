@@ -9,7 +9,12 @@ t._timer = setTimeout(() =>{ t.className = ''; }, 1700);
 function recomputeAdmin(){
 if (isIframe && _iframeDebugActive) return; // preserve temp admin grant in preview
 const name = localStorage.getItem('qb_userName') || '';
-if (adminList.includes(name)) _adminToken.grant(); else _adminToken.revoke();
+const uid = authUser?.uid || clientId || '';
+const uidAdmin = !!(uid && adminUids && adminUids[uid] === true);
+// Compatibility while the UID map is being bootstrapped. Once adminUids has an
+// entry, only UID-based access is accepted by the client and by Firebase rules.
+const legacyAdmin = Object.keys(adminUids || {}).length === 0 && adminList.includes(name);
+if (uidAdmin || legacyAdmin) _adminToken.grant(); else _adminToken.revoke();
 applyAdminUI(); }
 function applyAdminUI(){
 const ccs = $('catColorSection');
@@ -24,7 +29,8 @@ const adminBtn  = $('jumpBtn-sec-admin');
 if (dangerEl)  dangerEl.style.display  = isAdmin ? '' :'none';
 if (adminEl)   adminEl.style.display   = isAdmin ? '' :'none';
 if (dangerBtn) dangerBtn.style.display  = isAdmin ? '' :'none';
-if (adminBtn)  adminBtn.style.display   = isAdmin ? '' :'none';
+if (adminBtn)  adminBtn.style.display  = isAdmin ? '' :'none';
+renderUpdatesAdminUI();
 applyDebugMenuVisibility();
 document.querySelectorAll('.session-invalid-toggle').forEach(el =>{ el.style.display = isAdmin ? '' :'none'; });
 document.querySelectorAll('.ld-admin-btn').forEach(el =>{ el.style.display = isAdmin ? '' :'none'; });

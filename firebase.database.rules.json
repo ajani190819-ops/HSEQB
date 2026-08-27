@@ -2,6 +2,7 @@
   "rules": {
     ".read": false,
     ".write": false,
+
     "sessions": {
       ".read": "auth != null",
       ".write": "auth != null"
@@ -14,21 +15,40 @@
       ".read": "auth != null",
       ".write": "auth != null"
     },
-    "appVersion": {
+
+    "adminUids": {
       ".read": "auth != null",
-      ".write": "auth != null"
-    },
-    "releaseHtml": {
-      ".read": "auth != null",
-      ".write": "auth != null"
-    },
-    "userIdentities": {
-      ".read": "auth != null",
-      ".write": "auth != null"
+      "$uid": {
+        ".write": "auth != null && root.child('adminUids').child(auth.uid).val() === true",
+        ".validate": "newData.val() === true"
+      }
     },
     "adminList": {
       ".read": "auth != null",
-      ".write": "auth != null"
+      ".write": "auth != null && root.child('adminUids').child(auth.uid).val() === true"
+    },
+
+    "appVersion": {
+      ".read": "auth != null",
+      ".write": "auth != null && root.child('adminUids').child(auth.uid).val() === true"
+    },
+    "releaseHtml": {
+      ".read": "auth != null",
+      ".write": "auth != null && root.child('adminUids').child(auth.uid).val() === true"
+    },
+    "releaseHistory": {
+      ".read": "auth != null",
+      "$releaseId": {
+        ".write": "auth != null && root.child('adminUids').child(auth.uid).val() === true",
+        ".validate": "newData.hasChildren(['label', 'buildId', 'title', 'releaseNotes', 'publishedAt', 'publishedByUid']) && newData.child('publishedByUid').val() === auth.uid"
+      }
+    },
+
+    "userIdentities": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid"
+      }
     },
     "config": {
       ".read": "auth != null",

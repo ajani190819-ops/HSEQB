@@ -2,7 +2,7 @@ const VERSION = '3.7.0'; // auto-managed by bump.js
 const DOWNLOAD_URL = 'https://raw.githubusercontent.com/ajani190819-ops/HSEQB/main/index.html';
 const DISPLAY_VERSION = VERSION; const INTERNAL_BUILD = VERSION;
 const FILE_VERSION    = VERSION; const FILE_BUILD_ID  = VERSION;
-var db, sessionsRef, globalPlayersRef, versionRef, releaseHtmlRef, globalSettingsRef, userIdentitiesRef, userProfilesRef, userProfileRef, adminListRef, adminList = [];
+var db, sessionsRef, globalPlayersRef, versionRef, releaseHtmlRef, releaseHistoryRef, globalSettingsRef, userIdentitiesRef, userProfilesRef, userProfileRef, adminListRef, adminUidsRef, adminList = [], adminUids = {};
 const _adminToken = (()=>{
 let _tok = null;
 const _secret = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
@@ -16,7 +16,7 @@ Object.defineProperty(window, 'isAdmin',{ get:() => _adminToken.check(), set:() 
 function _noopRef(){
 const noop = () => _noopRef();
 const p = () => Promise.resolve({ val:() => null });
-return{ on:noop, off:noop, once:p, set:p, update:p, remove:p, child:noop, transaction:p };
+return{ on:noop, off:noop, once:p, set:p, update:p, remove:p, child:noop, push:() => ({ set:p }), transaction:p };
 }
 let authUser = null; let authStarted = false; let appStarted = false;
 const THEME_MODES = ['light', 'dark', 'device'];

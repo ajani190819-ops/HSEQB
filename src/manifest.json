@@ -46,7 +46,8 @@
       "src/js/27-setup-panels.js",
       "src/js/28-recording-and-stats.js",
       "src/js/29-data-io.js",
-      "src/js/30-debug-boot.js"
+      "src/js/30-debug-boot.js",
+      "src/js/31-updates.js"
     ]
   }
 }

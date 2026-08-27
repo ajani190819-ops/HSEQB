@@ -165,6 +165,179 @@ button, .button, .ql-btn, .ql-cat-chip, .ql-confirm-btn, .ql-cancel-btn, .header
   .qb-scroll, .analytics-scroll { padding: 14px; }
   .an-grid { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
 }
+
+
+/* ===== Public Updates center ===== */
+.updates-header-btn { position: relative; }
+.updates-header-icon { font-size: 1.05em; line-height: 1; }
+.updates-unread-badge {
+  display: none;
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 29px;
+  height: 18px;
+  padding: 1px 5px;
+  border: 2px solid var(--secondary);
+  border-radius: 12px;
+  background: #ffdd57;
+  color: #4b3500;
+  font-size: .65em;
+  font-weight: 800;
+  line-height: 14px;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,.2);
+}
+.updates-unread-badge.show { display: block; }
+.updates-modal-content {
+  width: min(760px, 94vw);
+  max-width: 760px;
+  max-height: min(88vh, 900px);
+  padding: 22px 24px 26px;
+}
+.updates-modal-header { margin-bottom: 16px; }
+.updates-modal-header h2 { color: var(--primary); }
+.updates-modal-subtitle { margin-top: 4px; color: var(--text2); font-size: .83em; }
+.updates-current-summary {
+  padding: 16px 18px;
+  border: 2px solid rgba(102,126,234,.3);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, rgba(102,126,234,.11), rgba(118,75,162,.09));
+}
+.updates-current-kicker {
+  color: var(--primary);
+  font-size: .68em;
+  font-weight: 800;
+  letter-spacing: .1em;
+  margin-bottom: 7px;
+}
+.updates-current-main { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
+.updates-current-title { color: var(--text); font-size: 1.08em; font-weight: 750; margin-bottom: 5px; }
+.updates-current-notes { color: var(--text2); font-size: .84em; line-height: 1.55; }
+.updates-version-stack { flex-shrink: 0; text-align: right; }
+.updates-version-stack strong { display: block; color: var(--primary); font-size: 1.05em; }
+.updates-status { display: block; margin-top: 5px; color: var(--text3); font-size: .68em; font-weight: 700; white-space: nowrap; }
+.updates-status-new { color: var(--success); }
+.updates-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 10px 0 18px; }
+.updates-load-status { color: var(--text3); font-size: .75em; }
+.updates-refresh-btn { padding: 6px 11px; font-size: .78em; }
+.updates-admin-panel {
+  margin: 0 0 22px;
+  padding: 17px 18px;
+  border: 2px solid rgba(17,153,142,.42);
+  border-radius: var(--radius-sm);
+  background: rgba(17,153,142,.055);
+}
+.updates-admin-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 13px; }
+.updates-admin-heading h3, .updates-history-heading h3 { color: var(--text); font-size: 1em; margin-bottom: 3px; }
+.updates-admin-heading p, .updates-history-heading p { color: var(--text2); font-size: .76em; line-height: 1.45; }
+.updates-admin-pill, .updates-current-pill, .updates-preview-pill {
+  border-radius: 20px;
+  padding: 3px 8px;
+  font-size: .65em;
+  font-weight: 800;
+  letter-spacing: .03em;
+  white-space: nowrap;
+}
+.updates-admin-pill { background: rgba(17,153,142,.14); color: var(--success); }
+.updates-current-pill { background: rgba(17,153,142,.13); color: var(--success); }
+.updates-preview-pill { background: rgba(102,126,234,.12); color: var(--primary); }
+.updates-release-prompt {
+  margin: 0 0 13px;
+  padding: 9px 11px;
+  border-left: 3px solid var(--primary);
+  border-radius: 5px;
+  background: rgba(102,126,234,.09);
+  color: var(--text2);
+  font-size: .76em;
+  line-height: 1.45;
+}
+.updates-release-prompt strong { color: var(--primary); }
+.updates-release-ok { border-left-color: var(--success); background: rgba(17,153,142,.08); }
+.updates-release-ok strong { color: var(--success); }
+.updates-form-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+.updates-admin-panel .input-group { margin-bottom: 11px; }
+.updates-admin-panel .input-group label { font-size: .8em; }
+.updates-textarea {
+  display: block;
+  width: 100%;
+  min-height: 94px;
+  resize: vertical;
+  padding: 9px 11px;
+  border: 1.5px solid var(--input-border);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: .9em;
+  line-height: 1.45;
+  background: var(--input-bg);
+  color: var(--input-text);
+}
+.updates-textarea-small { min-height: 56px; }
+.updates-textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(102,126,234,.12); }
+.updates-publish-btn { width: 100%; margin-top: 2px; }
+.updates-upload-status { min-height: 1.35em; padding-top: 7px; color: var(--text2); font-size: .75em; line-height: 1.4; }
+.updates-history-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin: 2px 0 11px; }
+.updates-history-count { color: var(--text3); font-size: .72em; font-weight: 700; }
+.updates-list { display: flex; flex-direction: column; gap: 10px; }
+.updates-release-card { display: flex; position: relative; gap: 12px; padding: 13px 14px 14px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: var(--card); box-shadow: var(--shadow-xs); }
+.updates-release-card.is-current { border-color: rgba(17,153,142,.48); }
+.updates-release-rail { position: relative; width: 8px; flex-shrink: 0; }
+.updates-release-rail::after { content: ''; position: absolute; top: 18px; bottom: -28px; left: 3px; width: 2px; background: var(--border); }
+.updates-release-card:last-child .updates-release-rail::after { display: none; }
+.updates-release-dot { display: block; width: 8px; height: 8px; margin-top: 5px; border-radius: 50%; background: var(--primary); box-shadow: 0 0 0 3px rgba(102,126,234,.13); }
+.updates-release-card.is-current .updates-release-dot { background: var(--success); box-shadow: 0 0 0 3px rgba(17,153,142,.13); }
+.updates-release-content { min-width: 0; flex: 1; }
+.updates-release-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; margin-bottom: 6px; color: var(--text3); font-size: .7em; }
+.updates-release-meta strong { color: var(--primary); font-size: 1.08em; }
+.updates-release-content h4 { margin-bottom: 5px; color: var(--text); font-size: .98em; }
+.updates-release-notes { color: var(--text2); font-size: .82em; line-height: 1.55; white-space: normal; }
+.updates-release-actions { margin-top: 9px; }
+.updates-card-download { padding: 5px 10px; font-size: .74em; }
+.updates-empty { display: flex; align-items: center; flex-direction: column; gap: 6px; padding: 28px 15px; border: 1.5px dashed var(--border); border-radius: var(--radius-sm); color: var(--text2); text-align: center; font-size: .82em; }
+.updates-empty strong { color: var(--text); }
+.updates-empty-icon { color: var(--primary); font-size: 1.8em; }
+.admin-updates-link { display: flex; align-items: center; gap: 10px; padding: 12px; border: 1.5px solid rgba(102,126,234,.3); border-radius: var(--radius-sm); background: rgba(102,126,234,.06); }
+.admin-updates-link-icon { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; flex-shrink: 0; border-radius: 9px; background: rgba(102,126,234,.15); color: var(--primary); font-size: 1.2em; }
+.admin-updates-link-copy { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 2px; }
+.admin-updates-link-copy strong { color: var(--text); font-size: .84em; }
+.admin-updates-link-copy span { color: var(--text2); font-size: .72em; line-height: 1.4; }
+.admin-updates-link .button { flex-shrink: 0; padding: 7px 10px; font-size: .76em; }
+@media (max-width: 600px) {
+  .updates-modal-content { width: 96vw; padding: 18px 15px 22px; }
+  .updates-current-main { flex-direction: column-reverse; gap: 7px; }
+  .updates-version-stack { width: 100%; display: flex; align-items: baseline; justify-content: space-between; text-align: left; }
+  .updates-status { margin: 0; }
+  .updates-form-grid { grid-template-columns: 1fr; gap: 0; }
+  .updates-admin-heading { flex-direction: column; gap: 7px; }
+  .admin-updates-link { align-items: flex-start; flex-wrap: wrap; }
+  .admin-updates-link .button { width: 100%; }
+}
+@media (max-width: 540px) {
+  .updates-header-label { display: none; }
+  .updates-header-btn { padding-left: 9px; padding-right: 9px; }
+  .updates-header-icon { font-size: 1.25em; }
+}
+
+
+/* The history action can wrap beside the download action on narrow screens. */
+#updateBanner.show { max-height: 100px; }
+@media (max-width: 600px) { #updateBanner.show { max-height: 180px; } }
+
+/* UID-based administrator management */
+.admin-uid-row { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:9px 10px; border-bottom:1.5px solid var(--border); font-size:.84em; }
+.admin-uid-row:last-child { border-bottom:0; }
+.admin-uid-label { min-width:0; display:flex; flex-direction:column; gap:2px; font-weight:650; color:var(--text); overflow:hidden; }
+.admin-uid-sub { color:var(--text3); font-family:monospace; font-size:.76em; font-weight:400; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.admin-uid-actions { display:flex; align-items:center; gap:6px; flex-shrink:0; }
+.admin-current-pill, .admin-legacy-pill { padding:3px 7px; border-radius:20px; font-size:.68em; font-weight:800; white-space:nowrap; }
+.admin-current-pill { color:var(--success); background:rgba(17,153,142,.12); }
+.admin-legacy-pill { color:var(--warning); background:rgba(243,156,18,.13); }
+.admin-remove-btn { background:none; border:1px solid var(--danger); color:var(--danger); border-radius:5px; padding:3px 9px; font-size:.78em; cursor:pointer; font-family:inherit; }
+.admin-empty { padding:12px; color:var(--text2); font-size:.82em; line-height:1.45; }
+@media (max-width: 600px) {
+  .admin-uid-row { align-items:flex-start; flex-direction:column; }
+  .admin-uid-actions { width:100%; justify-content:flex-end; }
+}
 </style>
 <script>
 /* Apply the cached choice before the sign-in form paints, including on a cold load. */
@@ -206,7 +379,7 @@ button, .button, .ql-btn, .ql-cat-chip, .ql-confirm-btn, .ql-cancel-btn, .header
       ↓ Running inside Claude's preview — Firebase sync is blocked by the sandbox.
       <strong>Download the file and open it in your browser for live sync.</strong><button onclick="document.getElementById('sandboxWarning').style.display='none';" style="margin-left:12px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.5);color:#fff;padding:3px 10px;border-radius:6px;cursor:pointer;font-weight:700;font-family:inherit;font-size:.9em;">Dismiss</button></div><script>
       try{ if (window.self !== window.top){ document.getElementById('sandboxWarning').style.display = 'block'; document.body.classList.add('is-iframe'); } } catch(e){ document.getElementById('sandboxWarning').style.display = 'block'; document.body.classList.add('is-iframe'); }
-    </script><div class="qb-header" id="qbHeader"><div class="qb-header-left"><button class="header-btn sidebar-open-btn hidden" id="sidebarOpenBtn" >&#9654; Menu</button></div><div class="qb-header-center"><h1 data-short="HSE QB" data-medium="HSE QB Tracker">HSE Quiz Bowl Tracker <span class="version-badge" id="versionBadge"></span></h1><div class="header-session-name" id="headerSessionName"></div></div><div class="header-controls"><div style="display:flex;align-items:center;gap:6px;user-select:none;" title="Switch between Tracker and Analytics"><span id="toggleLabelTracker" class="header-toggle-label" style="color:rgba(255,255,255,.95);">Tracker</span><div onclick="toggleAnalytics()" id="viewToggleSwitch" style="width:48px;height:24px;background:rgba(255,255,255,.25);border-radius:12px;border:2px solid rgba(255,255,255,.4);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;"><div id="viewToggleKnob" style="width:16px;height:16px;background:#fff;border-radius:50%;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,.3);"></div></div><span id="toggleLabelAnalytics" class="header-toggle-label" style="color:rgba(255,255,255,.55);">Stats</span></div><button class="header-btn round" onclick="openHelpModal()" title="Help / Tutorial">?</button><span id="autosaveStatus" class="auto-save-indicator state-connecting"><span class="save-ring"><svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="8" r="6" stroke="rgba(255,255,255,0.25)" stroke-width="2"/><path d="M8 2 A6 6 0 0 1 14 8" stroke="white" stroke-width="2" stroke-linecap="round"/></svg><span class="save-ring-dot"></span></span><span class="save-label">Connecting…</span></span></div></div><div id="updateBanner"></div><div class="qb-body"><aside class="qb-sidebar" id="mainSidebar"><div class="sidebar-nav"><div class="sidebar-jump-wrapper" id="sidebarJumpWrapper"><button class="sidebar-jump-btn" onclick="toggleJumpDropdown()" type="button"><span id="sidebarJumpLabel">Setup</span><span class="sidebar-jump-arrow">&#9662;</span></button><div class="sidebar-jump-menu"><div class="sidebar-sec-hdr">Setup</div><button onclick="showSection('sec-session')">Session</button><button onclick="showSection('sec-players')">Players</button><button onclick="showSection('sec-teams')">Teams</button><button onclick="showSection('sec-categories')">Categories</button><div class="sidebar-sec-hdr">Settings</div><button onclick="showSection('sec-userid')">User ID</button><button onclick="showSection('sec-visual')">Visual Settings</button><button id="jumpBtn-sec-admin" onclick="showSection('sec-admin')" class="hidden">Admin Panel</button><div class="sidebar-sec-hdr">Session & Data</div><button onclick="showSection('sec-export')">Export / Import</button><button id="jumpBtn-sec-danger" onclick="showSection('sec-danger')" class="hidden">Data Management</button><button id="jumpBtn-sec-debug" onclick="showSection('sec-debug')" class="hidden">Debug Menu</button></div></div><button class="sidebar-close-btn" onclick="toggleSidebar()">&#9664; Hide</button></div><div class="sidebar-sections"><div class="qb-section" id="sec-session"><h2>Session <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div class="session-info"><div class="session-info-row"><span>Name:</span><strong id="sessionName">&#8212;</strong></div><div class="session-info-row"><span>Created:</span><strong id="sessionCreated">&#8212;</strong></div><div class="session-info-row"><span>Last Updated:</span><strong id="sessionLastUpdated">&#8212;</strong></div><div class="session-info-row"><span>Answers:</span><strong id="sessionAnswerCount">0</strong></div></div><div class="input-group"><label>New Session Name:</label><input type="text" id="newSessionName" placeholder="Session name..." /></div><div class="session-controls"><button class="button button-success" onclick="createNewSession()">+ New Session</button><button class="button" onclick="openSessionsModal()">Load</button></div></div></div><div class="qb-section" id="sec-players"><h2>Players <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div class="input-group"><label>Add Player:</label><input type="text" id="playerInput" placeholder="Player name..." onkeydown="if(event.key==='Enter') addToPlayerPool()" /></div><div class="button-group mb-14" ><button class="button" onclick="addToPlayerPool()">Add Player</button><button class="button button-danger" onclick="clearPlayerPool()">Clear All</button></div><div style="padding-bottom:14px;border-bottom:1.5px solid var(--border);margin-bottom:14px;"><div style="font-weight:600;font-size:.85em;margin-bottom:8px;color:var(--text);">Player Management</div><div style="font-size:.78em;color:var(--text2);margin-bottom:10px;">Rename players to fix typos. To merge, click <strong>Merge</strong> on the player you want to <em>remove</em> — their stats will be combined into whichever player you select next.</div><div id="playerMgmtContainer" style="display:flex;flex-direction:column;gap:8px;"></div></div><div class="input-group"><label>Import from File (CSV/TXT):</label><input type="file" accept=".csv,.txt" onchange="handlePlayerImport(event)" /></div><div id="playerPoolDisplay"></div></div></div><div class="qb-section" id="sec-teams"><h2>Teams <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div class="input-group"><label>Team Name:</label><input type="text" id="teamNameInput" placeholder="Team name..." /></div><button class="button" onclick="addTeam()">Add Team</button><div id="teamsContainer" style="margin-top:20px;"></div></div></div><div class="qb-section" id="sec-categories"><h2>Categories <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><p style="font-size:.85em;color:var(--text2);margin-bottom:10px;">Categories and subcategories are fixed. Select a parent category when recording answers to reveal its subcategories.</p><div style="display:flex;flex-direction:column;gap:6px;"></div><div id="categoryTreeDisplay"></div><div id="catFreqSection" style="display:none;margin-top:16px;padding-top:14px;border-top:1.5px solid var(--border);"><div style="font-weight:600;font-size:.85em;margin-bottom:4px;color:var(--text);">Expected Subcategory Frequencies <span class="fw4-82-ml6">Admin only — synced for all users</span></div><p style="font-size:.76em;color:var(--text3);margin-bottom:10px;line-height:1.5;">Enter the expected % of tossups for each subcategory at a typical tournament. Shown under each subcategory breakdown chart.</p><div id="catFreqPickers" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;"></div><div class="button-group"><button class="button" onclick="saveCatFreqs()">Save Frequencies</button><button class="button" style="background:var(--sec-bg);color:var(--text2);border:1.5px solid var(--border);" onclick="resetCatFreqs()">Reset Defaults</button></div><div id="catFreqStatus" class="fs-8-success-mt6"></div></div></div></div><div class="qb-section" id="sec-export"><h2>Export Data <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><p style="margin-bottom:8px;font-weight:600;">Select what to include:</p><div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:var(--sp);"><button class="button-category selected" id="exportPlayers" onclick="this.classList.toggle('selected')">Players &amp; Scores</button><button class="button-category selected" id="exportAnswerLog" onclick="this.classList.toggle('selected')">Answer Log</button><button class="button-category selected" id="exportTeamStats" onclick="this.classList.toggle('selected')">Team Statistics</button></div><div class="button-group"><button class="button button-success" onclick="exportToExcel()">Export to Excel</button><button class="button button-secondary" onclick="exportToJSON()">Export as JSON</button></div><div style="margin-top:22px;padding-top:18px;border-top:1.5px solid var(--border);"><p style="font-weight:600;margin-bottom:6px;">Import Session</p><p style="font-size:.85em;color:var(--text2);margin-bottom:12px;">Load a previously exported JSON file.</p><div class="input-group"><label>Select JSON file:</label><input type="file" id="importSessionFile" accept=".json" onchange="importFromJSON(event)" /></div><div id="importStatus" style="font-size:.85em;margin-top:8px;display:none;"></div></div></div></div><div class="qb-section" id="sec-userid">
+    </script><div class="qb-header" id="qbHeader"><div class="qb-header-left"><button class="header-btn sidebar-open-btn hidden" id="sidebarOpenBtn" >&#9654; Menu</button></div><div class="qb-header-center"><h1 data-short="HSE QB" data-medium="HSE QB Tracker">HSE Quiz Bowl Tracker <span class="version-badge" id="versionBadge"></span></h1><div class="header-session-name" id="headerSessionName"></div></div><div class="header-controls"><div style="display:flex;align-items:center;gap:6px;user-select:none;" title="Switch between Tracker and Analytics"><span id="toggleLabelTracker" class="header-toggle-label" style="color:rgba(255,255,255,.95);">Tracker</span><div onclick="toggleAnalytics()" id="viewToggleSwitch" style="width:48px;height:24px;background:rgba(255,255,255,.25);border-radius:12px;border:2px solid rgba(255,255,255,.4);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;"><div id="viewToggleKnob" style="width:16px;height:16px;background:#fff;border-radius:50%;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,.3);"></div></div><span id="toggleLabelAnalytics" class="header-toggle-label" style="color:rgba(255,255,255,.55);">Stats</span></div><button class="header-btn updates-header-btn" onclick="openUpdatesModal()" title="Updates &amp; changelog"><span class="updates-header-icon">↻</span><span class="updates-header-label">Updates</span><span id="updatesUnreadBadge" class="updates-unread-badge" aria-label="New updates"></span></button><button class="header-btn round" onclick="openHelpModal()" title="Help / Tutorial">?</button><span id="autosaveStatus" class="auto-save-indicator state-connecting"><span class="save-ring"><svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="8" r="6" stroke="rgba(255,255,255,0.25)" stroke-width="2"/><path d="M8 2 A6 6 0 0 1 14 8" stroke="white" stroke-width="2" stroke-linecap="round"/></svg><span class="save-ring-dot"></span></span><span class="save-label">Connecting…</span></span></div></div><div id="updateBanner"></div><div class="qb-body"><aside class="qb-sidebar" id="mainSidebar"><div class="sidebar-nav"><div class="sidebar-jump-wrapper" id="sidebarJumpWrapper"><button class="sidebar-jump-btn" onclick="toggleJumpDropdown()" type="button"><span id="sidebarJumpLabel">Setup</span><span class="sidebar-jump-arrow">&#9662;</span></button><div class="sidebar-jump-menu"><div class="sidebar-sec-hdr">Setup</div><button onclick="showSection('sec-session')">Session</button><button onclick="showSection('sec-players')">Players</button><button onclick="showSection('sec-teams')">Teams</button><button onclick="showSection('sec-categories')">Categories</button><div class="sidebar-sec-hdr">Settings</div><button onclick="showSection('sec-userid')">User ID</button><button onclick="showSection('sec-visual')">Visual Settings</button><button id="jumpBtn-sec-admin" onclick="showSection('sec-admin')" class="hidden">Admin Panel</button><div class="sidebar-sec-hdr">Session & Data</div><button onclick="showSection('sec-export')">Export / Import</button><button id="jumpBtn-sec-danger" onclick="showSection('sec-danger')" class="hidden">Data Management</button><button id="jumpBtn-sec-debug" onclick="showSection('sec-debug')" class="hidden">Debug Menu</button></div></div><button class="sidebar-close-btn" onclick="toggleSidebar()">&#9664; Hide</button></div><div class="sidebar-sections"><div class="qb-section" id="sec-session"><h2>Session <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div class="session-info"><div class="session-info-row"><span>Name:</span><strong id="sessionName">&#8212;</strong></div><div class="session-info-row"><span>Created:</span><strong id="sessionCreated">&#8212;</strong></div><div class="session-info-row"><span>Last Updated:</span><strong id="sessionLastUpdated">&#8212;</strong></div><div class="session-info-row"><span>Answers:</span><strong id="sessionAnswerCount">0</strong></div></div><div class="input-group"><label>New Session Name:</label><input type="text" id="newSessionName" placeholder="Session name..." /></div><div class="session-controls"><button class="button button-success" onclick="createNewSession()">+ New Session</button><button class="button" onclick="openSessionsModal()">Load</button></div></div></div><div class="qb-section" id="sec-players"><h2>Players <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div class="input-group"><label>Add Player:</label><input type="text" id="playerInput" placeholder="Player name..." onkeydown="if(event.key==='Enter') addToPlayerPool()" /></div><div class="button-group mb-14" ><button class="button" onclick="addToPlayerPool()">Add Player</button><button class="button button-danger" onclick="clearPlayerPool()">Clear All</button></div><div style="padding-bottom:14px;border-bottom:1.5px solid var(--border);margin-bottom:14px;"><div style="font-weight:600;font-size:.85em;margin-bottom:8px;color:var(--text);">Player Management</div><div style="font-size:.78em;color:var(--text2);margin-bottom:10px;">Rename players to fix typos. To merge, click <strong>Merge</strong> on the player you want to <em>remove</em> — their stats will be combined into whichever player you select next.</div><div id="playerMgmtContainer" style="display:flex;flex-direction:column;gap:8px;"></div></div><div class="input-group"><label>Import from File (CSV/TXT):</label><input type="file" accept=".csv,.txt" onchange="handlePlayerImport(event)" /></div><div id="playerPoolDisplay"></div></div></div><div class="qb-section" id="sec-teams"><h2>Teams <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div class="input-group"><label>Team Name:</label><input type="text" id="teamNameInput" placeholder="Team name..." /></div><button class="button" onclick="addTeam()">Add Team</button><div id="teamsContainer" style="margin-top:20px;"></div></div></div><div class="qb-section" id="sec-categories"><h2>Categories <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><p style="font-size:.85em;color:var(--text2);margin-bottom:10px;">Categories and subcategories are fixed. Select a parent category when recording answers to reveal its subcategories.</p><div style="display:flex;flex-direction:column;gap:6px;"></div><div id="categoryTreeDisplay"></div><div id="catFreqSection" style="display:none;margin-top:16px;padding-top:14px;border-top:1.5px solid var(--border);"><div style="font-weight:600;font-size:.85em;margin-bottom:4px;color:var(--text);">Expected Subcategory Frequencies <span class="fw4-82-ml6">Admin only — synced for all users</span></div><p style="font-size:.76em;color:var(--text3);margin-bottom:10px;line-height:1.5;">Enter the expected % of tossups for each subcategory at a typical tournament. Shown under each subcategory breakdown chart.</p><div id="catFreqPickers" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;"></div><div class="button-group"><button class="button" onclick="saveCatFreqs()">Save Frequencies</button><button class="button" style="background:var(--sec-bg);color:var(--text2);border:1.5px solid var(--border);" onclick="resetCatFreqs()">Reset Defaults</button></div><div id="catFreqStatus" class="fs-8-success-mt6"></div></div></div></div><div class="qb-section" id="sec-export"><h2>Export Data <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><p style="margin-bottom:8px;font-weight:600;">Select what to include:</p><div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:var(--sp);"><button class="button-category selected" id="exportPlayers" onclick="this.classList.toggle('selected')">Players &amp; Scores</button><button class="button-category selected" id="exportAnswerLog" onclick="this.classList.toggle('selected')">Answer Log</button><button class="button-category selected" id="exportTeamStats" onclick="this.classList.toggle('selected')">Team Statistics</button></div><div class="button-group"><button class="button button-success" onclick="exportToExcel()">Export to Excel</button><button class="button button-secondary" onclick="exportToJSON()">Export as JSON</button></div><div style="margin-top:22px;padding-top:18px;border-top:1.5px solid var(--border);"><p style="font-weight:600;margin-bottom:6px;">Import Session</p><p style="font-size:.85em;color:var(--text2);margin-bottom:12px;">Load a previously exported JSON file.</p><div class="input-group"><label>Select JSON file:</label><input type="file" id="importSessionFile" accept=".json" onchange="importFromJSON(event)" /></div><div id="importStatus" style="font-size:.85em;margin-top:8px;display:none;"></div></div></div></div><div class="qb-section" id="sec-userid">
   <h2>User ID <span class="toggle-icon">&#9660;</span></h2>
   <div class="collapsible-content">
     <p style="font-size:.82em;color:var(--text2);margin-bottom:14px;line-height:1.5;">Your Firebase account identifies your synced data. Add a display name so teammates can recognize you across devices.</p>
@@ -260,16 +433,7 @@ button, .button, .ql-btn, .ql-cat-chip, .ql-confirm-btn, .ql-cancel-btn, .header
     <div id="catColorSection" style="display:none;padding-top:14px;border-top:1.5px solid var(--border);"><div style="font-weight:600;font-size:.85em;margin-bottom:8px;color:var(--text);">Category Colors <span class="fw4-82-ml6">Admin only — synced for all users</span></div><div id="catColorPickers" style="display:flex;flex-direction:column;gap:7px;margin-bottom:10px;"></div><div class="button-group"><button class="button" onclick="saveCatColors()">Save Colors</button><button class="button" style="background:var(--sec-bg);color:var(--text2);border:1.5px solid var(--border);" onclick="resetCatColors()">Reset Defaults</button></div><div id="catColorStatus" class="fs-8-success-mt6"></div></div>
   </div>
 </div>
-<div class="qb-section" id="sec-admin" style="border:2px solid var(--primary);display:none;"><h2 class="primary">Admin Panel <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><p style="font-size:.82em;color:var(--text2);margin-bottom:12px;line-height:1.5;">Admins can configure the small-sample adjustment used for player performance rankings. Add by exact full name.</p><div id="adminListDisplay" style="border:1.5px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:12px;background:var(--card);"></div><div class="input-group" style="margin-bottom:0;"><label>Add Admin (exact full name):</label><input type="text" id="adminAddInput" placeholder="e.g. Jane Smith" maxlength="61"
-                  onkeydown="if(event.key==='Enter') addAdmin()" /></div><div class="button-group" style="margin-top:10px;margin-bottom:18px;"><button class="button button-success" onclick="addAdmin()">Add Admin</button></div><div style="border-top:1.5px solid var(--border);padding-top:16px;"><div style="background:var(--sec-bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:12px;font-size:.8em;color:var(--text2);line-height:1.6;">
-                  This file (display):<span class="mono-primary" id="displayVersionDisplay"></span><br>
-                  This file (internal):<span class="mono-primary" id="internalVersionDisplay"></span><br>
-                  Published in Firebase:<span style="font-family:monospace;color:var(--success);" id="liveFirebaseBuildDisplay">—</span> <span style="font-family:monospace;color:var(--text3);" id="liveFirebaseLabelDisplay"></span><br>
-                  Published on GitHub:<span id="githubPublishedDisplay" style="font-family:monospace;color:var(--text3);">—</span></div><div id="releasePrompt" class="hidden"><div style="background:rgba(17,153,142,.08);border:1.5px solid rgba(17,153,142,.35);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:12px;"><div style="font-weight:700;font-size:.88em;color:var(--success);margin-bottom:6px;">New build detected</div><div style="font-size:.78em;color:var(--text2);line-height:1.6;"><div class="mb-8">This file has a new version that hasn't been published yet.</div><div class="fw6-m10-8">Workflow:</div><div style="margin-left:8px;border-left:2px solid var(--primary);padding-left:8px;">
-                        1. Attach the new index.html file below — it is uploaded to Firebase so users can download it without GitHub<br>
-                        2. Add release notes and click "Publish Release"<br>
-                        3. Users on older versions will see the update banner and download the new file directly through Firebase
-                      </div></div></div><div class="input-group mb-10" ><label>Select new index.html file to publish: <span class="fs-75-fw4">— uploaded to Firebase; leave empty to use the current page source (works when running online)</span></label><input type="file" id="releaseFileInput" accept=".html" /></div><div class="input-group mb-10" ><label>Release Notes <span class="fs-75-fw4">— shown to users in update notification</span></label><input type="text" id="releaseNotesInput" placeholder="e.g. Fixed analytics, added export" /></div><div class="input-group mb-14" ><label>Admin Comments <span class="fs-75-fw4">— internal notes (not shown to users)</span></label><input type="text" id="adminCommentsInput" placeholder="e.g. Tested with large datasets, ready for production" /></div><button class="button button-success" onclick="publishRelease()" style="width:100%;">Publish Release</button><div id="releaseUploadStatus" style="font-size:.82em;color:var(--text3);min-height:1.4em;margin-top:8px;"></div></div><div id="releaseUpToDate" style="display:none;font-size:.82em;color:var(--success);font-weight:600;">✔ This file is already the published version.</div></div></div></div><div class="qb-section" id="sec-danger" style="border:2px solid var(--danger);display:none;"><h2 class="danger">Data Management <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div style="margin-bottom:18px;padding-bottom:16px;border-bottom:1.5px solid var(--border);"><div style="font-weight:700;font-size:.92em;color:var(--text);margin-bottom:10px;">&#9881; Performance Score Settings</div><p style="font-size:.78em;color:var(--text2);margin-bottom:12px;padding:8px 10px;background:var(--hover);border-radius:6px;border:1.5px solid var(--border);"><strong>Global settings</strong> &#8212; Synced across all devices and sessions.</p><div style="font-size:.78em;color:var(--text2);padding:8px 10px;background:var(--sec-bg);border-radius:6px;border:1.5px solid var(--border);line-height:1.45;margin-bottom:12px;">Ranking requires a full session. A player earns a Leaderboard Score (and appears in the distribution chart) only after hearing at least 20 toss-ups — one full session — so partial-session players never skew the standings. The system automatically sets k to the median TU heard among ranked players, so the typical ranked player is 50% trusted.</div><div style="font-size:.78em;color:var(--text2);padding:8px 10px;background:var(--sec-bg);border-radius:6px;border:1.5px solid var(--border);line-height:1.45;margin-top:14px;"><strong style="color:var(--text);">Automatic k:</strong> calculated from the median Toss-Ups Heard among ranked players (those with at least one full 20-toss-up session). This makes the typical ranked player 50% trusted and adapts as the dataset grows.</div><div style="font-size:.78em;color:var(--text2);padding:8px 12px;background:var(--sec-bg);border-radius:6px;border:1.5px solid var(--border);line-height:1.5;"><strong style="color:var(--text);">Official player model:</strong> Leaderboard Score is the only overall ranking score, and it is earned after one full session (20 toss-ups heard). Reliability, Power Rate, and TU/20 are diagnostic measures. Bonuses remain team-scored and are excluded from player rankings.</div></div><div style="margin-bottom:18px;padding-bottom:16px;border-bottom:1.5px solid var(--border);"><div style="font-weight:700;font-size:.92em;color:var(--text);margin-bottom:6px;">Expected Subcategory Frequencies <span class="fw4-82-ml6">Admin only — synced for all users</span></div><p style="font-size:.78em;color:var(--text2);margin-bottom:12px;line-height:1.4;">Set how often each subcategory should appear. Used to calculate expected bonus opportunities.</p><div id="catFreqPickers" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;"></div><div class="button-group"><button class="button" onclick="saveCatFreqs()">Save Frequencies</button><button class="button" style="background:var(--sec-bg);color:var(--text2);border:1.5px solid var(--border);" onclick="resetCatFreqs()">Reset Defaults</button></div><div id="catFreqStatus" class="fs-8-success-mt6"></div></div><div style="border:2px solid var(--danger);border-radius:var(--radius-sm);overflow:hidden;"><div id="dangerZoneHeader" onclick="toggleDangerZone()" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(220,53,69,.07);cursor:pointer;user-select:none;"><span style="font-weight:700;font-size:.9em;color:var(--danger);">&#9888; Danger Zone</span><span id="dangerZoneArrow" style="font-size:.8em;color:var(--danger);transition:transform .25s;transform:rotate(-90deg);">&#9660;</span></div><div id="dangerZoneBody" style="display:none;padding:14px;border-top:1.5px solid rgba(220,53,69,.25);"><p style="font-size:.82em;color:var(--text2);margin-bottom:12px;line-height:1.5;">This permanently deletes <strong>all sessions and all data</strong> across every device. There is no undo. Export your data first.</p><div style="margin-bottom:10px;"><div style="font-weight:600;font-size:.82em;color:var(--text2);margin-bottom:6px;">Export format before deleting:</div><div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="button button-success" style="flex:1;" onclick="exportAllData('xlsx')">&#8595; Export All as Excel</button><button class="button button-success" style="flex:1;" onclick="exportAllData('csv')">&#8595; Export All as CSV</button><button class="button button-success" style="flex:1;" onclick="exportAllData('json')">&#8595; Export All as JSON</button></div></div><button class="button button-danger" style="width:100%;" onclick="resetAllData()">Delete All Data</button></div></div></div></div><div class="qb-section" id="sec-debug" style="border:2px solid var(--warning);display:none;"><h2 class="warning">[ Debug Menu <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><p style="font-size:.82em;color:var(--text2);margin-bottom:14px;line-height:1.5;">Inject realistic placeholder data into the current session to simulate a Firebase-populated game. Useful for testing UI, stats, and analytics without a live connection.</p><label style="font-size:.85em;font-weight:600;color:var(--text2);display:block;margin-bottom:6px;">Scenario</label><select id="debugScenario" class="inp-std inp-mb"><option value="mid">Mid-game (~20 questions)</option><option value="full">Full game (~30 questions)</option><option value="blowout">Blowout (one team dominant)</option></select><button class="button" style="width:100%;background:linear-gradient(135deg,var(--warning),#e67e22);" onclick="injectDebugData();loadSessionData();renderAll();">Inject Debug Data</button><button class="button button-secondary" style="width:100%;margin-top:8px;" onclick="clearDebugData()">Clear Session Data</button><div id="debugStatus" style="margin-top:10px;font-size:.82em;color:var(--text2);min-height:1.4em;"></div></div></div></div></aside><div id="trackerView" style="flex:1;display:flex;flex-direction:column;overflow:hidden;"><div class="qb-scroll" id="qbScroll"><div class="qb-section" style="overflow:visible;"><h2>Record Answer <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div class="input-group"><label>Select Player:<span id="playerOptionalHint" style="font-weight:400;font-size:.85em;color:var(--text2);display:none;">(Bonus is team-scored; Miss may be unattributed)</span></label><div id="playerButtonsContainer" class="player-buttons"></div></div><div class="input-group"><label>Point Type:<span style="font-weight:400;font-size:.8em;color:var(--text3);">1–6 keys</span></label><div class="point-type-buttons"><button class="button-point-type" onclick="selectPointType('Power')"   data-key="1">Toss-up <span class="pwr-bolt">&#9889;</span> Power (+15) <kbd>1</kbd></button><button class="button-point-type" onclick="selectPointType('Toss-up')" data-key="2">Toss-up (+10) <kbd>2</kbd></button><button class="button-point-type" onclick="selectPointType('Bonus')"   data-key="3">Team Bonus (+10) <kbd>3</kbd></button><button class="button-point-type" onclick="selectPointType('Miss')"    data-key="4">Miss (0) <kbd>4</kbd></button><button class="button-point-type" onclick="selectPointType('Neg')"     data-key="5">Neg (-5) <kbd>5</kbd></button><button class="button-point-type" onclick="selectPointType('Dead')"    data-key="6">Dead (0) <kbd>6</kbd></button></div></div><div class="input-group" id="categoryInputGroup"><label>Category:<span style="font-weight:400;font-size:.85em;color:var(--text2);">(Optional)</span></label><div id="categoryButtonsContainer"></div></div><div style="display:flex;align-items:center;gap:12px;margin-top:14px;padding:12px 14px;background:var(--sec-bg);border:2px solid var(--border);border-radius:8px;"><div style="flex:1;"><div style="font-weight:700;font-size:.9em;color:var(--text2);margin-bottom:2px;">Toss-Ups Heard <span style="font-weight:400;font-size:.85em;">(Auto-tracks once per toss-up)</span></div><div style="font-size:1.6em;font-weight:700;color:var(--primary);" id="tHeardDisplay">0</div></div><div style="display:flex;gap:6px;align-items:center;"><button onclick="adjustTHeard(-1)" class="btn-icon-danger">−</button><button onclick="adjustTHeard(1)" class="btn-icon-success">+</button></div></div><button class="button button-success" id="recordAnswerBtn" onclick="recordAnswer()" style="width:100%;margin-top:10px;padding:16px;font-size:1.05em;">Record Answer <kbd style="font-size:.75em;opacity:.7;margin-left:6px;">Enter</kbd></button></div></div><div class="qb-section"><h2>Substitutions <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div id="subPanelContent"></div></div></div><div class="qb-section"><h2>Statistics <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div id="statisticsContainer"></div></div></div><div class="qb-section"><h2>Answer Log <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><button class="button button-danger" onclick="clearAnswerLog()">Clear Log</button><div class="log-container-wrap"><div id="answerLog" class="log-container"></div></div></div></div></div></div><div id="analyticsView" style="flex:1;display:none;flex-direction:column;overflow:hidden;"><div style="padding:10px var(--hsp);border-bottom:1.5px solid var(--border);background:var(--card);flex-shrink:0;display:flex;gap:6px;flex-wrap:wrap;"><button class="analytics-tab active" onclick="switchAnalyticsTab('overview',this)">Overview</button><button class="analytics-tab" onclick="switchAnalyticsTab('players',this)">Players</button><button class="analytics-tab" onclick="switchAnalyticsTab('charts',this)">Charts</button><button class="analytics-tab" onclick="switchAnalyticsTab('teams',this)">Team Compositions</button></div><div class="analytics-scroll" id="analyticsScroll"><div id="an-overview" class="analytics-panel active"></div><div id="an-players" class="analytics-panel"></div><div id="an-charts" class="analytics-panel"></div><div id="an-teams" class="analytics-panel"></div></div></div></div></div><div id="helpModal" class="qb-modal"><div class="modal-content" style="max-width:640px;"><div class="modal-header"><h2>Help &amp; Tutorial</h2><button class="close-modal" onclick="closeHelpModal()">&#215;</button></div><div style="line-height:1.7;color:var(--text);font-size:.95em;"><h3 class="h3-primary">Getting Started</h3><p class="mb-14">Open the sidebar and work through each section in order: <strong>Session &rarr; Players &rarr; Teams &rarr; Categories</strong>. Once configured, use the <strong>Record Answer</strong> panel to log answers in real time. All data syncs automatically across connected devices via Firebase.</p><h3 class="h3-primary">Sessions</h3><p class="mb-14">Each match is a <strong>Session</strong>. Create one with a descriptive name before recording answers. Use <strong>Load Session</strong> to switch between matches. Sessions can be excluded from analytics &mdash; excluded sessions are dimmed and ignored in all Stats calculations.</p><h3 class="h3-primary">Players &amp; Teams</h3><p class="mb-14">Add players in the <strong>Players</strong> section, then create teams in <strong>Teams</strong> and assign players to them. Only players assigned to a team are selectable when recording answers. Players are stored globally and available across all sessions.</p><h3 class="h3-primary">Recording Answers</h3><p class="mb-8">Select a <strong>Player</strong>, then a <strong>Point Type</strong>, then a <strong>Category</strong> (optional for Neg), then press <strong>Record Answer</strong>. Use the answer log to delete mistakes.</p><table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:.9em;"><tr class="sec-bg"><th class="cell-pad-left">Type</th><th class="cell-pad-left">Points</th><th class="cell-pad-left">Notes</th></tr><tr><td class="cell-pad">Toss-up Power</td><td class="cell-pad">+15</td><td class="cell-pad">Answered correctly before the power mark</td></tr><tr class="sec-bg"><td class="cell-pad">Toss-up</td><td class="cell-pad">+10</td><td class="cell-pad">Answered correctly after the power mark</td></tr><tr><td class="cell-pad">Team Bonus</td><td class="cell-pad">+10 per part</td><td class="cell-pad">Recorded for the team; bonus conversion is a group effort</td></tr><tr class="sec-bg"><td class="cell-pad">Neg</td><td class="cell-pad">&minus;5</td><td class="cell-pad">Incorrect interrupt &mdash; category optional</td></tr><tr><td class="cell-pad">Miss</td><td class="cell-pad">0</td><td class="cell-pad">No answer or incorrect after power mark</td></tr><tr class="sec-bg"><td class="cell-pad">Dead</td><td class="cell-pad">0</td><td class="cell-pad">No team buzzed on the toss-up</td></tr></table><h3 class="h3-primary">Toss-Ups Heard Counter</h3><p class="mb-14">Tracks how many toss-up questions have been read. It increments once on the first outcome for each toss-up; a correct answer after a Neg or Miss is treated as a follow-up to that same question. Use the +/&minus; buttons to correct it manually. Required for normalized player metrics.</p><h3 class="h3-primary">Stats (Analytics)</h3><p class="mb-6">Toggle to the <strong>Stats</strong> view using the switch in the header. Stats are aggregated across all non-excluded sessions and organized into four tabs:</p><ul class="m14-pl20"><li><strong>Overview</strong> &mdash; totals, category breakdowns, top performers</li><li><strong>Players</strong> &mdash; ranked leaderboard; expand for metrics or click name for detail</li><li><strong>Charts</strong> &mdash; visual breakdown of answer types, categories, and trends</li><li><strong>Team Compositions</strong> &mdash; per-team stats per session</li></ul><h3 class="h3-primary">Player Metrics</h3><p class="mb-6">Player analytics use official toss-up decisions only. Bonuses remain team-scored and are never assigned to an individual player.</p><ul class="m14-pl20"><li><strong>Total Points</strong> — individual toss-up points: +15 per power, +10 per regular toss-up, and −5 per neg</li><li><strong>Toss-Ups Heard</strong> — opportunity count used to compare players with different amounts of playing time</li><li><strong>Raw TU/20</strong> — net toss-up points at a common pace of 20 toss-ups: <code>(15P + 10T − 5N) / H × 20</code></li><li><strong>Leaderboard Score</strong> — the leaderboard score; earned after one full session (20 toss-ups heard), with limited samples gently moved toward the team average using confidence</li><li><strong>Reliability</strong> — correct decisions divided by all recorded decisions: <code>(P+T) / (P+T+N+M) × 100</code></li><li><strong>Power Rate</strong> — powers divided by all recorded decisions: <code>P / (P+T+N+M) × 100</code>. Negs and misses count against this rate.</li><li><strong>TU/20</strong> — participation pace: <code>(P+T+N+M) / H × 20</code></li><li><strong>Confidence</strong> — sample-size weight: <code>H / (H+k)</code>. At <code>H=k</code>, the raw score is 50% trusted.</li></ul><h3 class="h3-primary">Official Score System</h3><p class="mb-8">The player leaderboard uses <strong>Leaderboard Score</strong> as its only overall score. A player earns it after hearing at least 20 toss-ups (one full session); limited samples are then shrunk toward the team average. This avoids double-counting related measures such as buzz rate, reliability, and conversion.</p><p style="margin-bottom:14px;font-family:monospace;font-size:.85em;background:var(--sec-bg);padding:8px 12px;border-radius:6px;border:1.5px solid var(--border);">Leaderboard Score = Confidence × Raw TU/20 + (1 − Confidence) × Team Average</p><p class="mb-14">Bonuses are shown in team totals and the answer log, but are not used for individual player rankings because bonus conversion is shared by the team.</p><h3 class="h3-primary">Leaderboard Sorting</h3><p class="mb-14">Sort by Total Points, Leaderboard Score, Reliability, Power Rate, TU/20, or A&ndash;Z. Ties are broken by the official toss-up counts, then fewest Negs.</p><h3 class="h3-primary">Export &amp; Import</h3><p class="mb-14">Export to <strong>CSV</strong> for spreadsheets or <strong>JSON</strong> to back up and re-import a full session. Both options are in the Data section of the sidebar.</p><h3 class="h3-primary">What Syncs Globally</h3><p class="mb-6">Stored in Firebase and synced instantly across all connected devices:</p><ul class="m8-pl20"><li>All session data (answers, scores, toss-ups heard)</li><li>Global player pool</li><li>Skill score settings and low-data overrides</li><li>App version and update info</li></ul><p class="mb-14">Stored with your Firebase account and cached locally: theme mode, accent color, scrollbar visibility, and sidebar state.</p><h3 class="h3-primary">Version Badge &amp; Deploy Indicator</h3><p class="mb-14">The version badge in the header shows the current file version. When viewed on the live GitHub Pages site, its border changes color to reflect the latest deploy status &mdash; <strong style="color:var(--success)">green</strong> = deployed successfully, <strong style="color:var(--warning)">yellow pulsing</strong> = deploy in progress, <strong style="color:var(--danger)">red</strong> = deploy failed. If a new deploy completes while you have the page open, a banner will appear prompting you to refresh.</p><h3 class="h3-primary">Updates (Local File)</h3><p class="mb-14">If you are running a local copy of the file, an update banner will appear when a newer version has been published. Click <strong>Download Update</strong> to get the latest file — admins publish the new <code>index.html</code> to Firebase, so the download comes straight through your Firebase connection (no GitHub request needed, so it works on restricted school networks). Users on the GitHub Pages site receive updates automatically on refresh.</p><h3 class="h3-primary">Visual Settings</h3><p>Choose <strong>Light</strong>, <strong>Dark</strong>, or <strong>Device</strong> theme, change the <strong>Accent Color</strong>, or hide scrollbars in the Visual Settings section of the sidebar.</p><p class="mb-14"><strong>Loading source:</strong> <span id="helpLoadingSource" class="mono-primary">&mdash;</span></p></div></div></div><div id="sessionsModal" class="qb-modal"><div class="modal-content"><div class="modal-header"><h2>Load Session</h2><button class="close-modal" onclick="closeSessionsModal()">&#215;</button></div><div style="display:flex;gap:8px;flex-wrap:wrap;padding:12px 16px;border-bottom:1.5px solid var(--border);background:var(--sec-bg);"><input type="text" id="sessionsSearchInput" placeholder="Search sessions..." style="flex:1;min-width:150px;padding:8px 12px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:.95em;background:var(--input-bg);color:var(--input-text);" /><select id="sessionsSortSelect" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:.95em;background:var(--input-bg);color:var(--input-text);"><option value="date-desc">Newest First</option><option value="date-asc">Oldest First</option><option value="name">Alphabetical (A-Z)</option><option value="answers-desc">Most Answers</option><option value="answers-asc">Least Answers</option></select></div><div id="sessionBulkBar" class="session-bulk-bar" style="display:none;"><label style="display:flex;align-items:center;gap:6px;font-size:.82em;font-weight:600;color:var(--text2);cursor:pointer;white-space:nowrap;"><input type="checkbox" id="sessionSelectAll" class="session-select-cb" style="margin:0;" onchange="toggleSelectAllSessions(this.checked)" /> Select all visible</label><span id="sessionBulkCount" style="font-size:.82em;font-weight:700;color:var(--primary);">0 selected</span><span class="bulk-spacer"></span><button class="button button-success" style="padding:6px 12px;font-size:.8em;" onclick="bulkSetAnalytics(true)">+ Add to Analytics</button><button class="button" style="padding:6px 12px;font-size:.8em;" onclick="bulkSetAnalytics(false)">− Exclude from Analytics</button><button class="button button-danger" style="padding:6px 12px;font-size:.8em;" onclick="bulkDeleteSessions()">Delete</button></div><div id="sessionsList" class="sessions-list"></div></div></div></div><div id="playerActionModal" class="qb-modal" onclick="if(event.target===this)closePlayerActionModal()"><div class="modal-content" style="max-width:420px;"><div class="modal-header"><h2 id="pamTitle">Player Action</h2><button class="close-modal" onclick="closePlayerActionModal()">&#215;</button></div><div style="padding:16px;"><div id="pamBody"></div></div></div></div><div id="bandModal" class="qb-modal" onclick="if(event.target===this)closeBandModal()"><div class="modal-content" style="max-width:440px;"><div class="modal-header"><h2 id="bandModalTitle">Score Band</h2><button class="close-modal" onclick="closeBandModal()">&#215;</button></div><div id="bandModalBody" style="padding:0 2px;"></div></div></div><div id="playerDetailModal" class="qb-modal"><div class="modal-content" style="max-width:620px;"><div class="modal-header"><h2 id="pdModalTitle">Player Details</h2><button class="close-modal" onclick="closePlayerDetailModal()">&#215;</button></div><div id="pdModalBody"></div></div></div><script src="local-settings.js" onerror="void 0"></script><script>const $=id=>document.getElementById(id);
+<div class="qb-section updates-admin-section" id="sec-admin" style="border:2px solid var(--primary);display:none;"><h2 class="primary">Admin Panel <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><p style="font-size:.82em;color:var(--text2);margin-bottom:12px;line-height:1.5;">Manage administrator access with Firebase UIDs. UID-based access is enforced by Firebase, so display names alone cannot grant publishing permissions.</p><div id="adminListDisplay" style="border:1.5px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:12px;background:var(--card);"></div><div class="input-group" style="margin-bottom:0;"><label for="adminUidInput">Add admin Firebase UID:</label><input type="text" id="adminUidInput" placeholder="Paste the Firebase UID" maxlength="128" onkeydown="if(event.key==='Enter') addAdmin()" /></div><div style="font-size:.75em;color:var(--text2);line-height:1.45;margin-top:7px;">Find your UID in the User ID section. After the owner UID is seeded in Firebase rules, admins can add other UIDs here.</div><div class="button-group" style="margin-top:10px;margin-bottom:18px;"><button class="button button-success" onclick="addAdmin()">Add UID admin</button></div><div class="admin-updates-link"><div class="admin-updates-link-icon">↻</div><div class="admin-updates-link-copy"><strong>Publish release notes</strong><span>Share new builds, write a changelog entry, and upload the downloadable file from Updates.</span></div><button class="button button-success" onclick="openUpdatesModal()">Open Updates</button></div><div style="border-top:1.5px solid var(--border);padding-top:16px;margin-top:16px;"><div style="background:var(--sec-bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;font-size:.8em;color:var(--text2);line-height:1.6;"><strong>Build status</strong><br>This file (display):<span class="mono-primary" id="displayVersionDisplay"></span><br>This file (internal):<span class="mono-primary" id="internalVersionDisplay"></span><br>Published in Firebase:<span style="font-family:monospace;color:var(--success);" id="liveFirebaseBuildDisplay">—</span> <span style="font-family:monospace;color:var(--text3);" id="liveFirebaseLabelDisplay"></span><br>Published on GitHub:<span id="githubPublishedDisplay" style="font-family:monospace;color:var(--text3);">—</span></div></div></div></div><div class="qb-section" id="sec-danger" style="border:2px solid var(--danger);display:none;"><h2 class="danger">Data Management <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div style="margin-bottom:18px;padding-bottom:16px;border-bottom:1.5px solid var(--border);"><div style="font-weight:700;font-size:.92em;color:var(--text);margin-bottom:10px;">&#9881; Performance Score Settings</div><p style="font-size:.78em;color:var(--text2);margin-bottom:12px;padding:8px 10px;background:var(--hover);border-radius:6px;border:1.5px solid var(--border);"><strong>Global settings</strong> &#8212; Synced across all devices and sessions.</p><div style="font-size:.78em;color:var(--text2);padding:8px 10px;background:var(--sec-bg);border-radius:6px;border:1.5px solid var(--border);line-height:1.45;margin-bottom:12px;">Ranking requires a full session. A player earns a Leaderboard Score (and appears in the distribution chart) only after hearing at least 20 toss-ups — one full session — so partial-session players never skew the standings. The system automatically sets k to the median TU heard among ranked players, so the typical ranked player is 50% trusted.</div><div style="font-size:.78em;color:var(--text2);padding:8px 10px;background:var(--sec-bg);border-radius:6px;border:1.5px solid var(--border);line-height:1.45;margin-top:14px;"><strong style="color:var(--text);">Automatic k:</strong> calculated from the median Toss-Ups Heard among ranked players (those with at least one full 20-toss-up session). This makes the typical ranked player 50% trusted and adapts as the dataset grows.</div><div style="font-size:.78em;color:var(--text2);padding:8px 12px;background:var(--sec-bg);border-radius:6px;border:1.5px solid var(--border);line-height:1.5;"><strong style="color:var(--text);">Official player model:</strong> Leaderboard Score is the only overall ranking score, and it is earned after one full session (20 toss-ups heard). Reliability, Power Rate, and TU/20 are diagnostic measures. Bonuses remain team-scored and are excluded from player rankings.</div></div><div style="margin-bottom:18px;padding-bottom:16px;border-bottom:1.5px solid var(--border);"><div style="font-weight:700;font-size:.92em;color:var(--text);margin-bottom:6px;">Expected Subcategory Frequencies <span class="fw4-82-ml6">Admin only — synced for all users</span></div><p style="font-size:.78em;color:var(--text2);margin-bottom:12px;line-height:1.4;">Set how often each subcategory should appear. Used to calculate expected bonus opportunities.</p><div id="catFreqPickers" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;"></div><div class="button-group"><button class="button" onclick="saveCatFreqs()">Save Frequencies</button><button class="button" style="background:var(--sec-bg);color:var(--text2);border:1.5px solid var(--border);" onclick="resetCatFreqs()">Reset Defaults</button></div><div id="catFreqStatus" class="fs-8-success-mt6"></div></div><div style="border:2px solid var(--danger);border-radius:var(--radius-sm);overflow:hidden;"><div id="dangerZoneHeader" onclick="toggleDangerZone()" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(220,53,69,.07);cursor:pointer;user-select:none;"><span style="font-weight:700;font-size:.9em;color:var(--danger);">&#9888; Danger Zone</span><span id="dangerZoneArrow" style="font-size:.8em;color:var(--danger);transition:transform .25s;transform:rotate(-90deg);">&#9660;</span></div><div id="dangerZoneBody" style="display:none;padding:14px;border-top:1.5px solid rgba(220,53,69,.25);"><p style="font-size:.82em;color:var(--text2);margin-bottom:12px;line-height:1.5;">This permanently deletes <strong>all sessions and all data</strong> across every device. There is no undo. Export your data first.</p><div style="margin-bottom:10px;"><div style="font-weight:600;font-size:.82em;color:var(--text2);margin-bottom:6px;">Export format before deleting:</div><div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="button button-success" style="flex:1;" onclick="exportAllData('xlsx')">&#8595; Export All as Excel</button><button class="button button-success" style="flex:1;" onclick="exportAllData('csv')">&#8595; Export All as CSV</button><button class="button button-success" style="flex:1;" onclick="exportAllData('json')">&#8595; Export All as JSON</button></div></div><button class="button button-danger" style="width:100%;" onclick="resetAllData()">Delete All Data</button></div></div></div></div><div class="qb-section" id="sec-debug" style="border:2px solid var(--warning);display:none;"><h2 class="warning">[ Debug Menu <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><p style="font-size:.82em;color:var(--text2);margin-bottom:14px;line-height:1.5;">Inject realistic placeholder data into the current session to simulate a Firebase-populated game. Useful for testing UI, stats, and analytics without a live connection.</p><label style="font-size:.85em;font-weight:600;color:var(--text2);display:block;margin-bottom:6px;">Scenario</label><select id="debugScenario" class="inp-std inp-mb"><option value="mid">Mid-game (~20 questions)</option><option value="full">Full game (~30 questions)</option><option value="blowout">Blowout (one team dominant)</option></select><button class="button" style="width:100%;background:linear-gradient(135deg,var(--warning),#e67e22);" onclick="injectDebugData();loadSessionData();renderAll();">Inject Debug Data</button><button class="button button-secondary" style="width:100%;margin-top:8px;" onclick="clearDebugData()">Clear Session Data</button><div id="debugStatus" style="margin-top:10px;font-size:.82em;color:var(--text2);min-height:1.4em;"></div></div></div></div></aside><div id="trackerView" style="flex:1;display:flex;flex-direction:column;overflow:hidden;"><div class="qb-scroll" id="qbScroll"><div class="qb-section" style="overflow:visible;"><h2>Record Answer <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div class="input-group"><label>Select Player:<span id="playerOptionalHint" style="font-weight:400;font-size:.85em;color:var(--text2);display:none;">(Bonus is team-scored; Miss may be unattributed)</span></label><div id="playerButtonsContainer" class="player-buttons"></div></div><div class="input-group"><label>Point Type:<span style="font-weight:400;font-size:.8em;color:var(--text3);">1–6 keys</span></label><div class="point-type-buttons"><button class="button-point-type" onclick="selectPointType('Power')"   data-key="1">Toss-up <span class="pwr-bolt">&#9889;</span> Power (+15) <kbd>1</kbd></button><button class="button-point-type" onclick="selectPointType('Toss-up')" data-key="2">Toss-up (+10) <kbd>2</kbd></button><button class="button-point-type" onclick="selectPointType('Bonus')"   data-key="3">Team Bonus (+10) <kbd>3</kbd></button><button class="button-point-type" onclick="selectPointType('Miss')"    data-key="4">Miss (0) <kbd>4</kbd></button><button class="button-point-type" onclick="selectPointType('Neg')"     data-key="5">Neg (-5) <kbd>5</kbd></button><button class="button-point-type" onclick="selectPointType('Dead')"    data-key="6">Dead (0) <kbd>6</kbd></button></div></div><div class="input-group" id="categoryInputGroup"><label>Category:<span style="font-weight:400;font-size:.85em;color:var(--text2);">(Optional)</span></label><div id="categoryButtonsContainer"></div></div><div style="display:flex;align-items:center;gap:12px;margin-top:14px;padding:12px 14px;background:var(--sec-bg);border:2px solid var(--border);border-radius:8px;"><div style="flex:1;"><div style="font-weight:700;font-size:.9em;color:var(--text2);margin-bottom:2px;">Toss-Ups Heard <span style="font-weight:400;font-size:.85em;">(Auto-tracks once per toss-up)</span></div><div style="font-size:1.6em;font-weight:700;color:var(--primary);" id="tHeardDisplay">0</div></div><div style="display:flex;gap:6px;align-items:center;"><button onclick="adjustTHeard(-1)" class="btn-icon-danger">−</button><button onclick="adjustTHeard(1)" class="btn-icon-success">+</button></div></div><button class="button button-success" id="recordAnswerBtn" onclick="recordAnswer()" style="width:100%;margin-top:10px;padding:16px;font-size:1.05em;">Record Answer <kbd style="font-size:.75em;opacity:.7;margin-left:6px;">Enter</kbd></button></div></div><div class="qb-section"><h2>Substitutions <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div id="subPanelContent"></div></div></div><div class="qb-section"><h2>Statistics <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div id="statisticsContainer"></div></div></div><div class="qb-section"><h2>Answer Log <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><button class="button button-danger" onclick="clearAnswerLog()">Clear Log</button><div class="log-container-wrap"><div id="answerLog" class="log-container"></div></div></div></div></div></div><div id="analyticsView" style="flex:1;display:none;flex-direction:column;overflow:hidden;"><div style="padding:10px var(--hsp);border-bottom:1.5px solid var(--border);background:var(--card);flex-shrink:0;display:flex;gap:6px;flex-wrap:wrap;"><button class="analytics-tab active" onclick="switchAnalyticsTab('overview',this)">Overview</button><button class="analytics-tab" onclick="switchAnalyticsTab('players',this)">Players</button><button class="analytics-tab" onclick="switchAnalyticsTab('charts',this)">Charts</button><button class="analytics-tab" onclick="switchAnalyticsTab('teams',this)">Team Compositions</button></div><div class="analytics-scroll" id="analyticsScroll"><div id="an-overview" class="analytics-panel active"></div><div id="an-players" class="analytics-panel"></div><div id="an-charts" class="analytics-panel"></div><div id="an-teams" class="analytics-panel"></div></div></div></div></div><div id="helpModal" class="qb-modal"><div class="modal-content" style="max-width:640px;"><div class="modal-header"><h2>Help &amp; Tutorial</h2><button class="close-modal" onclick="closeHelpModal()">&#215;</button></div><div style="line-height:1.7;color:var(--text);font-size:.95em;"><h3 class="h3-primary">Getting Started</h3><p class="mb-14">Open the sidebar and work through each section in order: <strong>Session &rarr; Players &rarr; Teams &rarr; Categories</strong>. Once configured, use the <strong>Record Answer</strong> panel to log answers in real time. All data syncs automatically across connected devices via Firebase.</p><h3 class="h3-primary">Sessions</h3><p class="mb-14">Each match is a <strong>Session</strong>. Create one with a descriptive name before recording answers. Use <strong>Load Session</strong> to switch between matches. Sessions can be excluded from analytics &mdash; excluded sessions are dimmed and ignored in all Stats calculations.</p><h3 class="h3-primary">Players &amp; Teams</h3><p class="mb-14">Add players in the <strong>Players</strong> section, then create teams in <strong>Teams</strong> and assign players to them. Only players assigned to a team are selectable when recording answers. Players are stored globally and available across all sessions.</p><h3 class="h3-primary">Recording Answers</h3><p class="mb-8">Select a <strong>Player</strong>, then a <strong>Point Type</strong>, then a <strong>Category</strong> (optional for Neg), then press <strong>Record Answer</strong>. Use the answer log to delete mistakes.</p><table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:.9em;"><tr class="sec-bg"><th class="cell-pad-left">Type</th><th class="cell-pad-left">Points</th><th class="cell-pad-left">Notes</th></tr><tr><td class="cell-pad">Toss-up Power</td><td class="cell-pad">+15</td><td class="cell-pad">Answered correctly before the power mark</td></tr><tr class="sec-bg"><td class="cell-pad">Toss-up</td><td class="cell-pad">+10</td><td class="cell-pad">Answered correctly after the power mark</td></tr><tr><td class="cell-pad">Team Bonus</td><td class="cell-pad">+10 per part</td><td class="cell-pad">Recorded for the team; bonus conversion is a group effort</td></tr><tr class="sec-bg"><td class="cell-pad">Neg</td><td class="cell-pad">&minus;5</td><td class="cell-pad">Incorrect interrupt &mdash; category optional</td></tr><tr><td class="cell-pad">Miss</td><td class="cell-pad">0</td><td class="cell-pad">No answer or incorrect after power mark</td></tr><tr class="sec-bg"><td class="cell-pad">Dead</td><td class="cell-pad">0</td><td class="cell-pad">No team buzzed on the toss-up</td></tr></table><h3 class="h3-primary">Toss-Ups Heard Counter</h3><p class="mb-14">Tracks how many toss-up questions have been read. It increments once on the first outcome for each toss-up; a correct answer after a Neg or Miss is treated as a follow-up to that same question. Use the +/&minus; buttons to correct it manually. Required for normalized player metrics.</p><h3 class="h3-primary">Stats (Analytics)</h3><p class="mb-6">Toggle to the <strong>Stats</strong> view using the switch in the header. Stats are aggregated across all non-excluded sessions and organized into four tabs:</p><ul class="m14-pl20"><li><strong>Overview</strong> &mdash; totals, category breakdowns, top performers</li><li><strong>Players</strong> &mdash; ranked leaderboard; expand for metrics or click name for detail</li><li><strong>Charts</strong> &mdash; visual breakdown of answer types, categories, and trends</li><li><strong>Team Compositions</strong> &mdash; per-team stats per session</li></ul><h3 class="h3-primary">Player Metrics</h3><p class="mb-6">Player analytics use official toss-up decisions only. Bonuses remain team-scored and are never assigned to an individual player.</p><ul class="m14-pl20"><li><strong>Total Points</strong> — individual toss-up points: +15 per power, +10 per regular toss-up, and −5 per neg</li><li><strong>Toss-Ups Heard</strong> — opportunity count used to compare players with different amounts of playing time</li><li><strong>Raw TU/20</strong> — net toss-up points at a common pace of 20 toss-ups: <code>(15P + 10T − 5N) / H × 20</code></li><li><strong>Leaderboard Score</strong> — the leaderboard score; earned after one full session (20 toss-ups heard), with limited samples gently moved toward the team average using confidence</li><li><strong>Reliability</strong> — correct decisions divided by all recorded decisions: <code>(P+T) / (P+T+N+M) × 100</code></li><li><strong>Power Rate</strong> — powers divided by all recorded decisions: <code>P / (P+T+N+M) × 100</code>. Negs and misses count against this rate.</li><li><strong>TU/20</strong> — participation pace: <code>(P+T+N+M) / H × 20</code></li><li><strong>Confidence</strong> — sample-size weight: <code>H / (H+k)</code>. At <code>H=k</code>, the raw score is 50% trusted.</li></ul><h3 class="h3-primary">Official Score System</h3><p class="mb-8">The player leaderboard uses <strong>Leaderboard Score</strong> as its only overall score. A player earns it after hearing at least 20 toss-ups (one full session); limited samples are then shrunk toward the team average. This avoids double-counting related measures such as buzz rate, reliability, and conversion.</p><p style="margin-bottom:14px;font-family:monospace;font-size:.85em;background:var(--sec-bg);padding:8px 12px;border-radius:6px;border:1.5px solid var(--border);">Leaderboard Score = Confidence × Raw TU/20 + (1 − Confidence) × Team Average</p><p class="mb-14">Bonuses are shown in team totals and the answer log, but are not used for individual player rankings because bonus conversion is shared by the team.</p><h3 class="h3-primary">Leaderboard Sorting</h3><p class="mb-14">Sort by Total Points, Leaderboard Score, Reliability, Power Rate, TU/20, or A&ndash;Z. Ties are broken by the official toss-up counts, then fewest Negs.</p><h3 class="h3-primary">Export &amp; Import</h3><p class="mb-14">Export to <strong>CSV</strong> for spreadsheets or <strong>JSON</strong> to back up and re-import a full session. Both options are in the Data section of the sidebar.</p><h3 class="h3-primary">What Syncs Globally</h3><p class="mb-6">Stored in Firebase and synced instantly across all connected devices:</p><ul class="m8-pl20"><li>All session data (answers, scores, toss-ups heard)</li><li>Global player pool</li><li>Skill score settings and low-data overrides</li><li>App version, release history, and update info</li></ul><p class="mb-14">Stored with your Firebase account and cached locally: theme mode, accent color, scrollbar visibility, and sidebar state.</p><h3 class="h3-primary">Version Badge &amp; Deploy Indicator</h3><p class="mb-14">The version badge in the header shows the current file version. When viewed on the live GitHub Pages site, its border changes color to reflect the latest deploy status &mdash; <strong style="color:var(--success)">green</strong> = deployed successfully, <strong style="color:var(--warning)">yellow pulsing</strong> = deploy in progress, <strong style="color:var(--danger)">red</strong> = deploy failed. If a new deploy completes while you have the page open, a banner will appear prompting you to refresh.</p><h3 class="h3-primary">Updates &amp; Changelog</h3><p class="mb-14">Open <strong>Updates</strong> in the header to see the shared release history and the latest public changelog. If you are running a local copy and a newer version has been published, you can download it there or from the update banner — admins can attach the new <code>index.html</code> to Firebase, so the download works without a GitHub request on restricted school networks. Admins also use this center to publish builds and write the release log.</p><h3 class="h3-primary">Visual Settings</h3><p>Choose <strong>Light</strong>, <strong>Dark</strong>, or <strong>Device</strong> theme, change the <strong>Accent Color</strong>, or hide scrollbars in the Visual Settings section of the sidebar.</p><p class="mb-14"><strong>Loading source:</strong> <span id="helpLoadingSource" class="mono-primary">&mdash;</span></p></div></div></div><div id="updatesModal" class="qb-modal" onclick="if(event.target===this)closeUpdatesModal()"><div class="modal-content updates-modal-content"><div class="modal-header updates-modal-header"><div><h2>Updates &amp; Changelog</h2><p class="updates-modal-subtitle">See what is new in HSE Quiz Bowl Tracker.</p></div><button class="close-modal" onclick="closeUpdatesModal()" aria-label="Close updates">&#215;</button></div><div id="updatesCurrentSummary" class="updates-current-summary" aria-live="polite"></div><div class="updates-toolbar"><span id="updatesLoadStatus" class="updates-load-status">Loading release history…</span><button class="button updates-refresh-btn" onclick="refreshUpdates()">&#8635; Refresh</button></div><div id="updatesAdminPanel" class="updates-admin-panel" style="display:none;"><div class="updates-admin-heading"><div><h3>Publish an update</h3><p>Write the public release log and optionally attach the new file for Firebase downloads.</p></div><span class="updates-admin-pill">Admin</span></div><div id="releasePrompt" class="updates-release-prompt hidden"><strong>New build detected.</strong> Publish it here when the file is ready so users can find the notes and download it.</div><div id="releaseUpToDate" class="updates-release-prompt updates-release-ok" style="display:none;">&#10003; This file is already the published build. You can still update the release log if needed.</div><div class="updates-form-grid"><div class="input-group"><label for="releaseTitleInput">Update title</label><input type="text" id="releaseTitleInput" class="inp-std" maxlength="120" placeholder="e.g. Better analytics and faster logging" /></div><div class="input-group"><label for="releaseFileInput">Downloadable index.html <span class="fs-75-fw4">optional when using the live page</span></label><input type="file" id="releaseFileInput" accept=".html" /></div></div><div class="input-group"><label for="releaseNotesInput">Public changelog <span class="fs-75-fw4">shown to everyone</span></label><textarea id="releaseNotesInput" class="updates-textarea" maxlength="5000" rows="5" placeholder="Tell players what changed, what was fixed, and anything they should know."></textarea></div><div class="input-group"><label for="adminCommentsInput">Admin notes <span class="fs-75-fw4">internal context; not shown in the changelog</span></label><textarea id="adminCommentsInput" class="updates-textarea updates-textarea-small" maxlength="2000" rows="2" placeholder="Optional: testing notes or deployment context"></textarea></div><button class="button button-success updates-publish-btn" onclick="publishRelease()">Publish v<span id="updatesPublishVersion">—</span></button><div id="releaseUploadStatus" class="updates-upload-status" role="status" aria-live="polite"></div></div><div class="updates-history-heading"><div><h3>Release history</h3><p>Updates are synced for every signed-in user.</p></div><span id="updatesHistoryCount" class="updates-history-count"></span></div><div id="updatesList" class="updates-list" aria-live="polite"></div></div></div><div id="sessionsModal" class="qb-modal"><div class="modal-content"><div class="modal-header"><h2>Load Session</h2><button class="close-modal" onclick="closeSessionsModal()">&#215;</button></div><div style="display:flex;gap:8px;flex-wrap:wrap;padding:12px 16px;border-bottom:1.5px solid var(--border);background:var(--sec-bg);"><input type="text" id="sessionsSearchInput" placeholder="Search sessions..." style="flex:1;min-width:150px;padding:8px 12px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:.95em;background:var(--input-bg);color:var(--input-text);" /><select id="sessionsSortSelect" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:.95em;background:var(--input-bg);color:var(--input-text);"><option value="date-desc">Newest First</option><option value="date-asc">Oldest First</option><option value="name">Alphabetical (A-Z)</option><option value="answers-desc">Most Answers</option><option value="answers-asc">Least Answers</option></select></div><div id="sessionBulkBar" class="session-bulk-bar" style="display:none;"><label style="display:flex;align-items:center;gap:6px;font-size:.82em;font-weight:600;color:var(--text2);cursor:pointer;white-space:nowrap;"><input type="checkbox" id="sessionSelectAll" class="session-select-cb" style="margin:0;" onchange="toggleSelectAllSessions(this.checked)" /> Select all visible</label><span id="sessionBulkCount" style="font-size:.82em;font-weight:700;color:var(--primary);">0 selected</span><span class="bulk-spacer"></span><button class="button button-success" style="padding:6px 12px;font-size:.8em;" onclick="bulkSetAnalytics(true)">+ Add to Analytics</button><button class="button" style="padding:6px 12px;font-size:.8em;" onclick="bulkSetAnalytics(false)">− Exclude from Analytics</button><button class="button button-danger" style="padding:6px 12px;font-size:.8em;" onclick="bulkDeleteSessions()">Delete</button></div><div id="sessionsList" class="sessions-list"></div></div></div></div><div id="playerActionModal" class="qb-modal" onclick="if(event.target===this)closePlayerActionModal()"><div class="modal-content" style="max-width:420px;"><div class="modal-header"><h2 id="pamTitle">Player Action</h2><button class="close-modal" onclick="closePlayerActionModal()">&#215;</button></div><div style="padding:16px;"><div id="pamBody"></div></div></div></div><div id="bandModal" class="qb-modal" onclick="if(event.target===this)closeBandModal()"><div class="modal-content" style="max-width:440px;"><div class="modal-header"><h2 id="bandModalTitle">Score Band</h2><button class="close-modal" onclick="closeBandModal()">&#215;</button></div><div id="bandModalBody" style="padding:0 2px;"></div></div></div><div id="playerDetailModal" class="qb-modal"><div class="modal-content" style="max-width:620px;"><div class="modal-header"><h2 id="pdModalTitle">Player Details</h2><button class="close-modal" onclick="closePlayerDetailModal()">&#215;</button></div><div id="pdModalBody"></div></div></div><script src="local-settings.js" onerror="void 0"></script><script>const $=id=>document.getElementById(id);
 const isIframe = (() =>{
 try{
 if (window.self === window.top) return false; // not in an iframe at all
@@ -306,7 +470,7 @@ const VERSION = '3.7.0'; // auto-managed by bump.js
 const DOWNLOAD_URL = 'https://raw.githubusercontent.com/ajani190819-ops/HSEQB/main/index.html';
 const DISPLAY_VERSION = VERSION; const INTERNAL_BUILD = VERSION;
 const FILE_VERSION    = VERSION; const FILE_BUILD_ID  = VERSION;
-var db, sessionsRef, globalPlayersRef, versionRef, releaseHtmlRef, globalSettingsRef, userIdentitiesRef, userProfilesRef, userProfileRef, adminListRef, adminList = [];
+var db, sessionsRef, globalPlayersRef, versionRef, releaseHtmlRef, releaseHistoryRef, globalSettingsRef, userIdentitiesRef, userProfilesRef, userProfileRef, adminListRef, adminUidsRef, adminList = [], adminUids = {};
 const _adminToken = (()=>{
 let _tok = null;
 const _secret = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
@@ -320,7 +484,7 @@ Object.defineProperty(window, 'isAdmin',{ get:() => _adminToken.check(), set:() 
 function _noopRef(){
 const noop = () => _noopRef();
 const p = () => Promise.resolve({ val:() => null });
-return{ on:noop, off:noop, once:p, set:p, update:p, remove:p, child:noop, transaction:p };
+return{ on:noop, off:noop, once:p, set:p, update:p, remove:p, child:noop, push:() => ({ set:p }), transaction:p };
 }
 let authUser = null; let authStarted = false; let appStarted = false;
 const THEME_MODES = ['light', 'dark', 'device'];
@@ -581,33 +745,37 @@ function initAuth(){
 }
 function initFirebase(){
 if (isIframe){
-db=null; sessionsRef=_noopRef(); globalPlayersRef=_noopRef(); versionRef=_noopRef(); releaseHtmlRef=_noopRef(); globalSettingsRef=_noopRef(); userIdentitiesRef=_noopRef(); userProfilesRef=_noopRef(); userProfileRef=null; adminListRef=_noopRef();
+db=null; sessionsRef=_noopRef(); globalPlayersRef=_noopRef(); versionRef=_noopRef(); releaseHtmlRef=_noopRef(); releaseHistoryRef=_noopRef(); globalSettingsRef=_noopRef(); userIdentitiesRef=_noopRef(); userProfilesRef=_noopRef(); userProfileRef=null; adminListRef=_noopRef(); adminUidsRef=_noopRef();
 startApp();
 return; }
 if (typeof firebase === 'undefined'){ setTimeout(initFirebase, 50); return; }
 const firebaseConfig ={apiKey:"AIzaSyCRkK3IpRXeQC9JH73iC0tC-mjq5nulaAo",authDomain:"hse-quiz-bowl.firebaseapp.com",databaseURL:"https://hse-quiz-bowl-default-rtdb.firebaseio.com",projectId:"hse-quiz-bowl",storageBucket:"hse-quiz-bowl.firebasestorage.app",messagingSenderId:"676670239956",appId:"1:676670239956:web:9c569fc74ecf21de25f741"};
 try{ firebase.app(); } catch(e){ firebase.initializeApp(firebaseConfig); }
 db=firebase.database();
-sessionsRef=db.ref('sessions'); globalPlayersRef=db.ref('globalPlayers'); versionRef=db.ref('appVersion'); releaseHtmlRef=db.ref('releaseHtml');
-globalSettingsRef=db.ref('globalSettings'); userIdentitiesRef=db.ref('userIdentities'); userProfilesRef=db.ref('userProfiles'); adminListRef=db.ref('adminList');
+sessionsRef=db.ref('sessions'); globalPlayersRef=db.ref('globalPlayers'); versionRef=db.ref('appVersion'); releaseHtmlRef=db.ref('releaseHtml'); releaseHistoryRef=db.ref('releaseHistory');
+globalSettingsRef=db.ref('globalSettings'); userIdentitiesRef=db.ref('userIdentities'); userProfilesRef=db.ref('userProfiles'); adminListRef=db.ref('adminList'); adminUidsRef=db.ref('adminUids');
 setupDeviceThemeListener();
 restoreVisualSettings();
 adminListRef.on('value', snap =>{ adminList=snap.val()||[]; recomputeAdmin(); });
+adminUidsRef.on('value', snap =>{ adminUids=snap.val()||{}; recomputeAdmin(); });
 initAuth(); }
 function startApp(){
 versionRef.on('value', snap =>{
 const data = snap.val();
-if (!data){ checkReleasePrompt(''); return; }
+if (!data){ setLatestReleaseMeta(null); checkReleasePrompt(''); return; }
 // Support both old string format and new object format
 const remoteBuild = (typeof data === 'object') ? (data.buildId || '')      :'';
 const downloadUrl = (typeof data === 'object') ? (data.downloadUrl || '')  :'';
 const releaseNotes= (typeof data === 'object') ? (data.releaseNotes || '') :'';
 const remoteLabel = (typeof data === 'object') ? (data.label || '')         :'';
 const hasFirebasePayload = (typeof data === 'object') ? !!data.hasFirebasePayload : false;
+setLatestReleaseMeta(data);
 // Badge always reflects FILE_VERSION — intentionally not set from Firebase
 // Pre-fill URL, version label, and release notes inputs if admin hasn't typed in them yet
 const rnInput = $('releaseNotesInput');
 if (rnInput && document.activeElement !== rnInput && !rnInput.value) rnInput.value = releaseNotes;
+const titleInput = $('releaseTitleInput');
+if (titleInput && document.activeElement !== titleInput && !titleInput.value) titleInput.value = 'HSE Quiz Bowl Tracker v' + FILE_VERSION;
 // Populate version preview label
 // Update live build display in admin panel
 const liveDisp = $('liveFirebaseBuildDisplay');
@@ -652,6 +820,10 @@ hideUpdateBanner(); }
 // Store loading source for help menu
 const loadingSource = isLocalFile ? 'Local File' :isGitHubPages ? 'GitHub Pages' :isOtherOnline ? 'Online' :'Unknown';
 localStorage.setItem('qb_loadingSource', loadingSource); });
+releaseHistoryRef.on('value', snap =>{
+releaseHistoryCache = snap.val() || {};
+if (updatesModalOpen) renderUpdatesCenter();
+});
 globalSettingsRef.on('value', snap =>{
 const s = snap.val(); if (!s) return;
 let changed = false;
@@ -759,8 +931,15 @@ const prompt   = $('releasePrompt');
 const upToDate = $('releaseUpToDate');
 if (!prompt || !upToDate) return;
 const isUnpublished = !remoteBuild || remoteBuild !== FILE_BUILD_ID;
-if (isUnpublished){ prompt.classList.remove('hidden'); upToDate.classList.add('hidden'); }
-else { prompt.classList.add('hidden'); upToDate.classList.remove('hidden'); }
+if (isUnpublished){
+  prompt.classList.remove('hidden');
+  upToDate.classList.add('hidden');
+  upToDate.style.display = 'none';
+} else {
+  prompt.classList.add('hidden');
+  upToDate.classList.remove('hidden');
+  upToDate.style.display = 'block';
+}
 }
 function setReleaseUploadStatus(msg, kind){
 const el = $('releaseUploadStatus');
@@ -786,9 +965,12 @@ finish(false, 'Metadata published — the HTML payload failed to upload (' + e.m
 function publishRelease(){
 if (!isAdmin){ showToast('Not authorised.', 'warn'); return; }
 if (!db || !releaseHtmlRef || !releaseHtmlRef.set){ showToast('Firebase is not connected — cannot publish.', 'warn'); return; }
-const notes    = ($('releaseNotesInput')?.value || '').trim();
-const comments = ($('adminCommentsInput')?.value || '').trim();
-const payload  = { label:FILE_VERSION, buildId:FILE_BUILD_ID, downloadUrl:DOWNLOAD_URL, releaseNotes:notes, adminComments:comments, hasFirebasePayload:false, lastUpdated:new Date().toISOString() };
+const title    = ($('releaseTitleInput')?.value || '').trim().slice(0, 120);
+const notes    = ($('releaseNotesInput')?.value || '').trim().slice(0, 5000);
+const comments = ($('adminCommentsInput')?.value || '').trim().slice(0, 2000);
+if (!title){ showToast('Add a short title for this update.', 'warn'); $('releaseTitleInput')?.focus(); return; }
+if (!notes){ showToast('Write the public changelog before publishing.', 'warn'); $('releaseNotesInput')?.focus(); return; }
+const payload  = { label:FILE_VERSION, buildId:FILE_BUILD_ID, title, downloadUrl:DOWNLOAD_URL, releaseNotes:notes, adminComments:comments, hasFirebasePayload:false, lastUpdated:new Date().toISOString() };
 const fileInput = $('releaseFileInput');
 const file = fileInput && fileInput.files && fileInput.files[0];
 const setStatus = (msg, kind) => setReleaseUploadStatus(msg, kind);
@@ -796,15 +978,19 @@ setStatus('Preparing release…');
 const finish = (hasPayload, statusMsg) =>{
 payload.hasFirebasePayload = !!hasPayload;
 versionRef.set(payload)
+.then(() => recordPublishedRelease({ ...payload, publishedAt:new Date().toISOString() }))
 .then(() =>{
 showToast('Published v'+FILE_VERSION, 'success');
 hideUpdateBanner();
 checkReleasePrompt(FILE_BUILD_ID);
-if (statusMsg) setStatus(statusMsg, 'ok');
-else if (!$('releaseUploadStatus')?.textContent?.trim()) setStatus('Published.', 'ok');
+if (statusMsg) setStatus(statusMsg + ' Changelog saved.', 'ok');
+else if (!$('releaseUploadStatus')?.textContent?.trim()) setStatus('Published and added to the changelog.', 'ok');
 if (fileInput) fileInput.value = '';
 })
-.catch(e =>{ showFirebaseError(e.message); setStatus('Metadata publish failed: ' + e.message, 'err'); });
+.catch(e =>{
+showFirebaseError(e.message);
+setStatus('Release published, but the changelog could not be saved: ' + e.message, 'err');
+});
 };
 // Publishing metadata without a fresh HTML payload must not leave a stale releaseHtml behind,
 // otherwise users would download an outdated file. Clear it so downloadUpdate falls back to GitHub.
@@ -840,10 +1026,14 @@ const banner = $('updateBanner');
 if (!banner) return;
 const hasUrl = downloadUrl && downloadUrl.startsWith('http');
 const viaFb  = !!hasFirebasePayload;
+const encodedDownloadUrl = hasUrl ? encodeURIComponent(downloadUrl) : '';
+const safeLabel = typeof updatesEscapeHtml === 'function' ? updatesEscapeHtml(newLabel) : String(newLabel || '');
+const safeNotes = typeof updatesEscapeHtml === 'function' ? updatesEscapeHtml(notes) : String(notes || '');
 banner.innerHTML =
 `<span class="ub-icon">▲</span>` +
-`<span class="ub-msg">This file is <strong>outdated / unpublished</strong> — published version is <strong>${newLabel}</strong> (you have ${FILE_VERSION})${notes ? ` — ${notes}` :''}.</span>` +
-(hasUrl ? `<button class="ub-btn ub-download" onclick="downloadUpdate('${downloadUrl}')">↓ Download Update${viaFb ? ' (Firebase)' : ''}</button>` :'') +
+`<span class="ub-msg">This file is <strong>outdated / unpublished</strong> — published version is <strong>${safeLabel}</strong> (you have ${FILE_VERSION})${notes ? ` — ${safeNotes}` :''}.</span>` +
+`<button class="ub-btn ub-history" onclick="openUpdatesModal()">View updates</button>` +
+(hasUrl ? `<button class="ub-btn ub-download" onclick="downloadUpdate(decodeURIComponent('${encodedDownloadUrl}'))">↓ Download Update${viaFb ? ' (Firebase)' : ''}</button>` :'') +
 `<button class="ub-btn ub-dismiss" onclick="hideUpdateBanner()" title="Dismiss">✕</button>`;
 banner.classList.add('show'); }
 function hideUpdateBanner(){
@@ -1206,6 +1396,7 @@ applyGlobalPlayersToSession(snap.val() ||{});
 });
 userIdentitiesRef.on('value', snap =>{
 userIdentitiesCache = snap.val() ||{};
+if (isAdmin) renderAdminPanel();
 }); }
 function applyGlobalPlayersToSession(data){
 const s = getCurrentSession(); if (!s) return;
@@ -1531,30 +1722,78 @@ $('bandModalBody').innerHTML = inBand.length
 $('bandModal').classList.add('open');
 }
 function closeBandModal(){ $('bandModal').classList.remove('open'); }
+function adminEscape(value){
+const text = String(value == null ? '' : value);
+return typeof updatesEscapeHtml === 'function' ? updatesEscapeHtml(text) : text.replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+function adminUidName(uid){
+const identity = userIdentitiesCache && userIdentitiesCache[uid];
+return String(identity?.name || (authUser?.uid === uid ? localStorage.getItem('qb_userName') : '') || '').trim();
+}
 function renderAdminPanel(){
 const el = $('adminListDisplay');
 if (!el) return;
 if (!isAdmin){ el.innerHTML = ''; return; }
-el.innerHTML = adminList.map(function(name){
-const isOwner = name === 'Kamau Elston';
-const action = isOwner ? '<span class="fs-75-text3">Owner</span>'
-:'<button onclick="removeAdmin(\'' + name.replace(/\\/g,'\\\\').replace(/'/g,"\\'") + '\')" style="background:none;border:1px solid var(--danger);color:var(--danger);border-radius:5px;padding:2px 9px;font-size:.8em;cursor:pointer;font-family:inherit;">Remove</button>';
-return '<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:.88em;">' + '<span style="font-weight:600;">' + name + '</span>' + action + '</div>';
-}).join(''); }
+const uidEntries = Object.entries(adminUids || {}).filter(([, enabled]) => enabled === true);
+const legacyEntries = uidEntries.length ? [] : (Array.isArray(adminList) ? adminList : []);
+let html = '';
+if (uidEntries.length){
+  html = uidEntries.map(([uid]) =>{
+    const name = adminUidName(uid);
+    const label = name ? `${adminEscape(name)}<span class="admin-uid-sub">${adminEscape(uid)}</span>` : `<span>${adminEscape(uid)}</span>`;
+    const current = authUser?.uid === uid ? '<span class="admin-current-pill">This account</span>' : '';
+    const encodedUid = encodeURIComponent(uid);
+    return `<div class="admin-uid-row"><div class="admin-uid-label">${label}</div><div class="admin-uid-actions">${current}<button onclick="removeAdmin(decodeURIComponent('${encodedUid}'))" class="admin-remove-btn">Remove</button></div></div>`;
+  }).join('');
+} else if (legacyEntries.length){
+  html = legacyEntries.map(name =>{
+    const encodedName = encodeURIComponent(name);
+    return `<div class="admin-uid-row"><div class="admin-uid-label"><span>${adminEscape(name)}</span><span class="admin-uid-sub">Legacy name entry — add Firebase UIDs before applying the secure rules</span></div><div class="admin-uid-actions"><span class="admin-legacy-pill">Legacy</span><button onclick="removeLegacyAdmin(decodeURIComponent('${encodedName}'))" class="admin-remove-btn">Remove</button></div></div>`;
+  }).join('');
+} else {
+  html = '<div class="admin-empty">No UID-based admins are configured yet. Add your Firebase UID below.</div>';
+}
+el.innerHTML = html;
+}
 function addAdmin(){
 if (!isAdmin){ showToast('Not authorised.', 'warn'); return; }
-const input = $('adminAddInput');
-const name  = (input?.value || '').trim();
-if (!name){ showToast('Enter a full name to add.'); return; }
-if (adminList.includes(name)){ showToast(name + ' is already an admin.', 'warn'); return; }
-adminListRef.set([...adminList, name]).catch(e => showFirebaseError(e.message));
-if (input) input.value = ''; }
-function removeAdmin(name){
+const input = $('adminUidInput') || $('adminAddInput');
+const uid = (input?.value || '').trim();
+if (!uid){ showToast('Enter the Firebase UID for the account to add.'); return; }
+if (uid.length > 128 || /[.#$\[\]/]/.test(uid)){ showToast('That does not look like a valid Firebase UID.', 'warn'); return; }
+if (adminUids && adminUids[uid] === true){ showToast('That account is already an admin.', 'warn'); return; }
+if (!adminUidsRef || !adminUidsRef.child){ showToast('Firebase is not connected.', 'warn'); return; }
+adminUidsRef.child(uid).set(true)
+.then(() =>{
+  if (input) input.value = '';
+  renderAdminPanel();
+  showToast('Admin access granted.', 'success');
+})
+.catch(e => showFirebaseError('Could not add admin: ' + e.message));
+}
+function removeAdmin(uid){
 if (!isAdmin){ showToast('Not authorised.', 'warn'); return; }
-showConfirm('Remove ' + name + ' from admins?', 'Remove').then(ok =>{
+const name = adminUidName(uid);
+const label = name ? name + ' (' + uid + ')' : uid;
+showConfirm('Remove ' + label + ' from UID-based admins?', 'Remove').then(ok =>{
 if (!ok) return;
-adminListRef.set(adminList.filter(n => n !== name)).catch(e => showFirebaseError(e.message));
-}); }
+adminUidsRef.child(uid).remove()
+.then(() =>{
+  renderAdminPanel();
+  showToast('Admin access removed.', 'success');
+})
+.catch(e => showFirebaseError('Could not remove admin: ' + e.message));
+});
+}
+function removeLegacyAdmin(name){
+if (!isAdmin){ showToast('Not authorised.', 'warn'); return; }
+showConfirm('Remove ' + name + ' from the legacy admin list?', 'Remove').then(ok =>{
+if (!ok) return;
+adminListRef.set((Array.isArray(adminList) ? adminList : []).filter(item => item !== name))
+.then(() => renderAdminPanel())
+.catch(e => showFirebaseError('Could not remove legacy admin: ' + e.message));
+});
+}
 const CAT_COLOR_DEFAULTS ={'Literature':'#3b82f6','Science':'#11998e','History':'#f97316','Social Studies':'#eab308','Pop Culture':'#a855f7','Fine Arts':'#06b6d4'};
 const CAT_ORDER = ['Literature', 'Science', 'History', 'Social Studies', 'Fine Arts', 'Pop Culture'];
 const CAT_FREQ_DEFAULTS ={
@@ -3385,7 +3624,12 @@ t._timer = setTimeout(() =>{ t.className = ''; }, 1700);
 function recomputeAdmin(){
 if (isIframe && _iframeDebugActive) return; // preserve temp admin grant in preview
 const name = localStorage.getItem('qb_userName') || '';
-if (adminList.includes(name)) _adminToken.grant(); else _adminToken.revoke();
+const uid = authUser?.uid || clientId || '';
+const uidAdmin = !!(uid && adminUids && adminUids[uid] === true);
+// Compatibility while the UID map is being bootstrapped. Once adminUids has an
+// entry, only UID-based access is accepted by the client and by Firebase rules.
+const legacyAdmin = Object.keys(adminUids || {}).length === 0 && adminList.includes(name);
+if (uidAdmin || legacyAdmin) _adminToken.grant(); else _adminToken.revoke();
 applyAdminUI(); }
 function applyAdminUI(){
 const ccs = $('catColorSection');
@@ -3400,7 +3644,8 @@ const adminBtn  = $('jumpBtn-sec-admin');
 if (dangerEl)  dangerEl.style.display  = isAdmin ? '' :'none';
 if (adminEl)   adminEl.style.display   = isAdmin ? '' :'none';
 if (dangerBtn) dangerBtn.style.display  = isAdmin ? '' :'none';
-if (adminBtn)  adminBtn.style.display   = isAdmin ? '' :'none';
+if (adminBtn)  adminBtn.style.display  = isAdmin ? '' :'none';
+renderUpdatesAdminUI();
 applyDebugMenuVisibility();
 document.querySelectorAll('.session-invalid-toggle').forEach(el =>{ el.style.display = isAdmin ? '' :'none'; });
 document.querySelectorAll('.ld-admin-btn').forEach(el =>{ el.style.display = isAdmin ? '' :'none'; });
@@ -4029,6 +4274,247 @@ state.sessions={}; state.currentSessionId=null;
 createNewSession(); renderAll(); });
 }; });
 }
-document.addEventListener('DOMContentLoaded', initFirebase);</script><div id="recordToast"></div><div id="appToast"></div><div id="confirmToast"><div class="ct-msg" id="confirmToastMsg"></div><div class="ct-btns"><button class="ct-cancel" onclick="resolveConfirmToast(false)">Cancel</button><button class="ct-ok" id="confirmToastOk" onclick="resolveConfirmToast(true)">Confirm</button></div></div><div id="welcomeToast"><div class="wt-title">Welcome to HSE Quiz Bowl Tracker!</div><div class="wt-sub">New here? The Help guide covers everything — players, teams, recording answers, and analytics.</div><div class="wt-btns"><button class="wt-btn-primary" onclick="dismissWelcomeToast(true)">Open Help Guide</button><button class="wt-btn-dismiss" onclick="dismissWelcomeToast(false)">Maybe Later</button></div></div>
+document.addEventListener('DOMContentLoaded', initFirebase);/*
+ * Public release history and Updates center.
+ *
+ * appVersion remains the single source of truth for the currently downloadable
+ * build. releaseHistory keeps the human-readable changelog that users can see.
+ * Keeping those concerns separate means publishing a new log never overwrites
+ * the history that came before it.
+ */
+var releaseHistoryCache = {};
+var latestReleaseMeta = null;
+var updatesModalOpen = false;
+
+function updatesEscapeHtml(value){
+  return String(value == null ? '' : value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+function updatesFormatText(value){
+  return updatesEscapeHtml(value).replace(/\r?\n/g, '<br>');
+}
+function updatesParseVersion(value){
+  return String(value || '').split('.').map(n => parseInt(n, 10) || 0);
+}
+function updatesCompareVersions(a, b){
+  const av = updatesParseVersion(a), bv = updatesParseVersion(b);
+  for (let i = 0; i < Math.max(av.length, bv.length); i++){
+    if ((av[i] || 0) !== (bv[i] || 0)) return (av[i] || 0) > (bv[i] || 0) ? 1 : -1;
+  }
+  return 0;
+}
+function updatesFormatDate(value){
+  if (!value) return 'Date not recorded';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Date not recorded';
+  return date.toLocaleDateString(undefined, { year:'numeric', month:'short', day:'numeric' });
+}
+function updatesCurrentBuild(){
+  return latestReleaseMeta && typeof latestReleaseMeta === 'object'
+    ? (latestReleaseMeta.buildId || '') : '';
+}
+function updatesCurrentLabel(){
+  return latestReleaseMeta && typeof latestReleaseMeta === 'object'
+    ? (latestReleaseMeta.label || '') : '';
+}
+function setLatestReleaseMeta(data){
+  if (!data){ latestReleaseMeta = null; }
+  else if (typeof data === 'object'){
+    latestReleaseMeta = { ...data };
+  } else {
+    // Older appVersion records were just strings. Keep them readable in the center.
+    latestReleaseMeta = { label:String(data), buildId:String(data), releaseNotes:'' };
+  }
+  updateUpdatesBadge();
+  const version = $('updatesPublishVersion');
+  if (version) version.textContent = FILE_VERSION;
+  if (updatesModalOpen) renderUpdatesCenter();
+}
+function updateUpdatesBadge(){
+  const badge = $('updatesUnreadBadge');
+  if (!badge) return;
+  const remoteBuild = updatesCurrentBuild();
+  const isNew = !!remoteBuild && updatesCompareVersions(remoteBuild, FILE_BUILD_ID) > 0;
+  badge.textContent = isNew ? 'New' : '';
+  badge.classList.toggle('show', isNew);
+  badge.setAttribute('aria-label', isNew ? 'New updates available' : 'No new updates');
+}
+function getReleaseHistoryEntries(){
+  let entries = Object.entries(releaseHistoryCache || {}).map(([id, release]) => ({
+    id, ...(release && typeof release === 'object' ? release : {})
+  }));
+  entries = entries.filter(item => item.buildId || item.label || item.releaseNotes || item.title);
+  entries.sort((a, b) =>{
+    const ad = new Date(a.publishedAt || a.lastUpdated || 0).getTime();
+    const bd = new Date(b.publishedAt || b.lastUpdated || 0).getTime();
+    return bd - ad;
+  });
+
+  // A current appVersion written by an older build may not have a history row yet.
+  // Show it in the center instead of making the public page look empty.
+  const current = latestReleaseMeta && typeof latestReleaseMeta === 'object'
+    ? latestReleaseMeta : null;
+  if (current && (current.buildId || current.label) && !entries.some(item =>
+    item.buildId && current.buildId && item.buildId === current.buildId)){
+    entries.unshift({
+      id:'current-release',
+      label:current.label || current.buildId,
+      buildId:current.buildId || current.label,
+      title:current.title || '',
+      releaseNotes:current.releaseNotes || '',
+      downloadUrl:current.downloadUrl || '',
+      hasFirebasePayload:!!current.hasFirebasePayload,
+      publishedAt:current.lastUpdated || current.publishedAt || ''
+    });
+  }
+
+  // Preview mode has no Firebase data. A small local example keeps the feature
+  // discoverable in the built-in preview without ever writing fake data remotely.
+  if (!entries.length && isIframe){
+    entries.push({
+      id:'preview-release', label:FILE_VERSION, buildId:FILE_BUILD_ID,
+      title:'A clearer home for updates',
+      releaseNotes:'The Updates center now keeps a shared release history. Admins can publish a build, write public release notes, and attach the downloadable file here.',
+      publishedAt:new Date().toISOString(), preview:true
+    });
+  }
+  return entries;
+}
+function renderUpdatesSummary(entries){
+  const el = $('updatesCurrentSummary');
+  if (!el) return;
+  const currentBuild = updatesCurrentBuild() || FILE_BUILD_ID;
+  const currentLabel = updatesCurrentLabel() || FILE_VERSION;
+  const currentEntry = entries.find(item => item.buildId === currentBuild) || entries[0];
+  const isAhead = updatesCompareVersions(currentBuild, FILE_BUILD_ID) > 0;
+  const status = isAhead ? 'Update available' : 'You are on the latest local build';
+  const notes = currentEntry?.releaseNotes ? updatesFormatText(currentEntry.releaseNotes) : 'No release notes have been added yet.';
+  el.innerHTML = `<div class="updates-current-kicker">CURRENT RELEASE</div>` +
+    `<div class="updates-current-main"><div><div class="updates-current-title">${updatesEscapeHtml(currentEntry?.title || 'HSE Quiz Bowl Tracker')}</div>` +
+    `<div class="updates-current-notes">${notes}</div></div>` +
+    `<div class="updates-version-stack"><strong>v${updatesEscapeHtml(currentLabel)}</strong><span class="updates-status ${isAhead ? 'updates-status-new' : ''}">${status}</span></div></div>`;
+}
+function renderReleaseCard(item, currentBuild){
+  const version = item.label || item.buildId || 'Unversioned';
+  const title = item.title || ('HSE Quiz Bowl Tracker ' + (version ? 'v' + version : 'update'));
+  const notes = item.releaseNotes || 'No public release notes were added for this update.';
+  const isCurrent = !!currentBuild && item.buildId === currentBuild;
+  const by = item.publishedBy ? ` · ${updatesEscapeHtml(item.publishedBy)}` : '';
+  const currentPill = isCurrent ? '<span class="updates-current-pill">Current</span>' : '';
+  const previewPill = item.preview ? '<span class="updates-preview-pill">Preview</span>' : '';
+  const canDownload = !!item.downloadUrl && /^https?:/i.test(item.downloadUrl) && isCurrent;
+  const encodedDownloadUrl = canDownload ? encodeURIComponent(item.downloadUrl) : '';
+  const download = canDownload
+    ? `<button class="button updates-card-download" onclick="downloadUpdate(decodeURIComponent('${encodedDownloadUrl}'))">↓ Download build</button>` : '';
+  return `<article class="updates-release-card${isCurrent ? ' is-current' : ''}">` +
+    `<div class="updates-release-rail"><span class="updates-release-dot"></span></div>` +
+    `<div class="updates-release-content"><div class="updates-release-meta"><strong>v${updatesEscapeHtml(version)}</strong><span>${updatesFormatDate(item.publishedAt || item.lastUpdated)}${by}</span>${currentPill}${previewPill}</div>` +
+    `<h4>${updatesEscapeHtml(title)}</h4><div class="updates-release-notes">${updatesFormatText(notes)}</div>${download ? `<div class="updates-release-actions">${download}</div>` : ''}</div></article>`;
+}
+function renderUpdatesCenter(){
+  const list = $('updatesList');
+  if (!list) return;
+  const entries = getReleaseHistoryEntries();
+  const currentBuild = updatesCurrentBuild() || (entries[0] && entries[0].buildId) || FILE_BUILD_ID;
+  renderUpdatesSummary(entries);
+  const count = $('updatesHistoryCount');
+  if (count) count.textContent = entries.length ? `${entries.length} ${entries.length === 1 ? 'release' : 'releases'}` : '';
+  if (!entries.length){
+    list.innerHTML = '<div class="updates-empty"><div class="updates-empty-icon">↻</div><strong>No updates have been published yet.</strong><span>When an admin publishes a release, its notes will appear here for everyone.</span></div>';
+  } else {
+    list.innerHTML = entries.map(item => renderReleaseCard(item, currentBuild)).join('');
+  }
+  const status = $('updatesLoadStatus');
+  if (status){
+    if (isIframe) status.textContent = 'Preview data · Firebase history is disabled';
+    else status.textContent = entries.length ? 'Synced release history' : 'No release history yet';
+  }
+}
+function renderUpdatesAdminUI(){
+  const panel = $('updatesAdminPanel');
+  if (panel) panel.style.display = isAdmin ? '' : 'none';
+  const version = $('updatesPublishVersion');
+  if (version) version.textContent = FILE_VERSION;
+  updateUpdatesBadge();
+  if (typeof checkReleasePrompt === 'function') checkReleasePrompt(updatesCurrentBuild());
+}
+function openUpdatesModal(){
+  const modal = $('updatesModal');
+  if (!modal) return;
+  updatesModalOpen = true;
+  modal.classList.add('open');
+  renderUpdatesAdminUI();
+  renderUpdatesCenter();
+  if (!isIframe && releaseHistoryRef && releaseHistoryRef.once){
+    const status = $('updatesLoadStatus');
+    if (status) status.textContent = 'Refreshing release history…';
+    releaseHistoryRef.once('value').then(snap =>{
+      releaseHistoryCache = snap.val() || {};
+      renderUpdatesCenter();
+    }).catch(() =>{
+      if (status) status.textContent = 'Could not refresh release history';
+    });
+  }
+}
+function closeUpdatesModal(){
+  const modal = $('updatesModal');
+  if (modal) modal.classList.remove('open');
+  updatesModalOpen = false;
+}
+function refreshUpdates(){
+  if (!releaseHistoryRef || !releaseHistoryRef.once || isIframe){
+    renderUpdatesCenter();
+    return;
+  }
+  const status = $('updatesLoadStatus');
+  if (status) status.textContent = 'Refreshing release history…';
+  releaseHistoryRef.once('value').then(snap =>{
+    releaseHistoryCache = snap.val() || {};
+    renderUpdatesCenter();
+    showToast('Release history refreshed.', 'success', 1800);
+  }).catch(e =>{
+    if (status) status.textContent = 'Could not refresh release history';
+    showToast('Could not refresh release history: ' + e.message, 'warn');
+  });
+}
+function recordPublishedRelease(payload){
+  if (isIframe || !releaseHistoryRef || !releaseHistoryRef.push) return Promise.resolve();
+  const entry = {
+    label:payload.label || FILE_VERSION,
+    buildId:payload.buildId || FILE_BUILD_ID,
+    title:String(payload.title || '').trim().slice(0, 120),
+    releaseNotes:String(payload.releaseNotes || '').trim().slice(0, 5000),
+    adminComments:String(payload.adminComments || '').trim().slice(0, 2000),
+    downloadUrl:payload.downloadUrl || DOWNLOAD_URL,
+    hasFirebasePayload:!!payload.hasFirebasePayload,
+    publishedAt:payload.publishedAt || new Date().toISOString(),
+    publishedBy:localStorage.getItem('qb_userName') || authUser?.email || 'Admin',
+    publishedByUid:authUser?.uid || clientId || ''
+  };
+  const existing = Object.values(releaseHistoryCache || {});
+  const duplicate = existing.some(item => item && item.buildId === entry.buildId &&
+    item.title === entry.title && item.releaseNotes === entry.releaseNotes);
+  if (duplicate) return Promise.resolve();
+  const releaseRef = releaseHistoryRef.push();
+  return releaseRef.set(entry).then(() =>{
+    // The live listener normally updates this immediately; updating the cache here
+    // also makes the center feel instant when a listener is slow to fire.
+    if (releaseRef.key) releaseHistoryCache[releaseRef.key] = entry;
+    if (updatesModalOpen) renderUpdatesCenter();
+  });
+}
+
+// Keep the publishing form available in the new public center while admin access
+// continues to be controlled by the existing account/admin-list flow.
+if (typeof document !== 'undefined'){
+  document.addEventListener('keydown', event =>{
+    if (event.key === 'Escape' && $('updatesModal')?.classList.contains('open')) closeUpdatesModal();
+  });
+}
+</script><div id="recordToast"></div><div id="appToast"></div><div id="confirmToast"><div class="ct-msg" id="confirmToastMsg"></div><div class="ct-btns"><button class="ct-cancel" onclick="resolveConfirmToast(false)">Cancel</button><button class="ct-ok" id="confirmToastOk" onclick="resolveConfirmToast(true)">Confirm</button></div></div><div id="welcomeToast"><div class="wt-title">Welcome to HSE Quiz Bowl Tracker!</div><div class="wt-sub">New here? The Help guide covers everything — players, teams, recording answers, and analytics.</div><div class="wt-btns"><button class="wt-btn-primary" onclick="dismissWelcomeToast(true)">Open Help Guide</button><button class="wt-btn-dismiss" onclick="dismissWelcomeToast(false)">Maybe Later</button></div></div>
 </body>
 </html>

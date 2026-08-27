@@ -1,27 +1,75 @@
+function adminEscape(value){
+const text = String(value == null ? '' : value);
+return typeof updatesEscapeHtml === 'function' ? updatesEscapeHtml(text) : text.replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+function adminUidName(uid){
+const identity = userIdentitiesCache && userIdentitiesCache[uid];
+return String(identity?.name || (authUser?.uid === uid ? localStorage.getItem('qb_userName') : '') || '').trim();
+}
 function renderAdminPanel(){
 const el = $('adminListDisplay');
 if (!el) return;
 if (!isAdmin){ el.innerHTML = ''; return; }
-el.innerHTML = adminList.map(function(name){
-const isOwner = name === 'Kamau Elston';
-const action = isOwner ? '<span class="fs-75-text3">Owner</span>'
-:'<button onclick="removeAdmin(\'' + name.replace(/\\/g,'\\\\').replace(/'/g,"\\'") + '\')" style="background:none;border:1px solid var(--danger);color:var(--danger);border-radius:5px;padding:2px 9px;font-size:.8em;cursor:pointer;font-family:inherit;">Remove</button>';
-return '<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:.88em;">' + '<span style="font-weight:600;">' + name + '</span>' + action + '</div>';
-}).join(''); }
+const uidEntries = Object.entries(adminUids || {}).filter(([, enabled]) => enabled === true);
+const legacyEntries = uidEntries.length ? [] : (Array.isArray(adminList) ? adminList : []);
+let html = '';
+if (uidEntries.length){
+  html = uidEntries.map(([uid]) =>{
+    const name = adminUidName(uid);
+    const label = name ? `${adminEscape(name)}<span class="admin-uid-sub">${adminEscape(uid)}</span>` : `<span>${adminEscape(uid)}</span>`;
+    const current = authUser?.uid === uid ? '<span class="admin-current-pill">This account</span>' : '';
+    const encodedUid = encodeURIComponent(uid);
+    return `<div class="admin-uid-row"><div class="admin-uid-label">${label}</div><div class="admin-uid-actions">${current}<button onclick="removeAdmin(decodeURIComponent('${encodedUid}'))" class="admin-remove-btn">Remove</button></div></div>`;
+  }).join('');
+} else if (legacyEntries.length){
+  html = legacyEntries.map(name =>{
+    const encodedName = encodeURIComponent(name);
+    return `<div class="admin-uid-row"><div class="admin-uid-label"><span>${adminEscape(name)}</span><span class="admin-uid-sub">Legacy name entry — add Firebase UIDs before applying the secure rules</span></div><div class="admin-uid-actions"><span class="admin-legacy-pill">Legacy</span><button onclick="removeLegacyAdmin(decodeURIComponent('${encodedName}'))" class="admin-remove-btn">Remove</button></div></div>`;
+  }).join('');
+} else {
+  html = '<div class="admin-empty">No UID-based admins are configured yet. Add your Firebase UID below.</div>';
+}
+el.innerHTML = html;
+}
 function addAdmin(){
 if (!isAdmin){ showToast('Not authorised.', 'warn'); return; }
-const input = $('adminAddInput');
-const name  = (input?.value || '').trim();
-if (!name){ showToast('Enter a full name to add.'); return; }
-if (adminList.includes(name)){ showToast(name + ' is already an admin.', 'warn'); return; }
-adminListRef.set([...adminList, name]).catch(e => showFirebaseError(e.message));
-if (input) input.value = ''; }
-function removeAdmin(name){
+const input = $('adminUidInput') || $('adminAddInput');
+const uid = (input?.value || '').trim();
+if (!uid){ showToast('Enter the Firebase UID for the account to add.'); return; }
+if (uid.length > 128 || /[.#$\[\]/]/.test(uid)){ showToast('That does not look like a valid Firebase UID.', 'warn'); return; }
+if (adminUids && adminUids[uid] === true){ showToast('That account is already an admin.', 'warn'); return; }
+if (!adminUidsRef || !adminUidsRef.child){ showToast('Firebase is not connected.', 'warn'); return; }
+adminUidsRef.child(uid).set(true)
+.then(() =>{
+  if (input) input.value = '';
+  renderAdminPanel();
+  showToast('Admin access granted.', 'success');
+})
+.catch(e => showFirebaseError('Could not add admin: ' + e.message));
+}
+function removeAdmin(uid){
 if (!isAdmin){ showToast('Not authorised.', 'warn'); return; }
-showConfirm('Remove ' + name + ' from admins?', 'Remove').then(ok =>{
+const name = adminUidName(uid);
+const label = name ? name + ' (' + uid + ')' : uid;
+showConfirm('Remove ' + label + ' from UID-based admins?', 'Remove').then(ok =>{
 if (!ok) return;
-adminListRef.set(adminList.filter(n => n !== name)).catch(e => showFirebaseError(e.message));
-}); }
+adminUidsRef.child(uid).remove()
+.then(() =>{
+  renderAdminPanel();
+  showToast('Admin access removed.', 'success');
+})
+.catch(e => showFirebaseError('Could not remove admin: ' + e.message));
+});
+}
+function removeLegacyAdmin(name){
+if (!isAdmin){ showToast('Not authorised.', 'warn'); return; }
+showConfirm('Remove ' + name + ' from the legacy admin list?', 'Remove').then(ok =>{
+if (!ok) return;
+adminListRef.set((Array.isArray(adminList) ? adminList : []).filter(item => item !== name))
+.then(() => renderAdminPanel())
+.catch(e => showFirebaseError('Could not remove legacy admin: ' + e.message));
+});
+}
 const CAT_COLOR_DEFAULTS ={'Literature':'#3b82f6','Science':'#11998e','History':'#f97316','Social Studies':'#eab308','Pop Culture':'#a855f7','Fine Arts':'#06b6d4'};
 const CAT_ORDER = ['Literature', 'Science', 'History', 'Social Studies', 'Fine Arts', 'Pop Culture'];
 const CAT_FREQ_DEFAULTS ={
