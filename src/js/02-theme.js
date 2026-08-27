@@ -20,6 +20,10 @@ function syncThemeControls(){
       ? 'Following your device preference: ' + (devicePrefersDark() ? 'Dark' : 'Light') + '.'
       : 'Using ' + (mode === 'dark' ? 'Dark' : 'Light') + ' mode.';
   }
+  document.querySelectorAll('.vs-mode-btn').forEach(b =>{
+    b.classList.toggle('active', b.dataset.mode === mode);
+    b.setAttribute('aria-pressed', b.dataset.mode === mode ? 'true' : 'false');
+  });
   document.querySelectorAll('.auth-theme-btn').forEach(b =>{
     b.classList.toggle('active', b.dataset.theme === mode);
     b.setAttribute('aria-pressed', b.dataset.theme === mode ? 'true' : 'false');

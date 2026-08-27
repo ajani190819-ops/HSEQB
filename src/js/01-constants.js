@@ -1,6 +1,20 @@
-const VERSION = '3.9.0'; // auto-managed by bump.js
+const VERSION = '3.10.0'; // auto-managed by bump.js
 const DOWNLOAD_URL = 'https://raw.githubusercontent.com/ajani190819-ops/HSEQB/main/index.html';
 const DEFAULT_ACCENT = '#0b41a8'; // Royal — HSE High School royal blue
+const DEFAULT_COLOR_THEME = 'royal';
+// Named color themes: independent of light/dark mode, each supplies the accent
+// (--primary) and the gradient partner (--secondary). 'custom' is user-defined.
+const COLOR_THEMES = [
+  { id:'royal',   name:'Royal',   sub:'HSE',      primary:'#0b41a8', secondary:'#002b7f' },
+  { id:'indigo',  name:'Indigo',  sub:'Classic',  primary:'#667eea', secondary:'#764ba2' },
+  { id:'teal',    name:'Teal',    sub:'Fresh',    primary:'#11998e', secondary:'#38ef7d' },
+  { id:'crimson', name:'Crimson', sub:'Bold',     primary:'#dc3545', secondary:'#8e1b26' },
+  { id:'purple',  name:'Purple',  sub:'Deep',     primary:'#764ba2', secondary:'#3f2a63' },
+  { id:'sunset',  name:'Sunset',  sub:'Warm',     primary:'#f39c12', secondary:'#e0533d' },
+  { id:'slate',   name:'Slate',   sub:'Neutral',  primary:'#4a5568', secondary:'#2d3748' },
+  { id:'forest',  name:'Forest',  sub:'Earthy',   primary:'#2f855a', secondary:'#1c4532' }
+];
+function getColorTheme(id){ return COLOR_THEMES.find(t => t.id === id) || null; }
 const GITHUB_REPO_URL     = 'https://github.com/ajani190819-ops/HSEQB';
 const GITHUB_ISSUES_URL   = GITHUB_REPO_URL + '/issues';
 const GITHUB_RELEASES_URL = GITHUB_REPO_URL + '/releases';
@@ -25,6 +39,8 @@ return{ on:noop, off:noop, once:p, set:p, update:p, remove:p, child:noop, push:(
 let authUser = null; let authStarted = false; let appStarted = false;
 const THEME_MODES = ['light', 'dark', 'device'];
 let themeMode = 'device';
+let colorTheme = DEFAULT_COLOR_THEME;
+let customThemeColors = { primary:'#0b41a8', secondary:'#002b7f' };
 let _deviceThemeQuery = null;
 let _profileSaveTimer = null;
 let _profileLoadSequence = 0;
