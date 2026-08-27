@@ -1,0 +1,33 @@
+function restoreVisualSettings(){
+  const ls=window.LOCAL_SETTINGS||{};
+  const get=(k,fb)=>ls[k]!==undefined?ls[k]:(localStorage.getItem(k)??fb);
+  const storedMode=get('themeMode',null);
+  const legacyDark=get('darkMode',false);
+  const mode=storedMode && THEME_MODES.includes(String(storedMode).toLowerCase())
+    ? normalizeThemeMode(storedMode)
+    : (legacyDark === 'true' || legacyDark === true ? 'dark' : 'device');
+  applyTheme(mode,true,false);
+  const hide=get('hideScrollbars','false') === 'true' || get('hideScrollbars',false) === true;
+  document.body.classList.toggle('hide-scrollbars',hide);
+  const hideEl=$('hideScrollbarsToggle'); if(hideEl) hideEl.checked=hide;
+  localStorage.setItem('hideScrollbars',hide ? 'true' : 'false');
+  const ac=get('accentColor',null);
+  if(ac && /^#[0-9a-f]{6}$/i.test(ac)) setAccentColor(ac,true,false);
+  syncThemeControls();
+}
+function renderAll(){
+renderSessionInfo(); renderPlayerPool(); renderPlayerMgmt(); renderPlayerButtons(); renderSubPanel();
+renderPointTypeButtons(); renderTeams(); renderCategories(); renderAnswerLog(); renderStatistics(); renderTHeard();
+if(analyticsOpen) renderAnalytics();
+if($('sessionsModal')?.classList.contains('open')) renderSessionsList();
+setTimeout(updateFadeMasks,50); }
+function renderSessionInfo(){
+const s = getCurrentSession();
+if (!s) return;
+const set=(id,val)=>{const el=$(id);if(el)el.textContent=val;};
+set('sessionName',s.name);
+set('headerSessionName',  s.name);
+set('headerSessionNameMobile', s.name);
+set('sessionCreated',     new Date(s.created).toLocaleString());
+set('sessionLastUpdated', new Date(s.lastUpdated).toLocaleString());
+set('sessionAnswerCount', (s.answerLog || []).length); }

@@ -1,0 +1,9 @@
+{
+  "name": "hseqb",
+  "version": "3.6.1",
+  "private": true,
+  "description": "HSE Quiz Bowl Tracker - single-file app built from src/ modules.",
+  "scripts": {
+    "build": "node build.js"
+  }
+}

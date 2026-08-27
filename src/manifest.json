@@ -1,0 +1,52 @@
+{
+  "template": "src/index.template.html",
+  "output": "index.html",
+  "joinSeparator": "",
+  "blocks": {
+    "@@@CSS_CORE@@@": [
+      "src/css/core.css"
+    ],
+    "@@@CSS_THEME@@@": [
+      "src/css/theme.css"
+    ],
+    "@@@JS_THEME_INIT@@@": [
+      "src/js/theme-init.js"
+    ],
+    "@@@JS_SANDBOX@@@": [
+      "src/js/sandbox-warning.js"
+    ],
+    "@@@JS_MAIN@@@": [
+      "src/js/00-core-utils.js",
+      "src/js/01-constants.js",
+      "src/js/02-theme.js",
+      "src/js/03-auth.js",
+      "src/js/04-firebase-init.js",
+      "src/js/05-releases.js",
+      "src/js/06-user-identity.js",
+      "src/js/07-write-lock.js",
+      "src/js/08-session-model.js",
+      "src/js/09-state.js",
+      "src/js/10-sync-indicators.js",
+      "src/js/11-gh-deploy.js",
+      "src/js/12-data-load.js",
+      "src/js/13-sessions.js",
+      "src/js/14-player-detail.js",
+      "src/js/15-admin-panel.js",
+      "src/js/16-rename-substitute.js",
+      "src/js/17-analytics.js",
+      "src/js/18-analytics-players.js",
+      "src/js/19-analytics-teams.js",
+      "src/js/20-analytics-charts.js",
+      "src/js/21-sidebar-ui.js",
+      "src/js/22-visual-settings.js",
+      "src/js/23-player-management.js",
+      "src/js/24-quick-log.js",
+      "src/js/25-toasts.js",
+      "src/js/26-substitution-panel.js",
+      "src/js/27-setup-panels.js",
+      "src/js/28-recording-and-stats.js",
+      "src/js/29-data-io.js",
+      "src/js/30-debug-boot.js"
+    ]
+  }
+}
