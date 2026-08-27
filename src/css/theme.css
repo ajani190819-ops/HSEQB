@@ -330,3 +330,7 @@ button, .button, .ql-btn, .ql-cat-chip, .ql-confirm-btn, .ql-cancel-btn, .header
   .admin-uid-row { align-items:flex-start; flex-direction:column; }
   .admin-uid-actions { width:100%; justify-content:flex-end; }
 }
+
+/* Help modal — GitHub links */
+.help-github-links { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 12px; }
+.help-github-links .button { flex:1 1 180px; }
