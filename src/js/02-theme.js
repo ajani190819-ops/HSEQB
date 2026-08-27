@@ -36,6 +36,12 @@ function applyTheme(mode, persistLocal, syncRemote){
   if (document.body) document.body.classList.toggle('dark-mode', dark);
   document.documentElement.dataset.theme = themeMode;
   document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+  // Repaint the selected palette when appearance changes; this is what makes
+  // blue/red accents calmer on white surfaces and brighter on dark surfaces.
+  if (typeof _paintColors === 'function' && typeof colorTheme !== 'undefined') {
+    const palette = colorTheme === 'custom' ? customThemeColors : getColorTheme(colorTheme);
+    if (palette) _paintColors(palette.primary, palette.secondary, palette.tertiary);
+  }
   if (persistLocal !== false){
     localStorage.setItem('themeMode', themeMode);
     // Keep the old key in sync for files/settings created before theme selection existed.

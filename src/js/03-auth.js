@@ -93,7 +93,7 @@ function resetLocalCustomizationForAccountSwitch(){
   document.body.classList.remove('hide-scrollbars');
   const hideToggle=$('hideScrollbarsToggle'); if(hideToggle) hideToggle.checked=false;
   const base=getColorTheme(DEFAULT_COLOR_THEME);
-  customThemeColors={ primary:base.primary, secondary:base.secondary };
+  customThemeColors={ primary:base.primary, secondary:base.secondary, tertiary:base.tertiary || '#ffffff' };
   applyColorTheme(DEFAULT_COLOR_THEME, true, false);
 }
 function extractProfileCustomization(profile){
