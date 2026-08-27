@@ -2324,7 +2324,7 @@ html += `</div>`;
 if (activePlayers.length > 1){
 const distributionH = Math.max(320, activePlayers.length * 22 + 180);
 html += `<div class="ch-section">Overall Performance</div><div class="ch-player-row">${chartCard('chart-player-distribution', 'Overall Performance Distribution', distributionH, activePlayers.length > 4 ? '520px' : '300px')}</div>`;
-html += `<div style="font-size:.74em;color:var(--text3);line-height:1.45;margin:6px 2px 0;">Each dot is a player positioned by Leaderboard Score. The gold line marks the team average; the blue bell curve is a reference shape showing where performance is concentrated. Higher values are farther right.</div>`;
+html += `<div style="font-size:.74em;color:var(--text3);line-height:1.45;margin:6px 2px 0;">Each dot is a player positioned by Leaderboard Score. Players are spread vertically to prevent overlap; vertical position has no meaning. The gold line marks the team average; the blue bell curve is a reference shape. Higher scores are farther right.</div>`;
 }
 html += `</div>`;
 }
@@ -2508,10 +2508,16 @@ const x = curveMin + (range * i / 48);
 const z = (x - distribution.average) / curveSd;
 curve.push({ x, y:0.88 * Math.exp(-0.5 * z * z) });
 }
-const plottedPlayers = activePlayers.map((p, i) =>{
+// Player y-position is purely visual. Spread players through the available
+// vertical space, ordered by score, so equal/nearby scores do not stack on
+// top of one another. The y-axis has no performance meaning.
+const plottedPlayers = activePlayers.map(p =>{
 const m = distribution.byName[p.name];
-return { x:m.adjustedImpact === null ? distribution.average : m.adjustedImpact, y:0.07 + (i % 3) * 0.045, player:p.name, raw:m.rawImpact === null ? 0 : m.rawImpact, confidence:m.confidence };
-});
+return { x:m.adjustedImpact === null ? distribution.average : m.adjustedImpact, y:0, player:p.name, raw:m.rawImpact === null ? 0 : m.rawImpact, confidence:m.confidence };
+}).sort((a,b) => a.x - b.x).map((row, i, rows) => ({
+...row,
+y: rows.length === 1 ? 0.5 : 0.12 + (i / (rows.length - 1)) * 0.76
+}));
 const isDarkDist = document.body.classList.contains('dark-mode');
 const averageLinePlugin = {
 id:'performanceAverageLine',
@@ -2558,7 +2564,7 @@ data:{ datasets:[
 options:{ ...barOpts,
 scales:{
 x:{ type:'linear', min:curveMin, max:curveMax, ticks:{ color:labelColor, font:{...baseFont,size:11}, maxTicksLimit:8 }, grid:{ color:gridColor }, title:{ display:true, text:'Leaderboard Score (higher is better →)', color:labelColor, font:{...baseFont,size:11} } },
-y:{ min:0, max:1.02, ticks:{ display:false }, grid:{ color:gridColor }, title:{ display:true, text:'Reference distribution', color:labelColor, font:{...baseFont,size:11} } }
+y:{ min:0, max:1.02, ticks:{ display:false }, grid:{ color:gridColor }, title:{ display:true, text:'Visual spacing only', color:labelColor, font:{...baseFont,size:11} } }
 },
 plugins:{ ...pluginDefaults, legend:{ ...pluginDefaults.legend, position:'bottom' }, tooltip:{ ...pluginDefaults.tooltip, callbacks:{ label:ctx =>{
 if (ctx.datasetIndex === 0) return 'Reference curve';
