@@ -1,6 +1,40 @@
 {
   "rules": {
-    ".read": "auth != null",
-    ".write": "auth != null"
+    ".read": false,
+    ".write": false,
+    "sessions": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "globalPlayers": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "globalSettings": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "appVersion": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "userIdentities": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "adminList": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "config": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "userProfiles": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    }
   }
 }
