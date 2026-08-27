@@ -38,7 +38,7 @@ function getUserCustomization(){
   const inlineAccent = document.documentElement.style.getPropertyValue('--primary').trim();
   return {
     themeMode: normalizeThemeMode(themeMode),
-    accentColor: inlineAccent || localStorage.getItem('accentColor') || '#667eea',
+    accentColor: inlineAccent || localStorage.getItem('accentColor') || DEFAULT_ACCENT,
     hideScrollbars: !!document.body?.classList.contains('hide-scrollbars'),
     sidebarCollapsed: !!$('mainSidebar')?.classList.contains('collapsed')
   };
@@ -83,10 +83,10 @@ function resetLocalCustomizationForAccountSwitch(){
   localStorage.removeItem('hideScrollbars');
   localStorage.removeItem('sidebarCollapsed');
   applyTheme('device', true, false);
-  document.documentElement.style.removeProperty('--primary');
+  ['--primary','--primary-light','--primary-dark','--secondary'].forEach(v => document.documentElement.style.removeProperty(v));
   document.body.classList.remove('hide-scrollbars');
   const hideToggle=$('hideScrollbarsToggle'); if(hideToggle) hideToggle.checked=false;
-  const accentSelect=$('accentColorSelect'); if(accentSelect) accentSelect.value='#667eea';
+  const accentSelect=$('accentColorSelect'); if(accentSelect) accentSelect.value=DEFAULT_ACCENT;
 }
 function extractProfileCustomization(profile){
   const source = { ...(profile || {}), ...(profile?.settings || {}), ...(profile?.customization || {}) };

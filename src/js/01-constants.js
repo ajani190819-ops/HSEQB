@@ -1,5 +1,6 @@
-const VERSION = '3.8.0'; // auto-managed by bump.js
+const VERSION = '3.9.0'; // auto-managed by bump.js
 const DOWNLOAD_URL = 'https://raw.githubusercontent.com/ajani190819-ops/HSEQB/main/index.html';
+const DEFAULT_ACCENT = '#0b41a8'; // Royal — HSE High School royal blue
 const GITHUB_REPO_URL     = 'https://github.com/ajani190819-ops/HSEQB';
 const GITHUB_ISSUES_URL   = GITHUB_REPO_URL + '/issues';
 const GITHUB_RELEASES_URL = GITHUB_REPO_URL + '/releases';

@@ -13,6 +13,7 @@ function restoreVisualSettings(){
   localStorage.setItem('hideScrollbars',hide ? 'true' : 'false');
   const ac=get('accentColor',null);
   if(ac && /^#[0-9a-f]{6}$/i.test(ac)) setAccentColor(ac,true,false);
+  else { const sel=$('accentColorSelect'); if(sel) sel.value=DEFAULT_ACCENT; }
   syncThemeControls();
 }
 function renderAll(){

@@ -76,9 +76,20 @@ else{const c=isIframe?false:localStorage.getItem('sidebarCollapsed')==='true';si
 function toggleDarkMode(){
   setThemeMode(themeMode === 'dark' ? 'light' : 'dark', true);
 }
+function _shadeHex(hex, amount){
+  const n = parseInt(hex.slice(1), 16);
+  const mix = c => Math.round(amount < 0 ? c * (1 + amount) : c + (255 - c) * amount);
+  const r = mix((n >> 16) & 255), g = mix((n >> 8) & 255), b = mix(n & 255);
+  return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+}
 function setAccentColor(color, persistLocal, syncRemote){
   if (!/^#[0-9a-f]{6}$/i.test(color || '')) return;
-  document.documentElement.style.setProperty('--primary', color);
+  const root = document.documentElement.style;
+  root.setProperty('--primary', color);
+  root.setProperty('--primary-light', _shadeHex(color, 0.28));
+  root.setProperty('--primary-dark',  _shadeHex(color, -0.28));
+  if (color.toLowerCase() === DEFAULT_ACCENT) root.setProperty('--secondary', '#002b7f');
+  else root.removeProperty('--secondary');
   if (persistLocal !== false) localStorage.setItem('accentColor', color);
   const select=$('accentColorSelect'); if(select) select.value=color;
   if (syncRemote !== false) scheduleUserProfileSave();
