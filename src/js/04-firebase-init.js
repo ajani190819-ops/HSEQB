@@ -1,13 +1,13 @@
 function initFirebase(){
 if (isIframe){
-db=null; sessionsRef=_noopRef(); globalPlayersRef=_noopRef(); versionRef=_noopRef(); globalSettingsRef=_noopRef(); userIdentitiesRef=_noopRef(); userProfilesRef=_noopRef(); userProfileRef=null; adminListRef=_noopRef();
+db=null; sessionsRef=_noopRef(); globalPlayersRef=_noopRef(); versionRef=_noopRef(); releaseHtmlRef=_noopRef(); globalSettingsRef=_noopRef(); userIdentitiesRef=_noopRef(); userProfilesRef=_noopRef(); userProfileRef=null; adminListRef=_noopRef();
 startApp();
 return; }
 if (typeof firebase === 'undefined'){ setTimeout(initFirebase, 50); return; }
 const firebaseConfig ={apiKey:"AIzaSyCRkK3IpRXeQC9JH73iC0tC-mjq5nulaAo",authDomain:"hse-quiz-bowl.firebaseapp.com",databaseURL:"https://hse-quiz-bowl-default-rtdb.firebaseio.com",projectId:"hse-quiz-bowl",storageBucket:"hse-quiz-bowl.firebasestorage.app",messagingSenderId:"676670239956",appId:"1:676670239956:web:9c569fc74ecf21de25f741"};
 try{ firebase.app(); } catch(e){ firebase.initializeApp(firebaseConfig); }
 db=firebase.database();
-sessionsRef=db.ref('sessions'); globalPlayersRef=db.ref('globalPlayers'); versionRef=db.ref('appVersion');
+sessionsRef=db.ref('sessions'); globalPlayersRef=db.ref('globalPlayers'); versionRef=db.ref('appVersion'); releaseHtmlRef=db.ref('releaseHtml');
 globalSettingsRef=db.ref('globalSettings'); userIdentitiesRef=db.ref('userIdentities'); userProfilesRef=db.ref('userProfiles'); adminListRef=db.ref('adminList');
 setupDeviceThemeListener();
 restoreVisualSettings();
@@ -22,6 +22,7 @@ const remoteBuild = (typeof data === 'object') ? (data.buildId || '')      :'';
 const downloadUrl = (typeof data === 'object') ? (data.downloadUrl || '')  :'';
 const releaseNotes= (typeof data === 'object') ? (data.releaseNotes || '') :'';
 const remoteLabel = (typeof data === 'object') ? (data.label || '')         :'';
+const hasFirebasePayload = (typeof data === 'object') ? !!data.hasFirebasePayload : false;
 // Badge always reflects FILE_VERSION — intentionally not set from Firebase
 // Pre-fill URL, version label, and release notes inputs if admin hasn't typed in them yet
 const rnInput = $('releaseNotesInput');
@@ -62,7 +63,7 @@ const remoteIsNewer  = remoteBuild && remoteLabel && isNewer(remoteBuild, FILE_B
 const localIsNewer   = remoteBuild && isNewer(FILE_BUILD_ID, remoteBuild);
 const isUnpublishedLocal = !remoteBuild || localIsNewer || FILE_BUILD_ID === remoteBuild;
 if (shouldCheckUpdates && remoteIsNewer){
-showUpdateBanner(remoteLabel, downloadUrl, releaseNotes);
+showUpdateBanner(remoteLabel, downloadUrl, releaseNotes, hasFirebasePayload);
 } else if (shouldCheckUpdates && (localIsNewer || !remoteBuild)){
 showDevBanner();
 } else{
