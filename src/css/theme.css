@@ -330,3 +330,61 @@ button, .button, .ql-btn, .ql-cat-chip, .ql-confirm-btn, .ql-cancel-btn, .header
   .admin-uid-row { align-items:flex-start; flex-direction:column; }
   .admin-uid-actions { width:100%; justify-content:flex-end; }
 }
+
+/* Help modal — GitHub links */
+.help-github-links { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 12px; }
+.help-github-links .button { flex:1 1 180px; }
+
+/* ── Visual Settings panel ────────────────────────────────────────────────
+   Appearance (light/dark) and Color Theme (palette) are separate controls:
+   a palette sets --primary/--secondary only, so it works in either mode.   */
+.vs-note { font-size:.78em; color:var(--text2); margin-bottom:14px; padding:8px 10px; background:var(--hover); border-radius:6px; border:1.5px solid var(--border); line-height:1.5; }
+.vs-block { padding:12px 0 14px; border-top:1.5px solid var(--border); }
+.vs-block:first-of-type { border-top:0; padding-top:0; }
+.vs-block-head { display:flex; align-items:baseline; justify-content:space-between; gap:8px; margin-bottom:9px; }
+.vs-block-title { font-weight:700; font-size:.88em; color:var(--text); }
+.vs-block-sub { font-size:.72em; color:var(--text3); font-weight:600; text-align:right; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.vs-hint { font-size:.74em; color:var(--text3); line-height:1.45; margin-top:7px; }
+.vs-hint-top { margin-top:0; margin-bottom:9px; }
+.vs-sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
+
+/* Light / Dark / Device segmented control */
+.vs-mode-row { display:flex; gap:6px; }
+.vs-mode-btn { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:9px 4px; border:2px solid var(--border); border-radius:var(--radius-sm);
+  background:var(--card); color:var(--text2); font-family:inherit; font-size:.76em; font-weight:700; cursor:pointer; transition:border-color .15s, color .15s, background .15s; touch-action:manipulation; }
+.vs-mode-btn .vs-mode-icon { font-size:1.15em; line-height:1; }
+.vs-mode-btn:hover { border-color:var(--primary-light); color:var(--text); }
+.vs-mode-btn.active { border-color:var(--primary); color:#fff; background:linear-gradient(135deg,var(--primary),var(--secondary)); box-shadow:var(--shadow-xs); }
+
+/* Color theme swatches */
+.theme-swatch-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(84px,1fr)); gap:7px; }
+.theme-swatch { display:flex; flex-direction:column; align-items:center; gap:4px; padding:9px 5px; border:2px solid var(--border); border-radius:var(--radius-sm);
+  background:var(--card); cursor:pointer; font-family:inherit; transition:border-color .15s, transform .12s, box-shadow .15s; touch-action:manipulation; }
+.theme-swatch:hover { border-color:var(--primary-light); transform:translateY(-1px); }
+.theme-swatch.active { border-color:var(--primary); box-shadow:0 0 0 2px color-mix(in srgb, var(--primary) 28%, transparent); }
+.theme-swatch-chip { width:100%; height:26px; border-radius:6px; border:1.5px solid rgba(0,0,0,.18); box-shadow:inset 0 1px 3px rgba(255,255,255,.25); }
+.theme-swatch-name { font-size:.76em; font-weight:700; color:var(--text); line-height:1.1; }
+.theme-swatch-sub { font-size:.65em; font-weight:600; color:var(--text3); line-height:1.1; }
+.theme-swatch.active .theme-swatch-name { color:var(--primary); }
+.theme-swatch-custom .theme-swatch-chip { position:relative; }
+.theme-swatch-custom .theme-swatch-chip::after { content:'+'; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:1em; text-shadow:0 1px 3px rgba(0,0,0,.45); }
+
+/* Custom color pickers */
+.custom-theme-panel { margin-top:10px; padding:11px 12px; border:1.5px solid var(--border); border-radius:var(--radius-sm); background:var(--sec-bg); }
+.custom-theme-row { display:flex; align-items:center; gap:9px; margin-bottom:9px; }
+.custom-theme-row label { flex:0 0 62px; font-size:.8em; font-weight:700; color:var(--text2); }
+.custom-color-input { flex:0 0 46px; width:46px; height:34px; padding:2px; border:1.5px solid var(--border); border-radius:6px; background:var(--card); cursor:pointer; }
+.custom-hex-input { flex:1; min-width:0; padding:7px 9px; border:1.5px solid var(--border); border-radius:6px; background:var(--input-bg); color:var(--input-text);
+  font-family:monospace; font-size:.85em; text-transform:lowercase; }
+.vs-reset-btn { width:100%; margin-top:4px; }
+
+/* Interface toggles */
+.vs-toggle-row { display:flex; align-items:center; gap:11px; }
+.vs-toggle-copy { display:flex; flex-direction:column; gap:2px; min-width:0; }
+.vs-toggle-copy strong { font-size:.84em; font-weight:700; color:var(--text); }
+.vs-toggle-copy span { font-size:.73em; color:var(--text3); line-height:1.4; }
+
+@media (pointer: coarse) {
+  .vs-mode-btn, .theme-swatch { min-height:56px; }
+  .custom-hex-input { font-size:16px; }
+}

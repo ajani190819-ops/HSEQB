@@ -29,6 +29,13 @@ const sourceEl = $('helpLoadingSource');
 if (sourceEl) sourceEl.textContent = loadingSource;
 $('helpModal').classList.add('open'); }
 function closeHelpModal()    { $('helpModal').classList.remove('open'); }
+function openExternalLink(url){
+try { const w = window.open(url, '_blank', 'noopener,noreferrer'); if (w) { w.opener = null; return; } } catch(e) {}
+try { if (typeof showToast === 'function') showToast('Popup blocked — open manually: ' + url, 'warning', 6000); else window.location.href = url; } catch(e) {}
+}
+function openGitHubRepo()     { openExternalLink(GITHUB_REPO_URL); }
+function openGitHubIssues()   { openExternalLink(GITHUB_ISSUES_URL); }
+function openGitHubReleases() { openExternalLink(GITHUB_RELEASES_URL); }
 var sessionSelection = new Set();
 function renderSessionsList(){
 const list = $('sessionsList');

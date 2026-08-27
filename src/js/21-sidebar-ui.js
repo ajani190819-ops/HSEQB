@@ -76,12 +76,92 @@ else{const c=isIframe?false:localStorage.getItem('sidebarCollapsed')==='true';si
 function toggleDarkMode(){
   setThemeMode(themeMode === 'dark' ? 'light' : 'dark', true);
 }
-function setAccentColor(color, persistLocal, syncRemote){
-  if (!/^#[0-9a-f]{6}$/i.test(color || '')) return;
-  document.documentElement.style.setProperty('--primary', color);
-  if (persistLocal !== false) localStorage.setItem('accentColor', color);
-  const select=$('accentColorSelect'); if(select) select.value=color;
+function _shadeHex(hex, amount){
+  const n = parseInt(hex.slice(1), 16);
+  const mix = c => Math.round(amount < 0 ? c * (1 + amount) : c + (255 - c) * amount);
+  const r = mix((n >> 16) & 255), g = mix((n >> 8) & 255), b = mix(n & 255);
+  return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+}
+function _isHex(v){ return /^#[0-9a-f]{6}$/i.test(v || ''); }
+// Paint the four accent custom properties. Everything else in the stylesheet
+// derives from these, so light/dark mode stays completely independent.
+function _paintColors(primary, secondary){
+  const root = document.documentElement.style;
+  root.setProperty('--primary', primary);
+  root.setProperty('--primary-light', _shadeHex(primary, 0.28));
+  root.setProperty('--primary-dark',  _shadeHex(primary, -0.28));
+  root.setProperty('--secondary', secondary || _shadeHex(primary, -0.45));
+}
+function applyColorTheme(id, persistLocal, syncRemote){
+  const custom = id === 'custom';
+  const theme = custom ? null : getColorTheme(id);
+  if (!custom && !theme) return applyColorTheme(DEFAULT_COLOR_THEME, persistLocal, syncRemote);
+  colorTheme = custom ? 'custom' : theme.id;
+  const primary   = custom ? customThemeColors.primary   : theme.primary;
+  const secondary = custom ? customThemeColors.secondary : theme.secondary;
+  _paintColors(primary, secondary);
+  if (persistLocal !== false){
+    localStorage.setItem('colorTheme', colorTheme);
+    localStorage.setItem('accentColor', primary); // legacy key stays in sync
+    if (custom){
+      localStorage.setItem('customPrimary', primary);
+      localStorage.setItem('customSecondary', secondary);
+    }
+  }
+  syncColorThemeControls();
+  if (typeof _chartInstances !== 'undefined' && _chartInstances){
+    Object.values(_chartInstances).forEach(chart =>{ try{ chart.update(); }catch(e){} });
+  }
   if (syncRemote !== false) scheduleUserProfileSave();
+}
+function setColorTheme(id){ applyColorTheme(id, true, true); }
+function setCustomThemeColor(which, value){
+  if (!_isHex(value)) return;
+  customThemeColors[which === 'secondary' ? 'secondary' : 'primary'] = value.toLowerCase();
+  applyColorTheme('custom', true, true);
+}
+function resetCustomTheme(){
+  const base = getColorTheme(DEFAULT_COLOR_THEME);
+  customThemeColors = { primary:base.primary, secondary:base.secondary };
+  applyColorTheme('custom', true, true);
+}
+// Rebuild the swatch grid, mark the active card, and mirror the custom inputs.
+function renderColorThemeGrid(){
+  const grid = $('colorThemeGrid');
+  if (!grid) return;
+  grid.innerHTML = COLOR_THEMES.map(t => `
+    <button type="button" class="theme-swatch${colorTheme === t.id ? ' active' : ''}" data-theme="${t.id}"
+            onclick="setColorTheme('${t.id}')" aria-pressed="${colorTheme === t.id}" title="${t.name} — ${t.sub}">
+      <span class="theme-swatch-chip" style="background:linear-gradient(135deg,${t.primary},${t.secondary});"></span>
+      <span class="theme-swatch-name">${t.name}</span>
+      <span class="theme-swatch-sub">${t.sub}</span>
+    </button>`).join('') + `
+    <button type="button" class="theme-swatch theme-swatch-custom${colorTheme === 'custom' ? ' active' : ''}" data-theme="custom"
+            onclick="setColorTheme('custom')" aria-pressed="${colorTheme === 'custom'}" title="Custom — pick your own colors">
+      <span class="theme-swatch-chip" style="background:linear-gradient(135deg,${customThemeColors.primary},${customThemeColors.secondary});"></span>
+      <span class="theme-swatch-name">Custom</span>
+      <span class="theme-swatch-sub">Your colors</span>
+    </button>`;
+}
+function syncColorThemeControls(){
+  renderColorThemeGrid();
+  const panel = $('customThemePanel');
+  if (panel) panel.style.display = colorTheme === 'custom' ? 'block' : 'none';
+  const p = $('customPrimaryInput');    if (p) p.value = customThemeColors.primary;
+  const s = $('customSecondaryInput');  if (s) s.value = customThemeColors.secondary;
+  const ph = $('customPrimaryHex');     if (ph) ph.value = customThemeColors.primary;
+  const sh = $('customSecondaryHex');   if (sh) sh.value = customThemeColors.secondary;
+  const active = colorTheme === 'custom' ? { name:'Custom', sub:'Your colors' } : getColorTheme(colorTheme);
+  const label = $('activeThemeLabel');
+  if (label && active) label.textContent = active.name + ' — ' + active.sub;
+}
+// Back-compat: older profiles and LOCAL_SETTINGS store a bare accent hex.
+function setAccentColor(color, persistLocal, syncRemote){
+  if (!_isHex(color)) return;
+  const match = COLOR_THEMES.find(t => t.primary.toLowerCase() === color.toLowerCase());
+  if (match) return applyColorTheme(match.id, persistLocal, syncRemote);
+  customThemeColors = { primary:color.toLowerCase(), secondary:_shadeHex(color, -0.45) };
+  applyColorTheme('custom', persistLocal, syncRemote);
 }
 function changeSkillThreshold(delta){
 const oldThreshold = skillThresholdPct;

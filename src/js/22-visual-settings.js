@@ -11,8 +11,14 @@ function restoreVisualSettings(){
   document.body.classList.toggle('hide-scrollbars',hide);
   const hideEl=$('hideScrollbarsToggle'); if(hideEl) hideEl.checked=hide;
   localStorage.setItem('hideScrollbars',hide ? 'true' : 'false');
+  const cp=get('customPrimary',null), cs=get('customSecondary',null);
+  if(/^#[0-9a-f]{6}$/i.test(cp||'')) customThemeColors.primary=String(cp).toLowerCase();
+  if(/^#[0-9a-f]{6}$/i.test(cs||'')) customThemeColors.secondary=String(cs).toLowerCase();
+  const ct=get('colorTheme',null);
   const ac=get('accentColor',null);
-  if(ac && /^#[0-9a-f]{6}$/i.test(ac)) setAccentColor(ac,true,false);
+  if(ct==='custom' || getColorTheme(ct)) applyColorTheme(ct,true,false);
+  else if(/^#[0-9a-f]{6}$/i.test(ac||'')) setAccentColor(ac,true,false);   // pre-theme files
+  else applyColorTheme(DEFAULT_COLOR_THEME,true,false);
   syncThemeControls();
 }
 function renderAll(){
