@@ -383,7 +383,7 @@ function resetLocalCustomizationForAccountSwitch(){
   const accentSelect=$('accentColorSelect'); if(accentSelect) accentSelect.value='#667eea';
 }
 function extractProfileCustomization(profile){
-  const source = profile?.customization || profile?.settings || profile || {};
+  const source = { ...(profile || {}), ...(profile?.settings || {}), ...(profile?.customization || {}) };
   const result = {};
   const mode = source.themeMode || source.theme;
   if (THEME_MODES.includes(String(mode || '').toLowerCase())) result.themeMode = normalizeThemeMode(mode);
