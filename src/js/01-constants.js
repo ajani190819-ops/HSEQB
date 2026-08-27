@@ -1,4 +1,4 @@
-const VERSION = '3.7.0'; // ← Change only this each release
+const VERSION = '3.7.0'; // auto-managed by bump.js
 const DOWNLOAD_URL = 'https://raw.githubusercontent.com/ajani190819-ops/HSEQB/main/index.html';
 const DISPLAY_VERSION = VERSION; const INTERNAL_BUILD = VERSION;
 const FILE_VERSION    = VERSION; const FILE_BUILD_ID  = VERSION;
