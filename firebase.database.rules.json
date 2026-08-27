@@ -22,6 +22,10 @@
       ".read": "auth != null",
       ".write": "auth != null"
     },
+    "releaseHistory": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
     "userIdentities": {
       ".read": "auth != null",
       ".write": "auth != null"

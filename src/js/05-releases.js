@@ -18,8 +18,15 @@ const prompt   = $('releasePrompt');
 const upToDate = $('releaseUpToDate');
 if (!prompt || !upToDate) return;
 const isUnpublished = !remoteBuild || remoteBuild !== FILE_BUILD_ID;
-if (isUnpublished){ prompt.classList.remove('hidden'); upToDate.classList.add('hidden'); }
-else { prompt.classList.add('hidden'); upToDate.classList.remove('hidden'); }
+if (isUnpublished){
+  prompt.classList.remove('hidden');
+  upToDate.classList.add('hidden');
+  upToDate.style.display = 'none';
+} else {
+  prompt.classList.add('hidden');
+  upToDate.classList.remove('hidden');
+  upToDate.style.display = 'block';
+}
 }
 function setReleaseUploadStatus(msg, kind){
 const el = $('releaseUploadStatus');
@@ -45,9 +52,12 @@ finish(false, 'Metadata published — the HTML payload failed to upload (' + e.m
 function publishRelease(){
 if (!isAdmin){ showToast('Not authorised.', 'warn'); return; }
 if (!db || !releaseHtmlRef || !releaseHtmlRef.set){ showToast('Firebase is not connected — cannot publish.', 'warn'); return; }
-const notes    = ($('releaseNotesInput')?.value || '').trim();
-const comments = ($('adminCommentsInput')?.value || '').trim();
-const payload  = { label:FILE_VERSION, buildId:FILE_BUILD_ID, downloadUrl:DOWNLOAD_URL, releaseNotes:notes, adminComments:comments, hasFirebasePayload:false, lastUpdated:new Date().toISOString() };
+const title    = ($('releaseTitleInput')?.value || '').trim().slice(0, 120);
+const notes    = ($('releaseNotesInput')?.value || '').trim().slice(0, 5000);
+const comments = ($('adminCommentsInput')?.value || '').trim().slice(0, 2000);
+if (!title){ showToast('Add a short title for this update.', 'warn'); $('releaseTitleInput')?.focus(); return; }
+if (!notes){ showToast('Write the public changelog before publishing.', 'warn'); $('releaseNotesInput')?.focus(); return; }
+const payload  = { label:FILE_VERSION, buildId:FILE_BUILD_ID, title, downloadUrl:DOWNLOAD_URL, releaseNotes:notes, adminComments:comments, hasFirebasePayload:false, lastUpdated:new Date().toISOString() };
 const fileInput = $('releaseFileInput');
 const file = fileInput && fileInput.files && fileInput.files[0];
 const setStatus = (msg, kind) => setReleaseUploadStatus(msg, kind);
@@ -55,15 +65,19 @@ setStatus('Preparing release…');
 const finish = (hasPayload, statusMsg) =>{
 payload.hasFirebasePayload = !!hasPayload;
 versionRef.set(payload)
+.then(() => recordPublishedRelease({ ...payload, publishedAt:new Date().toISOString() }))
 .then(() =>{
 showToast('Published v'+FILE_VERSION, 'success');
 hideUpdateBanner();
 checkReleasePrompt(FILE_BUILD_ID);
-if (statusMsg) setStatus(statusMsg, 'ok');
-else if (!$('releaseUploadStatus')?.textContent?.trim()) setStatus('Published.', 'ok');
+if (statusMsg) setStatus(statusMsg + ' Changelog saved.', 'ok');
+else if (!$('releaseUploadStatus')?.textContent?.trim()) setStatus('Published and added to the changelog.', 'ok');
 if (fileInput) fileInput.value = '';
 })
-.catch(e =>{ showFirebaseError(e.message); setStatus('Metadata publish failed: ' + e.message, 'err'); });
+.catch(e =>{
+showFirebaseError(e.message);
+setStatus('Release published, but the changelog could not be saved: ' + e.message, 'err');
+});
 };
 // Publishing metadata without a fresh HTML payload must not leave a stale releaseHtml behind,
 // otherwise users would download an outdated file. Clear it so downloadUpdate falls back to GitHub.
@@ -99,10 +113,14 @@ const banner = $('updateBanner');
 if (!banner) return;
 const hasUrl = downloadUrl && downloadUrl.startsWith('http');
 const viaFb  = !!hasFirebasePayload;
+const encodedDownloadUrl = hasUrl ? encodeURIComponent(downloadUrl) : '';
+const safeLabel = typeof updatesEscapeHtml === 'function' ? updatesEscapeHtml(newLabel) : String(newLabel || '');
+const safeNotes = typeof updatesEscapeHtml === 'function' ? updatesEscapeHtml(notes) : String(notes || '');
 banner.innerHTML =
 `<span class="ub-icon">▲</span>` +
-`<span class="ub-msg">This file is <strong>outdated / unpublished</strong> — published version is <strong>${newLabel}</strong> (you have ${FILE_VERSION})${notes ? ` — ${notes}` :''}.</span>` +
-(hasUrl ? `<button class="ub-btn ub-download" onclick="downloadUpdate('${downloadUrl}')">↓ Download Update${viaFb ? ' (Firebase)' : ''}</button>` :'') +
+`<span class="ub-msg">This file is <strong>outdated / unpublished</strong> — published version is <strong>${safeLabel}</strong> (you have ${FILE_VERSION})${notes ? ` — ${safeNotes}` :''}.</span>` +
+`<button class="ub-btn ub-history" onclick="openUpdatesModal()">View updates</button>` +
+(hasUrl ? `<button class="ub-btn ub-download" onclick="downloadUpdate(decodeURIComponent('${encodedDownloadUrl}'))">↓ Download Update${viaFb ? ' (Firebase)' : ''}</button>` :'') +
 `<button class="ub-btn ub-dismiss" onclick="hideUpdateBanner()" title="Dismiss">✕</button>`;
 banner.classList.add('show'); }
 function hideUpdateBanner(){

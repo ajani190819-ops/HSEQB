@@ -1,13 +1,13 @@
 function initFirebase(){
 if (isIframe){
-db=null; sessionsRef=_noopRef(); globalPlayersRef=_noopRef(); versionRef=_noopRef(); releaseHtmlRef=_noopRef(); globalSettingsRef=_noopRef(); userIdentitiesRef=_noopRef(); userProfilesRef=_noopRef(); userProfileRef=null; adminListRef=_noopRef();
+db=null; sessionsRef=_noopRef(); globalPlayersRef=_noopRef(); versionRef=_noopRef(); releaseHtmlRef=_noopRef(); releaseHistoryRef=_noopRef(); globalSettingsRef=_noopRef(); userIdentitiesRef=_noopRef(); userProfilesRef=_noopRef(); userProfileRef=null; adminListRef=_noopRef();
 startApp();
 return; }
 if (typeof firebase === 'undefined'){ setTimeout(initFirebase, 50); return; }
 const firebaseConfig ={apiKey:"AIzaSyCRkK3IpRXeQC9JH73iC0tC-mjq5nulaAo",authDomain:"hse-quiz-bowl.firebaseapp.com",databaseURL:"https://hse-quiz-bowl-default-rtdb.firebaseio.com",projectId:"hse-quiz-bowl",storageBucket:"hse-quiz-bowl.firebasestorage.app",messagingSenderId:"676670239956",appId:"1:676670239956:web:9c569fc74ecf21de25f741"};
 try{ firebase.app(); } catch(e){ firebase.initializeApp(firebaseConfig); }
 db=firebase.database();
-sessionsRef=db.ref('sessions'); globalPlayersRef=db.ref('globalPlayers'); versionRef=db.ref('appVersion'); releaseHtmlRef=db.ref('releaseHtml');
+sessionsRef=db.ref('sessions'); globalPlayersRef=db.ref('globalPlayers'); versionRef=db.ref('appVersion'); releaseHtmlRef=db.ref('releaseHtml'); releaseHistoryRef=db.ref('releaseHistory');
 globalSettingsRef=db.ref('globalSettings'); userIdentitiesRef=db.ref('userIdentities'); userProfilesRef=db.ref('userProfiles'); adminListRef=db.ref('adminList');
 setupDeviceThemeListener();
 restoreVisualSettings();
@@ -16,17 +16,20 @@ initAuth(); }
 function startApp(){
 versionRef.on('value', snap =>{
 const data = snap.val();
-if (!data){ checkReleasePrompt(''); return; }
+if (!data){ setLatestReleaseMeta(null); checkReleasePrompt(''); return; }
 // Support both old string format and new object format
 const remoteBuild = (typeof data === 'object') ? (data.buildId || '')      :'';
 const downloadUrl = (typeof data === 'object') ? (data.downloadUrl || '')  :'';
 const releaseNotes= (typeof data === 'object') ? (data.releaseNotes || '') :'';
 const remoteLabel = (typeof data === 'object') ? (data.label || '')         :'';
 const hasFirebasePayload = (typeof data === 'object') ? !!data.hasFirebasePayload : false;
+setLatestReleaseMeta(data);
 // Badge always reflects FILE_VERSION — intentionally not set from Firebase
 // Pre-fill URL, version label, and release notes inputs if admin hasn't typed in them yet
 const rnInput = $('releaseNotesInput');
 if (rnInput && document.activeElement !== rnInput && !rnInput.value) rnInput.value = releaseNotes;
+const titleInput = $('releaseTitleInput');
+if (titleInput && document.activeElement !== titleInput && !titleInput.value) titleInput.value = 'HSE Quiz Bowl Tracker v' + FILE_VERSION;
 // Populate version preview label
 // Update live build display in admin panel
 const liveDisp = $('liveFirebaseBuildDisplay');
@@ -71,6 +74,10 @@ hideUpdateBanner(); }
 // Store loading source for help menu
 const loadingSource = isLocalFile ? 'Local File' :isGitHubPages ? 'GitHub Pages' :isOtherOnline ? 'Online' :'Unknown';
 localStorage.setItem('qb_loadingSource', loadingSource); });
+releaseHistoryRef.on('value', snap =>{
+releaseHistoryCache = snap.val() || {};
+if (updatesModalOpen) renderUpdatesCenter();
+});
 globalSettingsRef.on('value', snap =>{
 const s = snap.val(); if (!s) return;
 let changed = false;
