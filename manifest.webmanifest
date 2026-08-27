@@ -1,0 +1,15 @@
+{
+  "name": "HSE Quiz Bowl Tracker",
+  "short_name": "HSE QB",
+  "description": "Live quiz bowl score, answer, and analytics tracker.",
+  "id": "hse-quiz-bowl-tracker",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f4f6fb",
+  "theme_color": "#667eea",
+  "icons": [
+    { "src": "icons/icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
