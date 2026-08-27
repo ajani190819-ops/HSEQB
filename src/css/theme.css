@@ -314,3 +314,19 @@ button, .button, .ql-btn, .ql-cat-chip, .ql-confirm-btn, .ql-cancel-btn, .header
 /* The history action can wrap beside the download action on narrow screens. */
 #updateBanner.show { max-height: 100px; }
 @media (max-width: 600px) { #updateBanner.show { max-height: 180px; } }
+
+/* UID-based administrator management */
+.admin-uid-row { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:9px 10px; border-bottom:1.5px solid var(--border); font-size:.84em; }
+.admin-uid-row:last-child { border-bottom:0; }
+.admin-uid-label { min-width:0; display:flex; flex-direction:column; gap:2px; font-weight:650; color:var(--text); overflow:hidden; }
+.admin-uid-sub { color:var(--text3); font-family:monospace; font-size:.76em; font-weight:400; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.admin-uid-actions { display:flex; align-items:center; gap:6px; flex-shrink:0; }
+.admin-current-pill, .admin-legacy-pill { padding:3px 7px; border-radius:20px; font-size:.68em; font-weight:800; white-space:nowrap; }
+.admin-current-pill { color:var(--success); background:rgba(17,153,142,.12); }
+.admin-legacy-pill { color:var(--warning); background:rgba(243,156,18,.13); }
+.admin-remove-btn { background:none; border:1px solid var(--danger); color:var(--danger); border-radius:5px; padding:3px 9px; font-size:.78em; cursor:pointer; font-family:inherit; }
+.admin-empty { padding:12px; color:var(--text2); font-size:.82em; line-height:1.45; }
+@media (max-width: 600px) {
+  .admin-uid-row { align-items:flex-start; flex-direction:column; }
+  .admin-uid-actions { width:100%; justify-content:flex-end; }
+}

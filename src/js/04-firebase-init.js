@@ -1,6 +1,6 @@
 function initFirebase(){
 if (isIframe){
-db=null; sessionsRef=_noopRef(); globalPlayersRef=_noopRef(); versionRef=_noopRef(); releaseHtmlRef=_noopRef(); releaseHistoryRef=_noopRef(); globalSettingsRef=_noopRef(); userIdentitiesRef=_noopRef(); userProfilesRef=_noopRef(); userProfileRef=null; adminListRef=_noopRef();
+db=null; sessionsRef=_noopRef(); globalPlayersRef=_noopRef(); versionRef=_noopRef(); releaseHtmlRef=_noopRef(); releaseHistoryRef=_noopRef(); globalSettingsRef=_noopRef(); userIdentitiesRef=_noopRef(); userProfilesRef=_noopRef(); userProfileRef=null; adminListRef=_noopRef(); adminUidsRef=_noopRef();
 startApp();
 return; }
 if (typeof firebase === 'undefined'){ setTimeout(initFirebase, 50); return; }
@@ -8,10 +8,11 @@ const firebaseConfig ={apiKey:"AIzaSyCRkK3IpRXeQC9JH73iC0tC-mjq5nulaAo",authDoma
 try{ firebase.app(); } catch(e){ firebase.initializeApp(firebaseConfig); }
 db=firebase.database();
 sessionsRef=db.ref('sessions'); globalPlayersRef=db.ref('globalPlayers'); versionRef=db.ref('appVersion'); releaseHtmlRef=db.ref('releaseHtml'); releaseHistoryRef=db.ref('releaseHistory');
-globalSettingsRef=db.ref('globalSettings'); userIdentitiesRef=db.ref('userIdentities'); userProfilesRef=db.ref('userProfiles'); adminListRef=db.ref('adminList');
+globalSettingsRef=db.ref('globalSettings'); userIdentitiesRef=db.ref('userIdentities'); userProfilesRef=db.ref('userProfiles'); adminListRef=db.ref('adminList'); adminUidsRef=db.ref('adminUids');
 setupDeviceThemeListener();
 restoreVisualSettings();
 adminListRef.on('value', snap =>{ adminList=snap.val()||[]; recomputeAdmin(); });
+adminUidsRef.on('value', snap =>{ adminUids=snap.val()||{}; recomputeAdmin(); });
 initAuth(); }
 function startApp(){
 versionRef.on('value', snap =>{

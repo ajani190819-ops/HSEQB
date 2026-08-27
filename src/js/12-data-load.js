@@ -16,6 +16,7 @@ applyGlobalPlayersToSession(snap.val() ||{});
 });
 userIdentitiesRef.on('value', snap =>{
 userIdentitiesCache = snap.val() ||{};
+if (isAdmin) renderAdminPanel();
 }); }
 function applyGlobalPlayersToSession(data){
 const s = getCurrentSession(); if (!s) return;
