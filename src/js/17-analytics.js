@@ -153,7 +153,7 @@ label:'Performance Rates',
 twoCol:true,
 colHeaders:['Team', 'Avg / Player'],
 rows:[
-{ label:'Reliability',            total:teamReliability,    avg:avgReliability,    totalColor:accColor(teamReliability), avgColor:accColor(avgReliability) },
+{ label:'Reliability',            total:teamReliability,    avg:avgReliability,    totalColor:'var(--pt-power)', avgColor:'var(--pt-power)' },
 { label:'Power Rate',              total:teamPowerRate,      avg:avgPowerRate,      totalColor:'var(--primary)', avgColor:'var(--primary)' },
 { label:'TU/20',     total:globalTHeard > 0 ? ((totalBuzzes / globalTHeard) * 20).toFixed(1) : '—', avg:avgAttempts20, totalColor:'var(--text2)', avgColor:'var(--text2)' },
 { label:'Points / 20',    total:teamActualPts20,   avg:avgActualPts20,   totalColor:'var(--primary)', avgColor:'var(--primary)' },
