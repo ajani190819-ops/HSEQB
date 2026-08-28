@@ -55,7 +55,7 @@ const el = $('categoryTreeDisplay'); if (!el) return;
 el.innerHTML = Object.entries(CATEGORY_TREE).map(([parent, subs]) =>
 `<div class="mb-8">
 <div style="font-size:.78em;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);margin-bottom:4px;">${parent}</div>
-<div style="display:flex;flex-wrap:wrap;gap:4px;">${subs.map(s=>`<span style="font-size:.8em;padding:2px 8px;border-radius:10px;background:var(--sec-bg);border:1.5px solid var(--border);color:var(--text1);">${s}</span>`).join('')}</div>
+<div style="display:flex;flex-wrap:wrap;gap:4px;">${subs.map(s=>`<span style="font-size:.8em;padding:2px 8px;border-radius:10px;background:var(--sec-bg);border:1.5px solid var(--border);color:var(--text);">${s}</span>`).join('')}</div>
 </div>`
 ).join(''); }
 var _selectedParentCat = null;

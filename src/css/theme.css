@@ -398,6 +398,9 @@ button, .button, .ql-btn, .ql-cat-chip, .ql-confirm-btn, .ql-cancel-btn, .header
   --hse-red:#335699;
   --hse-white:#fff;
   --accent-line:#335699;
+  --primary-ink:var(--primary);
+  --primary-ink-hover:color-mix(in srgb, var(--primary) 72%, #000);
+  --primary-wash:color-mix(in srgb, var(--primary) 12%, transparent);
   /* Surface neutrals are kept as a fallback, then lightly tinted toward the
      active palette so the app reads as themed rather than plain gray. */
   --bg-neutral:#f7f9fd;
@@ -481,6 +484,9 @@ html.dark-mode { --hse-blue:#0c4cc6; --hse-red:#0045cb; --hse-white:#f4f6fb; --a
   --banner-stripe:color-mix(in srgb, var(--hse-white) 72%, var(--primary-light));
   --banner-stripe-soft:color-mix(in srgb, var(--hse-white) 48%, var(--primary-light));
   --stripe-surface-mix:7%;
+  --primary-ink:color-mix(in srgb, var(--primary) 52%, #fff);
+  --primary-ink-hover:color-mix(in srgb, var(--primary) 38%, #fff);
+  --primary-wash:color-mix(in srgb, var(--primary) 18%, transparent);
   /* Dark-mode accent text needs a much brighter lift than outlines so deep,
      saturated custom accents remain readable on dark cards. */
   --highlight:color-mix(in srgb, var(--accent-line) 52%, #fff);
@@ -500,6 +506,35 @@ html.dark-mode { --hse-blue:#0c4cc6; --hse-red:#0045cb; --hse-white:#f4f6fb; --a
 .qb-section:hover, .stat-card:hover, .team-stat-card:hover { border-color:var(--border-strong); }
 /* Team cards keep their colored rule, but the rule now follows the accent color. */
 .team-stat-card, .an-team-card { border-left-color:var(--accent-line); }
+
+/* Category and category-adjacent theme-colored text gets a brighter ink in
+   dark mode so deep palettes stay readable. */
+.an-cat-title, .ch-title, .session-card-title,
+.cat-group-label, .cat-group-chip:hover {
+  color:var(--primary-ink);
+}
+.cat-group-label {
+  font-size:.67em;
+  letter-spacing:.06em;
+  background:var(--primary-wash);
+  border-color:color-mix(in srgb, var(--primary-ink) 30%, transparent);
+}
+.cat-group-label:hover {
+  color:var(--primary-ink-hover);
+  border-color:var(--primary-ink);
+  background:color-mix(in srgb, var(--primary-ink) 20%, transparent);
+}
+.cat-group-chip {
+  font-weight:650;
+}
+.cat-group-chip:hover {
+  border-color:var(--primary-ink);
+  background:color-mix(in srgb, var(--primary-ink) 8%, transparent);
+}
+.cat-group-label.selected, .cat-group-chip.selected {
+  color:#fff;
+  text-shadow:0 1px 1px rgba(0,0,0,.2);
+}
 
 /* Highlighted text and emphasis. */
 .player-score, .team-score, .stat-value, .session-info-row strong,
