@@ -26,12 +26,32 @@ if(arrow) arrow.style.transform=open?'':'rotate(-90deg)'; }
 const isMobile = () => !isIframe && window.innerWidth <= 900;
 if (isIframe){
 const _memStore ={};
+let _nativeLS = null;
+try {
+  _nativeLS = window.localStorage;
+  for (let i = 0; i < _nativeLS.length; i++){
+    const key = _nativeLS.key(i);
+    if (key !== null) _memStore[key] = _nativeLS.getItem(key);
+  }
+} catch(e){}
 const _safeLS ={
-getItem:   k => (_memStore[k] !== undefined ? _memStore[k] :null),
-setItem:   (k, v) =>{ _memStore[k] = String(v); },
-removeItem:k =>{ delete _memStore[k]; },
-clear:     () =>{ Object.keys(_memStore).forEach(k => delete _memStore[k]); },
-key:       i => Object.keys(_memStore)[i] || null,
+getItem(k){
+  if (_memStore[k] !== undefined) return _memStore[k];
+  try { return _nativeLS ? _nativeLS.getItem(k) : null; } catch(e) { return null; }
+},
+setItem(k, v){
+  _memStore[k] = String(v);
+  try { if (_nativeLS) _nativeLS.setItem(k, String(v)); } catch(e){}
+},
+removeItem(k){
+  delete _memStore[k];
+  try { if (_nativeLS) _nativeLS.removeItem(k); } catch(e){}
+},
+clear(){
+  Object.keys(_memStore).forEach(k => delete _memStore[k]);
+  try { if (_nativeLS) _nativeLS.clear(); } catch(e){}
+},
+key(i){ return Object.keys(_memStore)[i] || null; },
 get length(){ return Object.keys(_memStore).length; }
 };
 try{ Object.defineProperty(window, 'localStorage',{ get:() => _safeLS }); } catch(e){}
