@@ -117,7 +117,7 @@ const statChips = [
 ['Points',   team.pts,      color],
 ['Toss-ups', team.tossups,  'var(--success)'],
 ['Bonuses',  team.bonuses,  'var(--primary)'],
-['Powers',   team.powers,   '#9b59b6'],
+['Powers',   team.powers,   'var(--pt-power)'],
 ['Negs',     team.negs,     'var(--danger)'],
 ['Misses',   team.misses,   'var(--warning)'],
 ['Accuracy', acc + '%',     'var(--text2)'],

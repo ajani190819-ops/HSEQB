@@ -145,8 +145,8 @@ if(!el||!s) return;
 const answers=s.answerLog||[];
 el.innerHTML=answers.length
 ?[...answers].reverse().map((a,i)=>`
-<div class="log-entry">
-<span><strong>${answers.length-i}. ${answerActorLabel(a) === 'Dead TU' ? '<span class="text-3">Dead TU</span>' : isTeamBonusAnswer(a) ? '<span class="warning">' + answerActorLabel(a) + '</span>' : answerActorLabel(a)}</strong> &mdash; ${a.pointType==='Power'?'TU ⚡︎ Power':a.pointType} (${a.points>0?'+':''}${a.points} Pts) &mdash; ${a.category}</span>
+<div class="log-entry" data-pt="${a.pointType}">
+<span><strong>${answers.length-i}. ${answerActorLabel(a) === 'Dead TU' ? '<span class="text-3">Dead TU</span>' : isTeamBonusAnswer(a) ? '<span style="color:var(--pt-bonus);">' + answerActorLabel(a) + '</span>' : answerActorLabel(a)}</strong> &mdash; ${a.pointType==='Power'?'TU ⚡︎ Power':a.pointType} (${a.points>0?'+':''}${a.points} Pts) &mdash; ${a.category}</span>
 <button class="button button-danger" onclick="deleteAnswer('${a.id}')" style="padding:4px 8px;font-size:.8em;">Delete</button>
 </div>`).join('') :'<p class="text-2">No answers recorded yet.</p>';
 el.onscroll=updateFadeMasks;

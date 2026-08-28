@@ -32,10 +32,19 @@ function syncThemeControls(){
 function applyTheme(mode, persistLocal, syncRemote){
   themeMode = normalizeThemeMode(mode);
   const dark = themeIsDark(themeMode);
-  document.documentElement.classList.toggle('dark-mode', dark);
-  if (document.body) document.body.classList.toggle('dark-mode', dark);
-  document.documentElement.dataset.theme = themeMode;
-  document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+  // Disable transitions momentarily so text contrast updates instantly
+  try{
+    document.documentElement.classList.add('theme-transitioning');
+    document.documentElement.classList.toggle('dark-mode', dark);
+    if (document.body) document.body.classList.toggle('dark-mode', dark);
+    document.documentElement.dataset.theme = themeMode;
+    document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+    // Force reflow so browser applies new vars before re-enabling transitions
+    void document.documentElement.offsetHeight;
+  } finally {
+    // Re-enable transitions on next frame
+    requestAnimationFrame(()=> requestAnimationFrame(()=> document.documentElement.classList.remove('theme-transitioning')));
+  }
   // Repaint the selected palette when appearance changes; this is what makes
   // blue/red accents calmer on white surfaces and brighter on dark surfaces.
   if (typeof _paintColors === 'function' && typeof colorTheme !== 'undefined') {
@@ -49,7 +58,16 @@ function applyTheme(mode, persistLocal, syncRemote){
   }
   syncThemeControls();
   if (typeof _chartInstances !== 'undefined' && _chartInstances){
-    Object.values(_chartInstances).forEach(chart =>{ try{ chart.update(); }catch(e){} });
+    // Charts cache dark-mode colors at creation; re-render them so contrast updates instantly
+    try{
+      if (typeof renderAnalyticsCharts === 'function' && typeof _lastAnswers !== 'undefined' && _lastAnswers){
+        const ps = typeof _lastPlayers !== 'undefined' ? _lastPlayers : [];
+        const gh = typeof _globalTHeard !== 'undefined' ? _globalTHeard : {};
+        renderAnalyticsCharts(_lastAnswers, ps, gh);
+      } else {
+        Object.values(_chartInstances).forEach(chart =>{ try{ chart.update(); }catch(e){} });
+      }
+    }catch(e){}
   }
   if (syncRemote) scheduleUserProfileSave();
 }
