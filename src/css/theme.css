@@ -415,12 +415,12 @@ button, .button, .ql-btn, .ql-cat-chip, .ql-confirm-btn, .ql-cancel-btn, .header
   --card-neutral:#ffffff;
   --input-bg-neutral:#ffffff;
   --hover-neutral:#f0f3fa;
-  --surface-tint:color-mix(in srgb, var(--primary) 64%, var(--secondary));
-  --bg-tint-mix:6%;
-  --sec-bg-tint-mix:10%;
-  --card-tint-mix:7%;
-  --input-bg-tint-mix:6%;
-  --hover-tint-mix:12%;
+  --surface-tint:color-mix(in srgb, var(--primary) 60%, var(--secondary));
+  --bg-tint-mix:4%;
+  --sec-bg-tint-mix:7%;
+  --card-tint-mix:5%;
+  --input-bg-tint-mix:4%;
+  --hover-tint-mix:9%;
   --bg:color-mix(in srgb, var(--surface-tint) var(--bg-tint-mix), var(--bg-neutral));
   --sec-bg:color-mix(in srgb, var(--surface-tint) var(--sec-bg-tint-mix), var(--sec-bg-neutral));
   --card:color-mix(in srgb, var(--surface-tint) var(--card-tint-mix), var(--card-neutral));
@@ -506,6 +506,26 @@ html.dark-mode { --hse-blue:#0c4cc6; --hse-red:#ff4765; --hse-white:#f4f6fb; --a
   --highlight:color-mix(in srgb, var(--accent-line) 52%, #fff);
   --highlight-ink:color-mix(in srgb, var(--accent-line) 38%, #fff);
   --highlight-wash:color-mix(in srgb, var(--accent-line) 18%, transparent);
+}
+
+/* Light mode should always land on the lighter surface set even if a stale
+   preview/body class sneaks in. Keep the tint present, but very soft. */
+html:not(.dark-mode) body {
+  --bg-neutral:#f7f9fd;
+  --sec-bg-neutral:#f2f5fb;
+  --card-neutral:#ffffff;
+  --input-bg-neutral:#ffffff;
+  --hover-neutral:#f0f3fa;
+  --bg-tint-mix:4%;
+  --sec-bg-tint-mix:7%;
+  --card-tint-mix:5%;
+  --input-bg-tint-mix:4%;
+  --hover-tint-mix:9%;
+  --bg:color-mix(in srgb, var(--surface-tint) var(--bg-tint-mix), var(--bg-neutral));
+  --sec-bg:color-mix(in srgb, var(--surface-tint) var(--sec-bg-tint-mix), var(--sec-bg-neutral));
+  --card:color-mix(in srgb, var(--surface-tint) var(--card-tint-mix), var(--card-neutral));
+  --input-bg:color-mix(in srgb, var(--surface-tint) var(--input-bg-tint-mix), var(--input-bg-neutral));
+  --hover:color-mix(in srgb, var(--surface-tint) var(--hover-tint-mix), var(--hover-neutral));
 }
 
 /* Panels, cards and containers get the stronger accent-tinted edge. (The auth
