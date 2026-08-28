@@ -40,7 +40,7 @@ function applyTheme(mode, persistLocal, syncRemote){
   // blue/red accents calmer on white surfaces and brighter on dark surfaces.
   if (typeof _paintColors === 'function' && typeof colorTheme !== 'undefined') {
     const palette = colorTheme === 'custom' ? customThemeColors : getColorTheme(colorTheme);
-    if (palette) _paintColors(palette.primary, palette.secondary, palette.tertiary);
+    if (palette) _paintColors(palette.primary, palette.secondary, palette.tertiary, palette.accent);
   }
   if (persistLocal !== false){
     localStorage.setItem('themeMode', themeMode);

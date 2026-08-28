@@ -389,77 +389,194 @@ button, .button, .ql-btn, .ql-cat-chip, .ql-confirm-btn, .ql-cancel-btn, .header
   .custom-hex-input { font-size:16px; }
 }
 
-/* HSE color language: a quiet blue / white / red system with texture instead
-   of relying on a single two-color gradient everywhere. The inline values are
-   painted by _paintColors so accents respond to light and dark mode. */
+/* Palette language: surfaces stay mostly neutral but borrow a little color from
+   the active theme so the app feels branded instead of plain gray. The inline
+   values are painted by _paintColors so accents respond to light and dark mode. */
 :root {
   --tertiary:#fff;
   --hse-blue:#003da5;
   --hse-red:#c8102e;
   --hse-white:#fff;
   --accent-line:#c8102e;
-  /* Neutral bases the companion color is tinted over. core.css carries the
+  --primary-ink:var(--primary);
+  --primary-ink-hover:color-mix(in srgb, var(--primary) 72%, #000);
+  --primary-wash:color-mix(in srgb, var(--primary) 12%, transparent);
+  --header-control-bg:color-mix(in srgb, var(--primary-dark) 44%, transparent);
+  --header-control-bg-strong:color-mix(in srgb, var(--primary-dark) 56%, transparent);
+  --header-control-hover:color-mix(in srgb, var(--primary-dark) 62%, transparent);
+  --header-control-border:color-mix(in srgb, var(--hse-white) 44%, transparent);
+  --header-control-shadow:0 4px 14px rgba(7,15,32,.18);
+  --header-control-text:rgba(255,255,255,.98);
+  --header-control-text-muted:rgba(255,255,255,.78);
+  /* Surface neutrals are kept as a fallback, then lightly tinted toward the
+     active palette so the app reads as themed rather than plain gray. */
+  --bg-neutral:#f7f9fd;
+  --sec-bg-neutral:#f2f5fb;
+  --card-neutral:#ffffff;
+  --input-bg-neutral:#ffffff;
+  --hover-neutral:#f0f3fa;
+  --surface-tint:color-mix(in srgb, var(--primary) 60%, var(--secondary));
+  --bg-tint-mix:4%;
+  --sec-bg-tint-mix:7%;
+  --card-tint-mix:5%;
+  --input-bg-tint-mix:4%;
+  --hover-tint-mix:9%;
+  --bg:color-mix(in srgb, var(--surface-tint) var(--bg-tint-mix), var(--bg-neutral));
+  --sec-bg:color-mix(in srgb, var(--surface-tint) var(--sec-bg-tint-mix), var(--sec-bg-neutral));
+  --card:color-mix(in srgb, var(--surface-tint) var(--card-tint-mix), var(--card-neutral));
+  --input-bg:color-mix(in srgb, var(--surface-tint) var(--input-bg-tint-mix), var(--input-bg-neutral));
+  --hover:color-mix(in srgb, var(--surface-tint) var(--hover-tint-mix), var(--hover-neutral));
+  /* Neutral bases the accent color is tinted over. core.css carries the
      same plain values first, so a browser without color-mix() still gets a
      gray outline instead of no outline at all. */
   --border-neutral:#c9cfdd;
   --input-border-neutral:#dde1ea;
-  /* Panel outlines always carry a tint of the palette's companion color — the
-     HSE red on the default tricolor palette — instead of flat gray, in light
-     mode and dark mode alike. Panels take the strongest tint, the hairlines
-     inside them the softest, so the hierarchy still reads. */
-  --border:color-mix(in srgb, var(--accent-line) 22%, var(--border-neutral));
-  --panel-border:color-mix(in srgb, var(--accent-line) 32%, var(--border-neutral));
-  --border-strong:color-mix(in srgb, var(--accent-line) 44%, var(--border-neutral));
-  --input-border:color-mix(in srgb, var(--accent-line) 16%, var(--input-border-neutral));
+  --border-mix:22%;
+  --panel-border-mix:32%;
+  --border-strong-mix:44%;
+  --input-border-mix:16%;
+  --surface-dot-mix:10%;
+  --surface-dot-opacity:.34;
+  --banner-stripe:color-mix(in srgb, var(--hse-white) 78%, var(--primary-light));
+  --banner-stripe-soft:color-mix(in srgb, var(--hse-white) 58%, var(--primary-light));
+  --stripe-surface-mix:4%;
+  --stripe-band-a:var(--primary);
+  --stripe-band-b:color-mix(in srgb, var(--primary) 58%, var(--secondary));
+  --stripe-band-c:var(--secondary);
+  /* Panel outlines always carry a tint of the palette's accent color instead
+     of flat gray. Panels take the strongest tint, the hairlines inside them the
+     softest, so the hierarchy still reads. */
+  --border:color-mix(in srgb, var(--accent-line) var(--border-mix), var(--border-neutral));
+  --panel-border:color-mix(in srgb, var(--accent-line) var(--panel-border-mix), var(--border-neutral));
+  --border-strong:color-mix(in srgb, var(--accent-line) var(--border-strong-mix), var(--border-neutral));
+  --input-border:color-mix(in srgb, var(--accent-line) var(--input-border-mix), var(--input-border-neutral));
   /* Highlighted text — scores, ranks, player links, doc headings — reads in the
-     companion red the way the school's own site uses red for emphasis; blue
-     stays the structural and interactive color. */
+     accent color while blue stays the structural and interactive color. */
   --highlight:var(--accent-line);
   --highlight-ink:color-mix(in srgb, var(--accent-line) 72%, #000);
   --highlight-wash:color-mix(in srgb, var(--accent-line) 12%, transparent);
 }
 
-/* Pre-paint dark default for the companion color — the value _paintColors
-   derives for the HSE palette on dark surfaces. Scoped to html.dark-mode on
-   purpose: body carries .dark-mode too, and a stylesheet value there would
-   beat the inline --accent-line painted on <html>, flattening every custom
-   palette back to the HSE red. */
-html.dark-mode { --accent-line:#d95b70; }
+/* Pre-paint dark defaults for palette-owned values. Scoped to html.dark-mode on
+   purpose: body carries .dark-mode too, and a stylesheet value there would beat
+   the inline colors painted on <html>, flattening every custom palette. */
+html.dark-mode { --hse-blue:#0c4cc6; --hse-red:#ff4765; --hse-white:#f4f6fb; --accent-line:#ff4765; }
 
-/* Dark surfaces need a little more red in the mix for the same tint to read. */
+/* Dark surfaces need a little more chroma in the mix for the same tint to
+   read with the same energy they have on light cards. */
 .dark-mode {
+  --bg-neutral:#0d1117;
+  --sec-bg-neutral:#161b22;
+  --card-neutral:#1c2128;
+  --input-bg-neutral:#0d1117;
+  --hover-neutral:#1e2530;
+  --bg-tint-mix:12%;
+  --sec-bg-tint-mix:18%;
+  --card-tint-mix:15%;
+  --input-bg-tint-mix:11%;
+  --hover-tint-mix:24%;
+  --bg:color-mix(in srgb, var(--surface-tint) var(--bg-tint-mix), var(--bg-neutral));
+  --sec-bg:color-mix(in srgb, var(--surface-tint) var(--sec-bg-tint-mix), var(--sec-bg-neutral));
+  --card:color-mix(in srgb, var(--surface-tint) var(--card-tint-mix), var(--card-neutral));
+  --input-bg:color-mix(in srgb, var(--surface-tint) var(--input-bg-tint-mix), var(--input-bg-neutral));
+  --hover:color-mix(in srgb, var(--surface-tint) var(--hover-tint-mix), var(--hover-neutral));
   --border-neutral:#444e63;
   --input-border-neutral:#2d3340;
-  --border:color-mix(in srgb, var(--accent-line) 28%, var(--border-neutral));
-  --panel-border:color-mix(in srgb, var(--accent-line) 40%, var(--border-neutral));
-  --border-strong:color-mix(in srgb, var(--accent-line) 52%, var(--border-neutral));
-  --input-border:color-mix(in srgb, var(--accent-line) 20%, var(--input-border-neutral));
-  /* Text highlights lift a little on dark surfaces to stay above 4.5:1 while
-     the outlines keep the deeper red. */
-  --highlight:color-mix(in srgb, var(--accent-line) 88%, #fff);
-  --highlight-ink:color-mix(in srgb, var(--accent-line) 80%, #fff);
+  --border-mix:34%;
+  --panel-border-mix:46%;
+  --border-strong-mix:58%;
+  --input-border-mix:24%;
+  --surface-dot-mix:14%;
+  --surface-dot-opacity:.22;
+  --banner-stripe:color-mix(in srgb, var(--hse-white) 72%, var(--primary-light));
+  --banner-stripe-soft:color-mix(in srgb, var(--hse-white) 48%, var(--primary-light));
+  --stripe-surface-mix:7%;
+  --primary-ink:color-mix(in srgb, var(--primary) 52%, #fff);
+  --primary-ink-hover:color-mix(in srgb, var(--primary) 38%, #fff);
+  --primary-wash:color-mix(in srgb, var(--primary) 18%, transparent);
+  --header-control-bg:color-mix(in srgb, var(--primary-dark) 56%, transparent);
+  --header-control-bg-strong:color-mix(in srgb, var(--primary-dark) 68%, transparent);
+  --header-control-hover:color-mix(in srgb, var(--primary-dark) 74%, transparent);
+  --header-control-border:color-mix(in srgb, var(--hse-white) 36%, transparent);
+  --header-control-shadow:0 6px 18px rgba(0,0,0,.28);
+  --header-control-text:rgba(255,255,255,.98);
+  --header-control-text-muted:rgba(255,255,255,.74);
+  /* Dark-mode accent text needs a much brighter lift than outlines so deep,
+     saturated custom accents remain readable on dark cards. */
+  --highlight:color-mix(in srgb, var(--accent-line) 52%, #fff);
+  --highlight-ink:color-mix(in srgb, var(--accent-line) 38%, #fff);
+  --highlight-wash:color-mix(in srgb, var(--accent-line) 18%, transparent);
 }
 
-/* Panels, cards and containers get the stronger red-tinted edge. (The auth
-   card is absent on purpose: its border-image tricolor ribbon wins over any
-   border-color, so it already carries the full blue / white / red edge.) */
+/* Light mode should always land on the lighter surface set even if a stale
+   preview/body class sneaks in. Keep the tint present, but very soft. */
+html:not(.dark-mode) body {
+  --bg-neutral:#f7f9fd;
+  --sec-bg-neutral:#f2f5fb;
+  --card-neutral:#ffffff;
+  --input-bg-neutral:#ffffff;
+  --hover-neutral:#f0f3fa;
+  --bg-tint-mix:4%;
+  --sec-bg-tint-mix:7%;
+  --card-tint-mix:5%;
+  --input-bg-tint-mix:4%;
+  --hover-tint-mix:9%;
+  --bg:color-mix(in srgb, var(--surface-tint) var(--bg-tint-mix), var(--bg-neutral));
+  --sec-bg:color-mix(in srgb, var(--surface-tint) var(--sec-bg-tint-mix), var(--sec-bg-neutral));
+  --card:color-mix(in srgb, var(--surface-tint) var(--card-tint-mix), var(--card-neutral));
+  --input-bg:color-mix(in srgb, var(--surface-tint) var(--input-bg-tint-mix), var(--input-bg-neutral));
+  --hover:color-mix(in srgb, var(--surface-tint) var(--hover-tint-mix), var(--hover-neutral));
+}
+
+/* Panels, cards and containers get the stronger accent-tinted edge. (The auth
+   card is absent on purpose: its border-image ribbon wins over any border-color,
+   so it already carries the full three-color decorative edge.) */
 .qb-section,
 .stat-card, .team-stat-card, .overall-ranking,
 .an-stat-box, .an-player-card, .an-cat-card, .an-team-card, .an-lb-row,
 .log-container, .session-info, .sidebar-jump-menu,
 .custom-theme-panel, .updates-release-card { border-color:var(--panel-border); }
-/* Hovering a panel deepens the red edge instead of turning it blue. */
+/* Hovering a panel deepens the accent edge instead of turning it blue. */
 .qb-section:hover, .stat-card:hover, .team-stat-card:hover { border-color:var(--border-strong); }
-/* Team cards keep their colored rule, but the rule is the companion red now. */
+/* Team cards keep their colored rule, but the rule now follows the accent color. */
 .team-stat-card, .an-team-card { border-left-color:var(--accent-line); }
+
+/* Category and category-adjacent theme-colored text gets a brighter ink in
+   dark mode so deep palettes stay readable. */
+.an-cat-title, .ch-title, .session-card-title,
+.cat-group-label, .cat-group-chip:hover {
+  color:var(--primary-ink);
+}
+.cat-group-label {
+  font-size:.67em;
+  letter-spacing:.06em;
+  background:var(--primary-wash);
+  border-color:color-mix(in srgb, var(--primary-ink) 30%, transparent);
+}
+.cat-group-label:hover {
+  color:var(--primary-ink-hover);
+  border-color:var(--primary-ink);
+  background:color-mix(in srgb, var(--primary-ink) 20%, transparent);
+}
+.cat-group-chip {
+  font-weight:650;
+}
+.cat-group-chip:hover {
+  border-color:var(--primary-ink);
+  background:color-mix(in srgb, var(--primary-ink) 8%, transparent);
+}
+.cat-group-label.selected, .cat-group-chip.selected {
+  color:#fff;
+  text-shadow:0 1px 1px rgba(0,0,0,.2);
+}
 
 /* Highlighted text and emphasis. */
 .player-score, .team-score, .stat-value, .session-info-row strong,
 .player-card-rank, .an-stat-box .an-val, .an-player-pts, .an-lb-rank,
 .an-lb-pts, .an-team-pts, .h3-primary { color:var(--highlight); }
-/* The active jump-nav entry is marked with a red wash instead of plain gray. */
+/* The active jump-nav entry is marked with an accent wash instead of plain gray. */
 .sidebar-jump-menu button.active-item { color:var(--highlight); background:var(--highlight-wash); }
-/* Clickable player names and section headings underline in red. */
+/* Clickable player names and section headings underline in the accent color. */
 .an-player-name { color:var(--highlight); }
 .an-player-name:hover { color:var(--highlight-ink); }
 .qb-section h2:hover { color:var(--highlight); }
@@ -471,28 +588,106 @@ body::before {
   inset:0;
   pointer-events:none;
   z-index:0;
-  opacity:.34;
-  background-image:radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--primary) 10%, transparent) 1px, transparent 1.2px);
+  opacity:var(--surface-dot-opacity);
+  background-image:radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--primary) var(--surface-dot-mix), transparent) 1px, transparent 1.2px);
   background-size:18px 18px;
 }
 .qb-container, .auth-gate { position:relative; z-index:1; }
 
-/* The header gets an HSE ribbon plus fine diagonal texture over its gradient. */
+/* The header keeps its gradient, but its diagonal texture now stays in a light
+   lane so the accent color can do the outlining/highlight work elsewhere. */
 .qb-header {
   background-color:var(--primary);
-  background-image:repeating-linear-gradient(135deg, rgba(255,255,255,.055) 0 2px, transparent 2px 9px), linear-gradient(135deg, var(--primary), var(--secondary));
+  background-image:repeating-linear-gradient(135deg, color-mix(in srgb, var(--banner-stripe) 34%, transparent) 0 2px, transparent 2px 9px), linear-gradient(135deg, var(--primary), var(--secondary));
   box-shadow:0 2px 16px color-mix(in srgb, var(--primary) 28%, transparent);
 }
 .qb-header::after {
-  content:'';
-  position:absolute;
-  left:0;
-  right:0;
-  bottom:0;
-  height:4px;
-  background:linear-gradient(90deg, var(--hse-blue) 0 33.333%, var(--hse-white) 33.333% 66.666%, var(--hse-red) 66.666% 100%);
-  opacity:.95;
-  pointer-events:none;
+  content:none;
+}
+
+/* Header controls get a darker glass treatment so stripes and gradients stay
+   behind them instead of competing with text and icons. */
+.qb-header .header-btn,
+.qb-header .version-badge,
+.qb-header #viewToggleSwitch,
+.qb-header .auto-save-indicator {
+  background:var(--header-control-bg);
+  border-color:var(--header-control-border);
+  box-shadow:var(--header-control-shadow);
+  -webkit-backdrop-filter:blur(10px) saturate(1.05);
+  backdrop-filter:blur(10px) saturate(1.05);
+}
+.qb-header .header-btn,
+.qb-header .version-badge,
+.qb-header .header-toggle-label,
+.qb-header .header-session-name,
+.qb-header .auto-save-indicator {
+  text-shadow:0 1px 1px rgba(0,0,0,.22);
+}
+.qb-header .header-btn {
+  color:var(--header-control-text);
+  border-width:1.5px;
+}
+.qb-header .header-btn:hover,
+.qb-header .header-btn:focus-visible,
+.qb-header #viewToggleSwitch:hover {
+  background:var(--header-control-hover);
+}
+.qb-header .header-btn.active {
+  background:var(--header-control-bg-strong);
+  box-shadow:0 0 0 2px color-mix(in srgb, var(--hse-white) 24%, transparent), var(--header-control-shadow);
+}
+.qb-header .version-badge {
+  color:var(--header-control-text);
+  border-width:1.5px;
+  font-weight:700;
+  letter-spacing:.01em;
+}
+.qb-header .header-session-name,
+.qb-header .header-session-name::before,
+.qb-header .header-toggle-label {
+  color:var(--header-control-text-muted);
+}
+.qb-header .header-session-name::before {
+  opacity:.82;
+}
+.qb-header #viewToggleSwitch {
+  border:2px solid var(--header-control-border);
+}
+.qb-header #viewToggleKnob {
+  box-shadow:0 2px 8px rgba(0,0,0,.34);
+}
+.qb-header .auto-save-indicator.state-connecting,
+.qb-header .auto-save-indicator.state-idle {
+  background:var(--header-control-bg);
+  border-color:var(--header-control-border);
+  box-shadow:var(--header-control-shadow);
+}
+.qb-header .auto-save-indicator.state-flash {
+  background:color-mix(in srgb, var(--success) 24%, var(--header-control-bg));
+  border-color:color-mix(in srgb, var(--success) 48%, var(--header-control-border));
+  box-shadow:0 0 0 1px color-mix(in srgb, var(--success) 18%, transparent), var(--header-control-shadow);
+}
+.qb-header .auto-save-indicator.state-error {
+  background:color-mix(in srgb, var(--danger) 22%, var(--header-control-bg));
+  border-color:color-mix(in srgb, var(--danger) 46%, var(--header-control-border));
+  box-shadow:0 0 0 1px color-mix(in srgb, var(--danger) 18%, transparent), var(--header-control-shadow);
+}
+.qb-header #versionBadge.gh-state-success {
+  background:color-mix(in srgb, var(--success) 22%, var(--header-control-bg));
+  border-color:color-mix(in srgb, var(--success) 52%, var(--header-control-border));
+}
+.qb-header #versionBadge.gh-state-pending {
+  background:color-mix(in srgb, #ffd43b 24%, var(--header-control-bg));
+  border-color:color-mix(in srgb, #ffd43b 60%, var(--header-control-border));
+}
+.qb-header #versionBadge.gh-state-failure {
+  background:color-mix(in srgb, var(--danger) 22%, var(--header-control-bg));
+  border-color:color-mix(in srgb, var(--danger) 52%, var(--header-control-border));
+}
+.qb-header #versionBadge.gh-state-unknown {
+  background:var(--header-control-bg);
+  border-color:var(--header-control-border);
 }
 
 /* Reusable tricolor edge for panels, cards, and the auth experience. */
@@ -508,7 +703,7 @@ body::before {
 .theme-swatch-chip {
   position:relative;
   overflow:hidden;
-  background:var(--swatch-blue, var(--hse-blue));
+  background:var(--swatch-left, var(--hse-blue));
 }
 .theme-swatch-chip::before, .theme-swatch-chip::after {
   content:'';
@@ -517,58 +712,44 @@ body::before {
   bottom:0;
   width:33.333%;
 }
-.theme-swatch-chip::before { left:33.333%; background:var(--swatch-white, #fff); }
-.theme-swatch-chip::after { right:0; background:var(--swatch-red, var(--hse-red)); }
+.theme-swatch-chip::before { left:33.333%; background:var(--swatch-mid, #fff); }
+.theme-swatch-chip::after { right:0; background:var(--swatch-right, var(--hse-red)); }
 .theme-swatch-chip { box-shadow:inset 0 1px 3px rgba(255,255,255,.24), inset 0 0 0 1px rgba(0,0,0,.12); }
 
-/* Small tricolor accents add hierarchy without overpowering readable text. */
+/* Retire the tiny top-left tags so panel headings stay cleaner. */
 .qb-section > h2::before, .analytics-header::before {
-  content:'';
-  display:inline-block;
-  width:18px;
-  height:4px;
-  margin:0 7px 3px 0;
-  border-radius:3px;
-  background:linear-gradient(90deg, var(--hse-blue) 0 33.333%, var(--hse-white) 33.333% 66.666%, var(--hse-red) 66.666%);
-  box-shadow:0 0 0 1px color-mix(in srgb, var(--border) 55%, transparent);
+  content:none;
 }
 .button-success { background-color:var(--hse-blue); background-image:repeating-linear-gradient(135deg, rgba(255,255,255,.08) 0 2px, transparent 2px 8px); }
-.dark-mode body::before { opacity:.18; }
 @media (prefers-reduced-motion: reduce) {
   .theme-swatch:hover { transform:none; }
 }
 
 /* ── Accent style: Pinstripe vs Gradient ─────────────────────────────────
-   'gradient' keeps the classic two-color blends. 'stripes' expresses tricolor
-   palettes the way the title banner does: primary -> white gradients, with the
-   companion color as fine diagonal lines and tinted panel outlines — so the
-   HSE palette reads as texture instead of a French flag. _paintColors already
-   swaps --secondary to a blue -> white blend in stripe mode; the rules below
-   add the diagonal-line texture and the companion-tinted outlines. */
+   'gradient' keeps the classic two-color banner treatment. 'stripes' keeps the
+   softer primary-family gradients, reserves the accent color for outlines and
+   highlights, and moves the pinstripe treatment onto surfaces instead of the
+   title banner. */
 
-/* Header: gradient base + faint companion-color diagonal lines over the white texture. */
+/* Pinstripe mode keeps the banner clean so the stripes don't compete with the
+   header controls; the accent still shows up on the bottom rule. */
 html[data-accent-style="stripes"] .qb-header {
   background-color:var(--primary);
-  background-image:
-    repeating-linear-gradient(135deg, color-mix(in srgb, var(--accent-line) 14%, transparent) 0 2px, transparent 2px 16px),
-    repeating-linear-gradient(135deg, rgba(255,255,255,.05) 0 2px, transparent 2px 9px),
-    linear-gradient(135deg, var(--primary), var(--secondary));
+  background-image:linear-gradient(135deg, var(--primary), var(--secondary));
+  border-bottom-color:var(--accent-line);
 }
 
-/* The tricolor ribbons become slanted stripes instead of three flat thirds. */
-html[data-accent-style="stripes"] .qb-header::after,
-html[data-accent-style="stripes"] .qb-section > h2::before,
-html[data-accent-style="stripes"] .analytics-header::before {
-  background:repeating-linear-gradient(135deg, var(--hse-blue) 0 9px, var(--hse-white) 9px 14px, var(--hse-red) 14px 19px);
+/* Pinstripe mode still drops the old header ribbon entirely. */
+html[data-accent-style="stripes"] .qb-header::after {
+  content:none;
 }
 
-/* Panels pick up the strongest red-tinted outline (e.g. the Record Answer
-   panel gets a firm red edge on the HSE palette) plus a whisper of diagonal
-   pinstripe. Gradient mode keeps the same tinted outlines from the shared
-   rules above — the tint is never stripes-only. */
+/* Panels pick up the strongest accent-tinted outline plus a whisper of
+   diagonal pinstripe. Gradient mode keeps the same tinted outlines from the
+   shared rules above — the tint is never stripes-only. */
 html[data-accent-style="stripes"] .qb-section {
   border-color:var(--border-strong);
-  background-image:repeating-linear-gradient(135deg, color-mix(in srgb, var(--accent-line) 4%, transparent) 0 2px, transparent 2px 13px);
+  background-image:repeating-linear-gradient(135deg, color-mix(in srgb, var(--accent-line) var(--stripe-surface-mix), transparent) 0 2px, transparent 2px 12px);
 }
 html[data-accent-style="stripes"] .stat-card,
 html[data-accent-style="stripes"] .team-stat-card,
@@ -584,16 +765,11 @@ html[data-accent-style="stripes"] .team-stat-card { border-left-color:var(--acce
 html[data-accent-style="stripes"] .theme-swatch-chip::before,
 html[data-accent-style="stripes"] .theme-swatch-chip::after { content:none; }
 html[data-accent-style="stripes"] .theme-swatch-chip {
-  background:repeating-linear-gradient(135deg, var(--swatch-blue, var(--hse-blue)) 0 10px, var(--swatch-white, #fff) 10px 15px, var(--swatch-red, var(--hse-red)) 15px 20px);
+  background:repeating-linear-gradient(135deg, var(--swatch-left, var(--hse-blue)) 0 6px, var(--swatch-mid, #fff) 6px 12px, var(--swatch-right, var(--hse-red)) 12px 18px);
 }
 
 /* Auth card + release summary edges go diagonal too. */
 html[data-accent-style="stripes"] .auth-card,
 html[data-accent-style="stripes"] .updates-current-summary {
-  border-image:repeating-linear-gradient(135deg, var(--hse-blue) 0 10px, var(--hse-white) 10px 15px, var(--hse-red) 15px 20px) 1;
-}
-
-/* Slightly stronger lines on dark surfaces so the texture stays visible. */
-html.dark-mode[data-accent-style="stripes"] .qb-section {
-  background-image:repeating-linear-gradient(135deg, color-mix(in srgb, var(--accent-line) 6%, transparent) 0 2px, transparent 2px 13px);
+  border-image:repeating-linear-gradient(135deg, var(--stripe-band-a) 0 6px, var(--stripe-band-b) 6px 12px, var(--stripe-band-c) 12px 18px) 1;
 }

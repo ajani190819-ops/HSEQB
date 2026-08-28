@@ -43,6 +43,7 @@ function getUserCustomization(){
     colorTheme: colorTheme || DEFAULT_COLOR_THEME,
     customPrimary: customThemeColors.primary,
     customSecondary: customThemeColors.secondary,
+    customAccent: customThemeColors.accent || customThemeColors.secondary,
     hideScrollbars: !!document.body?.classList.contains('hide-scrollbars'),
     sidebarCollapsed: !!$('mainSidebar')?.classList.contains('collapsed')
   };
@@ -88,6 +89,7 @@ function resetLocalCustomizationForAccountSwitch(){
   localStorage.removeItem('accentStyle');
   localStorage.removeItem('customPrimary');
   localStorage.removeItem('customSecondary');
+  localStorage.removeItem('customAccent');
   localStorage.removeItem('hideScrollbars');
   localStorage.removeItem('sidebarCollapsed');
   applyTheme('device', true, false);
@@ -95,7 +97,7 @@ function resetLocalCustomizationForAccountSwitch(){
   document.body.classList.remove('hide-scrollbars');
   const hideToggle=$('hideScrollbarsToggle'); if(hideToggle) hideToggle.checked=false;
   const base=getColorTheme(DEFAULT_COLOR_THEME);
-  customThemeColors={ primary:base.primary, secondary:base.secondary, tertiary:base.tertiary || '#ffffff' };
+  customThemeColors={ primary:base.primary, secondary:base.secondary, tertiary:base.tertiary || '#ffffff', accent:base.accent || base.secondary };
   applyColorTheme(DEFAULT_COLOR_THEME, true, false);
   applyAccentStyle(DEFAULT_ACCENT_STYLE, true, false);
 }
@@ -109,6 +111,7 @@ function extractProfileCustomization(profile){
   if (ACCENT_STYLES.includes(String(source.accentStyle || '').toLowerCase())) result.accentStyle = String(source.accentStyle).toLowerCase();
   if (typeof source.customPrimary === 'string' && /^#[0-9a-f]{6}$/i.test(source.customPrimary)) result.customPrimary = source.customPrimary;
   if (typeof source.customSecondary === 'string' && /^#[0-9a-f]{6}$/i.test(source.customSecondary)) result.customSecondary = source.customSecondary;
+  if (typeof source.customAccent === 'string' && /^#[0-9a-f]{6}$/i.test(source.customAccent)) result.customAccent = source.customAccent;
   if (typeof source.hideScrollbars === 'boolean') result.hideScrollbars = source.hideScrollbars;
   if (typeof source.sidebarCollapsed === 'boolean') result.sidebarCollapsed = source.sidebarCollapsed;
   return result;
@@ -142,6 +145,8 @@ function applyAuthenticatedUserProfile(profile, user){
   else applyTheme(themeMode || 'device', true, false);
   if (customization.customPrimary)   customThemeColors.primary   = customization.customPrimary.toLowerCase();
   if (customization.customSecondary) customThemeColors.secondary = customization.customSecondary.toLowerCase();
+  if (customization.customAccent) customThemeColors.accent = customization.customAccent.toLowerCase();
+  else if (customization.customSecondary) customThemeColors.accent = customization.customSecondary.toLowerCase();
   if (customization.colorTheme) applyColorTheme(customization.colorTheme, true, false);
   else if (customization.accentColor) setAccentColor(customization.accentColor, true, false);
   applyAccentStyle(customization.accentStyle || accentStyle, true, false);

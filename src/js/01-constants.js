@@ -1,10 +1,10 @@
 const VERSION = '3.12.0'; // auto-managed by bump.js
 const DOWNLOAD_URL = 'https://raw.githubusercontent.com/ajani190819-ops/HSEQB/main/index.html';
-const DEFAULT_ACCENT = '#003da5'; // HSE blue from the default blue / white / red system
+const DEFAULT_ACCENT = '#003da5'; // Tricolor blue from the default HSE palette
 const DEFAULT_COLOR_THEME = 'tricolor';
-// Named color themes. Each palette supplies the blue accent, a companion color,
-// and (where useful) a third color for the HSE tricolor treatment. The colors
-// are adapted by _paintColors for the active light/dark appearance.
+// Named color themes. Each palette supplies a primary color, a gradient partner,
+// and (where useful) a third decorative color. _paintColors can also route a
+// separate accent color into outlines/highlights for the active appearance.
 const COLOR_THEMES = [
   { id:'tricolor',name:'Tricolor',sub:'HSE',    primary:'#003da5', secondary:'#c8102e', tertiary:'#ffffff' },
   { id:'royal',   name:'Royal',   sub:'HSE',      primary:'#0b41a8', secondary:'#002b7f', tertiary:'#ffffff' },
@@ -18,10 +18,10 @@ const COLOR_THEMES = [
 ];
 function getColorTheme(id){ return COLOR_THEMES.find(t => t.id === id) || null; }
 // How the palette is expressed across the UI:
-//  - 'stripes'  : gradients stay in the primary family (blue -> white) while the
-//                 companion color becomes fine diagonal pinstripes (like the
-//                 title banner texture) and tinted panel outlines.
-//  - 'gradient' : the classic primary -> companion two-color blend everywhere.
+//  - 'stripes'  : the banner stays a clean primary-family gradient while the
+//                 accent color is reserved for outlines/highlights and the
+//                 pinstripe treatment moves onto cards and surfaces.
+//  - 'gradient' : the classic primary -> gradient-partner two-color blend.
 const ACCENT_STYLES = ['stripes', 'gradient'];
 const DEFAULT_ACCENT_STYLE = 'stripes';
 const GITHUB_REPO_URL     = 'https://github.com/ajani190819-ops/HSEQB';
@@ -50,7 +50,7 @@ const THEME_MODES = ['light', 'dark', 'device'];
 let themeMode = 'device';
 let colorTheme = DEFAULT_COLOR_THEME;
 let accentStyle = DEFAULT_ACCENT_STYLE;
-let customThemeColors = { primary:'#003da5', secondary:'#c8102e', tertiary:'#ffffff' };
+let customThemeColors = { primary:'#003da5', secondary:'#c8102e', tertiary:'#ffffff', accent:'#c8102e' };
 let _deviceThemeQuery = null;
 let _profileSaveTimer = null;
 let _profileLoadSequence = 0;

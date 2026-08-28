@@ -8,7 +8,6 @@ if (chart.config.type !== 'doughnut') return;
 const meta0 = chart.getDatasetMeta(0);
 if (!meta0?.data?.length) return;
 const{ ctx } = chart;
-const isDark = document.body.classList.contains('dark-mode');
 const _isDarkNow = document.body.classList.contains('dark-mode');
 const gapCol     = _isDarkNow ? '#1c2128' :'#ffffff';
 const outlineCol = _isDarkNow ? 'rgba(255,255,255,0.55)' :'rgba(0,0,0,0.38)';

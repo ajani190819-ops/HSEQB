@@ -206,12 +206,13 @@ Score and are excluded from the team average and automatic `k`.
 
 ## Theming (HSE palette)
 
-The default palette is **Tricolor** (`DEFAULT_COLOR_THEME = 'tricolor'` in
-`01-constants.js`: HSE blue `#003da5`, red `#c8102e`, white). It is the default
-at three levels, and all three must agree or the first frame drifts off-brand:
+The default palette is **Royal** (`DEFAULT_COLOR_THEME = 'royal'` in
+`01-constants.js`: primary `#0b41a8`, gradient `#002b7f`, white). The default
+accent style is **Gradient** (`DEFAULT_ACCENT_STYLE = 'gradient'`). These
+defaults must agree at three levels or the first frame drifts off-brand:
 
 1. `css/core.css` `:root` / `html.dark-mode` carry the **exact** values
-   `_paintColors('#003da5','#c8102e','#ffffff')` produces, so the pre-boot
+   `_paintColors('#0b41a8','#002b7f','#ffffff')` produces, so the pre-boot
    paint already looks like the default theme. Recompute them with the real
    `_shadeHex` / `_mixHex` / `_hexLum` helpers if a palette value changes —
    never by eye.
@@ -223,17 +224,18 @@ at three levels, and all three must agree or the first frame drifts off-brand:
 **Palette tokens** — `_paintColors()` (`21-sidebar-ui.js`) is the only place
 that writes inline custom properties: `--primary`, `--primary-light`,
 `--primary-dark`, `--secondary`, `--accent-line`, `--tertiary`, `--hse-blue`,
-`--hse-red`, `--hse-white`. Everything else is **derived in CSS** from
-`--accent-line` with `color-mix()` in `theme.css`, so it follows the palette and
-the light/dark mode automatically:
+`--hse-red`, `--hse-white`. Everything else is **derived in CSS** from those
+palette values with `color-mix()` in `theme.css`, so surfaces, borders, and
+highlights all follow the palette and the light/dark mode automatically:
 
 | Token | Role |
 | --- | --- |
-| `--border` | hairlines and dividers — light companion-color tint over the neutral base |
+| `--border` | hairlines and dividers — light accent-color tint over the neutral base |
 | `--panel-border` | panels, cards, containers — stronger tint, so outlines are never flat gray |
 | `--border-strong` | hover state for panels |
 | `--input-border` | inputs, subtlest tint |
-| `--highlight` / `--highlight-ink` / `--highlight-wash` | red emphasis text, its hover shade, and a red wash |
+| `--highlight` / `--highlight-ink` / `--highlight-wash` | accent emphasis text, its contrast-adjusted hover shade, and a matching wash |
+| `--banner-stripe` / `--banner-stripe-soft` | light-only header texture so the accent color can stay reserved for outlines/highlights |
 
 Two rules keep this from breaking:
 
@@ -242,7 +244,7 @@ Two rules keep this from breaking:
   (`02-theme.js`), and a stylesheet value there beats the value inherited from
   the inline style on `<html>`, flattening every custom palette back to HSE.
   Pre-paint dark defaults belong on `html.dark-mode`.
-- Blue stays the structural/interactive color; the companion red is for
+- Blue stays the structural/interactive color; the accent color handles
   emphasis (scores, ranks, player links, help headings) and outlines. Canvas
   colors cannot read custom properties — use `accentRgba()` in
   `20-analytics-charts.js` rather than a hardcoded hex.

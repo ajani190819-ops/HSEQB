@@ -4,9 +4,12 @@ const sw   = $('viewToggleSwitch');
 const tl   = $('toggleLabelTracker');
 const al   = $('toggleLabelAnalytics');
 if (knob){ if(on){ knob.style.left='auto'; knob.style.right='2px'; } else { knob.style.left='2px'; knob.style.right='auto'; } }
-if (sw)   sw.style.background = on ? 'rgba(255,255,255,.5)' :'rgba(255,255,255,.25)';
-if (tl)   tl.style.color = on ? 'rgba(255,255,255,.55)' :'rgba(255,255,255,.95)';
-if (al)   al.style.color = on ? 'rgba(255,255,255,.95)' :'rgba(255,255,255,.55)';
+if (sw){
+  sw.style.background = on ? 'var(--header-control-bg-strong)' :'var(--header-control-bg)';
+  sw.style.borderColor = 'var(--header-control-border)';
+}
+if (tl)   tl.style.color = on ? 'var(--header-control-text-muted)' :'var(--header-control-text)';
+if (al)   al.style.color = on ? 'var(--header-control-text)' :'var(--header-control-text-muted)';
 const mknob = $('viewToggleKnobMobile');
 const mlbl  = $('toggleLabelMobile');
 if (mknob) mknob.style.left = on ? '20px' :'2px';

@@ -26,16 +26,37 @@ if(arrow) arrow.style.transform=open?'':'rotate(-90deg)'; }
 const isMobile = () => !isIframe && window.innerWidth <= 900;
 if (isIframe){
 const _memStore ={};
+let _nativeLS = null;
+try {
+  _nativeLS = window.localStorage;
+  for (let i = 0; i < _nativeLS.length; i++){
+    const key = _nativeLS.key(i);
+    if (key !== null) _memStore[key] = _nativeLS.getItem(key);
+  }
+} catch(e){}
 const _safeLS ={
-getItem:   k => (_memStore[k] !== undefined ? _memStore[k] :null),
-setItem:   (k, v) =>{ _memStore[k] = String(v); },
-removeItem:k =>{ delete _memStore[k]; },
-clear:     () =>{ Object.keys(_memStore).forEach(k => delete _memStore[k]); },
-key:       i => Object.keys(_memStore)[i] || null,
+getItem(k){
+  if (_memStore[k] !== undefined) return _memStore[k];
+  try { return _nativeLS ? _nativeLS.getItem(k) : null; } catch(e) { return null; }
+},
+setItem(k, v){
+  _memStore[k] = String(v);
+  try { if (_nativeLS) _nativeLS.setItem(k, String(v)); } catch(e){}
+},
+removeItem(k){
+  delete _memStore[k];
+  try { if (_nativeLS) _nativeLS.removeItem(k); } catch(e){}
+},
+clear(){
+  Object.keys(_memStore).forEach(k => delete _memStore[k]);
+  try { if (_nativeLS) _nativeLS.clear(); } catch(e){}
+},
+key(i){ return Object.keys(_memStore)[i] || null; },
 get length(){ return Object.keys(_memStore).length; }
 };
 try{ Object.defineProperty(window, 'localStorage',{ get:() => _safeLS }); } catch(e){}
-document.body.classList.add('dark-mode'); }
+}
+if (document.body) document.body.classList.toggle('dark-mode', document.documentElement.classList.contains('dark-mode'));
 var _iframeDebugActive = false;
 function toggleSidebar(){
 const sidebar=$('mainSidebar');
@@ -93,35 +114,81 @@ function _mixHex(a, b, t){
   const mix = s => Math.round(ch(pa, s) + (ch(pb, s) - ch(pa, s)) * t);
   return '#' + ((1 << 24) + (mix(16) << 16) + (mix(8) << 8) + mix(0)).toString(16).slice(1);
 }
-// Paint the accent properties from the palette's base colors. Deep colors are
-// lifted proportionally to how dark they are: in light mode navy/crimson get a
-// noticeable boost so they never read as near-black on white, and in dark mode
-// they are brightened further so they stay legible on dark surfaces.
-function _paintColors(primary, secondary, tertiary){
+function _clamp01(v){ return Math.max(0, Math.min(1, v)); }
+function _hexToRgb(hex){
+  const n = parseInt(hex.slice(1), 16);
+  return { r:(n >> 16) & 255, g:(n >> 8) & 255, b:n & 255 };
+}
+function _hexToHsl(hex){
+  const { r, g, b } = _hexToRgb(hex);
+  const rr = r / 255, gg = g / 255, bb = b / 255;
+  const max = Math.max(rr, gg, bb), min = Math.min(rr, gg, bb);
+  const l = (max + min) / 2;
+  if (max === min) return { h:0, s:0, l };
+  const d = max - min;
+  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+  const h = (max === rr
+    ? ((gg - bb) / d) + (gg < bb ? 6 : 0)
+    : max === gg
+      ? ((bb - rr) / d) + 2
+      : ((rr - gg) / d) + 4) * 60;
+  return { h, s, l };
+}
+function _hslToHex(h, s, l){
+  const hue = ((h % 360) + 360) % 360;
+  const sat = _clamp01(s), light = _clamp01(l);
+  const c = (1 - Math.abs(2 * light - 1)) * sat;
+  const hp = hue / 60;
+  const x = c * (1 - Math.abs(hp % 2 - 1));
+  let rgb = [0, 0, 0];
+  if (hp < 1) rgb = [c, x, 0];
+  else if (hp < 2) rgb = [x, c, 0];
+  else if (hp < 3) rgb = [0, c, x];
+  else if (hp < 4) rgb = [0, x, c];
+  else if (hp < 5) rgb = [x, 0, c];
+  else rgb = [c, 0, x];
+  const m = light - c / 2;
+  return '#' + rgb.map(v => Math.round((v + m) * 255).toString(16).padStart(2, '0')).join('');
+}
+function _boostHexForDarkSurface(hex){
+  if (!_isHex(hex)) return hex;
+  const { h, s, l } = _hexToHsl(hex);
+  const lum = _hexLum(hex);
+  const sat = _clamp01(s < 0.75 ? s + 0.06 : s * 1.01);
+  const lift = 0.05 + Math.max(0, 0.30 - lum) * 0.16;
+  const floor = 0.39 + Math.max(0, 0.22 - lum) * 0.14;
+  return _hslToHex(h, sat, Math.min(0.58, Math.max(l + lift, floor)));
+}
+// Paint the accent properties from the palette's base colors. Light mode keeps
+// the calmer, slightly lifted treatment for white surfaces; dark mode now lifts
+// colors with a small saturation boost too, so outlines and gradients stay
+// vivid instead of drifting toward gray.
+function _paintColors(primary, secondary, tertiary, accent){
   const root = document.documentElement.style;
   const dark = themeIsDark(themeMode);
   const adapt = (hex) => {
     if (!_isHex(hex)) return hex;
+    if (dark) return _boostHexForDarkSurface(hex);
     const lum = _hexLum(hex);
-    if (dark) return _shadeHex(hex, 0.20 + Math.max(0, 0.34 - lum));
     return lum < 0.34 ? _shadeHex(hex, (0.34 - lum) * 1.1) : hex;
   };
   const blue = adapt(primary);
-  const companion = adapt(secondary || _shadeHex(primary, -0.45));
+  const gradientEnd = adapt(secondary || accent || _shadeHex(primary, -0.45));
+  const accentTone = adapt(accent || secondary || _shadeHex(primary, -0.45));
   const white = dark ? '#f4f6fb' : (tertiary || '#ffffff');
-  // Pinstripe style: gradients blend the primary toward the palette's light
-  // color (blue -> white) while the companion color moves into thin diagonal
-  // lines and panel outlines instead of a solid French-flag color block.
+  // Pinstripe style: gradients stay in the primary family while the accent
+  // color drives outlines/highlights and only the surface pinstripes, not the
+  // light banner texture.
   const stripes = (typeof accentStyle === 'undefined') || accentStyle !== 'gradient';
-  const gradEnd = stripes ? _mixHex(blue, dark ? '#dfe6f5' : '#ffffff', 0.32) : companion;
+  const gradEnd = stripes ? _mixHex(blue, dark ? '#dfe6f5' : '#ffffff', dark ? 0.30 : 0.32) : gradientEnd;
   root.setProperty('--primary', blue);
   root.setProperty('--primary-light', _shadeHex(blue, dark ? 0.24 : 0.28));
   root.setProperty('--primary-dark',  _shadeHex(blue, -0.28));
   root.setProperty('--secondary', gradEnd);
-  root.setProperty('--accent-line', companion);
+  root.setProperty('--accent-line', accentTone);
   root.setProperty('--tertiary', white);
   root.setProperty('--hse-blue', blue);
-  root.setProperty('--hse-red', companion);
+  root.setProperty('--hse-red', accentTone);
   root.setProperty('--hse-white', white);
 }
 function applyColorTheme(id, persistLocal, syncRemote){
@@ -129,16 +196,19 @@ function applyColorTheme(id, persistLocal, syncRemote){
   const theme = custom ? null : getColorTheme(id);
   if (!custom && !theme) return applyColorTheme(DEFAULT_COLOR_THEME, persistLocal, syncRemote);
   colorTheme = custom ? 'custom' : theme.id;
+  document.documentElement.dataset.colorTheme = colorTheme;
   const primary   = custom ? customThemeColors.primary   : theme.primary;
   const secondary = custom ? customThemeColors.secondary : theme.secondary;
   const tertiary  = custom ? customThemeColors.tertiary : theme.tertiary;
-  _paintColors(primary, secondary, tertiary);
+  const accent    = custom ? (customThemeColors.accent || customThemeColors.secondary) : (theme.accent || theme.secondary);
+  _paintColors(primary, secondary, tertiary, accent);
   if (persistLocal !== false){
     localStorage.setItem('colorTheme', colorTheme);
     localStorage.setItem('accentColor', primary); // legacy key stays in sync
     if (custom){
       localStorage.setItem('customPrimary', primary);
       localStorage.setItem('customSecondary', secondary);
+      localStorage.setItem('customAccent', accent);
     }
   }
   syncColorThemeControls();
@@ -148,7 +218,7 @@ function applyColorTheme(id, persistLocal, syncRemote){
   if (syncRemote !== false) scheduleUserProfileSave();
 }
 function setColorTheme(id){ applyColorTheme(id, true, true); }
-// Accent style: 'stripes' (pinstripe texture + tinted outlines) or 'gradient'
+// Accent style: 'stripes' (surface pinstripes + tinted outlines) or 'gradient'
 // (classic two-color blends). Stored per account like the color theme.
 function normalizeAccentStyle(v){
   const value = String(v || '').toLowerCase();
@@ -157,9 +227,9 @@ function normalizeAccentStyle(v){
 function applyAccentStyle(style, persistLocal, syncRemote){
   accentStyle = normalizeAccentStyle(style);
   document.documentElement.dataset.accentStyle = accentStyle;
-  // Repaint so --secondary swaps between the blue->white blend and the companion color.
+  // Repaint so gradients and accents both follow the selected style.
   const palette = colorTheme === 'custom' ? customThemeColors : getColorTheme(colorTheme);
-  if (palette) _paintColors(palette.primary, palette.secondary, palette.tertiary);
+  if (palette) _paintColors(palette.primary, palette.secondary, palette.tertiary, palette.accent);
   if (persistLocal !== false) localStorage.setItem('accentStyle', accentStyle);
   syncAccentStyleControls();
   if (typeof _chartInstances !== 'undefined' && _chartInstances){
@@ -176,18 +246,19 @@ function syncAccentStyleControls(){
   const hint = $('accentStyleHint');
   if (hint){
     hint.textContent = accentStyle === 'gradient'
-      ? 'Classic look: the two theme colors blend directly into each other. Panel outlines keep their companion-color tint either way.'
-      : 'Primary + white gradients; the companion color appears as faint diagonal lines and firmer tinted panel outlines.';
+      ? 'Classic look: the primary and gradient colors blend directly into each other. Panels still keep a light palette tint.'
+      : 'Pinstripe look: a clean banner gradient, evenly spaced surface stripes, and a separate accent color for outlines and highlights.';
   }
 }
 function setCustomThemeColor(which, value){
   if (!_isHex(value)) return;
-  customThemeColors[which === 'secondary' ? 'secondary' : 'primary'] = value.toLowerCase();
+  const key = which === 'secondary' ? 'secondary' : which === 'accent' ? 'accent' : 'primary';
+  customThemeColors[key] = value.toLowerCase();
   applyColorTheme('custom', true, true);
 }
 function resetCustomTheme(){
   const base = getColorTheme(DEFAULT_COLOR_THEME);
-  customThemeColors = { primary:base.primary, secondary:base.secondary };
+  customThemeColors = { primary:base.primary, secondary:base.secondary, tertiary:base.tertiary || '#ffffff', accent:base.accent || base.secondary };
   applyColorTheme('custom', true, true);
 }
 // Rebuild the swatch grid, mark the active card, and mirror the custom inputs.
@@ -197,13 +268,13 @@ function renderColorThemeGrid(){
   grid.innerHTML = COLOR_THEMES.map(t => `
     <button type="button" class="theme-swatch${colorTheme === t.id ? ' active' : ''}" data-theme="${t.id}"
             onclick="setColorTheme('${t.id}')" aria-pressed="${colorTheme === t.id}" title="${t.name} — ${t.sub}">
-      <span class="theme-swatch-chip" style="--swatch-blue:${t.primary};--swatch-red:${t.secondary};--swatch-white:${t.tertiary || '#fff'};"></span>
+      <span class="theme-swatch-chip" style="--swatch-left:${t.primary};--swatch-mid:${t.tertiary || t.secondary || '#fff'};--swatch-right:${t.accent || t.secondary};"></span>
       <span class="theme-swatch-name">${t.name}</span>
       <span class="theme-swatch-sub">${t.sub}</span>
     </button>`).join('') + `
     <button type="button" class="theme-swatch theme-swatch-custom${colorTheme === 'custom' ? ' active' : ''}" data-theme="custom"
             onclick="setColorTheme('custom')" aria-pressed="${colorTheme === 'custom'}" title="Custom — pick your own colors">
-      <span class="theme-swatch-chip" style="--swatch-blue:${customThemeColors.primary};--swatch-red:${customThemeColors.secondary};--swatch-white:#fff;"></span>
+      <span class="theme-swatch-chip" style="--swatch-left:${customThemeColors.primary};--swatch-mid:${customThemeColors.secondary};--swatch-right:${customThemeColors.accent || customThemeColors.secondary};"></span>
       <span class="theme-swatch-name">Custom</span>
       <span class="theme-swatch-sub">Your colors</span>
     </button>`;
@@ -216,6 +287,8 @@ function syncColorThemeControls(){
   const s = $('customSecondaryInput');  if (s) s.value = customThemeColors.secondary;
   const ph = $('customPrimaryHex');     if (ph) ph.value = customThemeColors.primary;
   const sh = $('customSecondaryHex');   if (sh) sh.value = customThemeColors.secondary;
+  const a = $('customAccentInput');     if (a) a.value = customThemeColors.accent || customThemeColors.secondary;
+  const ah = $('customAccentHex');      if (ah) ah.value = customThemeColors.accent || customThemeColors.secondary;
   const active = colorTheme === 'custom' ? { name:'Custom', sub:'Your colors' } : getColorTheme(colorTheme);
   const label = $('activeThemeLabel');
   if (label && active) label.textContent = active.name + ' — ' + active.sub;
@@ -225,7 +298,7 @@ function setAccentColor(color, persistLocal, syncRemote){
   if (!_isHex(color)) return;
   const match = COLOR_THEMES.find(t => t.primary.toLowerCase() === color.toLowerCase());
   if (match) return applyColorTheme(match.id, persistLocal, syncRemote);
-  customThemeColors = { primary:color.toLowerCase(), secondary:_shadeHex(color, -0.45) };
+  customThemeColors = { primary:color.toLowerCase(), secondary:_shadeHex(color, -0.45), tertiary:'#ffffff', accent:_shadeHex(color, -0.45) };
   applyColorTheme('custom', persistLocal, syncRemote);
 }
 function changeSkillThreshold(delta){

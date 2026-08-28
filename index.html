@@ -1,6 +1,6 @@
 <!DOCTYPE html>
-<html lang="en" data-accent-style="stripes">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"><meta name="theme-color" content="#003da5"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="HSE QB"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icons/icon.png"><title>HSE Quiz Bowl Tracker</title><meta name="deploy-sha" content="dev"><meta name="color-scheme" content="only light dark"><script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script><style>:root{--sp:18px;--hsp:14px;--primary:#2257b1;--primary-light:#6086c7;--primary-dark:#183f7f;--secondary:#698dca;--success:#11998e;--success2:#38ef7d;--danger:#dc3545;--danger2:#e74c5c;--warning:#f39c12;--bg:#f7f9fd;--text:#1a1a2e;--text2:#5a6178;--text3:#9ba3b8;--sec-bg:#f2f5fb;--card:#ffffff;--input-bg:#fff;--input-border:#dde1ea;--input-text:#1a1a2e;--hover:#f0f3fa;--border:#c9cfdd;--shadow-xs:0 1px 3px rgba(60,70,100,.07);--shadow-sm:0 2px 8px rgba(60,70,100,.1);--shadow-md:0 6px 18px rgba(60,70,100,.14);--shadow-xl:0 20px 48px rgba(60,70,100,.18);--radius:12px;--radius-sm:8px}.dark-mode{--danger:#ff6b6b;--warning:#ffd43b;--bg:#0d1117;--text:#e6eaf4;--text2:#9ba3c0;--text3:#606880;--sec-bg:#161b22;--card:#1c2128;--input-bg:#0d1117;--input-border:#2d3340;--input-text:#e6eaf4;--hover:#1e2530;--border:#444e63;--shadow-xs:0 1px 3px rgba(0,0,0,.3);--shadow-sm:0 2px 8px rgba(0,0,0,.35);--shadow-md:0 6px 18px rgba(0,0,0,.45);--shadow-xl:0 20px 48px rgba(0,0,0,.65)}html.dark-mode{--primary:#527cc2;--primary-light:#7c9bd1;--primary-dark:#3b598c;--secondary:#7f9ed2}:root{color-scheme:only light dark}*{-webkit-color-adjust:exact !important;color-adjust:exact !important;forced-color-adjust:none !important}*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}html{height:100%;overflow:hidden}::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-button{display:none}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--primary);border-radius:10px}::-webkit-scrollbar-thumb:hover{background:var(--primary-dark)}*{scrollbar-width:thin;scrollbar-color:var(--primary) transparent}.qb-scroll,.sidebar-sections,.log-container{scrollbar-gutter:stable}body.hide-scrollbars::-webkit-scrollbar-thumb,body.hide-scrollbars::-webkit-scrollbar-track{background:transparent !important}body.hide-scrollbars *{scrollbar-color:transparent transparent !important}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);height:100vh;overflow:hidden;color:var(--text);display:flex;flex-direction:column}.qb-container{width:100%;flex:1;display:flex;flex-direction:column;background:var(--bg);overflow:hidden}#updateBanner{max-height:0;overflow:hidden;display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:linear-gradient(135deg,#11998e 0%,#38ef7d 100%);color:#fff;padding:0 16px;font-size:.88em;font-weight:600;box-shadow:0 2px 10px rgba(17,153,142,.35);position:relative;z-index:150;flex-shrink:0;transition:max-height .3s ease,padding .3s ease}#updateBanner.show{max-height:60px;padding:9px 16px}.ub-icon{font-size:1.1em;flex-shrink:0}.ub-msg{flex:1;min-width:0}.ub-btn{background:rgba(255,255,255,.22);border:1.5px solid rgba(255,255,255,.45);color:#fff;border-radius:6px;padding:5px 13px;font-size:.85em;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;transition:background .15s}.ub-btn:hover{background:rgba(255,255,255,.38)}.ub-dismiss{padding:4px 9px}.qb-header{background:linear-gradient(135deg,var(--primary) 0%,var(--secondary) 100%);color:#fff;padding:0 12px;display:flex;align-items:center;gap:8px;box-shadow:0 2px 16px color-mix(in srgb,var(--primary) 28%,transparent);border-bottom:2px solid rgba(0,0,0,0.25);position:relative;z-index:200;flex-shrink:0;transition:filter .3s ease;min-height:54px;flex-wrap:nowrap;overflow:hidden}.qb-header-left{flex:1;display:flex;align-items:center}.qb-header-center{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;pointer-events:none}.header-controls{flex:1;display:flex;justify-content:flex-end}.qb-header h1{font-size:clamp(1em,2.6vw,1.55em);font-weight:700;letter-spacing:-.3px;white-space:nowrap;overflow:hidden;text-overflow:clip;max-width:100%;margin:0;line-height:1.25;text-align:center}.version-badge{font-size:.42em;font-weight:600;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.85);padding:2px 7px;border-radius:20px;vertical-align:middle;position:relative;top:-2px;display:inline-flex;align-items:center;gap:6px;line-height:1}.header-session-name{font-size:.72em;font-weight:500;color:rgba(255,255,255,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;line-height:1;text-align:center}.header-session-name::before{content:'Session:';opacity:.7}.header-controls{flex-shrink:0;display:flex;gap:6px;align-items:center;flex:1;justify-content:flex-end}.qb-header-spacer{display:none}.header-toggle-label{font-size:.82em;font-weight:700;flex-shrink:0}@media (max-width:720px){.qb-header h1>.version-badge{display:none}}@media (max-width:640px){.qb-header h1{font-size:0}.qb-header h1::before{content:attr(data-medium);font-size:clamp(.82em,4.5vw,1em);font-weight:700;white-space:nowrap}}@media (max-width:540px){.qb-header-center{align-items:center;max-width:40%}.header-session-name{display:none}.header-toggle-label{display:none}}@media (max-width:360px){.qb-header h1{font-size:0}.qb-header h1::before{content:attr(data-short);font-size:1rem;font-weight:700;white-space:nowrap}}.header-btn{background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.28);border-radius:var(--radius-sm);padding:6px 12px;font-size:.82em;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;transition:background .2s;flex-shrink:0}.header-btn:hover{background:rgba(255,255,255,.26)}.header-btn.round{border-radius:50%;width:30px;height:30px;padding:0;justify-content:center;font-size:1em}.header-btn.active{background:rgba(255,255,255,.32);box-shadow:0 0 0 2px rgba(255,255,255,.45)}.sidebar-open-btn{display:none}.mobile-subrow{display:none !important}.qb-body{flex:1;display:flex;overflow:hidden;position:relative}.qb-sidebar{width:300px;flex-shrink:0;display:flex;flex-direction:column;padding:var(--sp) var(--hsp);background:var(--card);border-right:1.5px solid var(--border);overflow:visible;position:relative;z-index:100;transition:width .3s ease,padding .3s ease}.qb-sidebar.collapsed{width:0;padding:0;overflow:hidden;border-right:none}.qb-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:var(--sp) var(--hsp);transition:filter .3s ease;background:var(--bg)}#trackerView{display:flex;flex-direction:column;height:100%}#analyticsView{display:none;flex-direction:column;height:100%}#analyticsView.active{display:flex}.analytics-header{padding:12px var(--hsp);border-bottom:1.5px solid var(--border);background:var(--card);flex-shrink:0}.analytics-tabs{display:flex;gap:6px;flex-wrap:wrap}.analytics-tab{background:var(--sec-bg);color:var(--text2);border:2px solid var(--border);border-radius:20px;padding:6px 16px;font-size:.82em;font-weight:600;cursor:pointer;font-family:inherit;transition:border-color .15s,color .15s,background .15s,box-shadow .15s}.analytics-tab:hover{background:var(--hover);color:var(--primary);border-color:var(--primary-light)}.analytics-tab.active{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;border-color:var(--primary-dark);box-shadow:0 2px 8px color-mix(in srgb,var(--primary) 30%,transparent)}.analytics-scroll{flex:1;overflow-y:auto;padding:var(--sp) var(--hsp);scrollbar-gutter:stable;background:var(--bg)}.analytics-panel{display:none}.analytics-panel.active{display:block}.an-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:var(--sp);margin-bottom:var(--sp)}.an-stat-box{background:var(--card);border:2px solid var(--border);border-radius:10px;padding:16px;text-align:center;box-shadow:var(--shadow-sm)}.an-stat-box .an-val{font-size:2em;font-weight:700;color:var(--primary)}.an-stat-box .an-lbl{font-size:.82em;color:var(--text2);margin-top:4px}.an-player-card{background:var(--card);border:2px solid var(--border);border-radius:10px;padding:18px;margin-bottom:var(--sp);box-shadow:var(--shadow-sm)}.an-player-card:hover{border-color:var(--primary-light)}.an-player-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.an-player-name{font-size:1.1em;font-weight:700;color:var(--primary);cursor:pointer;text-decoration:underline;text-underline-offset:3px;transition:color .15s}.an-player-name:hover{color:var(--primary-dark)}.an-player-pts{font-size:1.2em;font-weight:700;color:var(--primary)}.an-player-meta{font-size:.82em;color:var(--text2);margin-bottom:12px}.an-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:.85em}.an-bar-label{width:110px;flex-shrink:0;color:var(--text2);font-weight:600}.an-bar-track{flex:1;height:10px;background:var(--sec-bg);border-radius:10px;overflow:hidden;border:2px solid var(--border)}.an-bar-fill{height:100%;border-radius:10px;background:linear-gradient(90deg,var(--primary),var(--secondary));transition:width .4s ease}.an-bar-fill.neg{background:linear-gradient(90deg,var(--danger),var(--danger2))}.an-bar-val{width:36px;text-align:right;font-weight:700;color:var(--text);flex-shrink:0}.an-cat-card{background:var(--card);border:2px solid var(--border);border-radius:10px;padding:16px;margin-bottom:var(--sp);box-shadow:var(--shadow-sm)}.an-cat-title{font-weight:700;font-size:1em;color:var(--primary);margin-bottom:10px}.an-cat-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1.5px solid var(--border);font-size:.88em;align-items:center}.an-cat-row:last-child{border-bottom:none}.an-lb-row{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--card);border:2px solid var(--border);border-radius:10px;margin-bottom:10px;box-shadow:var(--shadow-xs);font-size:.92em}.an-lb-rank{font-size:1.2em;font-weight:700;color:var(--primary);min-width:42px}.an-lb-name{flex:1;font-weight:600}.an-lb-pts{font-weight:700;color:var(--primary);margin-right:8px}.pwr-bolt{font-style:normal;font-variant-emoji:text}.an-lb-chip{font-size:.75em;padding:2px 8px;border-radius:10px;font-weight:700;background:var(--sec-bg);color:var(--text2);border:2px solid var(--border)}.an-lb-chip.power{background:color-mix(in srgb,var(--primary) 12%,transparent);color:var(--primary);border-color:var(--primary)}.an-lb-chip.neg{background:rgba(220,53,69,.1);color:var(--danger);border-color:var(--danger)}.an-team-card{background:var(--card);border:2px solid var(--border);border-left:5px solid var(--secondary);border-radius:10px;padding:16px;margin-bottom:var(--sp);box-shadow:var(--shadow-sm)}.an-team-name{font-weight:700;font-size:1.05em;margin-bottom:8px}.an-team-pts{color:var(--primary);font-weight:700;font-size:1.3em}@media (max-width:900px){.qb-sidebar{position:fixed;top:0;left:0;right:0;bottom:0;width:100% !important;height:100vh;max-height:100vh;overflow-y:auto;padding:12px 16px 20px !important;border-right:none;border-bottom:none;background:rgba(255,255,255,0.18) !important;-webkit-backdrop-filter:blur(28px) saturate(1.8);backdrop-filter:blur(28px) saturate(1.8);box-shadow:0 8px 32px rgba(0,0,0,.22);z-index:6000;transform:translateY(-110%);visibility:hidden;transition:transform .35s cubic-bezier(.4,0,.2,1),visibility .35s ease;pointer-events:none}.dark-mode .qb-sidebar{background:rgba(13,17,23,0.6) !important}.qb-sidebar.mobile-open{transform:translateY(0) !important;visibility:visible !important;pointer-events:auto !important}.qb-sidebar.mobile-open *{pointer-events:auto !important}.qb-scroll.menu-blurred,.analytics-scroll.menu-blurred{filter:blur(3px);pointer-events:none}body.menu-open{overflow:hidden}.mobile-subrow{display:none !important}}body.is-iframe .qb-sidebar{position:relative !important;transform:none !important;visibility:visible !important;width:300px !important;height:auto !important;max-height:none !important;padding:var(--sp) var(--hsp) !important;background:var(--card) !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important;box-shadow:none !important;pointer-events:auto !important;transition:width .3s ease,padding .3s ease !important}body.is-iframe .qb-sidebar.collapsed{width:0 !important;padding:0 !important;overflow:hidden !important}body.is-iframe .mobile-subrow{display:none !important}body.is-iframe .header-controls{display:flex !important}body.is-iframe .header-session-name{display:block !important}body.is-iframe .qb-scroll.menu-blurred,body.is-iframe .analytics-scroll.menu-blurred{filter:none !important;pointer-events:auto !important}.qb-section{margin-bottom:14px;padding:clamp(16px,4vw,20px);background:var(--card);border-radius:var(--radius);border:2px solid var(--border);overflow:visible;box-shadow:var(--shadow-xs)}.qb-section:hover{border-color:var(--primary-light)}.qb-section h2{color:var(--text);margin-bottom:var(--sp);font-size:clamp(1.05em,3vw,1.25em);cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none;font-weight:700;transition:color .2s}.qb-section h2:hover{color:var(--primary)}.toggle-icon{font-size:.75em;transition:transform .3s cubic-bezier(.4,0,.2,1);display:inline-block;color:var(--text3)}.toggle-icon.collapsed{transform:rotate(-90deg)}.collapsible-content{max-height:2000px;overflow:visible;transition:max-height .3s ease-out}.collapsible-content.collapsed{max-height:0 !important;overflow:hidden}.input-group{margin-bottom:var(--sp)}.input-group label{display:block;margin-bottom:6px;font-weight:600;font-size:clamp(.85em,2vw,.95em);color:var(--text2)}.input-group input,.input-group textarea,.input-group select{width:100%;padding:10px 13px;border:2px solid var(--input-border);border-radius:var(--radius-sm);font-size:.95em;font-family:inherit;background:var(--input-bg);color:var(--input-text);transition:border-color .2s,box-shadow .2s}.input-group input::placeholder,.input-group textarea::placeholder{color:var(--text3)}.input-group input:focus,.input-group textarea:focus,.input-group select:focus{border-color:var(--primary);outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 12%,transparent)}input[type="file"]{width:100%;padding:9px 12px;border-radius:var(--radius-sm);border:2px solid var(--input-border);background:var(--card);color:var(--input-text);cursor:pointer;font-family:inherit;font-size:.9em}input[type="file"]::file-selector-button{margin-right:10px;padding:6px 12px;border-radius:6px;border:none;background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;font-weight:700;cursor:pointer;font-size:.9em}#newSessionName{font-weight:600}.button{background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;border:none;padding:clamp(9px,2vw,12px) clamp(16px,3vw,24px);border-radius:var(--radius-sm);font-size:clamp(.85em,2vw,.95em);font-family:inherit;cursor:pointer;font-weight:600;white-space:nowrap;box-shadow:0 2px 8px color-mix(in srgb,var(--primary) 25%,transparent);transition:transform .15s,box-shadow .15s,opacity .15s}.button:hover{transform:translateY(-2px);box-shadow:0 6px 16px color-mix(in srgb,var(--primary) 35%,transparent)}.button:active{transform:translateY(0);opacity:.92}.button:disabled{opacity:.55;cursor:not-allowed;transform:none}.button-secondary{background:linear-gradient(135deg,#6c757d,#5a6268);box-shadow:0 2px 8px rgba(108,117,125,.2)}.button-danger{background:linear-gradient(135deg,var(--danger),var(--danger2));box-shadow:0 2px 8px rgba(220,53,69,.25)}.button-success{background:linear-gradient(135deg,var(--success),var(--success2));box-shadow:0 2px 8px rgba(17,153,142,.25)}.button-point-type,.button-category,.button-player{background:var(--card);color:var(--text2);border:1.5px solid var(--border);padding:clamp(9px,2vw,12px) clamp(12px,2.5vw,18px);border-radius:var(--radius-sm);font-size:clamp(.82em,1.8vw,.95em);font-family:inherit;cursor:pointer;font-weight:600;transition:border-color .15s,color .15s,background .15s,box-shadow .15s;box-shadow:none}.button-point-type:hover,.button-category:hover,.button-player:hover{border-color:var(--primary-light);color:var(--primary);background:color-mix(in srgb,var(--primary) 5%,transparent);box-shadow:none}.button-point-type.selected,.button-category.selected,.button-player.selected{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;border:1.5px solid transparent;box-shadow:0 2px 8px color-mix(in srgb,var(--primary) 25%,transparent)}.point-type-buttons,.category-buttons{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;padding:2px}.player-buttons{display:flex;flex-wrap:wrap;gap:8px;padding:2px}.button-group{display:flex;gap:10px;flex-wrap:wrap}.player-pool-item{display:inline-flex;align-items:center;margin:4px;padding:7px 12px;background:var(--sec-bg);border-radius:20px;font-size:.88em;border:2px solid var(--border);box-shadow:var(--shadow-xs);transition:border-color .15s}.player-pool-item:hover{border-color:var(--primary)}.player-pool-item .remove{cursor:pointer;margin-left:8px;color:var(--text3);font-weight:bold;padding:2px 6px;border-radius:4px;border:2px solid var(--border);transition:border-color .15s,background .15s,color .15s}.player-pool-item .remove:hover{background:var(--danger);color:#fff;border-color:var(--danger)}#playerPoolDisplay{padding:10px;min-height:40px;background:var(--sec-bg);border:2px solid var(--border);border-radius:var(--radius-sm)}.team-section{margin-bottom:12px;padding:14px 16px;background:var(--sec-bg);border-radius:var(--radius-sm);border:2px solid var(--border);box-shadow:var(--shadow-xs)}.team-section input[type="text"]{padding:9px 12px;border:2px solid var(--input-border);border-radius:6px;width:100%;background:var(--input-bg);color:var(--input-text);font-weight:600;font-family:inherit}.team-section input[type="text"]:focus{border-color:var(--primary);outline:none}.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-top:12px}.stat-card,.team-stat-card{background:var(--card);padding:16px;border-radius:var(--radius-sm);border:2px solid var(--border);box-shadow:var(--shadow-xs);transition:border-color .15s,box-shadow .15s,transform .15s;cursor:pointer;font-size:clamp(.85em,2vw,1em)}.stat-card:hover,.team-stat-card:hover{border-color:var(--primary-light);box-shadow:var(--shadow-sm);transform:translateY(-1px)}.team-stat-card{border-left:4px solid var(--secondary);grid-column:1/-1}.stat-card h3,.team-stat-card h3{display:flex;align-items:center;justify-content:space-between;user-select:none;margin:0;font-size:1em;font-weight:700}.stat-details{max-height:1000px;overflow:hidden;transition:max-height .3s ease-out,opacity .3s ease-out;opacity:1}.stat-card.collapsed .stat-details,.team-stat-card.collapsed .stat-details{max-height:0;opacity:0;pointer-events:none}.player-score,.team-score{color:var(--primary);font-weight:700}.stat-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1.5px solid var(--border);align-items:center}.stat-row:last-child{border-bottom:none}.stat-label{font-weight:500;color:var(--text2);font-size:.9em}.stat-value{color:var(--primary);font-weight:700;font-size:1em}.overall-ranking{grid-column:1/-1;background:var(--card);padding:16px;border-radius:var(--radius-sm);border:2px solid var(--border);box-shadow:var(--shadow-xs);margin-top:12px}.log-entry{padding:10px 12px;background:var(--sec-bg);margin:8px 0;border-radius:var(--radius-sm);border-left:3px solid var(--primary);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;font-size:clamp(.8em,2vw,.9em);box-shadow:var(--shadow-xs)}.log-container{max-height:420px;overflow-y:auto;border:2px solid var(--border);border-radius:var(--radius-sm);padding:10px;background:var(--card)}.log-container-wrap{position:relative;margin-top:12px}.switch{position:relative;display:inline-block;width:52px;height:26px;flex-shrink:0}.switch input{opacity:0;width:0;height:0}.slider{position:absolute;cursor:pointer;inset:0;background:var(--border);transition:.3s;border-radius:26px}.slider:before{position:absolute;content:"";height:20px;width:20px;left:3px;bottom:3px;background:#fff;transition:.3s;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.2)}input:checked+.slider{background:linear-gradient(135deg,var(--primary),var(--secondary))}input:checked+.slider:before{transform:translateX(26px)}.button-point-type kbd,#recordAnswerBtn kbd{display:inline-block;font-family:inherit;font-size:.72em;font-weight:600;padding:1px 5px;border-radius:4px;border:1px solid currentColor;opacity:.6;margin-left:4px;vertical-align:middle;line-height:1.4}#welcomeToast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(30px);background:var(--card);color:var(--text);border:2px solid var(--border);border-radius:14px;padding:16px 20px;box-shadow:var(--shadow-xl);z-index:99998;opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;min-width:280px;max-width:380px;text-align:center}#welcomeToast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}#welcomeToast .wt-title{font-size:1.05em;font-weight:700;color:var(--text);margin-bottom:6px}#welcomeToast .wt-sub{font-size:.85em;color:var(--text2);margin-bottom:14px;line-height:1.5}#welcomeToast .wt-btns{display:flex;gap:8px;justify-content:center}#welcomeToast .wt-btn-primary{background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:.88em;font-weight:700;cursor:pointer;font-family:inherit}#welcomeToast .wt-btn-dismiss{background:var(--sec-bg);color:var(--text2);border:2px solid var(--border);border-radius:8px;padding:8px 14px;font-size:.88em;font-weight:600;cursor:pointer;font-family:inherit}.user-id-status{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--sec-bg);border-radius:var(--radius-sm);border:2px solid var(--border);margin-bottom:12px}#categoryButtonsContainer{display:flex;flex-direction:column;gap:3px}.cat-group{display:flex;flex-wrap:wrap;align-items:center;gap:4px;padding:5px 6px;background:var(--sec-bg);border-radius:8px;border:1.5px solid var(--border)}.cat-group-label{padding:4px 10px;border-radius:5px;font-size:.63em;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--primary);background:color-mix(in srgb,var(--primary) 12%,transparent);border:1.5px solid color-mix(in srgb,var(--primary) 30%,transparent);cursor:pointer;font-family:inherit;transition:color .15s,background .15s,border-color .15s;white-space:nowrap}.cat-group-label:hover{background:color-mix(in srgb,var(--primary) 20%,transparent);border-color:var(--primary)}.cat-group-label.selected{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;border-color:transparent;box-shadow:0 2px 8px color-mix(in srgb,var(--primary) 30%,transparent)}.cat-group-chip{padding:4px 10px;border-radius:5px;font-size:.78em;font-weight:600;border:1.5px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-family:inherit;transition:border-color .15s,color .15s,background .15s}.cat-group-chip:hover{border-color:var(--primary-light);color:var(--primary);background:color-mix(in srgb,var(--primary) 8%,transparent)}.cat-group-chip.selected{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;border-color:transparent;box-shadow:0 2px 8px color-mix(in srgb,var(--primary) 25%,transparent)}#recordToast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--success);color:#fff;padding:10px 22px;border-radius:28px;font-size:.92em;font-weight:700;box-shadow:0 4px 18px rgba(0,0,0,.22);pointer-events:none;opacity:0;transition:opacity .18s,transform .18s;z-index:99999;white-space:nowrap;letter-spacing:.01em}#recordToast.show{opacity:1;transform:translateX(-50%) translateY(0)}#recordToast.neg{background:var(--danger)}#recordToast.miss{background:#888}#recordToast.pts{background:var(--primary)}#appToast{position:fixed;bottom:70px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--danger);color:#fff;padding:11px 22px;border-radius:28px;font-size:.9em;font-weight:700;box-shadow:0 4px 20px rgba(0,0,0,.28);pointer-events:none;opacity:0;transition:opacity .2s,transform .2s;z-index:100000;max-width:88vw;text-align:center;letter-spacing:.01em;line-height:1.4}#appToast.show{opacity:1;transform:translateX(-50%) translateY(0)}#appToast.toast-warn{background:#e67e22}#appToast.toast-success{background:var(--success)}#appToast.toast-info{background:var(--primary)}#confirmToast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--card);color:var(--text);padding:16px 20px;border-radius:14px;font-size:.9em;box-shadow:0 8px 32px rgba(0,0,0,.32);border:1.5px solid var(--border);opacity:0;transition:opacity .2s,transform .2s;z-index:100001;max-width:340px;width:90vw;text-align:center;pointer-events:none}#confirmToast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:all}#confirmToast .ct-msg{font-weight:600;margin-bottom:14px;line-height:1.45;color:var(--text)}#confirmToast .ct-btns{display:flex;gap:10px;justify-content:center}#confirmToast .ct-ok{background:var(--danger);color:#fff;border:none;border-radius:8px;padding:8px 22px;font-weight:700;cursor:pointer;font-family:inherit;font-size:.95em}#confirmToast .ct-ok.warn-ok{background:#e67e22}#confirmToast .ct-cancel{background:var(--sec-bg);color:var(--text2);border:1.5px solid var(--border);border-radius:8px;padding:8px 18px;font-weight:600;cursor:pointer;font-family:inherit;font-size:.95em}.ql-row{display:flex;align-items:center;gap:0;background:var(--card);border:1.5px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:6px;transition:border-color .12s}.ql-row:hover{border-color:var(--primary-light)}.ql-name{flex:0 0 auto;min-width:80px;max-width:120px;padding:0 12px;font-size:.82em;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-right:1.5px solid var(--border);height:44px;display:flex;align-items:center;background:var(--sec-bg)}.ql-btns{display:flex;flex:1}.ql-btn{flex:1;height:44px;border:none;border-right:1.5px solid var(--border);background:transparent;cursor:pointer;font-size:.75em;font-weight:700;color:var(--text2);transition:background .12s,color .12s;display:flex;align-items:center;justify-content:center;gap:3px;line-height:1.1;text-align:center;padding:0 4px}.ql-btn:last-child{border-right:none}.ql-btn:hover{background:var(--hover);color:var(--text)}.ql-btn.ql-power:hover{background:rgba(17,153,142,.12);color:var(--success)}.ql-btn.ql-tu:hover{background:color-mix(in srgb,var(--primary) 10%,transparent);color:var(--primary)}.ql-btn.ql-bonus:hover{background:color-mix(in srgb,var(--primary) 6%,transparent);color:var(--primary)}.ql-btn.ql-neg:hover{background:rgba(220,53,69,.08);color:var(--danger)}.ql-btn.ql-miss:hover{background:rgba(200,200,200,.1);color:var(--text3)}.ql-cat-row{display:none;padding:8px 12px;border-top:1.5px solid var(--border);background:var(--sec-bg);border-radius:0 0 10px 10px}.ql-cat-row.open{display:flex;flex-wrap:wrap;gap:5px;align-items:center}.ql-cat-chip{padding:3px 10px;border-radius:16px;font-size:.74em;font-weight:600;border:1.5px solid var(--border);background:var(--card);color:var(--text2);cursor:pointer;transition:all .1s}.ql-cat-chip:hover{border-color:var(--primary);color:var(--primary)}.ql-cat-chip.selected{background:var(--primary);border-color:var(--primary);color:#fff}.ql-confirm-btn{padding:3px 12px;border-radius:16px;font-size:.74em;font-weight:700;background:var(--success);color:#fff;border:none;cursor:pointer;margin-left:4px}.ql-cancel-btn{padding:3px 10px;border-radius:16px;font-size:.74em;font-weight:600;background:transparent;color:var(--text3);border:1.5px solid var(--border);cursor:pointer}.session-info{background:var(--sec-bg);padding:14px 16px;border-radius:var(--radius-sm);border:2px solid var(--border);margin-bottom:var(--sp);font-size:clamp(.82em,2vw,.95em)}.session-info-row{display:flex;justify-content:space-between;align-items:center;margin:10px 0;flex-wrap:wrap;gap:6px;padding-bottom:8px;border-bottom:1.5px solid var(--border)}.session-info-row:last-child{border-bottom:none;margin-bottom:0}.session-info-row span:first-child{font-weight:500;color:var(--text2);font-size:.9em}.session-info-row strong{color:var(--primary);font-weight:700}.session-controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:var(--sp)}.qb-modal{display:none;position:fixed;z-index:9999;inset:0;background:rgba(15,20,40,.55);backdrop-filter:blur(6px)}.qb-modal.open{display:block}.modal-content{background:var(--card);margin:50px auto;padding:24px 28px;border-radius:var(--radius);width:90%;max-width:550px;max-height:80vh;overflow-y:auto;box-shadow:var(--shadow-xl);border:2px solid var(--border)}.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;padding-bottom:14px;border-bottom:1.5px solid var(--border)}.modal-header h2{color:var(--text);margin:0;font-weight:700;font-size:1.3em}.close-modal{background:none;border:none;font-size:24px;cursor:pointer;color:var(--text3);width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:6px;transition:background .15s,color .15s}.close-modal:hover{background:var(--sec-bg);color:var(--primary)}.sessions-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:14px}.session-card{background:var(--sec-bg);padding:14px;border-radius:var(--radius-sm);border:2px solid var(--border);transition:transform .15s,box-shadow .15s,border-color .15s;box-shadow:var(--shadow-xs)}
+<html lang="en" data-accent-style="stripes" data-color-theme="tricolor">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"><meta name="theme-color" content="#003da5"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="HSE QB"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icons/icon.png"><title>HSE Quiz Bowl Tracker</title><meta name="deploy-sha" content="dev"><meta name="color-scheme" content="only light dark"><script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script><style>:root{--sp:18px;--hsp:14px;--primary:#2656b2;--primary-light:#6385c8;--primary-dark:#1b3e80;--secondary:#335699;--success:#11998e;--success2:#38ef7d;--danger:#dc3545;--danger2:#e74c5c;--warning:#f39c12;--bg:#f7f9fd;--text:#1a1a2e;--text2:#5a6178;--text3:#9ba3b8;--sec-bg:#f2f5fb;--card:#ffffff;--input-bg:#fff;--input-border:#dde1ea;--input-text:#1a1a2e;--hover:#f0f3fa;--border:#c9cfdd;--shadow-xs:0 1px 3px rgba(60,70,100,.07);--shadow-sm:0 2px 8px rgba(60,70,100,.1);--shadow-md:0 6px 18px rgba(60,70,100,.14);--shadow-xl:0 20px 48px rgba(60,70,100,.18);--radius:12px;--radius-sm:8px}.dark-mode{--danger:#ff6b6b;--warning:#ffd43b;--bg:#0d1117;--text:#e6eaf4;--text2:#9ba3c0;--text3:#606880;--sec-bg:#161b22;--card:#1c2128;--input-bg:#0d1117;--input-border:#2d3340;--input-text:#e6eaf4;--hover:#1e2530;--border:#444e63;--shadow-xs:0 1px 3px rgba(0,0,0,.3);--shadow-sm:0 2px 8px rgba(0,0,0,.35);--shadow-md:0 6px 18px rgba(0,0,0,.45);--shadow-xl:0 20px 48px rgba(0,0,0,.65)}html.dark-mode{--primary:#0c4cc6;--primary-light:#4677d4;--primary-dark:#09378f;--secondary:#0045cb}:root{color-scheme:only light dark}*{-webkit-color-adjust:exact !important;color-adjust:exact !important;forced-color-adjust:none !important}*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}html{height:100%;overflow:hidden}::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-button{display:none}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--primary);border-radius:10px}::-webkit-scrollbar-thumb:hover{background:var(--primary-dark)}*{scrollbar-width:thin;scrollbar-color:var(--primary) transparent}.qb-scroll,.sidebar-sections,.log-container{scrollbar-gutter:stable}body.hide-scrollbars::-webkit-scrollbar-thumb,body.hide-scrollbars::-webkit-scrollbar-track{background:transparent !important}body.hide-scrollbars *{scrollbar-color:transparent transparent !important}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);height:100vh;overflow:hidden;color:var(--text);display:flex;flex-direction:column}.qb-container{width:100%;flex:1;display:flex;flex-direction:column;background:var(--bg);overflow:hidden}#updateBanner{max-height:0;overflow:hidden;display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:linear-gradient(135deg,#11998e 0%,#38ef7d 100%);color:#fff;padding:0 16px;font-size:.88em;font-weight:600;box-shadow:0 2px 10px rgba(17,153,142,.35);position:relative;z-index:150;flex-shrink:0;transition:max-height .3s ease,padding .3s ease}#updateBanner.show{max-height:60px;padding:9px 16px}.ub-icon{font-size:1.1em;flex-shrink:0}.ub-msg{flex:1;min-width:0}.ub-btn{background:rgba(255,255,255,.22);border:1.5px solid rgba(255,255,255,.45);color:#fff;border-radius:6px;padding:5px 13px;font-size:.85em;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;transition:background .15s}.ub-btn:hover{background:rgba(255,255,255,.38)}.ub-dismiss{padding:4px 9px}.qb-header{background:linear-gradient(135deg,var(--primary) 0%,var(--secondary) 100%);color:#fff;padding:0 12px;display:flex;align-items:center;gap:8px;box-shadow:0 2px 16px color-mix(in srgb,var(--primary) 28%,transparent);border-bottom:2px solid rgba(0,0,0,0.25);position:relative;z-index:200;flex-shrink:0;transition:filter .3s ease;min-height:54px;flex-wrap:nowrap;overflow:hidden}.qb-header-left{flex:1;display:flex;align-items:center}.qb-header-center{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;pointer-events:none}.header-controls{flex:1;display:flex;justify-content:flex-end}.qb-header h1{font-size:clamp(1em,2.6vw,1.55em);font-weight:700;letter-spacing:-.3px;white-space:nowrap;overflow:hidden;text-overflow:clip;max-width:100%;margin:0;line-height:1.25;text-align:center}.version-badge{font-size:.42em;font-weight:600;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.85);padding:2px 7px;border-radius:20px;vertical-align:middle;position:relative;top:-2px;display:inline-flex;align-items:center;gap:6px;line-height:1}.header-session-name{font-size:.72em;font-weight:500;color:rgba(255,255,255,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;line-height:1;text-align:center}.header-session-name::before{content:'Session:';opacity:.7}.header-controls{flex-shrink:0;display:flex;gap:6px;align-items:center;flex:1;justify-content:flex-end}.qb-header-spacer{display:none}.header-toggle-label{font-size:.82em;font-weight:700;flex-shrink:0}@media (max-width:720px){.qb-header h1>.version-badge{display:none}}@media (max-width:640px){.qb-header h1{font-size:0}.qb-header h1::before{content:attr(data-medium);font-size:clamp(.82em,4.5vw,1em);font-weight:700;white-space:nowrap}}@media (max-width:540px){.qb-header-center{align-items:center;max-width:40%}.header-session-name{display:none}.header-toggle-label{display:none}}@media (max-width:360px){.qb-header h1{font-size:0}.qb-header h1::before{content:attr(data-short);font-size:1rem;font-weight:700;white-space:nowrap}}.header-btn{background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.28);border-radius:var(--radius-sm);padding:6px 12px;font-size:.82em;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;transition:background .2s;flex-shrink:0}.header-btn:hover{background:rgba(255,255,255,.26)}.header-btn.round{border-radius:50%;width:30px;height:30px;padding:0;justify-content:center;font-size:1em}.header-btn.active{background:rgba(255,255,255,.32);box-shadow:0 0 0 2px rgba(255,255,255,.45)}.sidebar-open-btn{display:none}.mobile-subrow{display:none !important}.qb-body{flex:1;display:flex;overflow:hidden;position:relative}.qb-sidebar{width:300px;flex-shrink:0;display:flex;flex-direction:column;padding:var(--sp) var(--hsp);background:var(--card);border-right:1.5px solid var(--border);overflow:visible;position:relative;z-index:100;transition:width .3s ease,padding .3s ease}.qb-sidebar.collapsed{width:0;padding:0;overflow:hidden;border-right:none}.qb-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:var(--sp) var(--hsp);transition:filter .3s ease;background:var(--bg)}#trackerView{display:flex;flex-direction:column;height:100%}#analyticsView{display:none;flex-direction:column;height:100%}#analyticsView.active{display:flex}.analytics-header{padding:12px var(--hsp);border-bottom:1.5px solid var(--border);background:var(--card);flex-shrink:0}.analytics-tabs{display:flex;gap:6px;flex-wrap:wrap}.analytics-tab{background:var(--sec-bg);color:var(--text2);border:2px solid var(--border);border-radius:20px;padding:6px 16px;font-size:.82em;font-weight:600;cursor:pointer;font-family:inherit;transition:border-color .15s,color .15s,background .15s,box-shadow .15s}.analytics-tab:hover{background:var(--hover);color:var(--primary);border-color:var(--primary-light)}.analytics-tab.active{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;border-color:var(--primary-dark);box-shadow:0 2px 8px color-mix(in srgb,var(--primary) 30%,transparent)}.analytics-scroll{flex:1;overflow-y:auto;padding:var(--sp) var(--hsp);scrollbar-gutter:stable;background:var(--bg)}.analytics-panel{display:none}.analytics-panel.active{display:block}.an-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:var(--sp);margin-bottom:var(--sp)}.an-stat-box{background:var(--card);border:2px solid var(--border);border-radius:10px;padding:16px;text-align:center;box-shadow:var(--shadow-sm)}.an-stat-box .an-val{font-size:2em;font-weight:700;color:var(--primary)}.an-stat-box .an-lbl{font-size:.82em;color:var(--text2);margin-top:4px}.an-player-card{background:var(--card);border:2px solid var(--border);border-radius:10px;padding:18px;margin-bottom:var(--sp);box-shadow:var(--shadow-sm)}.an-player-card:hover{border-color:var(--primary-light)}.an-player-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.an-player-name{font-size:1.1em;font-weight:700;color:var(--primary);cursor:pointer;text-decoration:underline;text-underline-offset:3px;transition:color .15s}.an-player-name:hover{color:var(--primary-dark)}.an-player-pts{font-size:1.2em;font-weight:700;color:var(--primary)}.an-player-meta{font-size:.82em;color:var(--text2);margin-bottom:12px}.an-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:.85em}.an-bar-label{width:110px;flex-shrink:0;color:var(--text2);font-weight:600}.an-bar-track{flex:1;height:10px;background:var(--sec-bg);border-radius:10px;overflow:hidden;border:2px solid var(--border)}.an-bar-fill{height:100%;border-radius:10px;background:linear-gradient(90deg,var(--primary),var(--secondary));transition:width .4s ease}.an-bar-fill.neg{background:linear-gradient(90deg,var(--danger),var(--danger2))}.an-bar-val{width:36px;text-align:right;font-weight:700;color:var(--text);flex-shrink:0}.an-cat-card{background:var(--card);border:2px solid var(--border);border-radius:10px;padding:16px;margin-bottom:var(--sp);box-shadow:var(--shadow-sm)}.an-cat-title{font-weight:700;font-size:1em;color:var(--primary);margin-bottom:10px}.an-cat-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1.5px solid var(--border);font-size:.88em;align-items:center}.an-cat-row:last-child{border-bottom:none}.an-lb-row{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--card);border:2px solid var(--border);border-radius:10px;margin-bottom:10px;box-shadow:var(--shadow-xs);font-size:.92em}.an-lb-rank{font-size:1.2em;font-weight:700;color:var(--primary);min-width:42px}.an-lb-name{flex:1;font-weight:600}.an-lb-pts{font-weight:700;color:var(--primary);margin-right:8px}.pwr-bolt{font-style:normal;font-variant-emoji:text}.an-lb-chip{font-size:.75em;padding:2px 8px;border-radius:10px;font-weight:700;background:var(--sec-bg);color:var(--text2);border:2px solid var(--border)}.an-lb-chip.power{background:color-mix(in srgb,var(--primary) 12%,transparent);color:var(--primary);border-color:var(--primary)}.an-lb-chip.neg{background:rgba(220,53,69,.1);color:var(--danger);border-color:var(--danger)}.an-team-card{background:var(--card);border:2px solid var(--border);border-left:5px solid var(--secondary);border-radius:10px;padding:16px;margin-bottom:var(--sp);box-shadow:var(--shadow-sm)}.an-team-name{font-weight:700;font-size:1.05em;margin-bottom:8px}.an-team-pts{color:var(--primary);font-weight:700;font-size:1.3em}@media (max-width:900px){.qb-sidebar{position:fixed;top:0;left:0;right:0;bottom:0;width:100% !important;height:100vh;max-height:100vh;overflow-y:auto;padding:12px 16px 20px !important;border-right:none;border-bottom:none;background:rgba(255,255,255,0.18) !important;-webkit-backdrop-filter:blur(28px) saturate(1.8);backdrop-filter:blur(28px) saturate(1.8);box-shadow:0 8px 32px rgba(0,0,0,.22);z-index:6000;transform:translateY(-110%);visibility:hidden;transition:transform .35s cubic-bezier(.4,0,.2,1),visibility .35s ease;pointer-events:none}.dark-mode .qb-sidebar{background:rgba(13,17,23,0.6) !important}.qb-sidebar.mobile-open{transform:translateY(0) !important;visibility:visible !important;pointer-events:auto !important}.qb-sidebar.mobile-open *{pointer-events:auto !important}.qb-scroll.menu-blurred,.analytics-scroll.menu-blurred{filter:blur(3px);pointer-events:none}body.menu-open{overflow:hidden}.mobile-subrow{display:none !important}}body.is-iframe .qb-sidebar{position:relative !important;transform:none !important;visibility:visible !important;width:300px !important;height:auto !important;max-height:none !important;padding:var(--sp) var(--hsp) !important;background:var(--card) !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important;box-shadow:none !important;pointer-events:auto !important;transition:width .3s ease,padding .3s ease !important}body.is-iframe .qb-sidebar.collapsed{width:0 !important;padding:0 !important;overflow:hidden !important}body.is-iframe .mobile-subrow{display:none !important}body.is-iframe .header-controls{display:flex !important}body.is-iframe .header-session-name{display:block !important}body.is-iframe .qb-scroll.menu-blurred,body.is-iframe .analytics-scroll.menu-blurred{filter:none !important;pointer-events:auto !important}.qb-section{margin-bottom:14px;padding:clamp(16px,4vw,20px);background:var(--card);border-radius:var(--radius);border:2px solid var(--border);overflow:visible;box-shadow:var(--shadow-xs)}.qb-section:hover{border-color:var(--primary-light)}.qb-section h2{color:var(--text);margin-bottom:var(--sp);font-size:clamp(1.05em,3vw,1.25em);cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none;font-weight:700;transition:color .2s}.qb-section h2:hover{color:var(--primary)}.toggle-icon{font-size:.75em;transition:transform .3s cubic-bezier(.4,0,.2,1);display:inline-block;color:var(--text3)}.toggle-icon.collapsed{transform:rotate(-90deg)}.collapsible-content{max-height:2000px;overflow:visible;transition:max-height .3s ease-out}.collapsible-content.collapsed{max-height:0 !important;overflow:hidden}.input-group{margin-bottom:var(--sp)}.input-group label{display:block;margin-bottom:6px;font-weight:600;font-size:clamp(.85em,2vw,.95em);color:var(--text2)}.input-group input,.input-group textarea,.input-group select{width:100%;padding:10px 13px;border:2px solid var(--input-border);border-radius:var(--radius-sm);font-size:.95em;font-family:inherit;background:var(--input-bg);color:var(--input-text);transition:border-color .2s,box-shadow .2s}.input-group input::placeholder,.input-group textarea::placeholder{color:var(--text3)}.input-group input:focus,.input-group textarea:focus,.input-group select:focus{border-color:var(--primary);outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 12%,transparent)}input[type="file"]{width:100%;padding:9px 12px;border-radius:var(--radius-sm);border:2px solid var(--input-border);background:var(--card);color:var(--input-text);cursor:pointer;font-family:inherit;font-size:.9em}input[type="file"]::file-selector-button{margin-right:10px;padding:6px 12px;border-radius:6px;border:none;background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;font-weight:700;cursor:pointer;font-size:.9em}#newSessionName{font-weight:600}.button{background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;border:none;padding:clamp(9px,2vw,12px) clamp(16px,3vw,24px);border-radius:var(--radius-sm);font-size:clamp(.85em,2vw,.95em);font-family:inherit;cursor:pointer;font-weight:600;white-space:nowrap;box-shadow:0 2px 8px color-mix(in srgb,var(--primary) 25%,transparent);transition:transform .15s,box-shadow .15s,opacity .15s}.button:hover{transform:translateY(-2px);box-shadow:0 6px 16px color-mix(in srgb,var(--primary) 35%,transparent)}.button:active{transform:translateY(0);opacity:.92}.button:disabled{opacity:.55;cursor:not-allowed;transform:none}.button-secondary{background:linear-gradient(135deg,#6c757d,#5a6268);box-shadow:0 2px 8px rgba(108,117,125,.2)}.button-danger{background:linear-gradient(135deg,var(--danger),var(--danger2));box-shadow:0 2px 8px rgba(220,53,69,.25)}.button-success{background:linear-gradient(135deg,var(--success),var(--success2));box-shadow:0 2px 8px rgba(17,153,142,.25)}.button-point-type,.button-category,.button-player{background:var(--card);color:var(--text2);border:1.5px solid var(--border);padding:clamp(9px,2vw,12px) clamp(12px,2.5vw,18px);border-radius:var(--radius-sm);font-size:clamp(.82em,1.8vw,.95em);font-family:inherit;cursor:pointer;font-weight:600;transition:border-color .15s,color .15s,background .15s,box-shadow .15s;box-shadow:none}.button-point-type:hover,.button-category:hover,.button-player:hover{border-color:var(--primary-light);color:var(--primary);background:color-mix(in srgb,var(--primary) 5%,transparent);box-shadow:none}.button-point-type.selected,.button-category.selected,.button-player.selected{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;border:1.5px solid transparent;box-shadow:0 2px 8px color-mix(in srgb,var(--primary) 25%,transparent)}.point-type-buttons,.category-buttons{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;padding:2px}.player-buttons{display:flex;flex-wrap:wrap;gap:8px;padding:2px}.button-group{display:flex;gap:10px;flex-wrap:wrap}.player-pool-item{display:inline-flex;align-items:center;margin:4px;padding:7px 12px;background:var(--sec-bg);border-radius:20px;font-size:.88em;border:2px solid var(--border);box-shadow:var(--shadow-xs);transition:border-color .15s}.player-pool-item:hover{border-color:var(--primary)}.player-pool-item .remove{cursor:pointer;margin-left:8px;color:var(--text3);font-weight:bold;padding:2px 6px;border-radius:4px;border:2px solid var(--border);transition:border-color .15s,background .15s,color .15s}.player-pool-item .remove:hover{background:var(--danger);color:#fff;border-color:var(--danger)}#playerPoolDisplay{padding:10px;min-height:40px;background:var(--sec-bg);border:2px solid var(--border);border-radius:var(--radius-sm)}.team-section{margin-bottom:12px;padding:14px 16px;background:var(--sec-bg);border-radius:var(--radius-sm);border:2px solid var(--border);box-shadow:var(--shadow-xs)}.team-section input[type="text"]{padding:9px 12px;border:2px solid var(--input-border);border-radius:6px;width:100%;background:var(--input-bg);color:var(--input-text);font-weight:600;font-family:inherit}.team-section input[type="text"]:focus{border-color:var(--primary);outline:none}.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-top:12px}.stat-card,.team-stat-card{background:var(--card);padding:16px;border-radius:var(--radius-sm);border:2px solid var(--border);box-shadow:var(--shadow-xs);transition:border-color .15s,box-shadow .15s,transform .15s;cursor:pointer;font-size:clamp(.85em,2vw,1em)}.stat-card:hover,.team-stat-card:hover{border-color:var(--primary-light);box-shadow:var(--shadow-sm);transform:translateY(-1px)}.team-stat-card{border-left:4px solid var(--secondary);grid-column:1/-1}.stat-card h3,.team-stat-card h3{display:flex;align-items:center;justify-content:space-between;user-select:none;margin:0;font-size:1em;font-weight:700}.stat-details{max-height:1000px;overflow:hidden;transition:max-height .3s ease-out,opacity .3s ease-out;opacity:1}.stat-card.collapsed .stat-details,.team-stat-card.collapsed .stat-details{max-height:0;opacity:0;pointer-events:none}.player-score,.team-score{color:var(--primary);font-weight:700}.stat-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1.5px solid var(--border);align-items:center}.stat-row:last-child{border-bottom:none}.stat-label{font-weight:500;color:var(--text2);font-size:.9em}.stat-value{color:var(--primary);font-weight:700;font-size:1em}.overall-ranking{grid-column:1/-1;background:var(--card);padding:16px;border-radius:var(--radius-sm);border:2px solid var(--border);box-shadow:var(--shadow-xs);margin-top:12px}.log-entry{padding:10px 12px;background:var(--sec-bg);margin:8px 0;border-radius:var(--radius-sm);border-left:3px solid var(--primary);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;font-size:clamp(.8em,2vw,.9em);box-shadow:var(--shadow-xs)}.log-container{max-height:420px;overflow-y:auto;border:2px solid var(--border);border-radius:var(--radius-sm);padding:10px;background:var(--card)}.log-container-wrap{position:relative;margin-top:12px}.switch{position:relative;display:inline-block;width:52px;height:26px;flex-shrink:0}.switch input{opacity:0;width:0;height:0}.slider{position:absolute;cursor:pointer;inset:0;background:var(--border);transition:.3s;border-radius:26px}.slider:before{position:absolute;content:"";height:20px;width:20px;left:3px;bottom:3px;background:#fff;transition:.3s;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.2)}input:checked+.slider{background:linear-gradient(135deg,var(--primary),var(--secondary))}input:checked+.slider:before{transform:translateX(26px)}.button-point-type kbd,#recordAnswerBtn kbd{display:inline-block;font-family:inherit;font-size:.72em;font-weight:600;padding:1px 5px;border-radius:4px;border:1px solid currentColor;opacity:.6;margin-left:4px;vertical-align:middle;line-height:1.4}#welcomeToast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(30px);background:var(--card);color:var(--text);border:2px solid var(--border);border-radius:14px;padding:16px 20px;box-shadow:var(--shadow-xl);z-index:99998;opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;min-width:280px;max-width:380px;text-align:center}#welcomeToast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}#welcomeToast .wt-title{font-size:1.05em;font-weight:700;color:var(--text);margin-bottom:6px}#welcomeToast .wt-sub{font-size:.85em;color:var(--text2);margin-bottom:14px;line-height:1.5}#welcomeToast .wt-btns{display:flex;gap:8px;justify-content:center}#welcomeToast .wt-btn-primary{background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:.88em;font-weight:700;cursor:pointer;font-family:inherit}#welcomeToast .wt-btn-dismiss{background:var(--sec-bg);color:var(--text2);border:2px solid var(--border);border-radius:8px;padding:8px 14px;font-size:.88em;font-weight:600;cursor:pointer;font-family:inherit}.user-id-status{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--sec-bg);border-radius:var(--radius-sm);border:2px solid var(--border);margin-bottom:12px}#categoryButtonsContainer{display:flex;flex-direction:column;gap:3px}.cat-group{display:flex;flex-wrap:wrap;align-items:center;gap:4px;padding:5px 6px;background:var(--sec-bg);border-radius:8px;border:1.5px solid var(--border)}.cat-group-label{padding:4px 10px;border-radius:5px;font-size:.63em;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--primary);background:color-mix(in srgb,var(--primary) 12%,transparent);border:1.5px solid color-mix(in srgb,var(--primary) 30%,transparent);cursor:pointer;font-family:inherit;transition:color .15s,background .15s,border-color .15s;white-space:nowrap}.cat-group-label:hover{background:color-mix(in srgb,var(--primary) 20%,transparent);border-color:var(--primary)}.cat-group-label.selected{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;border-color:transparent;box-shadow:0 2px 8px color-mix(in srgb,var(--primary) 30%,transparent)}.cat-group-chip{padding:4px 10px;border-radius:5px;font-size:.78em;font-weight:600;border:1.5px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-family:inherit;transition:border-color .15s,color .15s,background .15s}.cat-group-chip:hover{border-color:var(--primary-light);color:var(--primary);background:color-mix(in srgb,var(--primary) 8%,transparent)}.cat-group-chip.selected{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;border-color:transparent;box-shadow:0 2px 8px color-mix(in srgb,var(--primary) 25%,transparent)}#recordToast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--success);color:#fff;padding:10px 22px;border-radius:28px;font-size:.92em;font-weight:700;box-shadow:0 4px 18px rgba(0,0,0,.22);pointer-events:none;opacity:0;transition:opacity .18s,transform .18s;z-index:99999;white-space:nowrap;letter-spacing:.01em}#recordToast.show{opacity:1;transform:translateX(-50%) translateY(0)}#recordToast.neg{background:var(--danger)}#recordToast.miss{background:#888}#recordToast.pts{background:var(--primary)}#appToast{position:fixed;bottom:70px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--danger);color:#fff;padding:11px 22px;border-radius:28px;font-size:.9em;font-weight:700;box-shadow:0 4px 20px rgba(0,0,0,.28);pointer-events:none;opacity:0;transition:opacity .2s,transform .2s;z-index:100000;max-width:88vw;text-align:center;letter-spacing:.01em;line-height:1.4}#appToast.show{opacity:1;transform:translateX(-50%) translateY(0)}#appToast.toast-warn{background:#e67e22}#appToast.toast-success{background:var(--success)}#appToast.toast-info{background:var(--primary)}#confirmToast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--card);color:var(--text);padding:16px 20px;border-radius:14px;font-size:.9em;box-shadow:0 8px 32px rgba(0,0,0,.32);border:1.5px solid var(--border);opacity:0;transition:opacity .2s,transform .2s;z-index:100001;max-width:340px;width:90vw;text-align:center;pointer-events:none}#confirmToast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:all}#confirmToast .ct-msg{font-weight:600;margin-bottom:14px;line-height:1.45;color:var(--text)}#confirmToast .ct-btns{display:flex;gap:10px;justify-content:center}#confirmToast .ct-ok{background:var(--danger);color:#fff;border:none;border-radius:8px;padding:8px 22px;font-weight:700;cursor:pointer;font-family:inherit;font-size:.95em}#confirmToast .ct-ok.warn-ok{background:#e67e22}#confirmToast .ct-cancel{background:var(--sec-bg);color:var(--text2);border:1.5px solid var(--border);border-radius:8px;padding:8px 18px;font-weight:600;cursor:pointer;font-family:inherit;font-size:.95em}.ql-row{display:flex;align-items:center;gap:0;background:var(--card);border:1.5px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:6px;transition:border-color .12s}.ql-row:hover{border-color:var(--primary-light)}.ql-name{flex:0 0 auto;min-width:80px;max-width:120px;padding:0 12px;font-size:.82em;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-right:1.5px solid var(--border);height:44px;display:flex;align-items:center;background:var(--sec-bg)}.ql-btns{display:flex;flex:1}.ql-btn{flex:1;height:44px;border:none;border-right:1.5px solid var(--border);background:transparent;cursor:pointer;font-size:.75em;font-weight:700;color:var(--text2);transition:background .12s,color .12s;display:flex;align-items:center;justify-content:center;gap:3px;line-height:1.1;text-align:center;padding:0 4px}.ql-btn:last-child{border-right:none}.ql-btn:hover{background:var(--hover);color:var(--text)}.ql-btn.ql-power:hover{background:rgba(17,153,142,.12);color:var(--success)}.ql-btn.ql-tu:hover{background:color-mix(in srgb,var(--primary) 10%,transparent);color:var(--primary)}.ql-btn.ql-bonus:hover{background:color-mix(in srgb,var(--primary) 6%,transparent);color:var(--primary)}.ql-btn.ql-neg:hover{background:rgba(220,53,69,.08);color:var(--danger)}.ql-btn.ql-miss:hover{background:rgba(200,200,200,.1);color:var(--text3)}.ql-cat-row{display:none;padding:8px 12px;border-top:1.5px solid var(--border);background:var(--sec-bg);border-radius:0 0 10px 10px}.ql-cat-row.open{display:flex;flex-wrap:wrap;gap:5px;align-items:center}.ql-cat-chip{padding:3px 10px;border-radius:16px;font-size:.74em;font-weight:600;border:1.5px solid var(--border);background:var(--card);color:var(--text2);cursor:pointer;transition:all .1s}.ql-cat-chip:hover{border-color:var(--primary);color:var(--primary)}.ql-cat-chip.selected{background:var(--primary);border-color:var(--primary);color:#fff}.ql-confirm-btn{padding:3px 12px;border-radius:16px;font-size:.74em;font-weight:700;background:var(--success);color:#fff;border:none;cursor:pointer;margin-left:4px}.ql-cancel-btn{padding:3px 10px;border-radius:16px;font-size:.74em;font-weight:600;background:transparent;color:var(--text3);border:1.5px solid var(--border);cursor:pointer}.session-info{background:var(--sec-bg);padding:14px 16px;border-radius:var(--radius-sm);border:2px solid var(--border);margin-bottom:var(--sp);font-size:clamp(.82em,2vw,.95em)}.session-info-row{display:flex;justify-content:space-between;align-items:center;margin:10px 0;flex-wrap:wrap;gap:6px;padding-bottom:8px;border-bottom:1.5px solid var(--border)}.session-info-row:last-child{border-bottom:none;margin-bottom:0}.session-info-row span:first-child{font-weight:500;color:var(--text2);font-size:.9em}.session-info-row strong{color:var(--primary);font-weight:700}.session-controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:var(--sp)}.qb-modal{display:none;position:fixed;z-index:9999;inset:0;background:rgba(15,20,40,.55);backdrop-filter:blur(6px)}.qb-modal.open{display:block}.modal-content{background:var(--card);margin:50px auto;padding:24px 28px;border-radius:var(--radius);width:90%;max-width:550px;max-height:80vh;overflow-y:auto;box-shadow:var(--shadow-xl);border:2px solid var(--border)}.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;padding-bottom:14px;border-bottom:1.5px solid var(--border)}.modal-header h2{color:var(--text);margin:0;font-weight:700;font-size:1.3em}.close-modal{background:none;border:none;font-size:24px;cursor:pointer;color:var(--text3);width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:6px;transition:background .15s,color .15s}.close-modal:hover{background:var(--sec-bg);color:var(--primary)}.sessions-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:14px}.session-card{background:var(--sec-bg);padding:14px;border-radius:var(--radius-sm);border:2px solid var(--border);transition:transform .15s,box-shadow .15s,border-color .15s;box-shadow:var(--shadow-xs)}
 .session-card.selected{border-color:var(--primary);box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 20%,transparent)}
 .session-select-cb{width:17px;height:17px;flex-shrink:0;cursor:pointer;accent-color:var(--primary);margin-top:3px}
 .session-bulk-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 14px;border:2px solid var(--primary-light);border-radius:10px;background:color-mix(in srgb,var(--primary) 8%,transparent);margin-bottom:12px}
@@ -397,77 +397,194 @@ button, .button, .ql-btn, .ql-cat-chip, .ql-confirm-btn, .ql-cancel-btn, .header
   .custom-hex-input { font-size:16px; }
 }
 
-/* HSE color language: a quiet blue / white / red system with texture instead
-   of relying on a single two-color gradient everywhere. The inline values are
-   painted by _paintColors so accents respond to light and dark mode. */
+/* Palette language: surfaces stay mostly neutral but borrow a little color from
+   the active theme so the app feels branded instead of plain gray. The inline
+   values are painted by _paintColors so accents respond to light and dark mode. */
 :root {
   --tertiary:#fff;
   --hse-blue:#003da5;
   --hse-red:#c8102e;
   --hse-white:#fff;
   --accent-line:#c8102e;
-  /* Neutral bases the companion color is tinted over. core.css carries the
+  --primary-ink:var(--primary);
+  --primary-ink-hover:color-mix(in srgb, var(--primary) 72%, #000);
+  --primary-wash:color-mix(in srgb, var(--primary) 12%, transparent);
+  --header-control-bg:color-mix(in srgb, var(--primary-dark) 44%, transparent);
+  --header-control-bg-strong:color-mix(in srgb, var(--primary-dark) 56%, transparent);
+  --header-control-hover:color-mix(in srgb, var(--primary-dark) 62%, transparent);
+  --header-control-border:color-mix(in srgb, var(--hse-white) 44%, transparent);
+  --header-control-shadow:0 4px 14px rgba(7,15,32,.18);
+  --header-control-text:rgba(255,255,255,.98);
+  --header-control-text-muted:rgba(255,255,255,.78);
+  /* Surface neutrals are kept as a fallback, then lightly tinted toward the
+     active palette so the app reads as themed rather than plain gray. */
+  --bg-neutral:#f7f9fd;
+  --sec-bg-neutral:#f2f5fb;
+  --card-neutral:#ffffff;
+  --input-bg-neutral:#ffffff;
+  --hover-neutral:#f0f3fa;
+  --surface-tint:color-mix(in srgb, var(--primary) 60%, var(--secondary));
+  --bg-tint-mix:4%;
+  --sec-bg-tint-mix:7%;
+  --card-tint-mix:5%;
+  --input-bg-tint-mix:4%;
+  --hover-tint-mix:9%;
+  --bg:color-mix(in srgb, var(--surface-tint) var(--bg-tint-mix), var(--bg-neutral));
+  --sec-bg:color-mix(in srgb, var(--surface-tint) var(--sec-bg-tint-mix), var(--sec-bg-neutral));
+  --card:color-mix(in srgb, var(--surface-tint) var(--card-tint-mix), var(--card-neutral));
+  --input-bg:color-mix(in srgb, var(--surface-tint) var(--input-bg-tint-mix), var(--input-bg-neutral));
+  --hover:color-mix(in srgb, var(--surface-tint) var(--hover-tint-mix), var(--hover-neutral));
+  /* Neutral bases the accent color is tinted over. core.css carries the
      same plain values first, so a browser without color-mix() still gets a
      gray outline instead of no outline at all. */
   --border-neutral:#c9cfdd;
   --input-border-neutral:#dde1ea;
-  /* Panel outlines always carry a tint of the palette's companion color — the
-     HSE red on the default tricolor palette — instead of flat gray, in light
-     mode and dark mode alike. Panels take the strongest tint, the hairlines
-     inside them the softest, so the hierarchy still reads. */
-  --border:color-mix(in srgb, var(--accent-line) 22%, var(--border-neutral));
-  --panel-border:color-mix(in srgb, var(--accent-line) 32%, var(--border-neutral));
-  --border-strong:color-mix(in srgb, var(--accent-line) 44%, var(--border-neutral));
-  --input-border:color-mix(in srgb, var(--accent-line) 16%, var(--input-border-neutral));
+  --border-mix:22%;
+  --panel-border-mix:32%;
+  --border-strong-mix:44%;
+  --input-border-mix:16%;
+  --surface-dot-mix:10%;
+  --surface-dot-opacity:.34;
+  --banner-stripe:color-mix(in srgb, var(--hse-white) 78%, var(--primary-light));
+  --banner-stripe-soft:color-mix(in srgb, var(--hse-white) 58%, var(--primary-light));
+  --stripe-surface-mix:4%;
+  --stripe-band-a:var(--primary);
+  --stripe-band-b:color-mix(in srgb, var(--primary) 58%, var(--secondary));
+  --stripe-band-c:var(--secondary);
+  /* Panel outlines always carry a tint of the palette's accent color instead
+     of flat gray. Panels take the strongest tint, the hairlines inside them the
+     softest, so the hierarchy still reads. */
+  --border:color-mix(in srgb, var(--accent-line) var(--border-mix), var(--border-neutral));
+  --panel-border:color-mix(in srgb, var(--accent-line) var(--panel-border-mix), var(--border-neutral));
+  --border-strong:color-mix(in srgb, var(--accent-line) var(--border-strong-mix), var(--border-neutral));
+  --input-border:color-mix(in srgb, var(--accent-line) var(--input-border-mix), var(--input-border-neutral));
   /* Highlighted text — scores, ranks, player links, doc headings — reads in the
-     companion red the way the school's own site uses red for emphasis; blue
-     stays the structural and interactive color. */
+     accent color while blue stays the structural and interactive color. */
   --highlight:var(--accent-line);
   --highlight-ink:color-mix(in srgb, var(--accent-line) 72%, #000);
   --highlight-wash:color-mix(in srgb, var(--accent-line) 12%, transparent);
 }
 
-/* Pre-paint dark default for the companion color — the value _paintColors
-   derives for the HSE palette on dark surfaces. Scoped to html.dark-mode on
-   purpose: body carries .dark-mode too, and a stylesheet value there would
-   beat the inline --accent-line painted on <html>, flattening every custom
-   palette back to the HSE red. */
-html.dark-mode { --accent-line:#d95b70; }
+/* Pre-paint dark defaults for palette-owned values. Scoped to html.dark-mode on
+   purpose: body carries .dark-mode too, and a stylesheet value there would beat
+   the inline colors painted on <html>, flattening every custom palette. */
+html.dark-mode { --hse-blue:#0c4cc6; --hse-red:#ff4765; --hse-white:#f4f6fb; --accent-line:#ff4765; }
 
-/* Dark surfaces need a little more red in the mix for the same tint to read. */
+/* Dark surfaces need a little more chroma in the mix for the same tint to
+   read with the same energy they have on light cards. */
 .dark-mode {
+  --bg-neutral:#0d1117;
+  --sec-bg-neutral:#161b22;
+  --card-neutral:#1c2128;
+  --input-bg-neutral:#0d1117;
+  --hover-neutral:#1e2530;
+  --bg-tint-mix:12%;
+  --sec-bg-tint-mix:18%;
+  --card-tint-mix:15%;
+  --input-bg-tint-mix:11%;
+  --hover-tint-mix:24%;
+  --bg:color-mix(in srgb, var(--surface-tint) var(--bg-tint-mix), var(--bg-neutral));
+  --sec-bg:color-mix(in srgb, var(--surface-tint) var(--sec-bg-tint-mix), var(--sec-bg-neutral));
+  --card:color-mix(in srgb, var(--surface-tint) var(--card-tint-mix), var(--card-neutral));
+  --input-bg:color-mix(in srgb, var(--surface-tint) var(--input-bg-tint-mix), var(--input-bg-neutral));
+  --hover:color-mix(in srgb, var(--surface-tint) var(--hover-tint-mix), var(--hover-neutral));
   --border-neutral:#444e63;
   --input-border-neutral:#2d3340;
-  --border:color-mix(in srgb, var(--accent-line) 28%, var(--border-neutral));
-  --panel-border:color-mix(in srgb, var(--accent-line) 40%, var(--border-neutral));
-  --border-strong:color-mix(in srgb, var(--accent-line) 52%, var(--border-neutral));
-  --input-border:color-mix(in srgb, var(--accent-line) 20%, var(--input-border-neutral));
-  /* Text highlights lift a little on dark surfaces to stay above 4.5:1 while
-     the outlines keep the deeper red. */
-  --highlight:color-mix(in srgb, var(--accent-line) 88%, #fff);
-  --highlight-ink:color-mix(in srgb, var(--accent-line) 80%, #fff);
+  --border-mix:34%;
+  --panel-border-mix:46%;
+  --border-strong-mix:58%;
+  --input-border-mix:24%;
+  --surface-dot-mix:14%;
+  --surface-dot-opacity:.22;
+  --banner-stripe:color-mix(in srgb, var(--hse-white) 72%, var(--primary-light));
+  --banner-stripe-soft:color-mix(in srgb, var(--hse-white) 48%, var(--primary-light));
+  --stripe-surface-mix:7%;
+  --primary-ink:color-mix(in srgb, var(--primary) 52%, #fff);
+  --primary-ink-hover:color-mix(in srgb, var(--primary) 38%, #fff);
+  --primary-wash:color-mix(in srgb, var(--primary) 18%, transparent);
+  --header-control-bg:color-mix(in srgb, var(--primary-dark) 56%, transparent);
+  --header-control-bg-strong:color-mix(in srgb, var(--primary-dark) 68%, transparent);
+  --header-control-hover:color-mix(in srgb, var(--primary-dark) 74%, transparent);
+  --header-control-border:color-mix(in srgb, var(--hse-white) 36%, transparent);
+  --header-control-shadow:0 6px 18px rgba(0,0,0,.28);
+  --header-control-text:rgba(255,255,255,.98);
+  --header-control-text-muted:rgba(255,255,255,.74);
+  /* Dark-mode accent text needs a much brighter lift than outlines so deep,
+     saturated custom accents remain readable on dark cards. */
+  --highlight:color-mix(in srgb, var(--accent-line) 52%, #fff);
+  --highlight-ink:color-mix(in srgb, var(--accent-line) 38%, #fff);
+  --highlight-wash:color-mix(in srgb, var(--accent-line) 18%, transparent);
 }
 
-/* Panels, cards and containers get the stronger red-tinted edge. (The auth
-   card is absent on purpose: its border-image tricolor ribbon wins over any
-   border-color, so it already carries the full blue / white / red edge.) */
+/* Light mode should always land on the lighter surface set even if a stale
+   preview/body class sneaks in. Keep the tint present, but very soft. */
+html:not(.dark-mode) body {
+  --bg-neutral:#f7f9fd;
+  --sec-bg-neutral:#f2f5fb;
+  --card-neutral:#ffffff;
+  --input-bg-neutral:#ffffff;
+  --hover-neutral:#f0f3fa;
+  --bg-tint-mix:4%;
+  --sec-bg-tint-mix:7%;
+  --card-tint-mix:5%;
+  --input-bg-tint-mix:4%;
+  --hover-tint-mix:9%;
+  --bg:color-mix(in srgb, var(--surface-tint) var(--bg-tint-mix), var(--bg-neutral));
+  --sec-bg:color-mix(in srgb, var(--surface-tint) var(--sec-bg-tint-mix), var(--sec-bg-neutral));
+  --card:color-mix(in srgb, var(--surface-tint) var(--card-tint-mix), var(--card-neutral));
+  --input-bg:color-mix(in srgb, var(--surface-tint) var(--input-bg-tint-mix), var(--input-bg-neutral));
+  --hover:color-mix(in srgb, var(--surface-tint) var(--hover-tint-mix), var(--hover-neutral));
+}
+
+/* Panels, cards and containers get the stronger accent-tinted edge. (The auth
+   card is absent on purpose: its border-image ribbon wins over any border-color,
+   so it already carries the full three-color decorative edge.) */
 .qb-section,
 .stat-card, .team-stat-card, .overall-ranking,
 .an-stat-box, .an-player-card, .an-cat-card, .an-team-card, .an-lb-row,
 .log-container, .session-info, .sidebar-jump-menu,
 .custom-theme-panel, .updates-release-card { border-color:var(--panel-border); }
-/* Hovering a panel deepens the red edge instead of turning it blue. */
+/* Hovering a panel deepens the accent edge instead of turning it blue. */
 .qb-section:hover, .stat-card:hover, .team-stat-card:hover { border-color:var(--border-strong); }
-/* Team cards keep their colored rule, but the rule is the companion red now. */
+/* Team cards keep their colored rule, but the rule now follows the accent color. */
 .team-stat-card, .an-team-card { border-left-color:var(--accent-line); }
+
+/* Category and category-adjacent theme-colored text gets a brighter ink in
+   dark mode so deep palettes stay readable. */
+.an-cat-title, .ch-title, .session-card-title,
+.cat-group-label, .cat-group-chip:hover {
+  color:var(--primary-ink);
+}
+.cat-group-label {
+  font-size:.67em;
+  letter-spacing:.06em;
+  background:var(--primary-wash);
+  border-color:color-mix(in srgb, var(--primary-ink) 30%, transparent);
+}
+.cat-group-label:hover {
+  color:var(--primary-ink-hover);
+  border-color:var(--primary-ink);
+  background:color-mix(in srgb, var(--primary-ink) 20%, transparent);
+}
+.cat-group-chip {
+  font-weight:650;
+}
+.cat-group-chip:hover {
+  border-color:var(--primary-ink);
+  background:color-mix(in srgb, var(--primary-ink) 8%, transparent);
+}
+.cat-group-label.selected, .cat-group-chip.selected {
+  color:#fff;
+  text-shadow:0 1px 1px rgba(0,0,0,.2);
+}
 
 /* Highlighted text and emphasis. */
 .player-score, .team-score, .stat-value, .session-info-row strong,
 .player-card-rank, .an-stat-box .an-val, .an-player-pts, .an-lb-rank,
 .an-lb-pts, .an-team-pts, .h3-primary { color:var(--highlight); }
-/* The active jump-nav entry is marked with a red wash instead of plain gray. */
+/* The active jump-nav entry is marked with an accent wash instead of plain gray. */
 .sidebar-jump-menu button.active-item { color:var(--highlight); background:var(--highlight-wash); }
-/* Clickable player names and section headings underline in red. */
+/* Clickable player names and section headings underline in the accent color. */
 .an-player-name { color:var(--highlight); }
 .an-player-name:hover { color:var(--highlight-ink); }
 .qb-section h2:hover { color:var(--highlight); }
@@ -479,28 +596,106 @@ body::before {
   inset:0;
   pointer-events:none;
   z-index:0;
-  opacity:.34;
-  background-image:radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--primary) 10%, transparent) 1px, transparent 1.2px);
+  opacity:var(--surface-dot-opacity);
+  background-image:radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--primary) var(--surface-dot-mix), transparent) 1px, transparent 1.2px);
   background-size:18px 18px;
 }
 .qb-container, .auth-gate { position:relative; z-index:1; }
 
-/* The header gets an HSE ribbon plus fine diagonal texture over its gradient. */
+/* The header keeps its gradient, but its diagonal texture now stays in a light
+   lane so the accent color can do the outlining/highlight work elsewhere. */
 .qb-header {
   background-color:var(--primary);
-  background-image:repeating-linear-gradient(135deg, rgba(255,255,255,.055) 0 2px, transparent 2px 9px), linear-gradient(135deg, var(--primary), var(--secondary));
+  background-image:repeating-linear-gradient(135deg, color-mix(in srgb, var(--banner-stripe) 34%, transparent) 0 2px, transparent 2px 9px), linear-gradient(135deg, var(--primary), var(--secondary));
   box-shadow:0 2px 16px color-mix(in srgb, var(--primary) 28%, transparent);
 }
 .qb-header::after {
-  content:'';
-  position:absolute;
-  left:0;
-  right:0;
-  bottom:0;
-  height:4px;
-  background:linear-gradient(90deg, var(--hse-blue) 0 33.333%, var(--hse-white) 33.333% 66.666%, var(--hse-red) 66.666% 100%);
-  opacity:.95;
-  pointer-events:none;
+  content:none;
+}
+
+/* Header controls get a darker glass treatment so stripes and gradients stay
+   behind them instead of competing with text and icons. */
+.qb-header .header-btn,
+.qb-header .version-badge,
+.qb-header #viewToggleSwitch,
+.qb-header .auto-save-indicator {
+  background:var(--header-control-bg);
+  border-color:var(--header-control-border);
+  box-shadow:var(--header-control-shadow);
+  -webkit-backdrop-filter:blur(10px) saturate(1.05);
+  backdrop-filter:blur(10px) saturate(1.05);
+}
+.qb-header .header-btn,
+.qb-header .version-badge,
+.qb-header .header-toggle-label,
+.qb-header .header-session-name,
+.qb-header .auto-save-indicator {
+  text-shadow:0 1px 1px rgba(0,0,0,.22);
+}
+.qb-header .header-btn {
+  color:var(--header-control-text);
+  border-width:1.5px;
+}
+.qb-header .header-btn:hover,
+.qb-header .header-btn:focus-visible,
+.qb-header #viewToggleSwitch:hover {
+  background:var(--header-control-hover);
+}
+.qb-header .header-btn.active {
+  background:var(--header-control-bg-strong);
+  box-shadow:0 0 0 2px color-mix(in srgb, var(--hse-white) 24%, transparent), var(--header-control-shadow);
+}
+.qb-header .version-badge {
+  color:var(--header-control-text);
+  border-width:1.5px;
+  font-weight:700;
+  letter-spacing:.01em;
+}
+.qb-header .header-session-name,
+.qb-header .header-session-name::before,
+.qb-header .header-toggle-label {
+  color:var(--header-control-text-muted);
+}
+.qb-header .header-session-name::before {
+  opacity:.82;
+}
+.qb-header #viewToggleSwitch {
+  border:2px solid var(--header-control-border);
+}
+.qb-header #viewToggleKnob {
+  box-shadow:0 2px 8px rgba(0,0,0,.34);
+}
+.qb-header .auto-save-indicator.state-connecting,
+.qb-header .auto-save-indicator.state-idle {
+  background:var(--header-control-bg);
+  border-color:var(--header-control-border);
+  box-shadow:var(--header-control-shadow);
+}
+.qb-header .auto-save-indicator.state-flash {
+  background:color-mix(in srgb, var(--success) 24%, var(--header-control-bg));
+  border-color:color-mix(in srgb, var(--success) 48%, var(--header-control-border));
+  box-shadow:0 0 0 1px color-mix(in srgb, var(--success) 18%, transparent), var(--header-control-shadow);
+}
+.qb-header .auto-save-indicator.state-error {
+  background:color-mix(in srgb, var(--danger) 22%, var(--header-control-bg));
+  border-color:color-mix(in srgb, var(--danger) 46%, var(--header-control-border));
+  box-shadow:0 0 0 1px color-mix(in srgb, var(--danger) 18%, transparent), var(--header-control-shadow);
+}
+.qb-header #versionBadge.gh-state-success {
+  background:color-mix(in srgb, var(--success) 22%, var(--header-control-bg));
+  border-color:color-mix(in srgb, var(--success) 52%, var(--header-control-border));
+}
+.qb-header #versionBadge.gh-state-pending {
+  background:color-mix(in srgb, #ffd43b 24%, var(--header-control-bg));
+  border-color:color-mix(in srgb, #ffd43b 60%, var(--header-control-border));
+}
+.qb-header #versionBadge.gh-state-failure {
+  background:color-mix(in srgb, var(--danger) 22%, var(--header-control-bg));
+  border-color:color-mix(in srgb, var(--danger) 52%, var(--header-control-border));
+}
+.qb-header #versionBadge.gh-state-unknown {
+  background:var(--header-control-bg);
+  border-color:var(--header-control-border);
 }
 
 /* Reusable tricolor edge for panels, cards, and the auth experience. */
@@ -516,7 +711,7 @@ body::before {
 .theme-swatch-chip {
   position:relative;
   overflow:hidden;
-  background:var(--swatch-blue, var(--hse-blue));
+  background:var(--swatch-left, var(--hse-blue));
 }
 .theme-swatch-chip::before, .theme-swatch-chip::after {
   content:'';
@@ -525,58 +720,44 @@ body::before {
   bottom:0;
   width:33.333%;
 }
-.theme-swatch-chip::before { left:33.333%; background:var(--swatch-white, #fff); }
-.theme-swatch-chip::after { right:0; background:var(--swatch-red, var(--hse-red)); }
+.theme-swatch-chip::before { left:33.333%; background:var(--swatch-mid, #fff); }
+.theme-swatch-chip::after { right:0; background:var(--swatch-right, var(--hse-red)); }
 .theme-swatch-chip { box-shadow:inset 0 1px 3px rgba(255,255,255,.24), inset 0 0 0 1px rgba(0,0,0,.12); }
 
-/* Small tricolor accents add hierarchy without overpowering readable text. */
+/* Retire the tiny top-left tags so panel headings stay cleaner. */
 .qb-section > h2::before, .analytics-header::before {
-  content:'';
-  display:inline-block;
-  width:18px;
-  height:4px;
-  margin:0 7px 3px 0;
-  border-radius:3px;
-  background:linear-gradient(90deg, var(--hse-blue) 0 33.333%, var(--hse-white) 33.333% 66.666%, var(--hse-red) 66.666%);
-  box-shadow:0 0 0 1px color-mix(in srgb, var(--border) 55%, transparent);
+  content:none;
 }
 .button-success { background-color:var(--hse-blue); background-image:repeating-linear-gradient(135deg, rgba(255,255,255,.08) 0 2px, transparent 2px 8px); }
-.dark-mode body::before { opacity:.18; }
 @media (prefers-reduced-motion: reduce) {
   .theme-swatch:hover { transform:none; }
 }
 
 /* ── Accent style: Pinstripe vs Gradient ─────────────────────────────────
-   'gradient' keeps the classic two-color blends. 'stripes' expresses tricolor
-   palettes the way the title banner does: primary -> white gradients, with the
-   companion color as fine diagonal lines and tinted panel outlines — so the
-   HSE palette reads as texture instead of a French flag. _paintColors already
-   swaps --secondary to a blue -> white blend in stripe mode; the rules below
-   add the diagonal-line texture and the companion-tinted outlines. */
+   'gradient' keeps the classic two-color banner treatment. 'stripes' keeps the
+   softer primary-family gradients, reserves the accent color for outlines and
+   highlights, and moves the pinstripe treatment onto surfaces instead of the
+   title banner. */
 
-/* Header: gradient base + faint companion-color diagonal lines over the white texture. */
+/* Pinstripe mode keeps the banner clean so the stripes don't compete with the
+   header controls; the accent still shows up on the bottom rule. */
 html[data-accent-style="stripes"] .qb-header {
   background-color:var(--primary);
-  background-image:
-    repeating-linear-gradient(135deg, color-mix(in srgb, var(--accent-line) 14%, transparent) 0 2px, transparent 2px 16px),
-    repeating-linear-gradient(135deg, rgba(255,255,255,.05) 0 2px, transparent 2px 9px),
-    linear-gradient(135deg, var(--primary), var(--secondary));
+  background-image:linear-gradient(135deg, var(--primary), var(--secondary));
+  border-bottom-color:var(--accent-line);
 }
 
-/* The tricolor ribbons become slanted stripes instead of three flat thirds. */
-html[data-accent-style="stripes"] .qb-header::after,
-html[data-accent-style="stripes"] .qb-section > h2::before,
-html[data-accent-style="stripes"] .analytics-header::before {
-  background:repeating-linear-gradient(135deg, var(--hse-blue) 0 9px, var(--hse-white) 9px 14px, var(--hse-red) 14px 19px);
+/* Pinstripe mode still drops the old header ribbon entirely. */
+html[data-accent-style="stripes"] .qb-header::after {
+  content:none;
 }
 
-/* Panels pick up the strongest red-tinted outline (e.g. the Record Answer
-   panel gets a firm red edge on the HSE palette) plus a whisper of diagonal
-   pinstripe. Gradient mode keeps the same tinted outlines from the shared
-   rules above — the tint is never stripes-only. */
+/* Panels pick up the strongest accent-tinted outline plus a whisper of
+   diagonal pinstripe. Gradient mode keeps the same tinted outlines from the
+   shared rules above — the tint is never stripes-only. */
 html[data-accent-style="stripes"] .qb-section {
   border-color:var(--border-strong);
-  background-image:repeating-linear-gradient(135deg, color-mix(in srgb, var(--accent-line) 4%, transparent) 0 2px, transparent 2px 13px);
+  background-image:repeating-linear-gradient(135deg, color-mix(in srgb, var(--accent-line) var(--stripe-surface-mix), transparent) 0 2px, transparent 2px 12px);
 }
 html[data-accent-style="stripes"] .stat-card,
 html[data-accent-style="stripes"] .team-stat-card,
@@ -592,34 +773,88 @@ html[data-accent-style="stripes"] .team-stat-card { border-left-color:var(--acce
 html[data-accent-style="stripes"] .theme-swatch-chip::before,
 html[data-accent-style="stripes"] .theme-swatch-chip::after { content:none; }
 html[data-accent-style="stripes"] .theme-swatch-chip {
-  background:repeating-linear-gradient(135deg, var(--swatch-blue, var(--hse-blue)) 0 10px, var(--swatch-white, #fff) 10px 15px, var(--swatch-red, var(--hse-red)) 15px 20px);
+  background:repeating-linear-gradient(135deg, var(--swatch-left, var(--hse-blue)) 0 6px, var(--swatch-mid, #fff) 6px 12px, var(--swatch-right, var(--hse-red)) 12px 18px);
 }
 
 /* Auth card + release summary edges go diagonal too. */
 html[data-accent-style="stripes"] .auth-card,
 html[data-accent-style="stripes"] .updates-current-summary {
-  border-image:repeating-linear-gradient(135deg, var(--hse-blue) 0 10px, var(--hse-white) 10px 15px, var(--hse-red) 15px 20px) 1;
-}
-
-/* Slightly stronger lines on dark surfaces so the texture stays visible. */
-html.dark-mode[data-accent-style="stripes"] .qb-section {
-  background-image:repeating-linear-gradient(135deg, color-mix(in srgb, var(--accent-line) 6%, transparent) 0 2px, transparent 2px 13px);
+  border-image:repeating-linear-gradient(135deg, var(--stripe-band-a) 0 6px, var(--stripe-band-b) 6px 12px, var(--stripe-band-c) 12px 18px) 1;
 }
 </style>
-<script>
-/* Apply the cached choice before the sign-in form paints, including on a cold load. */
+<script>/* Apply the cached choice before the sign-in form paints, including on a cold load. */
 (function () {
   try {
     var saved = localStorage.getItem('themeMode');
     var legacyDark = localStorage.getItem('darkMode') === 'true';
     var mode = ['light', 'dark', 'device'].indexOf(saved) >= 0 ? saved : (legacyDark ? 'dark' : 'device');
     var dark = mode === 'dark' || (mode === 'device' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    var rawStyle = localStorage.getItem('accentStyle');
+    var accentStyle = rawStyle === 'gradient' ? 'gradient' : 'stripes';
+    var storedTheme = localStorage.getItem('colorTheme');
+    var themes = {
+      tricolor:{ primary:'#003da5', secondary:'#c8102e', tertiary:'#ffffff', accent:'#c8102e' },
+      royal:{ primary:'#0b41a8', secondary:'#002b7f', tertiary:'#ffffff', accent:'#002b7f' },
+      indigo:{ primary:'#667eea', secondary:'#764ba2' },
+      teal:{ primary:'#11998e', secondary:'#38ef7d' },
+      crimson:{ primary:'#dc3545', secondary:'#8e1b26' },
+      purple:{ primary:'#764ba2', secondary:'#3f2a63' },
+      sunset:{ primary:'#f39c12', secondary:'#e0533d' },
+      slate:{ primary:'#4a5568', secondary:'#2d3748' },
+      forest:{ primary:'#2f855a', secondary:'#1c4532' }
+    };
+    function isHex(v){ return /^#[0-9a-f]{6}$/i.test(v || ''); }
+    function shadeHex(hex, amount){
+      var n = parseInt(hex.slice(1), 16);
+      var mix = function (c) { return Math.round(amount < 0 ? c * (1 + amount) : c + (255 - c) * amount); };
+      var r = mix((n >> 16) & 255), g = mix((n >> 8) & 255), b = mix(n & 255);
+      return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+    }
+    function mixHex(a, b, t){
+      var pa = parseInt(a.slice(1), 16), pb = parseInt(b.slice(1), 16);
+      var ch = function (v, s) { return (v >> s) & 255; };
+      var mix = function (s) { return Math.round(ch(pa, s) + (ch(pb, s) - ch(pa, s)) * t); };
+      return '#' + ((1 << 24) + (mix(16) << 16) + (mix(8) << 8) + mix(0)).toString(16).slice(1);
+    }
+    var themeId = themes[storedTheme] ? storedTheme : 'tricolor';
+    var palette = themes[themeId];
+    if (storedTheme === 'custom'){
+      var cp = localStorage.getItem('customPrimary');
+      var cs = localStorage.getItem('customSecondary');
+      var ca = localStorage.getItem('customAccent');
+      if (isHex(cp)){
+        themeId = 'custom';
+        palette = {
+          primary:cp.toLowerCase(),
+          secondary:isHex(cs) ? cs.toLowerCase() : '#c8102e',
+          tertiary:'#ffffff',
+          accent:isHex(ca) ? ca.toLowerCase() : (isHex(cs) ? cs.toLowerCase() : '#c8102e')
+        };
+      }
+    }
+    var blue = palette.primary;
+    var accent = palette.accent || palette.secondary || shadeHex(blue, -0.45);
+    var white = dark ? '#f4f6fb' : (palette.tertiary || '#ffffff');
+    var secondary = accentStyle === 'gradient'
+      ? (palette.secondary || accent)
+      : mixHex(blue, dark ? '#dfe6f5' : '#ffffff', dark ? 0.30 : 0.32);
     document.documentElement.classList.toggle('dark-mode', !!dark);
     document.documentElement.dataset.theme = mode;
+    document.documentElement.dataset.accentStyle = accentStyle;
+    document.documentElement.dataset.colorTheme = themeId;
     document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
-    var style = localStorage.getItem('accentStyle');
-    document.documentElement.dataset.accentStyle = style === 'gradient' ? 'gradient' : 'stripes';
-  } catch (e) { /* Storage can be unavailable in private browsing; light remains the fallback. */ }
+    document.documentElement.style.setProperty('--primary', blue);
+    document.documentElement.style.setProperty('--primary-light', shadeHex(blue, dark ? 0.24 : 0.28));
+    document.documentElement.style.setProperty('--primary-dark', shadeHex(blue, -0.28));
+    document.documentElement.style.setProperty('--secondary', secondary);
+    document.documentElement.style.setProperty('--accent-line', accent);
+    document.documentElement.style.setProperty('--tertiary', white);
+    document.documentElement.style.setProperty('--hse-blue', blue);
+    document.documentElement.style.setProperty('--hse-red', accent);
+    document.documentElement.style.setProperty('--hse-white', white);
+    var themeMeta = document.querySelector('meta[name="theme-color"]');
+    if (themeMeta) themeMeta.setAttribute('content', blue);
+  } catch (e) { /* Storage can be unavailable in private browsing; tricolor pinstripe remains the fallback. */ }
 }());
 </script>
 </head>
@@ -648,7 +883,7 @@ html.dark-mode[data-accent-style="stripes"] .qb-section {
       ↓ Running inside Claude's preview — Firebase sync is blocked by the sandbox.
       <strong>Download the file and open it in your browser for live sync.</strong><button onclick="document.getElementById('sandboxWarning').style.display='none';" style="margin-left:12px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.5);color:#fff;padding:3px 10px;border-radius:6px;cursor:pointer;font-weight:700;font-family:inherit;font-size:.9em;">Dismiss</button></div><script>
       try{ if (window.self !== window.top){ document.getElementById('sandboxWarning').style.display = 'block'; document.body.classList.add('is-iframe'); } } catch(e){ document.getElementById('sandboxWarning').style.display = 'block'; document.body.classList.add('is-iframe'); }
-    </script><div class="qb-header" id="qbHeader"><div class="qb-header-left"><button class="header-btn sidebar-open-btn hidden" id="sidebarOpenBtn" >&#9654; Menu</button></div><div class="qb-header-center"><h1 data-short="HSE QB" data-medium="HSE QB Tracker">HSE Quiz Bowl Tracker <span class="version-badge" id="versionBadge"></span></h1><div class="header-session-name" id="headerSessionName"></div></div><div class="header-controls"><div style="display:flex;align-items:center;gap:6px;user-select:none;" title="Switch between Tracker and Analytics"><span id="toggleLabelTracker" class="header-toggle-label" style="color:rgba(255,255,255,.95);">Tracker</span><div onclick="toggleAnalytics()" id="viewToggleSwitch" style="width:48px;height:24px;background:rgba(255,255,255,.25);border-radius:12px;border:2px solid rgba(255,255,255,.4);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;"><div id="viewToggleKnob" style="width:16px;height:16px;background:#fff;border-radius:50%;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,.3);"></div></div><span id="toggleLabelAnalytics" class="header-toggle-label" style="color:rgba(255,255,255,.55);">Stats</span></div><button class="header-btn updates-header-btn" onclick="openUpdatesModal()" title="Updates &amp; changelog"><span class="updates-header-icon">↻</span><span class="updates-header-label">Updates</span><span id="updatesUnreadBadge" class="updates-unread-badge" aria-label="New updates"></span></button><button class="header-btn round" onclick="openHelpModal()" title="Help / Tutorial">?</button><span id="autosaveStatus" class="auto-save-indicator state-connecting"><span class="save-ring"><svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="8" r="6" stroke="rgba(255,255,255,0.25)" stroke-width="2"/><path d="M8 2 A6 6 0 0 1 14 8" stroke="white" stroke-width="2" stroke-linecap="round"/></svg><span class="save-ring-dot"></span></span><span class="save-label">Connecting…</span></span></div></div><div id="updateBanner"></div><div class="qb-body"><aside class="qb-sidebar" id="mainSidebar"><div class="sidebar-nav"><div class="sidebar-jump-wrapper" id="sidebarJumpWrapper"><button class="sidebar-jump-btn" onclick="toggleJumpDropdown()" type="button"><span id="sidebarJumpLabel">Setup</span><span class="sidebar-jump-arrow">&#9662;</span></button><div class="sidebar-jump-menu"><div class="sidebar-sec-hdr">Setup</div><button onclick="showSection('sec-session')">Session</button><button onclick="showSection('sec-players')">Players</button><button onclick="showSection('sec-teams')">Teams</button><button onclick="showSection('sec-categories')">Categories</button><div class="sidebar-sec-hdr">Settings</div><button onclick="showSection('sec-userid')">User ID</button><button onclick="showSection('sec-visual')">Visual Settings</button><button id="jumpBtn-sec-admin" onclick="showSection('sec-admin')" class="hidden">Admin Panel</button><div class="sidebar-sec-hdr">Session & Data</div><button onclick="showSection('sec-export')">Export / Import</button><button id="jumpBtn-sec-danger" onclick="showSection('sec-danger')" class="hidden">Data Management</button><button id="jumpBtn-sec-debug" onclick="showSection('sec-debug')" class="hidden">Debug Menu</button></div></div><button class="sidebar-close-btn" onclick="toggleSidebar()">&#9664; Hide</button></div><div class="sidebar-sections"><div class="qb-section" id="sec-session"><h2>Session <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div class="session-info"><div class="session-info-row"><span>Name:</span><strong id="sessionName">&#8212;</strong></div><div class="session-info-row"><span>Created:</span><strong id="sessionCreated">&#8212;</strong></div><div class="session-info-row"><span>Last Updated:</span><strong id="sessionLastUpdated">&#8212;</strong></div><div class="session-info-row"><span>Answers:</span><strong id="sessionAnswerCount">0</strong></div></div><div class="input-group"><label>New Session Name:</label><input type="text" id="newSessionName" placeholder="Session name..." /></div><div class="session-controls"><button class="button button-success" onclick="createNewSession()">+ New Session</button><button class="button" onclick="openSessionsModal()">Load</button></div></div></div><div class="qb-section" id="sec-players"><h2>Players <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div class="input-group"><label>Add Player:</label><input type="text" id="playerInput" placeholder="Player name..." onkeydown="if(event.key==='Enter') addToPlayerPool()" /></div><div class="button-group mb-14" ><button class="button" onclick="addToPlayerPool()">Add Player</button><button class="button button-danger" onclick="clearPlayerPool()">Clear All</button></div><div style="padding-bottom:14px;border-bottom:1.5px solid var(--border);margin-bottom:14px;"><div style="font-weight:600;font-size:.85em;margin-bottom:8px;color:var(--text);">Player Management</div><div style="font-size:.78em;color:var(--text2);margin-bottom:10px;">Rename players to fix typos. To merge, click <strong>Merge</strong> on the player you want to <em>remove</em> — their stats will be combined into whichever player you select next.</div><div id="playerMgmtContainer" style="display:flex;flex-direction:column;gap:8px;"></div></div><div class="input-group"><label>Import from File (CSV/TXT):</label><input type="file" accept=".csv,.txt" onchange="handlePlayerImport(event)" /></div><div id="playerPoolDisplay"></div></div></div><div class="qb-section" id="sec-teams"><h2>Teams <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div class="input-group"><label>Team Name:</label><input type="text" id="teamNameInput" placeholder="Team name..." /></div><button class="button" onclick="addTeam()">Add Team</button><div id="teamsContainer" style="margin-top:20px;"></div></div></div><div class="qb-section" id="sec-categories"><h2>Categories <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><p style="font-size:.85em;color:var(--text2);margin-bottom:10px;">Categories and subcategories are fixed. Select a parent category when recording answers to reveal its subcategories.</p><div style="display:flex;flex-direction:column;gap:6px;"></div><div id="categoryTreeDisplay"></div><div id="catFreqSection" style="display:none;margin-top:16px;padding-top:14px;border-top:1.5px solid var(--border);"><div style="font-weight:600;font-size:.85em;margin-bottom:4px;color:var(--text);">Expected Subcategory Frequencies <span class="fw4-82-ml6">Admin only — synced for all users</span></div><p style="font-size:.76em;color:var(--text3);margin-bottom:10px;line-height:1.5;">Enter the expected % of tossups for each subcategory at a typical tournament. Shown under each subcategory breakdown chart.</p><div id="catFreqPickers" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;"></div><div class="button-group"><button class="button" onclick="saveCatFreqs()">Save Frequencies</button><button class="button" style="background:var(--sec-bg);color:var(--text2);border:1.5px solid var(--border);" onclick="resetCatFreqs()">Reset Defaults</button></div><div id="catFreqStatus" class="fs-8-success-mt6"></div></div></div></div><div class="qb-section" id="sec-export"><h2>Export Data <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><p style="margin-bottom:8px;font-weight:600;">Select what to include:</p><div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:var(--sp);"><button class="button-category selected" id="exportPlayers" onclick="this.classList.toggle('selected')">Players &amp; Scores</button><button class="button-category selected" id="exportAnswerLog" onclick="this.classList.toggle('selected')">Answer Log</button><button class="button-category selected" id="exportTeamStats" onclick="this.classList.toggle('selected')">Team Statistics</button></div><div class="button-group"><button class="button button-success" onclick="exportToExcel()">Export to Excel</button><button class="button button-secondary" onclick="exportToJSON()">Export as JSON</button></div><div style="margin-top:22px;padding-top:18px;border-top:1.5px solid var(--border);"><p style="font-weight:600;margin-bottom:6px;">Import Session</p><p style="font-size:.85em;color:var(--text2);margin-bottom:12px;">Load a previously exported JSON file.</p><div class="input-group"><label>Select JSON file:</label><input type="file" id="importSessionFile" accept=".json" onchange="importFromJSON(event)" /></div><div id="importStatus" style="font-size:.85em;margin-top:8px;display:none;"></div></div></div></div><div class="qb-section" id="sec-userid">
+    </script><div class="qb-header" id="qbHeader"><div class="qb-header-left"><button class="header-btn sidebar-open-btn hidden" id="sidebarOpenBtn" >&#9654; Menu</button></div><div class="qb-header-center"><h1 data-short="HSE QB" data-medium="HSE QB Tracker">HSE Quiz Bowl Tracker <span class="version-badge" id="versionBadge"></span></h1><div class="header-session-name" id="headerSessionName"></div></div><div class="header-controls"><div style="display:flex;align-items:center;gap:6px;user-select:none;" title="Switch between Tracker and Analytics"><span id="toggleLabelTracker" class="header-toggle-label" style="color:var(--header-control-text);">Tracker</span><div onclick="toggleAnalytics()" id="viewToggleSwitch" style="width:48px;height:24px;background:var(--header-control-bg);border-radius:12px;border:2px solid var(--header-control-border);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;box-shadow:var(--header-control-shadow);"><div id="viewToggleKnob" style="width:16px;height:16px;background:#fff;border-radius:50%;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 2px 8px rgba(0,0,0,.34);"></div></div><span id="toggleLabelAnalytics" class="header-toggle-label" style="color:var(--header-control-text-muted);">Stats</span></div><button class="header-btn updates-header-btn" onclick="openUpdatesModal()" title="Updates &amp; changelog"><span class="updates-header-icon">↻</span><span class="updates-header-label">Updates</span><span id="updatesUnreadBadge" class="updates-unread-badge" aria-label="New updates"></span></button><button class="header-btn round" onclick="openHelpModal()" title="Help / Tutorial">?</button><span id="autosaveStatus" class="auto-save-indicator state-connecting"><span class="save-ring"><svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="8" r="6" stroke="rgba(255,255,255,0.25)" stroke-width="2"/><path d="M8 2 A6 6 0 0 1 14 8" stroke="white" stroke-width="2" stroke-linecap="round"/></svg><span class="save-ring-dot"></span></span><span class="save-label">Connecting…</span></span></div></div><div id="updateBanner"></div><div class="qb-body"><aside class="qb-sidebar" id="mainSidebar"><div class="sidebar-nav"><div class="sidebar-jump-wrapper" id="sidebarJumpWrapper"><button class="sidebar-jump-btn" onclick="toggleJumpDropdown()" type="button"><span id="sidebarJumpLabel">Setup</span><span class="sidebar-jump-arrow">&#9662;</span></button><div class="sidebar-jump-menu"><div class="sidebar-sec-hdr">Setup</div><button onclick="showSection('sec-session')">Session</button><button onclick="showSection('sec-players')">Players</button><button onclick="showSection('sec-teams')">Teams</button><button onclick="showSection('sec-categories')">Categories</button><div class="sidebar-sec-hdr">Settings</div><button onclick="showSection('sec-userid')">User ID</button><button onclick="showSection('sec-visual')">Visual Settings</button><button id="jumpBtn-sec-admin" onclick="showSection('sec-admin')" class="hidden">Admin Panel</button><div class="sidebar-sec-hdr">Session & Data</div><button onclick="showSection('sec-export')">Export / Import</button><button id="jumpBtn-sec-danger" onclick="showSection('sec-danger')" class="hidden">Data Management</button><button id="jumpBtn-sec-debug" onclick="showSection('sec-debug')" class="hidden">Debug Menu</button></div></div><button class="sidebar-close-btn" onclick="toggleSidebar()">&#9664; Hide</button></div><div class="sidebar-sections"><div class="qb-section" id="sec-session"><h2>Session <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div class="session-info"><div class="session-info-row"><span>Name:</span><strong id="sessionName">&#8212;</strong></div><div class="session-info-row"><span>Created:</span><strong id="sessionCreated">&#8212;</strong></div><div class="session-info-row"><span>Last Updated:</span><strong id="sessionLastUpdated">&#8212;</strong></div><div class="session-info-row"><span>Answers:</span><strong id="sessionAnswerCount">0</strong></div></div><div class="input-group"><label>New Session Name:</label><input type="text" id="newSessionName" placeholder="Session name..." /></div><div class="session-controls"><button class="button button-success" onclick="createNewSession()">+ New Session</button><button class="button" onclick="openSessionsModal()">Load</button></div></div></div><div class="qb-section" id="sec-players"><h2>Players <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div class="input-group"><label>Add Player:</label><input type="text" id="playerInput" placeholder="Player name..." onkeydown="if(event.key==='Enter') addToPlayerPool()" /></div><div class="button-group mb-14" ><button class="button" onclick="addToPlayerPool()">Add Player</button><button class="button button-danger" onclick="clearPlayerPool()">Clear All</button></div><div style="padding-bottom:14px;border-bottom:1.5px solid var(--border);margin-bottom:14px;"><div style="font-weight:600;font-size:.85em;margin-bottom:8px;color:var(--text);">Player Management</div><div style="font-size:.78em;color:var(--text2);margin-bottom:10px;">Rename players to fix typos. To merge, click <strong>Merge</strong> on the player you want to <em>remove</em> — their stats will be combined into whichever player you select next.</div><div id="playerMgmtContainer" style="display:flex;flex-direction:column;gap:8px;"></div></div><div class="input-group"><label>Import from File (CSV/TXT):</label><input type="file" accept=".csv,.txt" onchange="handlePlayerImport(event)" /></div><div id="playerPoolDisplay"></div></div></div><div class="qb-section" id="sec-teams"><h2>Teams <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div class="input-group"><label>Team Name:</label><input type="text" id="teamNameInput" placeholder="Team name..." /></div><button class="button" onclick="addTeam()">Add Team</button><div id="teamsContainer" style="margin-top:20px;"></div></div></div><div class="qb-section" id="sec-categories"><h2>Categories <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><p style="font-size:.85em;color:var(--text2);margin-bottom:10px;">Categories and subcategories are fixed. Select a parent category when recording answers to reveal its subcategories.</p><div style="display:flex;flex-direction:column;gap:6px;"></div><div id="categoryTreeDisplay"></div><div id="catFreqSection" style="display:none;margin-top:16px;padding-top:14px;border-top:1.5px solid var(--border);"><div style="font-weight:600;font-size:.85em;margin-bottom:4px;color:var(--text);">Expected Subcategory Frequencies <span class="fw4-82-ml6">Admin only — synced for all users</span></div><p style="font-size:.76em;color:var(--text3);margin-bottom:10px;line-height:1.5;">Enter the expected % of tossups for each subcategory at a typical tournament. Shown under each subcategory breakdown chart.</p><div id="catFreqPickers" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;"></div><div class="button-group"><button class="button" onclick="saveCatFreqs()">Save Frequencies</button><button class="button" style="background:var(--sec-bg);color:var(--text2);border:1.5px solid var(--border);" onclick="resetCatFreqs()">Reset Defaults</button></div><div id="catFreqStatus" class="fs-8-success-mt6"></div></div></div></div><div class="qb-section" id="sec-export"><h2>Export Data <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><p style="margin-bottom:8px;font-weight:600;">Select what to include:</p><div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:var(--sp);"><button class="button-category selected" id="exportPlayers" onclick="this.classList.toggle('selected')">Players &amp; Scores</button><button class="button-category selected" id="exportAnswerLog" onclick="this.classList.toggle('selected')">Answer Log</button><button class="button-category selected" id="exportTeamStats" onclick="this.classList.toggle('selected')">Team Statistics</button></div><div class="button-group"><button class="button button-success" onclick="exportToExcel()">Export to Excel</button><button class="button button-secondary" onclick="exportToJSON()">Export as JSON</button></div><div style="margin-top:22px;padding-top:18px;border-top:1.5px solid var(--border);"><p style="font-weight:600;margin-bottom:6px;">Import Session</p><p style="font-size:.85em;color:var(--text2);margin-bottom:12px;">Load a previously exported JSON file.</p><div class="input-group"><label>Select JSON file:</label><input type="file" id="importSessionFile" accept=".json" onchange="importFromJSON(event)" /></div><div id="importStatus" style="font-size:.85em;margin-top:8px;display:none;"></div></div></div></div><div class="qb-section" id="sec-userid">
   <h2>User ID <span class="toggle-icon">&#9660;</span></h2>
   <div class="collapsible-content">
     <p style="font-size:.82em;color:var(--text2);margin-bottom:14px;line-height:1.5;">Your Firebase account identifies your synced data. Add a display name so teammates can recognize you across devices.</p>
@@ -699,12 +934,12 @@ html.dark-mode[data-accent-style="stripes"] .qb-section {
     </div>
 
     <div class="vs-block">
-      <div class="vs-block-head"><span class="vs-block-title">Color Theme</span><span class="vs-block-sub" id="activeThemeLabel">Royal &mdash; HSE</span></div>
+      <div class="vs-block-head"><span class="vs-block-title">Color Theme</span><span class="vs-block-sub" id="activeThemeLabel">Tricolor &mdash; HSE</span></div>
       <p class="vs-hint vs-hint-top">Color themes are independent of Light/Dark &mdash; pick any palette and it works in both.</p>
       <div id="colorThemeGrid" class="theme-swatch-grid" role="group" aria-label="Color theme"></div>
       <div id="customThemePanel" class="custom-theme-panel" style="display:none;">
         <div class="custom-theme-row">
-          <label for="customPrimaryInput">Accent</label>
+          <label for="customPrimaryInput">Primary</label>
           <input type="color" id="customPrimaryInput" class="custom-color-input" value="#0b41a8" oninput="setCustomThemeColor('primary', this.value)" />
           <input type="text" id="customPrimaryHex" class="custom-hex-input" maxlength="7" spellcheck="false" value="#0b41a8"
                  onchange="setCustomThemeColor('primary', this.value)" onkeydown="if(event.key==='Enter') setCustomThemeColor('primary', this.value)" />
@@ -715,7 +950,13 @@ html.dark-mode[data-accent-style="stripes"] .qb-section {
           <input type="text" id="customSecondaryHex" class="custom-hex-input" maxlength="7" spellcheck="false" value="#002b7f"
                  onchange="setCustomThemeColor('secondary', this.value)" onkeydown="if(event.key==='Enter') setCustomThemeColor('secondary', this.value)" />
         </div>
-        <p class="vs-hint">The accent drives buttons, links, and highlights; the gradient color blends into the header and toggles.</p>
+        <div class="custom-theme-row">
+          <label for="customAccentInput">Accent</label>
+          <input type="color" id="customAccentInput" class="custom-color-input" value="#002b7f" oninput="setCustomThemeColor('accent', this.value)" />
+          <input type="text" id="customAccentHex" class="custom-hex-input" maxlength="7" spellcheck="false" value="#002b7f"
+                 onchange="setCustomThemeColor('accent', this.value)" onkeydown="if(event.key==='Enter') setCustomThemeColor('accent', this.value)" />
+        </div>
+        <p class="vs-hint">Primary drives the main UI, Gradient blends into headers and toggles, and Accent controls outlines plus highlighted text. Accent text is automatically lifted for contrast in dark mode.</p>
         <button class="button button-secondary vs-reset-btn" onclick="resetCustomTheme()">Reset custom colors</button>
       </div>
     </div>
@@ -741,7 +982,7 @@ html.dark-mode[data-accent-style="stripes"] .qb-section {
     <div id="catColorSection" style="display:none;padding-top:14px;border-top:1.5px solid var(--border);"><div style="font-weight:600;font-size:.85em;margin-bottom:8px;color:var(--text);">Category Colors <span class="fw4-82-ml6">Admin only — synced for all users</span></div><div id="catColorPickers" style="display:flex;flex-direction:column;gap:7px;margin-bottom:10px;"></div><div class="button-group"><button class="button" onclick="saveCatColors()">Save Colors</button><button class="button" style="background:var(--sec-bg);color:var(--text2);border:1.5px solid var(--border);" onclick="resetCatColors()">Reset Defaults</button></div><div id="catColorStatus" class="fs-8-success-mt6"></div></div>
   </div>
 </div>
-<div class="qb-section updates-admin-section" id="sec-admin" style="border:2px solid var(--primary);display:none;"><h2 class="primary">Admin Panel <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><p style="font-size:.82em;color:var(--text2);margin-bottom:12px;line-height:1.5;">Manage administrator access with Firebase UIDs. UID-based access is enforced by Firebase, so display names alone cannot grant publishing permissions.</p><div id="adminListDisplay" style="border:1.5px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:12px;background:var(--card);"></div><div class="input-group" style="margin-bottom:0;"><label for="adminUidInput">Add admin Firebase UID:</label><input type="text" id="adminUidInput" placeholder="Paste the Firebase UID" maxlength="128" onkeydown="if(event.key==='Enter') addAdmin()" /></div><div style="font-size:.75em;color:var(--text2);line-height:1.45;margin-top:7px;">Find your UID in the User ID section. After the owner UID is seeded in Firebase rules, admins can add other UIDs here.</div><div class="button-group" style="margin-top:10px;margin-bottom:18px;"><button class="button button-success" onclick="addAdmin()">Add UID admin</button></div><div class="admin-updates-link"><div class="admin-updates-link-icon">↻</div><div class="admin-updates-link-copy"><strong>Publish release notes</strong><span>Share new builds, write a changelog entry, and upload the downloadable file from Updates.</span></div><button class="button button-success" onclick="openUpdatesModal()">Open Updates</button></div><div style="border-top:1.5px solid var(--border);padding-top:16px;margin-top:16px;"><div style="background:var(--sec-bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;font-size:.8em;color:var(--text2);line-height:1.6;"><strong>Build status</strong><br>This file (display):<span class="mono-primary" id="displayVersionDisplay"></span><br>This file (internal):<span class="mono-primary" id="internalVersionDisplay"></span><br>Published in Firebase:<span style="font-family:monospace;color:var(--success);" id="liveFirebaseBuildDisplay">—</span> <span style="font-family:monospace;color:var(--text3);" id="liveFirebaseLabelDisplay"></span><br>Published on GitHub:<span id="githubPublishedDisplay" style="font-family:monospace;color:var(--text3);">—</span></div></div></div></div><div class="qb-section" id="sec-danger" style="border:2px solid var(--danger);display:none;"><h2 class="danger">Data Management <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div style="margin-bottom:18px;padding-bottom:16px;border-bottom:1.5px solid var(--border);"><div style="font-weight:700;font-size:.92em;color:var(--text);margin-bottom:10px;">&#9881; Performance Score Settings</div><p style="font-size:.78em;color:var(--text2);margin-bottom:12px;padding:8px 10px;background:var(--hover);border-radius:6px;border:1.5px solid var(--border);"><strong>Global settings</strong> &#8212; Synced across all devices and sessions.</p><div style="font-size:.78em;color:var(--text2);padding:8px 10px;background:var(--sec-bg);border-radius:6px;border:1.5px solid var(--border);line-height:1.45;margin-bottom:12px;">Ranking requires a full session. A player earns a Leaderboard Score (and appears in the distribution chart) only after hearing at least 20 toss-ups — one full session — so partial-session players never skew the standings. The system automatically sets k to the median TU heard among ranked players, so the typical ranked player is 50% trusted.</div><div style="font-size:.78em;color:var(--text2);padding:8px 10px;background:var(--sec-bg);border-radius:6px;border:1.5px solid var(--border);line-height:1.45;margin-top:14px;"><strong style="color:var(--text);">Automatic k:</strong> calculated from the median Toss-Ups Heard among ranked players (those with at least one full 20-toss-up session). This makes the typical ranked player 50% trusted and adapts as the dataset grows.</div><div style="font-size:.78em;color:var(--text2);padding:8px 12px;background:var(--sec-bg);border-radius:6px;border:1.5px solid var(--border);line-height:1.5;"><strong style="color:var(--text);">Official player model:</strong> Leaderboard Score is the only overall ranking score, and it is earned after one full session (20 toss-ups heard). Reliability, Power Rate, and TU/20 are diagnostic measures. Bonuses remain team-scored and are excluded from player rankings.</div></div><div style="margin-bottom:18px;padding-bottom:16px;border-bottom:1.5px solid var(--border);"><div style="font-weight:700;font-size:.92em;color:var(--text);margin-bottom:6px;">Expected Subcategory Frequencies <span class="fw4-82-ml6">Admin only — synced for all users</span></div><p style="font-size:.78em;color:var(--text2);margin-bottom:12px;line-height:1.4;">Set how often each subcategory should appear. Used to calculate expected bonus opportunities.</p><div id="catFreqPickers" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;"></div><div class="button-group"><button class="button" onclick="saveCatFreqs()">Save Frequencies</button><button class="button" style="background:var(--sec-bg);color:var(--text2);border:1.5px solid var(--border);" onclick="resetCatFreqs()">Reset Defaults</button></div><div id="catFreqStatus" class="fs-8-success-mt6"></div></div><div style="border:2px solid var(--danger);border-radius:var(--radius-sm);overflow:hidden;"><div id="dangerZoneHeader" onclick="toggleDangerZone()" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(220,53,69,.07);cursor:pointer;user-select:none;"><span style="font-weight:700;font-size:.9em;color:var(--danger);">&#9888; Danger Zone</span><span id="dangerZoneArrow" style="font-size:.8em;color:var(--danger);transition:transform .25s;transform:rotate(-90deg);">&#9660;</span></div><div id="dangerZoneBody" style="display:none;padding:14px;border-top:1.5px solid rgba(220,53,69,.25);"><p style="font-size:.82em;color:var(--text2);margin-bottom:12px;line-height:1.5;">This permanently deletes <strong>all sessions and all data</strong> across every device. There is no undo. Export your data first.</p><div style="margin-bottom:10px;"><div style="font-weight:600;font-size:.82em;color:var(--text2);margin-bottom:6px;">Export format before deleting:</div><div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="button button-success" style="flex:1;" onclick="exportAllData('xlsx')">&#8595; Export All as Excel</button><button class="button button-success" style="flex:1;" onclick="exportAllData('csv')">&#8595; Export All as CSV</button><button class="button button-success" style="flex:1;" onclick="exportAllData('json')">&#8595; Export All as JSON</button></div></div><button class="button button-danger" style="width:100%;" onclick="resetAllData()">Delete All Data</button></div></div></div></div><div class="qb-section" id="sec-debug" style="border:2px solid var(--warning);display:none;"><h2 class="warning">[ Debug Menu <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><p style="font-size:.82em;color:var(--text2);margin-bottom:14px;line-height:1.5;">Inject realistic placeholder data into the current session to simulate a Firebase-populated game. Useful for testing UI, stats, and analytics without a live connection.</p><label style="font-size:.85em;font-weight:600;color:var(--text2);display:block;margin-bottom:6px;">Scenario</label><select id="debugScenario" class="inp-std inp-mb"><option value="mid">Mid-game (~20 questions)</option><option value="full">Full game (~30 questions)</option><option value="blowout">Blowout (one team dominant)</option></select><button class="button" style="width:100%;background:linear-gradient(135deg,var(--warning),#e67e22);" onclick="injectDebugData();loadSessionData();renderAll();">Inject Debug Data</button><button class="button button-secondary" style="width:100%;margin-top:8px;" onclick="clearDebugData()">Clear Session Data</button><div id="debugStatus" style="margin-top:10px;font-size:.82em;color:var(--text2);min-height:1.4em;"></div></div></div></div></aside><div id="trackerView" style="flex:1;display:flex;flex-direction:column;overflow:hidden;"><div class="qb-scroll" id="qbScroll"><div class="qb-section" style="overflow:visible;"><h2>Record Answer <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div class="input-group"><label>Select Player:<span id="playerOptionalHint" style="font-weight:400;font-size:.85em;color:var(--text2);display:none;">(Bonus is team-scored; Miss may be unattributed)</span></label><div id="playerButtonsContainer" class="player-buttons"></div></div><div class="input-group"><label>Point Type:<span style="font-weight:400;font-size:.8em;color:var(--text3);">1–6 keys</span></label><div class="point-type-buttons"><button class="button-point-type" onclick="selectPointType('Power')"   data-key="1">Toss-up <span class="pwr-bolt">&#9889;</span> Power (+15) <kbd>1</kbd></button><button class="button-point-type" onclick="selectPointType('Toss-up')" data-key="2">Toss-up (+10) <kbd>2</kbd></button><button class="button-point-type" onclick="selectPointType('Bonus')"   data-key="3">Team Bonus (+10) <kbd>3</kbd></button><button class="button-point-type" onclick="selectPointType('Miss')"    data-key="4">Miss (0) <kbd>4</kbd></button><button class="button-point-type" onclick="selectPointType('Neg')"     data-key="5">Neg (-5) <kbd>5</kbd></button><button class="button-point-type" onclick="selectPointType('Dead')"    data-key="6">Dead (0) <kbd>6</kbd></button></div></div><div class="input-group" id="categoryInputGroup"><label>Category:<span style="font-weight:400;font-size:.85em;color:var(--text2);">(Optional)</span></label><div id="categoryButtonsContainer"></div></div><div style="display:flex;align-items:center;gap:12px;margin-top:14px;padding:12px 14px;background:var(--sec-bg);border:2px solid var(--border);border-radius:8px;"><div style="flex:1;"><div style="font-weight:700;font-size:.9em;color:var(--text2);margin-bottom:2px;">Toss-Ups Heard <span style="font-weight:400;font-size:.85em;">(Auto-tracks once per toss-up)</span></div><div style="font-size:1.6em;font-weight:700;color:var(--primary);" id="tHeardDisplay">0</div></div><div style="display:flex;gap:6px;align-items:center;"><button onclick="adjustTHeard(-1)" class="btn-icon-danger">−</button><button onclick="adjustTHeard(1)" class="btn-icon-success">+</button></div></div><button class="button button-success" id="recordAnswerBtn" onclick="recordAnswer()" style="width:100%;margin-top:10px;padding:16px;font-size:1.05em;">Record Answer <kbd style="font-size:.75em;opacity:.7;margin-left:6px;">Enter</kbd></button></div></div><div class="qb-section"><h2>Substitutions <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div id="subPanelContent"></div></div></div><div class="qb-section"><h2>Statistics <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div id="statisticsContainer"></div></div></div><div class="qb-section"><h2>Answer Log <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><button class="button button-danger" onclick="clearAnswerLog()">Clear Log</button><div class="log-container-wrap"><div id="answerLog" class="log-container"></div></div></div></div></div></div><div id="analyticsView" style="flex:1;display:none;flex-direction:column;overflow:hidden;"><div style="padding:10px var(--hsp);border-bottom:1.5px solid var(--border);background:var(--card);flex-shrink:0;display:flex;gap:6px;flex-wrap:wrap;"><button class="analytics-tab active" onclick="switchAnalyticsTab('overview',this)">Overview</button><button class="analytics-tab" onclick="switchAnalyticsTab('players',this)">Players</button><button class="analytics-tab" onclick="switchAnalyticsTab('charts',this)">Charts</button><button class="analytics-tab" onclick="switchAnalyticsTab('teams',this)">Team Compositions</button></div><div class="analytics-scroll" id="analyticsScroll"><div id="an-overview" class="analytics-panel active"></div><div id="an-players" class="analytics-panel"></div><div id="an-charts" class="analytics-panel"></div><div id="an-teams" class="analytics-panel"></div></div></div></div></div><div id="helpModal" class="qb-modal"><div class="modal-content" style="max-width:640px;"><div class="modal-header"><h2>Help &amp; Tutorial</h2><button class="close-modal" onclick="closeHelpModal()">&#215;</button></div><div style="line-height:1.7;color:var(--text);font-size:.95em;"><h3 class="h3-primary">Getting Started</h3><p class="mb-14">Open the sidebar and work through each section in order: <strong>Session &rarr; Players &rarr; Teams &rarr; Categories</strong>. Once configured, use the <strong>Record Answer</strong> panel to log answers in real time. All data syncs automatically across connected devices via Firebase.</p><h3 class="h3-primary">Sessions</h3><p class="mb-14">Each match is a <strong>Session</strong>. Create one with a descriptive name before recording answers. Use <strong>Load Session</strong> to switch between matches. Sessions can be excluded from analytics &mdash; excluded sessions are dimmed and ignored in all Stats calculations.</p><h3 class="h3-primary">Players &amp; Teams</h3><p class="mb-14">Add players in the <strong>Players</strong> section, then create teams in <strong>Teams</strong> and assign players to them. Only players assigned to a team are selectable when recording answers. Players are stored globally and available across all sessions.</p><h3 class="h3-primary">Recording Answers</h3><p class="mb-8">Select a <strong>Player</strong>, then a <strong>Point Type</strong>, then a <strong>Category</strong> (optional for Neg), then press <strong>Record Answer</strong>. Use the answer log to delete mistakes.</p><table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:.9em;"><tr class="sec-bg"><th class="cell-pad-left">Type</th><th class="cell-pad-left">Points</th><th class="cell-pad-left">Notes</th></tr><tr><td class="cell-pad">Toss-up Power</td><td class="cell-pad">+15</td><td class="cell-pad">Answered correctly before the power mark</td></tr><tr class="sec-bg"><td class="cell-pad">Toss-up</td><td class="cell-pad">+10</td><td class="cell-pad">Answered correctly after the power mark</td></tr><tr><td class="cell-pad">Team Bonus</td><td class="cell-pad">+10 per part</td><td class="cell-pad">Recorded for the team; bonus conversion is a group effort</td></tr><tr class="sec-bg"><td class="cell-pad">Neg</td><td class="cell-pad">&minus;5</td><td class="cell-pad">Incorrect interrupt &mdash; category optional</td></tr><tr><td class="cell-pad">Miss</td><td class="cell-pad">0</td><td class="cell-pad">No answer or incorrect after power mark</td></tr><tr class="sec-bg"><td class="cell-pad">Dead</td><td class="cell-pad">0</td><td class="cell-pad">No team buzzed on the toss-up</td></tr></table><h3 class="h3-primary">Toss-Ups Heard Counter</h3><p class="mb-14">Tracks how many toss-up questions have been read. It increments once on the first outcome for each toss-up; a correct answer after a Neg or Miss is treated as a follow-up to that same question. Use the +/&minus; buttons to correct it manually. Required for normalized player metrics.</p><h3 class="h3-primary">Stats (Analytics)</h3><p class="mb-6">Toggle to the <strong>Stats</strong> view using the switch in the header. Stats are aggregated across all non-excluded sessions and organized into four tabs:</p><ul class="m14-pl20"><li><strong>Overview</strong> &mdash; totals, category breakdowns, top performers</li><li><strong>Players</strong> &mdash; ranked leaderboard; expand for metrics or click name for detail</li><li><strong>Charts</strong> &mdash; visual breakdown of answer types, categories, and trends</li><li><strong>Team Compositions</strong> &mdash; per-team stats per session</li></ul><h3 class="h3-primary">Formula Symbols</h3><p class="mb-6">Every formula below uses the same letters. All of them count <strong>official toss-up decisions only</strong> — bonuses are excluded.</p><ul class="m14-pl20"><li><code>P</code> — <strong>Powers</strong>, early correct buzzes (+15)</li><li><code>T</code> — <strong>Toss-ups</strong>, regular correct buzzes (+10)</li><li><code>N</code> — <strong>Negs</strong>, incorrect early buzzes (−5)</li><li><code>M</code> — <strong>Misses</strong>, incorrect buzzes with no penalty (0)</li><li><code>H</code> — <strong>Toss-Ups Heard</strong>, the opportunities the player was in the room for</li><li><code>k</code> — the <strong>confidence constant</strong>, auto-set to the median <code>H</code> among ranked players; at <code>H = k</code> a player is 50% trusted</li><li><code>Team Average</code> — the mean Raw TU/20 of ranked players, used to shrink small samples</li></ul><p class="mb-14"><strong>Ranked vs. provisional:</strong> a player is <strong>ranked</strong> only once <code>H &ge; 20</code> (one full session). Provisional players still show diagnostics, but they get no Leaderboard Score and are left out of the team average and the automatic <code>k</code>.</p><h3 class="h3-primary">Player Metrics</h3><p class="mb-6">Player analytics use official toss-up decisions only. Bonuses remain team-scored and are never assigned to an individual player.</p><ul class="m14-pl20"><li><strong>Total Points</strong> — individual toss-up points: +15 per power, +10 per regular toss-up, and −5 per neg</li><li><strong>Toss-Ups Heard</strong> — opportunity count used to compare players with different amounts of playing time</li><li><strong>Raw TU/20</strong> — net toss-up points at a common pace of 20 toss-ups: <code>(15P + 10T − 5N) / H × 20</code></li><li><strong>Leaderboard Score</strong> — the leaderboard score; earned after one full session (20 toss-ups heard), with limited samples gently moved toward the team average using confidence</li><li><strong>Reliability</strong> — correct decisions divided by all recorded decisions: <code>(P+T) / (P+T+N+M) × 100</code></li><li><strong>Power Rate</strong> — powers divided by all recorded decisions: <code>P / (P+T+N+M) × 100</code>. Negs and misses count against this rate.</li><li><strong>TU/20</strong> — participation pace: <code>(P+T+N+M) / H × 20</code></li><li><strong>Confidence</strong> — sample-size weight: <code>H / (H+k)</code>. At <code>H=k</code>, the raw score is 50% trusted.</li></ul><h3 class="h3-primary">Official Score System</h3><p class="mb-8">The player leaderboard uses <strong>Leaderboard Score</strong> as its only overall score. A player earns it after hearing at least 20 toss-ups (one full session); limited samples are then shrunk toward the team average. This avoids double-counting related measures such as buzz rate, reliability, and conversion.</p><p style="margin-bottom:14px;font-family:monospace;font-size:.85em;background:var(--sec-bg);padding:8px 12px;border-radius:6px;border:1.5px solid var(--border);">Leaderboard Score = Confidence × Raw TU/20 + (1 − Confidence) × Team Average</p><p class="mb-14">Bonuses are shown in team totals and the answer log, but are not used for individual player rankings because bonus conversion is shared by the team.</p><h3 class="h3-primary">Leaderboard Sorting</h3><p class="mb-14">Sort by Total Points, Leaderboard Score, Reliability, Power Rate, TU/20, or A&ndash;Z. Ties are broken by the official toss-up counts, then fewest Negs.</p><h3 class="h3-primary">Export &amp; Import</h3><p class="mb-14">Export to <strong>CSV</strong> for spreadsheets or <strong>JSON</strong> to back up and re-import a full session. Both options are in the Data section of the sidebar.</p><h3 class="h3-primary">What Syncs Globally</h3><p class="mb-6">Stored in Firebase and synced instantly across all connected devices:</p><ul class="m8-pl20"><li>All session data (answers, scores, toss-ups heard)</li><li>Global player pool</li><li>Skill score settings and low-data overrides</li><li>App version, release history, and update info</li></ul><p class="mb-14">Stored with your Firebase account and cached locally: theme mode, accent color, scrollbar visibility, and sidebar state.</p><h3 class="h3-primary">Version Badge &amp; Deploy Indicator</h3><p class="mb-14">The version badge in the header shows the current file version. When viewed on the live GitHub Pages site, its border changes color to reflect the latest deploy status &mdash; <strong style="color:var(--success)">green</strong> = deployed successfully, <strong style="color:var(--warning)">yellow pulsing</strong> = deploy in progress, <strong style="color:var(--danger)">red</strong> = deploy failed. If a new deploy completes while you have the page open, a banner will appear prompting you to refresh.</p><h3 class="h3-primary">Updates &amp; Changelog</h3><p class="mb-14">Open <strong>Updates</strong> in the header to see the shared release history and the latest public changelog. If you are running a local copy and a newer version has been published, you can download it there or from the update banner — admins can attach the new <code>index.html</code> to Firebase, so the download works without a GitHub request on restricted school networks. Admins also use this center to publish builds and write the release log.</p><h3 class="h3-primary">Visual Settings</h3><p class="mb-14">Choose <strong>Light</strong>, <strong>Dark</strong>, or <strong>Device</strong> theme, change the <strong>Accent Color</strong>, or hide scrollbars in the Visual Settings section of the sidebar. <strong>Appearance</strong> (Light / Dark / Device) and <strong>Color Theme</strong> are separate: pick any palette and it works in either mode. Eight palettes ship with the app &mdash; the default is <strong>Royal</strong>, the Hamilton Southeastern royal blue &mdash; plus a <strong>Custom</strong> option where you choose your own accent and gradient colors. Your choice is saved to your account and follows you to any device.</p><h3 class="h3-primary">Source Code on GitHub</h3><p class="mb-8">HSE Quiz Bowl Tracker is open source. Browse the code, read the release history, or report a bug directly on GitHub.</p><div class="help-github-links"><button class="button" onclick="openGitHubRepo()">&#9733; Open GitHub Repository</button><button class="button button-secondary" onclick="openGitHubIssues()">&#9888; Report an Issue</button><button class="button button-secondary" onclick="openGitHubReleases()">&#8595; Releases &amp; Downloads</button></div><p class="mb-14 fs-75-fw4">Repository: <a id="helpGithubLink" class="mono-primary" href="https://github.com/ajani190819-ops/HSEQB" target="_blank" rel="noopener noreferrer">github.com/ajani190819-ops/HSEQB</a></p><p class="mb-14"><strong>Loading source:</strong> <span id="helpLoadingSource" class="mono-primary">&mdash;</span></p></div></div></div><div id="updatesModal" class="qb-modal" onclick="if(event.target===this)closeUpdatesModal()"><div class="modal-content updates-modal-content"><div class="modal-header updates-modal-header"><div><h2>Updates &amp; Changelog</h2><p class="updates-modal-subtitle">See what is new in HSE Quiz Bowl Tracker.</p></div><button class="close-modal" onclick="closeUpdatesModal()" aria-label="Close updates">&#215;</button></div><div id="updatesCurrentSummary" class="updates-current-summary" aria-live="polite"></div><div class="updates-toolbar"><span id="updatesLoadStatus" class="updates-load-status">Loading release history…</span><button class="button updates-refresh-btn" onclick="refreshUpdates()">&#8635; Refresh</button></div><div id="updatesAdminPanel" class="updates-admin-panel" style="display:none;"><div class="updates-admin-heading"><div><h3>Publish an update</h3><p>Write the public release log and optionally attach the new file for Firebase downloads.</p></div><span class="updates-admin-pill">Admin</span></div><div id="releasePrompt" class="updates-release-prompt hidden"><strong>New build detected.</strong> Publish it here when the file is ready so users can find the notes and download it.</div><div id="releaseUpToDate" class="updates-release-prompt updates-release-ok" style="display:none;">&#10003; This file is already the published build. You can still update the release log if needed.</div><div class="updates-form-grid"><div class="input-group"><label for="releaseTitleInput">Update title</label><input type="text" id="releaseTitleInput" class="inp-std" maxlength="120" placeholder="e.g. Better analytics and faster logging" /></div><div class="input-group"><label for="releaseFileInput">Downloadable index.html <span class="fs-75-fw4">optional when using the live page</span></label><input type="file" id="releaseFileInput" accept=".html" /></div></div><div class="input-group"><label for="releaseNotesInput">Public changelog <span class="fs-75-fw4">shown to everyone</span></label><textarea id="releaseNotesInput" class="updates-textarea" maxlength="5000" rows="5" placeholder="Tell players what changed, what was fixed, and anything they should know."></textarea></div><div class="input-group"><label for="adminCommentsInput">Admin notes <span class="fs-75-fw4">internal context; not shown in the changelog</span></label><textarea id="adminCommentsInput" class="updates-textarea updates-textarea-small" maxlength="2000" rows="2" placeholder="Optional: testing notes or deployment context"></textarea></div><button class="button button-success updates-publish-btn" onclick="publishRelease()">Publish v<span id="updatesPublishVersion">—</span></button><div id="releaseUploadStatus" class="updates-upload-status" role="status" aria-live="polite"></div></div><div class="updates-history-heading"><div><h3>Release history</h3><p>Updates are synced for every signed-in user.</p></div><span id="updatesHistoryCount" class="updates-history-count"></span></div><div id="updatesList" class="updates-list" aria-live="polite"></div></div></div><div id="sessionsModal" class="qb-modal"><div class="modal-content"><div class="modal-header"><h2>Load Session</h2><button class="close-modal" onclick="closeSessionsModal()">&#215;</button></div><div style="display:flex;gap:8px;flex-wrap:wrap;padding:12px 16px;border-bottom:1.5px solid var(--border);background:var(--sec-bg);"><input type="text" id="sessionsSearchInput" placeholder="Search sessions..." style="flex:1;min-width:150px;padding:8px 12px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:.95em;background:var(--input-bg);color:var(--input-text);" /><select id="sessionsSortSelect" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:.95em;background:var(--input-bg);color:var(--input-text);"><option value="date-desc">Newest First</option><option value="date-asc">Oldest First</option><option value="name">Alphabetical (A-Z)</option><option value="answers-desc">Most Answers</option><option value="answers-asc">Least Answers</option></select></div><div id="sessionBulkBar" class="session-bulk-bar" style="display:none;"><label style="display:flex;align-items:center;gap:6px;font-size:.82em;font-weight:600;color:var(--text2);cursor:pointer;white-space:nowrap;"><input type="checkbox" id="sessionSelectAll" class="session-select-cb" style="margin:0;" onchange="toggleSelectAllSessions(this.checked)" /> Select all visible</label><span id="sessionBulkCount" style="font-size:.82em;font-weight:700;color:var(--primary);">0 selected</span><span class="bulk-spacer"></span><button class="button button-success" style="padding:6px 12px;font-size:.8em;" onclick="bulkSetAnalytics(true)">+ Add to Analytics</button><button class="button" style="padding:6px 12px;font-size:.8em;" onclick="bulkSetAnalytics(false)">− Exclude from Analytics</button><button class="button button-danger" style="padding:6px 12px;font-size:.8em;" onclick="bulkDeleteSessions()">Delete</button></div><div id="sessionsList" class="sessions-list"></div></div></div></div><div id="playerActionModal" class="qb-modal" onclick="if(event.target===this)closePlayerActionModal()"><div class="modal-content" style="max-width:420px;"><div class="modal-header"><h2 id="pamTitle">Player Action</h2><button class="close-modal" onclick="closePlayerActionModal()">&#215;</button></div><div style="padding:16px;"><div id="pamBody"></div></div></div></div><div id="bandModal" class="qb-modal" onclick="if(event.target===this)closeBandModal()"><div class="modal-content" style="max-width:440px;"><div class="modal-header"><h2 id="bandModalTitle">Score Band</h2><button class="close-modal" onclick="closeBandModal()">&#215;</button></div><div id="bandModalBody" style="padding:0 2px;"></div></div></div><div id="playerDetailModal" class="qb-modal"><div class="modal-content" style="max-width:620px;"><div class="modal-header"><h2 id="pdModalTitle">Player Details</h2><button class="close-modal" onclick="closePlayerDetailModal()">&#215;</button></div><div id="pdModalBody"></div></div></div><script src="local-settings.js" onerror="void 0"></script><script>const $=id=>document.getElementById(id);
+<div class="qb-section updates-admin-section" id="sec-admin" style="border:2px solid var(--primary);display:none;"><h2 class="primary">Admin Panel <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><p style="font-size:.82em;color:var(--text2);margin-bottom:12px;line-height:1.5;">Manage administrator access with Firebase UIDs. UID-based access is enforced by Firebase, so display names alone cannot grant publishing permissions.</p><div id="adminListDisplay" style="border:1.5px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:12px;background:var(--card);"></div><div class="input-group" style="margin-bottom:0;"><label for="adminUidInput">Add admin Firebase UID:</label><input type="text" id="adminUidInput" placeholder="Paste the Firebase UID" maxlength="128" onkeydown="if(event.key==='Enter') addAdmin()" /></div><div style="font-size:.75em;color:var(--text2);line-height:1.45;margin-top:7px;">Find your UID in the User ID section. After the owner UID is seeded in Firebase rules, admins can add other UIDs here.</div><div class="button-group" style="margin-top:10px;margin-bottom:18px;"><button class="button button-success" onclick="addAdmin()">Add UID admin</button></div><div class="admin-updates-link"><div class="admin-updates-link-icon">↻</div><div class="admin-updates-link-copy"><strong>Publish release notes</strong><span>Share new builds, write a changelog entry, and upload the downloadable file from Updates.</span></div><button class="button button-success" onclick="openUpdatesModal()">Open Updates</button></div><div style="border-top:1.5px solid var(--border);padding-top:16px;margin-top:16px;"><div style="background:var(--sec-bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;font-size:.8em;color:var(--text2);line-height:1.6;"><strong>Build status</strong><br>This file (display):<span class="mono-primary" id="displayVersionDisplay"></span><br>This file (internal):<span class="mono-primary" id="internalVersionDisplay"></span><br>Published in Firebase:<span style="font-family:monospace;color:var(--success);" id="liveFirebaseBuildDisplay">—</span> <span style="font-family:monospace;color:var(--text3);" id="liveFirebaseLabelDisplay"></span><br>Published on GitHub:<span id="githubPublishedDisplay" style="font-family:monospace;color:var(--text3);">—</span></div></div></div></div><div class="qb-section" id="sec-danger" style="border:2px solid var(--danger);display:none;"><h2 class="danger">Data Management <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div style="margin-bottom:18px;padding-bottom:16px;border-bottom:1.5px solid var(--border);"><div style="font-weight:700;font-size:.92em;color:var(--text);margin-bottom:10px;">&#9881; Performance Score Settings</div><p style="font-size:.78em;color:var(--text2);margin-bottom:12px;padding:8px 10px;background:var(--hover);border-radius:6px;border:1.5px solid var(--border);"><strong>Global settings</strong> &#8212; Synced across all devices and sessions.</p><div style="font-size:.78em;color:var(--text2);padding:8px 10px;background:var(--sec-bg);border-radius:6px;border:1.5px solid var(--border);line-height:1.45;margin-bottom:12px;">Ranking requires a full session. A player earns a Leaderboard Score (and appears in the distribution chart) only after hearing at least 20 toss-ups — one full session — so partial-session players never skew the standings. The system automatically sets k to the median TU heard among ranked players, so the typical ranked player is 50% trusted.</div><div style="font-size:.78em;color:var(--text2);padding:8px 10px;background:var(--sec-bg);border-radius:6px;border:1.5px solid var(--border);line-height:1.45;margin-top:14px;"><strong style="color:var(--text);">Automatic k:</strong> calculated from the median Toss-Ups Heard among ranked players (those with at least one full 20-toss-up session). This makes the typical ranked player 50% trusted and adapts as the dataset grows.</div><div style="font-size:.78em;color:var(--text2);padding:8px 12px;background:var(--sec-bg);border-radius:6px;border:1.5px solid var(--border);line-height:1.5;"><strong style="color:var(--text);">Official player model:</strong> Leaderboard Score is the only overall ranking score, and it is earned after one full session (20 toss-ups heard). Reliability, Power Rate, and TU/20 are diagnostic measures. Bonuses remain team-scored and are excluded from player rankings.</div></div><div style="margin-bottom:18px;padding-bottom:16px;border-bottom:1.5px solid var(--border);"><div style="font-weight:700;font-size:.92em;color:var(--text);margin-bottom:6px;">Expected Subcategory Frequencies <span class="fw4-82-ml6">Admin only — synced for all users</span></div><p style="font-size:.78em;color:var(--text2);margin-bottom:12px;line-height:1.4;">Set how often each subcategory should appear. Used to calculate expected bonus opportunities.</p><div id="catFreqPickers" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;"></div><div class="button-group"><button class="button" onclick="saveCatFreqs()">Save Frequencies</button><button class="button" style="background:var(--sec-bg);color:var(--text2);border:1.5px solid var(--border);" onclick="resetCatFreqs()">Reset Defaults</button></div><div id="catFreqStatus" class="fs-8-success-mt6"></div></div><div style="border:2px solid var(--danger);border-radius:var(--radius-sm);overflow:hidden;"><div id="dangerZoneHeader" onclick="toggleDangerZone()" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(220,53,69,.07);cursor:pointer;user-select:none;"><span style="font-weight:700;font-size:.9em;color:var(--danger);">&#9888; Danger Zone</span><span id="dangerZoneArrow" style="font-size:.8em;color:var(--danger);transition:transform .25s;transform:rotate(-90deg);">&#9660;</span></div><div id="dangerZoneBody" style="display:none;padding:14px;border-top:1.5px solid rgba(220,53,69,.25);"><p style="font-size:.82em;color:var(--text2);margin-bottom:12px;line-height:1.5;">This permanently deletes <strong>all sessions and all data</strong> across every device. There is no undo. Export your data first.</p><div style="margin-bottom:10px;"><div style="font-weight:600;font-size:.82em;color:var(--text2);margin-bottom:6px;">Export format before deleting:</div><div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="button button-success" style="flex:1;" onclick="exportAllData('xlsx')">&#8595; Export All as Excel</button><button class="button button-success" style="flex:1;" onclick="exportAllData('csv')">&#8595; Export All as CSV</button><button class="button button-success" style="flex:1;" onclick="exportAllData('json')">&#8595; Export All as JSON</button></div></div><button class="button button-danger" style="width:100%;" onclick="resetAllData()">Delete All Data</button></div></div></div></div><div class="qb-section" id="sec-debug" style="border:2px solid var(--warning);display:none;"><h2 class="warning">[ Debug Menu <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><p style="font-size:.82em;color:var(--text2);margin-bottom:14px;line-height:1.5;">Inject realistic placeholder data into the current session to simulate a Firebase-populated game. Useful for testing UI, stats, and analytics without a live connection.</p><label style="font-size:.85em;font-weight:600;color:var(--text2);display:block;margin-bottom:6px;">Scenario</label><select id="debugScenario" class="inp-std inp-mb"><option value="mid">Mid-game (~20 questions)</option><option value="full">Full game (~30 questions)</option><option value="blowout">Blowout (one team dominant)</option></select><button class="button" style="width:100%;background:linear-gradient(135deg,var(--warning),#e67e22);" onclick="injectDebugData();loadSessionData();renderAll();">Inject Debug Data</button><button class="button button-secondary" style="width:100%;margin-top:8px;" onclick="clearDebugData()">Clear Session Data</button><div id="debugStatus" style="margin-top:10px;font-size:.82em;color:var(--text2);min-height:1.4em;"></div></div></div></div></aside><div id="trackerView" style="flex:1;display:flex;flex-direction:column;overflow:hidden;"><div class="qb-scroll" id="qbScroll"><div class="qb-section" style="overflow:visible;"><h2>Record Answer <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div class="input-group"><label>Select Player:<span id="playerOptionalHint" style="font-weight:400;font-size:.85em;color:var(--text2);display:none;">(Bonus is team-scored; Miss may be unattributed)</span></label><div id="playerButtonsContainer" class="player-buttons"></div></div><div class="input-group"><label>Point Type:<span style="font-weight:400;font-size:.8em;color:var(--text3);">1–6 keys</span></label><div class="point-type-buttons"><button class="button-point-type" onclick="selectPointType('Power')"   data-key="1">Toss-up <span class="pwr-bolt">&#9889;</span> Power (+15) <kbd>1</kbd></button><button class="button-point-type" onclick="selectPointType('Toss-up')" data-key="2">Toss-up (+10) <kbd>2</kbd></button><button class="button-point-type" onclick="selectPointType('Bonus')"   data-key="3">Team Bonus (+10) <kbd>3</kbd></button><button class="button-point-type" onclick="selectPointType('Miss')"    data-key="4">Miss (0) <kbd>4</kbd></button><button class="button-point-type" onclick="selectPointType('Neg')"     data-key="5">Neg (-5) <kbd>5</kbd></button><button class="button-point-type" onclick="selectPointType('Dead')"    data-key="6">Dead (0) <kbd>6</kbd></button></div></div><div class="input-group" id="categoryInputGroup"><label>Category:<span style="font-weight:400;font-size:.85em;color:var(--text2);">(Optional)</span></label><div id="categoryButtonsContainer"></div></div><div style="display:flex;align-items:center;gap:12px;margin-top:14px;padding:12px 14px;background:var(--sec-bg);border:2px solid var(--border);border-radius:8px;"><div style="flex:1;"><div style="font-weight:700;font-size:.9em;color:var(--text2);margin-bottom:2px;">Toss-Ups Heard <span style="font-weight:400;font-size:.85em;">(Auto-tracks once per toss-up)</span></div><div style="font-size:1.6em;font-weight:700;color:var(--primary);" id="tHeardDisplay">0</div></div><div style="display:flex;gap:6px;align-items:center;"><button onclick="adjustTHeard(-1)" class="btn-icon-danger">−</button><button onclick="adjustTHeard(1)" class="btn-icon-success">+</button></div></div><button class="button button-success" id="recordAnswerBtn" onclick="recordAnswer()" style="width:100%;margin-top:10px;padding:16px;font-size:1.05em;">Record Answer <kbd style="font-size:.75em;opacity:.7;margin-left:6px;">Enter</kbd></button></div></div><div class="qb-section"><h2>Substitutions <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div id="subPanelContent"></div></div></div><div class="qb-section"><h2>Statistics <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div id="statisticsContainer"></div></div></div><div class="qb-section"><h2>Answer Log <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><button class="button button-danger" onclick="clearAnswerLog()">Clear Log</button><div class="log-container-wrap"><div id="answerLog" class="log-container"></div></div></div></div></div></div><div id="analyticsView" style="flex:1;display:none;flex-direction:column;overflow:hidden;"><div style="padding:10px var(--hsp);border-bottom:1.5px solid var(--border);background:var(--card);flex-shrink:0;display:flex;gap:6px;flex-wrap:wrap;"><button class="analytics-tab active" onclick="switchAnalyticsTab('overview',this)">Overview</button><button class="analytics-tab" onclick="switchAnalyticsTab('players',this)">Players</button><button class="analytics-tab" onclick="switchAnalyticsTab('charts',this)">Charts</button><button class="analytics-tab" onclick="switchAnalyticsTab('teams',this)">Team Compositions</button></div><div class="analytics-scroll" id="analyticsScroll"><div id="an-overview" class="analytics-panel active"></div><div id="an-players" class="analytics-panel"></div><div id="an-charts" class="analytics-panel"></div><div id="an-teams" class="analytics-panel"></div></div></div></div></div><div id="helpModal" class="qb-modal"><div class="modal-content" style="max-width:640px;"><div class="modal-header"><h2>Help &amp; Tutorial</h2><button class="close-modal" onclick="closeHelpModal()">&#215;</button></div><div style="line-height:1.7;color:var(--text);font-size:.95em;"><h3 class="h3-primary">Getting Started</h3><p class="mb-14">Open the sidebar and work through each section in order: <strong>Session &rarr; Players &rarr; Teams &rarr; Categories</strong>. Once configured, use the <strong>Record Answer</strong> panel to log answers in real time. All data syncs automatically across connected devices via Firebase.</p><h3 class="h3-primary">Sessions</h3><p class="mb-14">Each match is a <strong>Session</strong>. Create one with a descriptive name before recording answers. Use <strong>Load Session</strong> to switch between matches. Sessions can be excluded from analytics &mdash; excluded sessions are dimmed and ignored in all Stats calculations.</p><h3 class="h3-primary">Players &amp; Teams</h3><p class="mb-14">Add players in the <strong>Players</strong> section, then create teams in <strong>Teams</strong> and assign players to them. Only players assigned to a team are selectable when recording answers. Players are stored globally and available across all sessions.</p><h3 class="h3-primary">Recording Answers</h3><p class="mb-8">Select a <strong>Player</strong>, then a <strong>Point Type</strong>, then a <strong>Category</strong> (optional for Neg), then press <strong>Record Answer</strong>. Use the answer log to delete mistakes.</p><table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:.9em;"><tr class="sec-bg"><th class="cell-pad-left">Type</th><th class="cell-pad-left">Points</th><th class="cell-pad-left">Notes</th></tr><tr><td class="cell-pad">Toss-up Power</td><td class="cell-pad">+15</td><td class="cell-pad">Answered correctly before the power mark</td></tr><tr class="sec-bg"><td class="cell-pad">Toss-up</td><td class="cell-pad">+10</td><td class="cell-pad">Answered correctly after the power mark</td></tr><tr><td class="cell-pad">Team Bonus</td><td class="cell-pad">+10 per part</td><td class="cell-pad">Recorded for the team; bonus conversion is a group effort</td></tr><tr class="sec-bg"><td class="cell-pad">Neg</td><td class="cell-pad">&minus;5</td><td class="cell-pad">Incorrect interrupt &mdash; category optional</td></tr><tr><td class="cell-pad">Miss</td><td class="cell-pad">0</td><td class="cell-pad">No answer or incorrect after power mark</td></tr><tr class="sec-bg"><td class="cell-pad">Dead</td><td class="cell-pad">0</td><td class="cell-pad">No team buzzed on the toss-up</td></tr></table><h3 class="h3-primary">Toss-Ups Heard Counter</h3><p class="mb-14">Tracks how many toss-up questions have been read. It increments once on the first outcome for each toss-up; a correct answer after a Neg or Miss is treated as a follow-up to that same question. Use the +/&minus; buttons to correct it manually. Required for normalized player metrics.</p><h3 class="h3-primary">Stats (Analytics)</h3><p class="mb-6">Toggle to the <strong>Stats</strong> view using the switch in the header. Stats are aggregated across all non-excluded sessions and organized into four tabs:</p><ul class="m14-pl20"><li><strong>Overview</strong> &mdash; totals, category breakdowns, top performers</li><li><strong>Players</strong> &mdash; ranked leaderboard; expand for metrics or click name for detail</li><li><strong>Charts</strong> &mdash; visual breakdown of answer types, categories, and trends</li><li><strong>Team Compositions</strong> &mdash; per-team stats per session</li></ul><h3 class="h3-primary">Formula Symbols</h3><p class="mb-6">Every formula below uses the same letters. All of them count <strong>official toss-up decisions only</strong> — bonuses are excluded.</p><ul class="m14-pl20"><li><code>P</code> — <strong>Powers</strong>, early correct buzzes (+15)</li><li><code>T</code> — <strong>Toss-ups</strong>, regular correct buzzes (+10)</li><li><code>N</code> — <strong>Negs</strong>, incorrect early buzzes (−5)</li><li><code>M</code> — <strong>Misses</strong>, incorrect buzzes with no penalty (0)</li><li><code>H</code> — <strong>Toss-Ups Heard</strong>, the opportunities the player was in the room for</li><li><code>k</code> — the <strong>confidence constant</strong>, auto-set to the median <code>H</code> among ranked players; at <code>H = k</code> a player is 50% trusted</li><li><code>Team Average</code> — the mean Raw TU/20 of ranked players, used to shrink small samples</li></ul><p class="mb-14"><strong>Ranked vs. provisional:</strong> a player is <strong>ranked</strong> only once <code>H &ge; 20</code> (one full session). Provisional players still show diagnostics, but they get no Leaderboard Score and are left out of the team average and the automatic <code>k</code>.</p><h3 class="h3-primary">Player Metrics</h3><p class="mb-6">Player analytics use official toss-up decisions only. Bonuses remain team-scored and are never assigned to an individual player.</p><ul class="m14-pl20"><li><strong>Total Points</strong> — individual toss-up points: +15 per power, +10 per regular toss-up, and −5 per neg</li><li><strong>Toss-Ups Heard</strong> — opportunity count used to compare players with different amounts of playing time</li><li><strong>Raw TU/20</strong> — net toss-up points at a common pace of 20 toss-ups: <code>(15P + 10T − 5N) / H × 20</code></li><li><strong>Leaderboard Score</strong> — the leaderboard score; earned after one full session (20 toss-ups heard), with limited samples gently moved toward the team average using confidence</li><li><strong>Reliability</strong> — correct decisions divided by all recorded decisions: <code>(P+T) / (P+T+N+M) × 100</code></li><li><strong>Power Rate</strong> — powers divided by all recorded decisions: <code>P / (P+T+N+M) × 100</code>. Negs and misses count against this rate.</li><li><strong>TU/20</strong> — participation pace: <code>(P+T+N+M) / H × 20</code></li><li><strong>Confidence</strong> — sample-size weight: <code>H / (H+k)</code>. At <code>H=k</code>, the raw score is 50% trusted.</li></ul><h3 class="h3-primary">Official Score System</h3><p class="mb-8">The player leaderboard uses <strong>Leaderboard Score</strong> as its only overall score. A player earns it after hearing at least 20 toss-ups (one full session); limited samples are then shrunk toward the team average. This avoids double-counting related measures such as buzz rate, reliability, and conversion.</p><p style="margin-bottom:14px;font-family:monospace;font-size:.85em;background:var(--sec-bg);padding:8px 12px;border-radius:6px;border:1.5px solid var(--border);">Leaderboard Score = Confidence × Raw TU/20 + (1 − Confidence) × Team Average</p><p class="mb-14">Bonuses are shown in team totals and the answer log, but are not used for individual player rankings because bonus conversion is shared by the team.</p><h3 class="h3-primary">Leaderboard Sorting</h3><p class="mb-14">Sort by Total Points, Leaderboard Score, Reliability, Power Rate, TU/20, or A&ndash;Z. Ties are broken by the official toss-up counts, then fewest Negs.</p><h3 class="h3-primary">Export &amp; Import</h3><p class="mb-14">Export to <strong>CSV</strong> for spreadsheets or <strong>JSON</strong> to back up and re-import a full session. Both options are in the Data section of the sidebar.</p><h3 class="h3-primary">What Syncs Globally</h3><p class="mb-6">Stored in Firebase and synced instantly across all connected devices:</p><ul class="m8-pl20"><li>All session data (answers, scores, toss-ups heard)</li><li>Global player pool</li><li>Skill score settings and low-data overrides</li><li>App version, release history, and update info</li></ul><p class="mb-14">Stored with your Firebase account and cached locally: theme mode, color theme or custom colors, scrollbar visibility, and sidebar state.</p><h3 class="h3-primary">Version Badge &amp; Deploy Indicator</h3><p class="mb-14">The version badge in the header shows the current file version. When viewed on the live GitHub Pages site, its border changes color to reflect the latest deploy status &mdash; <strong style="color:var(--success)">green</strong> = deployed successfully, <strong style="color:var(--warning)">yellow pulsing</strong> = deploy in progress, <strong style="color:var(--danger)">red</strong> = deploy failed. If a new deploy completes while you have the page open, a banner will appear prompting you to refresh.</p><h3 class="h3-primary">Updates &amp; Changelog</h3><p class="mb-14">Open <strong>Updates</strong> in the header to see the shared release history and the latest public changelog. If you are running a local copy and a newer version has been published, you can download it there or from the update banner — admins can attach the new <code>index.html</code> to Firebase, so the download works without a GitHub request on restricted school networks. Admins also use this center to publish builds and write the release log.</p><h3 class="h3-primary">Visual Settings</h3><p class="mb-14">Choose <strong>Light</strong>, <strong>Dark</strong>, or <strong>Device</strong> theme, change the <strong>Color Theme</strong>, or hide scrollbars in the Visual Settings section of the sidebar. <strong>Appearance</strong> (Light / Dark / Device) and <strong>Color Theme</strong> are separate: pick any palette and it works in either mode. Eight palettes ship with the app &mdash; the default is <strong>Tricolor</strong>, the Hamilton Southeastern blue/white/red pinstripe setup &mdash; plus a <strong>Custom</strong> option where you choose your own primary, gradient, and accent colors. Your choice is saved to your account and follows you to any device.</p><h3 class="h3-primary">Source Code on GitHub</h3><p class="mb-8">HSE Quiz Bowl Tracker is open source. Browse the code, read the release history, or report a bug directly on GitHub.</p><div class="help-github-links"><button class="button" onclick="openGitHubRepo()">&#9733; Open GitHub Repository</button><button class="button button-secondary" onclick="openGitHubIssues()">&#9888; Report an Issue</button><button class="button button-secondary" onclick="openGitHubReleases()">&#8595; Releases &amp; Downloads</button></div><p class="mb-14 fs-75-fw4">Repository: <a id="helpGithubLink" class="mono-primary" href="https://github.com/ajani190819-ops/HSEQB" target="_blank" rel="noopener noreferrer">github.com/ajani190819-ops/HSEQB</a></p><p class="mb-14"><strong>Loading source:</strong> <span id="helpLoadingSource" class="mono-primary">&mdash;</span></p></div></div></div><div id="updatesModal" class="qb-modal" onclick="if(event.target===this)closeUpdatesModal()"><div class="modal-content updates-modal-content"><div class="modal-header updates-modal-header"><div><h2>Updates &amp; Changelog</h2><p class="updates-modal-subtitle">See what is new in HSE Quiz Bowl Tracker.</p></div><button class="close-modal" onclick="closeUpdatesModal()" aria-label="Close updates">&#215;</button></div><div id="updatesCurrentSummary" class="updates-current-summary" aria-live="polite"></div><div class="updates-toolbar"><span id="updatesLoadStatus" class="updates-load-status">Loading release history…</span><button class="button updates-refresh-btn" onclick="refreshUpdates()">&#8635; Refresh</button></div><div id="updatesAdminPanel" class="updates-admin-panel" style="display:none;"><div class="updates-admin-heading"><div><h3>Publish an update</h3><p>Write the public release log and optionally attach the new file for Firebase downloads.</p></div><span class="updates-admin-pill">Admin</span></div><div id="releasePrompt" class="updates-release-prompt hidden"><strong>New build detected.</strong> Publish it here when the file is ready so users can find the notes and download it.</div><div id="releaseUpToDate" class="updates-release-prompt updates-release-ok" style="display:none;">&#10003; This file is already the published build. You can still update the release log if needed.</div><div class="updates-form-grid"><div class="input-group"><label for="releaseTitleInput">Update title</label><input type="text" id="releaseTitleInput" class="inp-std" maxlength="120" placeholder="e.g. Better analytics and faster logging" /></div><div class="input-group"><label for="releaseFileInput">Downloadable index.html <span class="fs-75-fw4">optional when using the live page</span></label><input type="file" id="releaseFileInput" accept=".html" /></div></div><div class="input-group"><label for="releaseNotesInput">Public changelog <span class="fs-75-fw4">shown to everyone</span></label><textarea id="releaseNotesInput" class="updates-textarea" maxlength="5000" rows="5" placeholder="Tell players what changed, what was fixed, and anything they should know."></textarea></div><div class="input-group"><label for="adminCommentsInput">Admin notes <span class="fs-75-fw4">internal context; not shown in the changelog</span></label><textarea id="adminCommentsInput" class="updates-textarea updates-textarea-small" maxlength="2000" rows="2" placeholder="Optional: testing notes or deployment context"></textarea></div><button class="button button-success updates-publish-btn" onclick="publishRelease()">Publish v<span id="updatesPublishVersion">—</span></button><div id="releaseUploadStatus" class="updates-upload-status" role="status" aria-live="polite"></div></div><div class="updates-history-heading"><div><h3>Release history</h3><p>Updates are synced for every signed-in user.</p></div><span id="updatesHistoryCount" class="updates-history-count"></span></div><div id="updatesList" class="updates-list" aria-live="polite"></div></div></div><div id="sessionsModal" class="qb-modal"><div class="modal-content"><div class="modal-header"><h2>Load Session</h2><button class="close-modal" onclick="closeSessionsModal()">&#215;</button></div><div style="display:flex;gap:8px;flex-wrap:wrap;padding:12px 16px;border-bottom:1.5px solid var(--border);background:var(--sec-bg);"><input type="text" id="sessionsSearchInput" placeholder="Search sessions..." style="flex:1;min-width:150px;padding:8px 12px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:.95em;background:var(--input-bg);color:var(--input-text);" /><select id="sessionsSortSelect" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:.95em;background:var(--input-bg);color:var(--input-text);"><option value="date-desc">Newest First</option><option value="date-asc">Oldest First</option><option value="name">Alphabetical (A-Z)</option><option value="answers-desc">Most Answers</option><option value="answers-asc">Least Answers</option></select></div><div id="sessionBulkBar" class="session-bulk-bar" style="display:none;"><label style="display:flex;align-items:center;gap:6px;font-size:.82em;font-weight:600;color:var(--text2);cursor:pointer;white-space:nowrap;"><input type="checkbox" id="sessionSelectAll" class="session-select-cb" style="margin:0;" onchange="toggleSelectAllSessions(this.checked)" /> Select all visible</label><span id="sessionBulkCount" style="font-size:.82em;font-weight:700;color:var(--primary);">0 selected</span><span class="bulk-spacer"></span><button class="button button-success" style="padding:6px 12px;font-size:.8em;" onclick="bulkSetAnalytics(true)">+ Add to Analytics</button><button class="button" style="padding:6px 12px;font-size:.8em;" onclick="bulkSetAnalytics(false)">− Exclude from Analytics</button><button class="button button-danger" style="padding:6px 12px;font-size:.8em;" onclick="bulkDeleteSessions()">Delete</button></div><div id="sessionsList" class="sessions-list"></div></div></div></div><div id="playerActionModal" class="qb-modal" onclick="if(event.target===this)closePlayerActionModal()"><div class="modal-content" style="max-width:420px;"><div class="modal-header"><h2 id="pamTitle">Player Action</h2><button class="close-modal" onclick="closePlayerActionModal()">&#215;</button></div><div style="padding:16px;"><div id="pamBody"></div></div></div></div><div id="bandModal" class="qb-modal" onclick="if(event.target===this)closeBandModal()"><div class="modal-content" style="max-width:440px;"><div class="modal-header"><h2 id="bandModalTitle">Score Band</h2><button class="close-modal" onclick="closeBandModal()">&#215;</button></div><div id="bandModalBody" style="padding:0 2px;"></div></div></div><div id="playerDetailModal" class="qb-modal"><div class="modal-content" style="max-width:620px;"><div class="modal-header"><h2 id="pdModalTitle">Player Details</h2><button class="close-modal" onclick="closePlayerDetailModal()">&#215;</button></div><div id="pdModalBody"></div></div></div><script src="local-settings.js" onerror="void 0"></script><script>const $=id=>document.getElementById(id);
 const isIframe = (() =>{
 try{
 if (window.self === window.top) return false; // not in an iframe at all
@@ -776,11 +1017,11 @@ return null;
 }
 const VERSION = '3.12.0'; // auto-managed by bump.js
 const DOWNLOAD_URL = 'https://raw.githubusercontent.com/ajani190819-ops/HSEQB/main/index.html';
-const DEFAULT_ACCENT = '#003da5'; // HSE blue from the default blue / white / red system
+const DEFAULT_ACCENT = '#003da5'; // Tricolor blue from the default HSE palette
 const DEFAULT_COLOR_THEME = 'tricolor';
-// Named color themes. Each palette supplies the blue accent, a companion color,
-// and (where useful) a third color for the HSE tricolor treatment. The colors
-// are adapted by _paintColors for the active light/dark appearance.
+// Named color themes. Each palette supplies a primary color, a gradient partner,
+// and (where useful) a third decorative color. _paintColors can also route a
+// separate accent color into outlines/highlights for the active appearance.
 const COLOR_THEMES = [
   { id:'tricolor',name:'Tricolor',sub:'HSE',    primary:'#003da5', secondary:'#c8102e', tertiary:'#ffffff' },
   { id:'royal',   name:'Royal',   sub:'HSE',      primary:'#0b41a8', secondary:'#002b7f', tertiary:'#ffffff' },
@@ -794,10 +1035,10 @@ const COLOR_THEMES = [
 ];
 function getColorTheme(id){ return COLOR_THEMES.find(t => t.id === id) || null; }
 // How the palette is expressed across the UI:
-//  - 'stripes'  : gradients stay in the primary family (blue -> white) while the
-//                 companion color becomes fine diagonal pinstripes (like the
-//                 title banner texture) and tinted panel outlines.
-//  - 'gradient' : the classic primary -> companion two-color blend everywhere.
+//  - 'stripes'  : the banner stays a clean primary-family gradient while the
+//                 accent color is reserved for outlines/highlights and the
+//                 pinstripe treatment moves onto cards and surfaces.
+//  - 'gradient' : the classic primary -> gradient-partner two-color blend.
 const ACCENT_STYLES = ['stripes', 'gradient'];
 const DEFAULT_ACCENT_STYLE = 'stripes';
 const GITHUB_REPO_URL     = 'https://github.com/ajani190819-ops/HSEQB';
@@ -826,7 +1067,7 @@ const THEME_MODES = ['light', 'dark', 'device'];
 let themeMode = 'device';
 let colorTheme = DEFAULT_COLOR_THEME;
 let accentStyle = DEFAULT_ACCENT_STYLE;
-let customThemeColors = { primary:'#003da5', secondary:'#c8102e', tertiary:'#ffffff' };
+let customThemeColors = { primary:'#003da5', secondary:'#c8102e', tertiary:'#ffffff', accent:'#c8102e' };
 let _deviceThemeQuery = null;
 let _profileSaveTimer = null;
 let _profileLoadSequence = 0;
@@ -873,7 +1114,7 @@ function applyTheme(mode, persistLocal, syncRemote){
   // blue/red accents calmer on white surfaces and brighter on dark surfaces.
   if (typeof _paintColors === 'function' && typeof colorTheme !== 'undefined') {
     const palette = colorTheme === 'custom' ? customThemeColors : getColorTheme(colorTheme);
-    if (palette) _paintColors(palette.primary, palette.secondary, palette.tertiary);
+    if (palette) _paintColors(palette.primary, palette.secondary, palette.tertiary, palette.accent);
   }
   if (persistLocal !== false){
     localStorage.setItem('themeMode', themeMode);
@@ -943,6 +1184,7 @@ function getUserCustomization(){
     colorTheme: colorTheme || DEFAULT_COLOR_THEME,
     customPrimary: customThemeColors.primary,
     customSecondary: customThemeColors.secondary,
+    customAccent: customThemeColors.accent || customThemeColors.secondary,
     hideScrollbars: !!document.body?.classList.contains('hide-scrollbars'),
     sidebarCollapsed: !!$('mainSidebar')?.classList.contains('collapsed')
   };
@@ -988,6 +1230,7 @@ function resetLocalCustomizationForAccountSwitch(){
   localStorage.removeItem('accentStyle');
   localStorage.removeItem('customPrimary');
   localStorage.removeItem('customSecondary');
+  localStorage.removeItem('customAccent');
   localStorage.removeItem('hideScrollbars');
   localStorage.removeItem('sidebarCollapsed');
   applyTheme('device', true, false);
@@ -995,7 +1238,7 @@ function resetLocalCustomizationForAccountSwitch(){
   document.body.classList.remove('hide-scrollbars');
   const hideToggle=$('hideScrollbarsToggle'); if(hideToggle) hideToggle.checked=false;
   const base=getColorTheme(DEFAULT_COLOR_THEME);
-  customThemeColors={ primary:base.primary, secondary:base.secondary, tertiary:base.tertiary || '#ffffff' };
+  customThemeColors={ primary:base.primary, secondary:base.secondary, tertiary:base.tertiary || '#ffffff', accent:base.accent || base.secondary };
   applyColorTheme(DEFAULT_COLOR_THEME, true, false);
   applyAccentStyle(DEFAULT_ACCENT_STYLE, true, false);
 }
@@ -1009,6 +1252,7 @@ function extractProfileCustomization(profile){
   if (ACCENT_STYLES.includes(String(source.accentStyle || '').toLowerCase())) result.accentStyle = String(source.accentStyle).toLowerCase();
   if (typeof source.customPrimary === 'string' && /^#[0-9a-f]{6}$/i.test(source.customPrimary)) result.customPrimary = source.customPrimary;
   if (typeof source.customSecondary === 'string' && /^#[0-9a-f]{6}$/i.test(source.customSecondary)) result.customSecondary = source.customSecondary;
+  if (typeof source.customAccent === 'string' && /^#[0-9a-f]{6}$/i.test(source.customAccent)) result.customAccent = source.customAccent;
   if (typeof source.hideScrollbars === 'boolean') result.hideScrollbars = source.hideScrollbars;
   if (typeof source.sidebarCollapsed === 'boolean') result.sidebarCollapsed = source.sidebarCollapsed;
   return result;
@@ -1042,6 +1286,8 @@ function applyAuthenticatedUserProfile(profile, user){
   else applyTheme(themeMode || 'device', true, false);
   if (customization.customPrimary)   customThemeColors.primary   = customization.customPrimary.toLowerCase();
   if (customization.customSecondary) customThemeColors.secondary = customization.customSecondary.toLowerCase();
+  if (customization.customAccent) customThemeColors.accent = customization.customAccent.toLowerCase();
+  else if (customization.customSecondary) customThemeColors.accent = customization.customSecondary.toLowerCase();
   if (customization.colorTheme) applyColorTheme(customization.colorTheme, true, false);
   else if (customization.accentColor) setAccentColor(customization.accentColor, true, false);
   applyAccentStyle(customization.accentStyle || accentStyle, true, false);
@@ -2298,9 +2544,12 @@ const sw   = $('viewToggleSwitch');
 const tl   = $('toggleLabelTracker');
 const al   = $('toggleLabelAnalytics');
 if (knob){ if(on){ knob.style.left='auto'; knob.style.right='2px'; } else { knob.style.left='2px'; knob.style.right='auto'; } }
-if (sw)   sw.style.background = on ? 'rgba(255,255,255,.5)' :'rgba(255,255,255,.25)';
-if (tl)   tl.style.color = on ? 'rgba(255,255,255,.55)' :'rgba(255,255,255,.95)';
-if (al)   al.style.color = on ? 'rgba(255,255,255,.95)' :'rgba(255,255,255,.55)';
+if (sw){
+  sw.style.background = on ? 'var(--header-control-bg-strong)' :'var(--header-control-bg)';
+  sw.style.borderColor = 'var(--header-control-border)';
+}
+if (tl)   tl.style.color = on ? 'var(--header-control-text-muted)' :'var(--header-control-text)';
+if (al)   al.style.color = on ? 'var(--header-control-text)' :'var(--header-control-text-muted)';
 const mknob = $('viewToggleKnobMobile');
 const mlbl  = $('toggleLabelMobile');
 if (mknob) mknob.style.left = on ? '20px' :'2px';
@@ -2920,7 +3169,6 @@ if (chart.config.type !== 'doughnut') return;
 const meta0 = chart.getDatasetMeta(0);
 if (!meta0?.data?.length) return;
 const{ ctx } = chart;
-const isDark = document.body.classList.contains('dark-mode');
 const _isDarkNow = document.body.classList.contains('dark-mode');
 const gapCol     = _isDarkNow ? '#1c2128' :'#ffffff';
 const outlineCol = _isDarkNow ? 'rgba(255,255,255,0.55)' :'rgba(0,0,0,0.38)';
@@ -3489,16 +3737,37 @@ if(arrow) arrow.style.transform=open?'':'rotate(-90deg)'; }
 const isMobile = () => !isIframe && window.innerWidth <= 900;
 if (isIframe){
 const _memStore ={};
+let _nativeLS = null;
+try {
+  _nativeLS = window.localStorage;
+  for (let i = 0; i < _nativeLS.length; i++){
+    const key = _nativeLS.key(i);
+    if (key !== null) _memStore[key] = _nativeLS.getItem(key);
+  }
+} catch(e){}
 const _safeLS ={
-getItem:   k => (_memStore[k] !== undefined ? _memStore[k] :null),
-setItem:   (k, v) =>{ _memStore[k] = String(v); },
-removeItem:k =>{ delete _memStore[k]; },
-clear:     () =>{ Object.keys(_memStore).forEach(k => delete _memStore[k]); },
-key:       i => Object.keys(_memStore)[i] || null,
+getItem(k){
+  if (_memStore[k] !== undefined) return _memStore[k];
+  try { return _nativeLS ? _nativeLS.getItem(k) : null; } catch(e) { return null; }
+},
+setItem(k, v){
+  _memStore[k] = String(v);
+  try { if (_nativeLS) _nativeLS.setItem(k, String(v)); } catch(e){}
+},
+removeItem(k){
+  delete _memStore[k];
+  try { if (_nativeLS) _nativeLS.removeItem(k); } catch(e){}
+},
+clear(){
+  Object.keys(_memStore).forEach(k => delete _memStore[k]);
+  try { if (_nativeLS) _nativeLS.clear(); } catch(e){}
+},
+key(i){ return Object.keys(_memStore)[i] || null; },
 get length(){ return Object.keys(_memStore).length; }
 };
 try{ Object.defineProperty(window, 'localStorage',{ get:() => _safeLS }); } catch(e){}
-document.body.classList.add('dark-mode'); }
+}
+if (document.body) document.body.classList.toggle('dark-mode', document.documentElement.classList.contains('dark-mode'));
 var _iframeDebugActive = false;
 function toggleSidebar(){
 const sidebar=$('mainSidebar');
@@ -3556,35 +3825,81 @@ function _mixHex(a, b, t){
   const mix = s => Math.round(ch(pa, s) + (ch(pb, s) - ch(pa, s)) * t);
   return '#' + ((1 << 24) + (mix(16) << 16) + (mix(8) << 8) + mix(0)).toString(16).slice(1);
 }
-// Paint the accent properties from the palette's base colors. Deep colors are
-// lifted proportionally to how dark they are: in light mode navy/crimson get a
-// noticeable boost so they never read as near-black on white, and in dark mode
-// they are brightened further so they stay legible on dark surfaces.
-function _paintColors(primary, secondary, tertiary){
+function _clamp01(v){ return Math.max(0, Math.min(1, v)); }
+function _hexToRgb(hex){
+  const n = parseInt(hex.slice(1), 16);
+  return { r:(n >> 16) & 255, g:(n >> 8) & 255, b:n & 255 };
+}
+function _hexToHsl(hex){
+  const { r, g, b } = _hexToRgb(hex);
+  const rr = r / 255, gg = g / 255, bb = b / 255;
+  const max = Math.max(rr, gg, bb), min = Math.min(rr, gg, bb);
+  const l = (max + min) / 2;
+  if (max === min) return { h:0, s:0, l };
+  const d = max - min;
+  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+  const h = (max === rr
+    ? ((gg - bb) / d) + (gg < bb ? 6 : 0)
+    : max === gg
+      ? ((bb - rr) / d) + 2
+      : ((rr - gg) / d) + 4) * 60;
+  return { h, s, l };
+}
+function _hslToHex(h, s, l){
+  const hue = ((h % 360) + 360) % 360;
+  const sat = _clamp01(s), light = _clamp01(l);
+  const c = (1 - Math.abs(2 * light - 1)) * sat;
+  const hp = hue / 60;
+  const x = c * (1 - Math.abs(hp % 2 - 1));
+  let rgb = [0, 0, 0];
+  if (hp < 1) rgb = [c, x, 0];
+  else if (hp < 2) rgb = [x, c, 0];
+  else if (hp < 3) rgb = [0, c, x];
+  else if (hp < 4) rgb = [0, x, c];
+  else if (hp < 5) rgb = [x, 0, c];
+  else rgb = [c, 0, x];
+  const m = light - c / 2;
+  return '#' + rgb.map(v => Math.round((v + m) * 255).toString(16).padStart(2, '0')).join('');
+}
+function _boostHexForDarkSurface(hex){
+  if (!_isHex(hex)) return hex;
+  const { h, s, l } = _hexToHsl(hex);
+  const lum = _hexLum(hex);
+  const sat = _clamp01(s < 0.75 ? s + 0.06 : s * 1.01);
+  const lift = 0.05 + Math.max(0, 0.30 - lum) * 0.16;
+  const floor = 0.39 + Math.max(0, 0.22 - lum) * 0.14;
+  return _hslToHex(h, sat, Math.min(0.58, Math.max(l + lift, floor)));
+}
+// Paint the accent properties from the palette's base colors. Light mode keeps
+// the calmer, slightly lifted treatment for white surfaces; dark mode now lifts
+// colors with a small saturation boost too, so outlines and gradients stay
+// vivid instead of drifting toward gray.
+function _paintColors(primary, secondary, tertiary, accent){
   const root = document.documentElement.style;
   const dark = themeIsDark(themeMode);
   const adapt = (hex) => {
     if (!_isHex(hex)) return hex;
+    if (dark) return _boostHexForDarkSurface(hex);
     const lum = _hexLum(hex);
-    if (dark) return _shadeHex(hex, 0.20 + Math.max(0, 0.34 - lum));
     return lum < 0.34 ? _shadeHex(hex, (0.34 - lum) * 1.1) : hex;
   };
   const blue = adapt(primary);
-  const companion = adapt(secondary || _shadeHex(primary, -0.45));
+  const gradientEnd = adapt(secondary || accent || _shadeHex(primary, -0.45));
+  const accentTone = adapt(accent || secondary || _shadeHex(primary, -0.45));
   const white = dark ? '#f4f6fb' : (tertiary || '#ffffff');
-  // Pinstripe style: gradients blend the primary toward the palette's light
-  // color (blue -> white) while the companion color moves into thin diagonal
-  // lines and panel outlines instead of a solid French-flag color block.
+  // Pinstripe style: gradients stay in the primary family while the accent
+  // color drives outlines/highlights and only the surface pinstripes, not the
+  // light banner texture.
   const stripes = (typeof accentStyle === 'undefined') || accentStyle !== 'gradient';
-  const gradEnd = stripes ? _mixHex(blue, dark ? '#dfe6f5' : '#ffffff', 0.32) : companion;
+  const gradEnd = stripes ? _mixHex(blue, dark ? '#dfe6f5' : '#ffffff', dark ? 0.30 : 0.32) : gradientEnd;
   root.setProperty('--primary', blue);
   root.setProperty('--primary-light', _shadeHex(blue, dark ? 0.24 : 0.28));
   root.setProperty('--primary-dark',  _shadeHex(blue, -0.28));
   root.setProperty('--secondary', gradEnd);
-  root.setProperty('--accent-line', companion);
+  root.setProperty('--accent-line', accentTone);
   root.setProperty('--tertiary', white);
   root.setProperty('--hse-blue', blue);
-  root.setProperty('--hse-red', companion);
+  root.setProperty('--hse-red', accentTone);
   root.setProperty('--hse-white', white);
 }
 function applyColorTheme(id, persistLocal, syncRemote){
@@ -3592,16 +3907,19 @@ function applyColorTheme(id, persistLocal, syncRemote){
   const theme = custom ? null : getColorTheme(id);
   if (!custom && !theme) return applyColorTheme(DEFAULT_COLOR_THEME, persistLocal, syncRemote);
   colorTheme = custom ? 'custom' : theme.id;
+  document.documentElement.dataset.colorTheme = colorTheme;
   const primary   = custom ? customThemeColors.primary   : theme.primary;
   const secondary = custom ? customThemeColors.secondary : theme.secondary;
   const tertiary  = custom ? customThemeColors.tertiary : theme.tertiary;
-  _paintColors(primary, secondary, tertiary);
+  const accent    = custom ? (customThemeColors.accent || customThemeColors.secondary) : (theme.accent || theme.secondary);
+  _paintColors(primary, secondary, tertiary, accent);
   if (persistLocal !== false){
     localStorage.setItem('colorTheme', colorTheme);
     localStorage.setItem('accentColor', primary); // legacy key stays in sync
     if (custom){
       localStorage.setItem('customPrimary', primary);
       localStorage.setItem('customSecondary', secondary);
+      localStorage.setItem('customAccent', accent);
     }
   }
   syncColorThemeControls();
@@ -3611,7 +3929,7 @@ function applyColorTheme(id, persistLocal, syncRemote){
   if (syncRemote !== false) scheduleUserProfileSave();
 }
 function setColorTheme(id){ applyColorTheme(id, true, true); }
-// Accent style: 'stripes' (pinstripe texture + tinted outlines) or 'gradient'
+// Accent style: 'stripes' (surface pinstripes + tinted outlines) or 'gradient'
 // (classic two-color blends). Stored per account like the color theme.
 function normalizeAccentStyle(v){
   const value = String(v || '').toLowerCase();
@@ -3620,9 +3938,9 @@ function normalizeAccentStyle(v){
 function applyAccentStyle(style, persistLocal, syncRemote){
   accentStyle = normalizeAccentStyle(style);
   document.documentElement.dataset.accentStyle = accentStyle;
-  // Repaint so --secondary swaps between the blue->white blend and the companion color.
+  // Repaint so gradients and accents both follow the selected style.
   const palette = colorTheme === 'custom' ? customThemeColors : getColorTheme(colorTheme);
-  if (palette) _paintColors(palette.primary, palette.secondary, palette.tertiary);
+  if (palette) _paintColors(palette.primary, palette.secondary, palette.tertiary, palette.accent);
   if (persistLocal !== false) localStorage.setItem('accentStyle', accentStyle);
   syncAccentStyleControls();
   if (typeof _chartInstances !== 'undefined' && _chartInstances){
@@ -3639,18 +3957,19 @@ function syncAccentStyleControls(){
   const hint = $('accentStyleHint');
   if (hint){
     hint.textContent = accentStyle === 'gradient'
-      ? 'Classic look: the two theme colors blend directly into each other. Panel outlines keep their companion-color tint either way.'
-      : 'Primary + white gradients; the companion color appears as faint diagonal lines and firmer tinted panel outlines.';
+      ? 'Classic look: the primary and gradient colors blend directly into each other. Panels still keep a light palette tint.'
+      : 'Pinstripe look: a clean banner gradient, evenly spaced surface stripes, and a separate accent color for outlines and highlights.';
   }
 }
 function setCustomThemeColor(which, value){
   if (!_isHex(value)) return;
-  customThemeColors[which === 'secondary' ? 'secondary' : 'primary'] = value.toLowerCase();
+  const key = which === 'secondary' ? 'secondary' : which === 'accent' ? 'accent' : 'primary';
+  customThemeColors[key] = value.toLowerCase();
   applyColorTheme('custom', true, true);
 }
 function resetCustomTheme(){
   const base = getColorTheme(DEFAULT_COLOR_THEME);
-  customThemeColors = { primary:base.primary, secondary:base.secondary };
+  customThemeColors = { primary:base.primary, secondary:base.secondary, tertiary:base.tertiary || '#ffffff', accent:base.accent || base.secondary };
   applyColorTheme('custom', true, true);
 }
 // Rebuild the swatch grid, mark the active card, and mirror the custom inputs.
@@ -3660,13 +3979,13 @@ function renderColorThemeGrid(){
   grid.innerHTML = COLOR_THEMES.map(t => `
     <button type="button" class="theme-swatch${colorTheme === t.id ? ' active' : ''}" data-theme="${t.id}"
             onclick="setColorTheme('${t.id}')" aria-pressed="${colorTheme === t.id}" title="${t.name} — ${t.sub}">
-      <span class="theme-swatch-chip" style="--swatch-blue:${t.primary};--swatch-red:${t.secondary};--swatch-white:${t.tertiary || '#fff'};"></span>
+      <span class="theme-swatch-chip" style="--swatch-left:${t.primary};--swatch-mid:${t.tertiary || t.secondary || '#fff'};--swatch-right:${t.accent || t.secondary};"></span>
       <span class="theme-swatch-name">${t.name}</span>
       <span class="theme-swatch-sub">${t.sub}</span>
     </button>`).join('') + `
     <button type="button" class="theme-swatch theme-swatch-custom${colorTheme === 'custom' ? ' active' : ''}" data-theme="custom"
             onclick="setColorTheme('custom')" aria-pressed="${colorTheme === 'custom'}" title="Custom — pick your own colors">
-      <span class="theme-swatch-chip" style="--swatch-blue:${customThemeColors.primary};--swatch-red:${customThemeColors.secondary};--swatch-white:#fff;"></span>
+      <span class="theme-swatch-chip" style="--swatch-left:${customThemeColors.primary};--swatch-mid:${customThemeColors.secondary};--swatch-right:${customThemeColors.accent || customThemeColors.secondary};"></span>
       <span class="theme-swatch-name">Custom</span>
       <span class="theme-swatch-sub">Your colors</span>
     </button>`;
@@ -3679,6 +3998,8 @@ function syncColorThemeControls(){
   const s = $('customSecondaryInput');  if (s) s.value = customThemeColors.secondary;
   const ph = $('customPrimaryHex');     if (ph) ph.value = customThemeColors.primary;
   const sh = $('customSecondaryHex');   if (sh) sh.value = customThemeColors.secondary;
+  const a = $('customAccentInput');     if (a) a.value = customThemeColors.accent || customThemeColors.secondary;
+  const ah = $('customAccentHex');      if (ah) ah.value = customThemeColors.accent || customThemeColors.secondary;
   const active = colorTheme === 'custom' ? { name:'Custom', sub:'Your colors' } : getColorTheme(colorTheme);
   const label = $('activeThemeLabel');
   if (label && active) label.textContent = active.name + ' — ' + active.sub;
@@ -3688,7 +4009,7 @@ function setAccentColor(color, persistLocal, syncRemote){
   if (!_isHex(color)) return;
   const match = COLOR_THEMES.find(t => t.primary.toLowerCase() === color.toLowerCase());
   if (match) return applyColorTheme(match.id, persistLocal, syncRemote);
-  customThemeColors = { primary:color.toLowerCase(), secondary:_shadeHex(color, -0.45) };
+  customThemeColors = { primary:color.toLowerCase(), secondary:_shadeHex(color, -0.45), tertiary:'#ffffff', accent:_shadeHex(color, -0.45) };
   applyColorTheme('custom', persistLocal, syncRemote);
 }
 function changeSkillThreshold(delta){
@@ -3729,9 +4050,11 @@ function restoreVisualSettings(){
   document.body.classList.toggle('hide-scrollbars',hide);
   const hideEl=$('hideScrollbarsToggle'); if(hideEl) hideEl.checked=hide;
   localStorage.setItem('hideScrollbars',hide ? 'true' : 'false');
-  const cp=get('customPrimary',null), cs=get('customSecondary',null);
+  const cp=get('customPrimary',null), cs=get('customSecondary',null), ca=get('customAccent',null);
   if(/^#[0-9a-f]{6}$/i.test(cp||'')) customThemeColors.primary=String(cp).toLowerCase();
   if(/^#[0-9a-f]{6}$/i.test(cs||'')) customThemeColors.secondary=String(cs).toLowerCase();
+  if(/^#[0-9a-f]{6}$/i.test(ca||'')) customThemeColors.accent=String(ca).toLowerCase();
+  else customThemeColors.accent=customThemeColors.secondary;
   const ct=get('colorTheme',null);
   const ac=get('accentColor',null);
   if(ct==='custom' || getColorTheme(ct)) applyColorTheme(ct,true,false);
@@ -4336,7 +4659,7 @@ const el = $('categoryTreeDisplay'); if (!el) return;
 el.innerHTML = Object.entries(CATEGORY_TREE).map(([parent, subs]) =>
 `<div class="mb-8">
 <div style="font-size:.78em;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);margin-bottom:4px;">${parent}</div>
-<div style="display:flex;flex-wrap:wrap;gap:4px;">${subs.map(s=>`<span style="font-size:.8em;padding:2px 8px;border-radius:10px;background:var(--sec-bg);border:1.5px solid var(--border);color:var(--text1);">${s}</span>`).join('')}</div>
+<div style="display:flex;flex-wrap:wrap;gap:4px;">${subs.map(s=>`<span style="font-size:.8em;padding:2px 8px;border-radius:10px;background:var(--sec-bg);border:1.5px solid var(--border);color:var(--text);">${s}</span>`).join('')}</div>
 </div>`
 ).join(''); }
 var _selectedParentCat = null;
