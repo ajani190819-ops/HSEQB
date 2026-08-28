@@ -401,6 +401,13 @@ button, .button, .ql-btn, .ql-cat-chip, .ql-confirm-btn, .ql-cancel-btn, .header
   --primary-ink:var(--primary);
   --primary-ink-hover:color-mix(in srgb, var(--primary) 72%, #000);
   --primary-wash:color-mix(in srgb, var(--primary) 12%, transparent);
+  --header-control-bg:color-mix(in srgb, var(--primary-dark) 44%, transparent);
+  --header-control-bg-strong:color-mix(in srgb, var(--primary-dark) 56%, transparent);
+  --header-control-hover:color-mix(in srgb, var(--primary-dark) 62%, transparent);
+  --header-control-border:color-mix(in srgb, var(--hse-white) 44%, transparent);
+  --header-control-shadow:0 4px 14px rgba(7,15,32,.18);
+  --header-control-text:rgba(255,255,255,.98);
+  --header-control-text-muted:rgba(255,255,255,.78);
   /* Surface neutrals are kept as a fallback, then lightly tinted toward the
      active palette so the app reads as themed rather than plain gray. */
   --bg-neutral:#f7f9fd;
@@ -487,6 +494,13 @@ html.dark-mode { --hse-blue:#0c4cc6; --hse-red:#ff4765; --hse-white:#f4f6fb; --a
   --primary-ink:color-mix(in srgb, var(--primary) 52%, #fff);
   --primary-ink-hover:color-mix(in srgb, var(--primary) 38%, #fff);
   --primary-wash:color-mix(in srgb, var(--primary) 18%, transparent);
+  --header-control-bg:color-mix(in srgb, var(--primary-dark) 56%, transparent);
+  --header-control-bg-strong:color-mix(in srgb, var(--primary-dark) 68%, transparent);
+  --header-control-hover:color-mix(in srgb, var(--primary-dark) 74%, transparent);
+  --header-control-border:color-mix(in srgb, var(--hse-white) 36%, transparent);
+  --header-control-shadow:0 6px 18px rgba(0,0,0,.28);
+  --header-control-text:rgba(255,255,255,.98);
+  --header-control-text-muted:rgba(255,255,255,.74);
   /* Dark-mode accent text needs a much brighter lift than outlines so deep,
      saturated custom accents remain readable on dark cards. */
   --highlight:color-mix(in srgb, var(--accent-line) 52%, #fff);
@@ -569,6 +583,91 @@ body::before {
 }
 .qb-header::after {
   content:none;
+}
+
+/* Header controls get a darker glass treatment so stripes and gradients stay
+   behind them instead of competing with text and icons. */
+.qb-header .header-btn,
+.qb-header .version-badge,
+.qb-header #viewToggleSwitch,
+.qb-header .auto-save-indicator {
+  background:var(--header-control-bg);
+  border-color:var(--header-control-border);
+  box-shadow:var(--header-control-shadow);
+  -webkit-backdrop-filter:blur(10px) saturate(1.05);
+  backdrop-filter:blur(10px) saturate(1.05);
+}
+.qb-header .header-btn,
+.qb-header .version-badge,
+.qb-header .header-toggle-label,
+.qb-header .header-session-name,
+.qb-header .auto-save-indicator {
+  text-shadow:0 1px 1px rgba(0,0,0,.22);
+}
+.qb-header .header-btn {
+  color:var(--header-control-text);
+  border-width:1.5px;
+}
+.qb-header .header-btn:hover,
+.qb-header .header-btn:focus-visible,
+.qb-header #viewToggleSwitch:hover {
+  background:var(--header-control-hover);
+}
+.qb-header .header-btn.active {
+  background:var(--header-control-bg-strong);
+  box-shadow:0 0 0 2px color-mix(in srgb, var(--hse-white) 24%, transparent), var(--header-control-shadow);
+}
+.qb-header .version-badge {
+  color:var(--header-control-text);
+  border-width:1.5px;
+  font-weight:700;
+  letter-spacing:.01em;
+}
+.qb-header .header-session-name,
+.qb-header .header-session-name::before,
+.qb-header .header-toggle-label {
+  color:var(--header-control-text-muted);
+}
+.qb-header .header-session-name::before {
+  opacity:.82;
+}
+.qb-header #viewToggleSwitch {
+  border:2px solid var(--header-control-border);
+}
+.qb-header #viewToggleKnob {
+  box-shadow:0 2px 8px rgba(0,0,0,.34);
+}
+.qb-header .auto-save-indicator.state-connecting,
+.qb-header .auto-save-indicator.state-idle {
+  background:var(--header-control-bg);
+  border-color:var(--header-control-border);
+  box-shadow:var(--header-control-shadow);
+}
+.qb-header .auto-save-indicator.state-flash {
+  background:color-mix(in srgb, var(--success) 24%, var(--header-control-bg));
+  border-color:color-mix(in srgb, var(--success) 48%, var(--header-control-border));
+  box-shadow:0 0 0 1px color-mix(in srgb, var(--success) 18%, transparent), var(--header-control-shadow);
+}
+.qb-header .auto-save-indicator.state-error {
+  background:color-mix(in srgb, var(--danger) 22%, var(--header-control-bg));
+  border-color:color-mix(in srgb, var(--danger) 46%, var(--header-control-border));
+  box-shadow:0 0 0 1px color-mix(in srgb, var(--danger) 18%, transparent), var(--header-control-shadow);
+}
+.qb-header #versionBadge.gh-state-success {
+  background:color-mix(in srgb, var(--success) 22%, var(--header-control-bg));
+  border-color:color-mix(in srgb, var(--success) 52%, var(--header-control-border));
+}
+.qb-header #versionBadge.gh-state-pending {
+  background:color-mix(in srgb, #ffd43b 24%, var(--header-control-bg));
+  border-color:color-mix(in srgb, #ffd43b 60%, var(--header-control-border));
+}
+.qb-header #versionBadge.gh-state-failure {
+  background:color-mix(in srgb, var(--danger) 22%, var(--header-control-bg));
+  border-color:color-mix(in srgb, var(--danger) 52%, var(--header-control-border));
+}
+.qb-header #versionBadge.gh-state-unknown {
+  background:var(--header-control-bg);
+  border-color:var(--header-control-border);
 }
 
 /* Reusable tricolor edge for panels, cards, and the auth experience. */
