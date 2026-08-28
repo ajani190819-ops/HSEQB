@@ -706,26 +706,17 @@ body::before {
 }
 
 /* ── Accent style: Pinstripe vs Gradient ─────────────────────────────────
-   'gradient' keeps the classic two-color blends. 'stripes' keeps the softer
-   primary-family gradients, reserves the accent color for outlines/highlights,
-   and uses light banner texture instead of darker flag-like header stripes. */
+   'gradient' keeps the classic two-color banner treatment. 'stripes' keeps the
+   softer primary-family gradients, reserves the accent color for outlines and
+   highlights, and moves the pinstripe treatment onto surfaces instead of the
+   title banner. */
 
-/* Header: gradient base + light diagonal lines, never the outline accent. */
+/* Pinstripe mode keeps the banner clean so the stripes don't compete with the
+   header controls; the accent still shows up on the bottom rule. */
 html[data-accent-style="stripes"] .qb-header {
   background-color:var(--primary);
-  background-image:
-    repeating-linear-gradient(135deg, color-mix(in srgb, var(--banner-stripe) 42%, transparent) 0 2px, transparent 2px 12px),
-    repeating-linear-gradient(135deg, color-mix(in srgb, var(--banner-stripe-soft) 24%, transparent) 0 2px, transparent 2px 12px),
-    linear-gradient(135deg, var(--primary), var(--secondary));
+  background-image:linear-gradient(135deg, var(--primary), var(--secondary));
   border-bottom-color:var(--accent-line);
-}
-
-/* Tricolor pinstripe mode restores the red banner accent the user asked for. */
-html[data-accent-style="stripes"][data-color-theme="tricolor"] .qb-header {
-  background-image:
-    repeating-linear-gradient(135deg, color-mix(in srgb, var(--accent-line) 44%, transparent) 0 2px, transparent 2px 12px),
-    repeating-linear-gradient(135deg, color-mix(in srgb, var(--hse-white) 18%, transparent) 0 2px, transparent 2px 12px),
-    linear-gradient(135deg, var(--primary), var(--secondary));
 }
 
 /* Pinstripe mode still drops the old header ribbon entirely. */

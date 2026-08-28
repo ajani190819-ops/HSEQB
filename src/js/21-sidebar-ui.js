@@ -197,7 +197,7 @@ function applyColorTheme(id, persistLocal, syncRemote){
   if (syncRemote !== false) scheduleUserProfileSave();
 }
 function setColorTheme(id){ applyColorTheme(id, true, true); }
-// Accent style: 'stripes' (pinstripe texture + tinted outlines) or 'gradient'
+// Accent style: 'stripes' (surface pinstripes + tinted outlines) or 'gradient'
 // (classic two-color blends). Stored per account like the color theme.
 function normalizeAccentStyle(v){
   const value = String(v || '').toLowerCase();
@@ -226,7 +226,7 @@ function syncAccentStyleControls(){
   if (hint){
     hint.textContent = accentStyle === 'gradient'
       ? 'Classic look: the primary and gradient colors blend directly into each other. Panels still keep a light palette tint.'
-      : 'Pinstripe look: softer primary-family gradients, light banner texture, evenly spaced surface stripes, and a separate accent color for outlines and highlights.';
+      : 'Pinstripe look: a clean banner gradient, evenly spaced surface stripes, and a separate accent color for outlines and highlights.';
   }
 }
 function setCustomThemeColor(which, value){

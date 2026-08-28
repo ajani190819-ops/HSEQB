@@ -714,26 +714,17 @@ body::before {
 }
 
 /* ── Accent style: Pinstripe vs Gradient ─────────────────────────────────
-   'gradient' keeps the classic two-color blends. 'stripes' keeps the softer
-   primary-family gradients, reserves the accent color for outlines/highlights,
-   and uses light banner texture instead of darker flag-like header stripes. */
+   'gradient' keeps the classic two-color banner treatment. 'stripes' keeps the
+   softer primary-family gradients, reserves the accent color for outlines and
+   highlights, and moves the pinstripe treatment onto surfaces instead of the
+   title banner. */
 
-/* Header: gradient base + light diagonal lines, never the outline accent. */
+/* Pinstripe mode keeps the banner clean so the stripes don't compete with the
+   header controls; the accent still shows up on the bottom rule. */
 html[data-accent-style="stripes"] .qb-header {
   background-color:var(--primary);
-  background-image:
-    repeating-linear-gradient(135deg, color-mix(in srgb, var(--banner-stripe) 42%, transparent) 0 2px, transparent 2px 12px),
-    repeating-linear-gradient(135deg, color-mix(in srgb, var(--banner-stripe-soft) 24%, transparent) 0 2px, transparent 2px 12px),
-    linear-gradient(135deg, var(--primary), var(--secondary));
+  background-image:linear-gradient(135deg, var(--primary), var(--secondary));
   border-bottom-color:var(--accent-line);
-}
-
-/* Tricolor pinstripe mode restores the red banner accent the user asked for. */
-html[data-accent-style="stripes"][data-color-theme="tricolor"] .qb-header {
-  background-image:
-    repeating-linear-gradient(135deg, color-mix(in srgb, var(--accent-line) 44%, transparent) 0 2px, transparent 2px 12px),
-    repeating-linear-gradient(135deg, color-mix(in srgb, var(--hse-white) 18%, transparent) 0 2px, transparent 2px 12px),
-    linear-gradient(135deg, var(--primary), var(--secondary));
 }
 
 /* Pinstripe mode still drops the old header ribbon entirely. */
@@ -1024,9 +1015,9 @@ const COLOR_THEMES = [
 ];
 function getColorTheme(id){ return COLOR_THEMES.find(t => t.id === id) || null; }
 // How the palette is expressed across the UI:
-//  - 'stripes'  : gradients stay in the primary family, header texture stays
-//                 light, and the accent color is reserved for outlines,
-//                 highlights, and surface pinstripe tinting.
+//  - 'stripes'  : the banner stays a clean primary-family gradient while the
+//                 accent color is reserved for outlines/highlights and the
+//                 pinstripe treatment moves onto cards and surfaces.
 //  - 'gradient' : the classic primary -> gradient-partner two-color blend.
 const ACCENT_STYLES = ['stripes', 'gradient'];
 const DEFAULT_ACCENT_STYLE = 'stripes';
@@ -3897,7 +3888,7 @@ function applyColorTheme(id, persistLocal, syncRemote){
   if (syncRemote !== false) scheduleUserProfileSave();
 }
 function setColorTheme(id){ applyColorTheme(id, true, true); }
-// Accent style: 'stripes' (pinstripe texture + tinted outlines) or 'gradient'
+// Accent style: 'stripes' (surface pinstripes + tinted outlines) or 'gradient'
 // (classic two-color blends). Stored per account like the color theme.
 function normalizeAccentStyle(v){
   const value = String(v || '').toLowerCase();
@@ -3926,7 +3917,7 @@ function syncAccentStyleControls(){
   if (hint){
     hint.textContent = accentStyle === 'gradient'
       ? 'Classic look: the primary and gradient colors blend directly into each other. Panels still keep a light palette tint.'
-      : 'Pinstripe look: softer primary-family gradients, light banner texture, evenly spaced surface stripes, and a separate accent color for outlines and highlights.';
+      : 'Pinstripe look: a clean banner gradient, evenly spaced surface stripes, and a separate accent color for outlines and highlights.';
   }
 }
 function setCustomThemeColor(which, value){

@@ -18,9 +18,9 @@ const COLOR_THEMES = [
 ];
 function getColorTheme(id){ return COLOR_THEMES.find(t => t.id === id) || null; }
 // How the palette is expressed across the UI:
-//  - 'stripes'  : gradients stay in the primary family, header texture stays
-//                 light, and the accent color is reserved for outlines,
-//                 highlights, and surface pinstripe tinting.
+//  - 'stripes'  : the banner stays a clean primary-family gradient while the
+//                 accent color is reserved for outlines/highlights and the
+//                 pinstripe treatment moves onto cards and surfaces.
 //  - 'gradient' : the classic primary -> gradient-partner two-color blend.
 const ACCENT_STYLES = ['stripes', 'gradient'];
 const DEFAULT_ACCENT_STYLE = 'stripes';
