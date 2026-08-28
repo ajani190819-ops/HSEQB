@@ -397,6 +397,7 @@ button, .button, .ql-btn, .ql-cat-chip, .ql-confirm-btn, .ql-cancel-btn, .header
   --hse-blue:#003da5;
   --hse-red:#c8102e;
   --hse-white:#fff;
+  --accent-line:#c8102e;
 }
 
 /* A low-contrast paper-like pattern keeps large surfaces from feeling flat. */
@@ -412,10 +413,10 @@ body::before {
 }
 .qb-container, .auth-gate { position:relative; z-index:1; }
 
-/* The header gets an HSE ribbon plus fine diagonal texture. */
+/* The header gets an HSE ribbon plus fine diagonal texture over its gradient. */
 .qb-header {
   background-color:var(--primary);
-  background-image:repeating-linear-gradient(135deg, rgba(255,255,255,.055) 0 2px, transparent 2px 9px);
+  background-image:repeating-linear-gradient(135deg, rgba(255,255,255,.055) 0 2px, transparent 2px 9px), linear-gradient(135deg, var(--primary), var(--secondary));
   box-shadow:0 2px 16px color-mix(in srgb, var(--primary) 28%, transparent);
 }
 .qb-header::after {
@@ -471,4 +472,62 @@ body::before {
 .dark-mode body::before { opacity:.18; }
 @media (prefers-reduced-motion: reduce) {
   .theme-swatch:hover { transform:none; }
+}
+
+/* ── Accent style: Pinstripe vs Gradient ─────────────────────────────────
+   'gradient' keeps the classic two-color blends. 'stripes' expresses tricolor
+   palettes the way the title banner does: primary -> white gradients, with the
+   companion color as fine diagonal lines and tinted panel outlines — so the
+   HSE palette reads as texture instead of a French flag. _paintColors already
+   swaps --secondary to a blue -> white blend in stripe mode; the rules below
+   add the diagonal-line texture and the companion-tinted outlines. */
+
+/* Header: gradient base + faint companion-color diagonal lines over the white texture. */
+html[data-accent-style="stripes"] .qb-header {
+  background-color:var(--primary);
+  background-image:
+    repeating-linear-gradient(135deg, color-mix(in srgb, var(--accent-line) 14%, transparent) 0 2px, transparent 2px 16px),
+    repeating-linear-gradient(135deg, rgba(255,255,255,.05) 0 2px, transparent 2px 9px),
+    linear-gradient(135deg, var(--primary), var(--secondary));
+}
+
+/* The tricolor ribbons become slanted stripes instead of three flat thirds. */
+html[data-accent-style="stripes"] .qb-header::after,
+html[data-accent-style="stripes"] .qb-section > h2::before,
+html[data-accent-style="stripes"] .analytics-header::before {
+  background:repeating-linear-gradient(135deg, var(--hse-blue) 0 9px, var(--hse-white) 9px 14px, var(--hse-red) 14px 19px);
+}
+
+/* Panels pick up a companion-tinted outline (e.g. the Record Answer panel gets
+   a soft red edge on the HSE palette) plus a whisper of diagonal pinstripe. */
+html[data-accent-style="stripes"] .qb-section {
+  border-color:color-mix(in srgb, var(--accent-line) 26%, var(--border));
+  background-image:repeating-linear-gradient(135deg, color-mix(in srgb, var(--accent-line) 4%, transparent) 0 2px, transparent 2px 13px);
+}
+html[data-accent-style="stripes"] .stat-card,
+html[data-accent-style="stripes"] .team-stat-card,
+html[data-accent-style="stripes"] .an-stat-box,
+html[data-accent-style="stripes"] .an-player-card,
+html[data-accent-style="stripes"] .an-cat-card,
+html[data-accent-style="stripes"] .session-info {
+  border-color:color-mix(in srgb, var(--accent-line) 16%, var(--border));
+}
+html[data-accent-style="stripes"] .team-stat-card { border-left-color:var(--accent-line); }
+
+/* Swatch chips preview the same diagonal treatment instead of flag thirds. */
+html[data-accent-style="stripes"] .theme-swatch-chip::before,
+html[data-accent-style="stripes"] .theme-swatch-chip::after { content:none; }
+html[data-accent-style="stripes"] .theme-swatch-chip {
+  background:repeating-linear-gradient(135deg, var(--swatch-blue, var(--hse-blue)) 0 10px, var(--swatch-white, #fff) 10px 15px, var(--swatch-red, var(--hse-red)) 15px 20px);
+}
+
+/* Auth card + release summary edges go diagonal too. */
+html[data-accent-style="stripes"] .auth-card,
+html[data-accent-style="stripes"] .updates-current-summary {
+  border-image:repeating-linear-gradient(135deg, var(--hse-blue) 0 10px, var(--hse-white) 10px 15px, var(--hse-red) 15px 20px) 1;
+}
+
+/* Slightly stronger lines on dark surfaces so the texture stays visible. */
+html.dark-mode[data-accent-style="stripes"] .qb-section {
+  background-image:repeating-linear-gradient(135deg, color-mix(in srgb, var(--accent-line) 6%, transparent) 0 2px, transparent 2px 13px);
 }

@@ -83,20 +83,42 @@ function _shadeHex(hex, amount){
   return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
 }
 function _isHex(v){ return /^#[0-9a-f]{6}$/i.test(v || ''); }
-// Paint the accent properties from the palette's base colors. Accents are
-// intentionally softened in light mode and lifted in dark mode so the same
-// HSE colors remain legible without becoming fluorescent or harsh.
+function _hexLum(hex){
+  const n = parseInt(hex.slice(1), 16);
+  return (0.2126 * ((n >> 16) & 255) + 0.7152 * ((n >> 8) & 255) + 0.0722 * (n & 255)) / 255;
+}
+function _mixHex(a, b, t){
+  const pa = parseInt(a.slice(1), 16), pb = parseInt(b.slice(1), 16);
+  const ch = (v, s) => (v >> s) & 255;
+  const mix = s => Math.round(ch(pa, s) + (ch(pb, s) - ch(pa, s)) * t);
+  return '#' + ((1 << 24) + (mix(16) << 16) + (mix(8) << 8) + mix(0)).toString(16).slice(1);
+}
+// Paint the accent properties from the palette's base colors. Deep colors are
+// lifted proportionally to how dark they are: in light mode navy/crimson get a
+// noticeable boost so they never read as near-black on white, and in dark mode
+// they are brightened further so they stay legible on dark surfaces.
 function _paintColors(primary, secondary, tertiary){
   const root = document.documentElement.style;
   const dark = themeIsDark(themeMode);
-  const adapt = (hex) => _isHex(hex) ? _shadeHex(hex, dark ? 0.22 : -0.10) : hex;
+  const adapt = (hex) => {
+    if (!_isHex(hex)) return hex;
+    const lum = _hexLum(hex);
+    if (dark) return _shadeHex(hex, 0.20 + Math.max(0, 0.34 - lum));
+    return lum < 0.34 ? _shadeHex(hex, (0.34 - lum) * 1.1) : hex;
+  };
   const blue = adapt(primary);
   const companion = adapt(secondary || _shadeHex(primary, -0.45));
   const white = dark ? '#f4f6fb' : (tertiary || '#ffffff');
+  // Pinstripe style: gradients blend the primary toward the palette's light
+  // color (blue -> white) while the companion color moves into thin diagonal
+  // lines and panel outlines instead of a solid French-flag color block.
+  const stripes = (typeof accentStyle === 'undefined') || accentStyle !== 'gradient';
+  const gradEnd = stripes ? _mixHex(blue, dark ? '#dfe6f5' : '#ffffff', 0.32) : companion;
   root.setProperty('--primary', blue);
   root.setProperty('--primary-light', _shadeHex(blue, dark ? 0.24 : 0.28));
   root.setProperty('--primary-dark',  _shadeHex(blue, -0.28));
-  root.setProperty('--secondary', companion);
+  root.setProperty('--secondary', gradEnd);
+  root.setProperty('--accent-line', companion);
   root.setProperty('--tertiary', white);
   root.setProperty('--hse-blue', blue);
   root.setProperty('--hse-red', companion);
@@ -126,6 +148,38 @@ function applyColorTheme(id, persistLocal, syncRemote){
   if (syncRemote !== false) scheduleUserProfileSave();
 }
 function setColorTheme(id){ applyColorTheme(id, true, true); }
+// Accent style: 'stripes' (pinstripe texture + tinted outlines) or 'gradient'
+// (classic two-color blends). Stored per account like the color theme.
+function normalizeAccentStyle(v){
+  const value = String(v || '').toLowerCase();
+  return ACCENT_STYLES.includes(value) ? value : DEFAULT_ACCENT_STYLE;
+}
+function applyAccentStyle(style, persistLocal, syncRemote){
+  accentStyle = normalizeAccentStyle(style);
+  document.documentElement.dataset.accentStyle = accentStyle;
+  // Repaint so --secondary swaps between the blue->white blend and the companion color.
+  const palette = colorTheme === 'custom' ? customThemeColors : getColorTheme(colorTheme);
+  if (palette) _paintColors(palette.primary, palette.secondary, palette.tertiary);
+  if (persistLocal !== false) localStorage.setItem('accentStyle', accentStyle);
+  syncAccentStyleControls();
+  if (typeof _chartInstances !== 'undefined' && _chartInstances){
+    Object.values(_chartInstances).forEach(chart =>{ try{ chart.update(); }catch(e){} });
+  }
+  if (syncRemote !== false) scheduleUserProfileSave();
+}
+function setAccentStyle(style){ applyAccentStyle(style, true, true); }
+function syncAccentStyleControls(){
+  document.querySelectorAll('.vs-style-btn').forEach(b =>{
+    b.classList.toggle('active', b.dataset.style === accentStyle);
+    b.setAttribute('aria-pressed', b.dataset.style === accentStyle ? 'true' : 'false');
+  });
+  const hint = $('accentStyleHint');
+  if (hint){
+    hint.textContent = accentStyle === 'gradient'
+      ? 'Classic look: the two theme colors blend directly into each other.'
+      : 'Primary + white gradients; the companion color appears as faint diagonal lines and tinted panel outlines.';
+  }
+}
 function setCustomThemeColor(which, value){
   if (!_isHex(value)) return;
   customThemeColors[which === 'secondary' ? 'secondary' : 'primary'] = value.toLowerCase();
