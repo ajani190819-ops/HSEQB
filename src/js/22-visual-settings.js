@@ -19,6 +19,7 @@ function restoreVisualSettings(){
   if(ct==='custom' || getColorTheme(ct)) applyColorTheme(ct,true,false);
   else if(/^#[0-9a-f]{6}$/i.test(ac||'')) setAccentColor(ac,true,false);   // pre-theme files
   else applyColorTheme(DEFAULT_COLOR_THEME,true,false);
+  applyAccentStyle(get('accentStyle',null) || DEFAULT_ACCENT_STYLE,true,false);
   syncThemeControls();
 }
 function renderAll(){

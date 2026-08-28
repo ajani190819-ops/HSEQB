@@ -38,6 +38,7 @@ function getUserCustomization(){
   const inlineAccent = document.documentElement.style.getPropertyValue('--primary').trim();
   return {
     themeMode: normalizeThemeMode(themeMode),
+    accentStyle: normalizeAccentStyle(accentStyle),
     accentColor: inlineAccent || localStorage.getItem('accentColor') || DEFAULT_ACCENT,
     colorTheme: colorTheme || DEFAULT_COLOR_THEME,
     customPrimary: customThemeColors.primary,
@@ -84,17 +85,19 @@ function resetLocalCustomizationForAccountSwitch(){
   localStorage.removeItem('darkMode');
   localStorage.removeItem('accentColor');
   localStorage.removeItem('colorTheme');
+  localStorage.removeItem('accentStyle');
   localStorage.removeItem('customPrimary');
   localStorage.removeItem('customSecondary');
   localStorage.removeItem('hideScrollbars');
   localStorage.removeItem('sidebarCollapsed');
   applyTheme('device', true, false);
-  ['--primary','--primary-light','--primary-dark','--secondary'].forEach(v => document.documentElement.style.removeProperty(v));
+  ['--primary','--primary-light','--primary-dark','--secondary','--accent-line','--tertiary','--hse-blue','--hse-red','--hse-white'].forEach(v => document.documentElement.style.removeProperty(v));
   document.body.classList.remove('hide-scrollbars');
   const hideToggle=$('hideScrollbarsToggle'); if(hideToggle) hideToggle.checked=false;
   const base=getColorTheme(DEFAULT_COLOR_THEME);
   customThemeColors={ primary:base.primary, secondary:base.secondary, tertiary:base.tertiary || '#ffffff' };
   applyColorTheme(DEFAULT_COLOR_THEME, true, false);
+  applyAccentStyle(DEFAULT_ACCENT_STYLE, true, false);
 }
 function extractProfileCustomization(profile){
   const source = { ...(profile || {}), ...(profile?.settings || {}), ...(profile?.customization || {}) };
@@ -103,6 +106,7 @@ function extractProfileCustomization(profile){
   if (THEME_MODES.includes(String(mode || '').toLowerCase())) result.themeMode = normalizeThemeMode(mode);
   if (typeof source.accentColor === 'string' && /^#[0-9a-f]{6}$/i.test(source.accentColor)) result.accentColor = source.accentColor;
   if (source.colorTheme === 'custom' || getColorTheme(source.colorTheme)) result.colorTheme = source.colorTheme;
+  if (ACCENT_STYLES.includes(String(source.accentStyle || '').toLowerCase())) result.accentStyle = String(source.accentStyle).toLowerCase();
   if (typeof source.customPrimary === 'string' && /^#[0-9a-f]{6}$/i.test(source.customPrimary)) result.customPrimary = source.customPrimary;
   if (typeof source.customSecondary === 'string' && /^#[0-9a-f]{6}$/i.test(source.customSecondary)) result.customSecondary = source.customSecondary;
   if (typeof source.hideScrollbars === 'boolean') result.hideScrollbars = source.hideScrollbars;
@@ -140,6 +144,7 @@ function applyAuthenticatedUserProfile(profile, user){
   if (customization.customSecondary) customThemeColors.secondary = customization.customSecondary.toLowerCase();
   if (customization.colorTheme) applyColorTheme(customization.colorTheme, true, false);
   else if (customization.accentColor) setAccentColor(customization.accentColor, true, false);
+  applyAccentStyle(customization.accentStyle || accentStyle, true, false);
   if (typeof customization.hideScrollbars === 'boolean'){
     document.body.classList.toggle('hide-scrollbars', customization.hideScrollbars);
     const toggle=$('hideScrollbarsToggle'); if(toggle) toggle.checked=customization.hideScrollbars;

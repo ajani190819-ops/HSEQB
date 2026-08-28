@@ -1,4 +1,4 @@
-const VERSION = '3.10.0'; // auto-managed by bump.js
+const VERSION = '3.11.0'; // auto-managed by bump.js
 const DOWNLOAD_URL = 'https://raw.githubusercontent.com/ajani190819-ops/HSEQB/main/index.html';
 const DEFAULT_ACCENT = '#003da5'; // HSE blue from the default blue / white / red system
 const DEFAULT_COLOR_THEME = 'tricolor';
@@ -17,6 +17,13 @@ const COLOR_THEMES = [
   { id:'forest',  name:'Forest',  sub:'Earthy',   primary:'#2f855a', secondary:'#1c4532' }
 ];
 function getColorTheme(id){ return COLOR_THEMES.find(t => t.id === id) || null; }
+// How the palette is expressed across the UI:
+//  - 'stripes'  : gradients stay in the primary family (blue -> white) while the
+//                 companion color becomes fine diagonal pinstripes (like the
+//                 title banner texture) and tinted panel outlines.
+//  - 'gradient' : the classic primary -> companion two-color blend everywhere.
+const ACCENT_STYLES = ['stripes', 'gradient'];
+const DEFAULT_ACCENT_STYLE = 'stripes';
 const GITHUB_REPO_URL     = 'https://github.com/ajani190819-ops/HSEQB';
 const GITHUB_ISSUES_URL   = GITHUB_REPO_URL + '/issues';
 const GITHUB_RELEASES_URL = GITHUB_REPO_URL + '/releases';
@@ -42,6 +49,7 @@ let authUser = null; let authStarted = false; let appStarted = false;
 const THEME_MODES = ['light', 'dark', 'device'];
 let themeMode = 'device';
 let colorTheme = DEFAULT_COLOR_THEME;
+let accentStyle = DEFAULT_ACCENT_STYLE;
 let customThemeColors = { primary:'#003da5', secondary:'#c8102e', tertiary:'#ffffff' };
 let _deviceThemeQuery = null;
 let _profileSaveTimer = null;
