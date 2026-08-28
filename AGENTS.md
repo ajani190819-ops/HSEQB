@@ -234,7 +234,7 @@ highlights all follow the palette and the light/dark mode automatically:
 | `--panel-border` | panels, cards, containers — stronger tint, so outlines are never flat gray |
 | `--border-strong` | hover state for panels |
 | `--input-border` | inputs, subtlest tint |
-| `--highlight` / `--highlight-ink` / `--highlight-wash` | red emphasis text, its hover shade, and a red wash |
+| `--highlight` / `--highlight-ink` / `--highlight-wash` | accent emphasis text, its contrast-adjusted hover shade, and a matching wash |
 
 Two rules keep this from breaking:
 
@@ -243,7 +243,7 @@ Two rules keep this from breaking:
   (`02-theme.js`), and a stylesheet value there beats the value inherited from
   the inline style on `<html>`, flattening every custom palette back to HSE.
   Pre-paint dark defaults belong on `html.dark-mode`.
-- Blue stays the structural/interactive color; the companion color handles
+- Blue stays the structural/interactive color; the accent color handles
   emphasis (scores, ranks, player links, help headings) and outlines. Canvas
   colors cannot read custom properties — use `accentRgba()` in
   `20-analytics-charts.js` rather than a hardcoded hex.

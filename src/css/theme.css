@@ -479,33 +479,33 @@ html.dark-mode { --hse-blue:#0c4cc6; --hse-red:#0045cb; --hse-white:#f4f6fb; --a
   --surface-dot-opacity:.22;
   --stripe-header-mix:19%;
   --stripe-surface-mix:7%;
-  /* Text highlights lift a little on dark surfaces to stay above 4.5:1 while
-     the outlines keep the deeper accent. */
-  --highlight:color-mix(in srgb, var(--accent-line) 84%, #fff);
-  --highlight-ink:color-mix(in srgb, var(--accent-line) 72%, #fff);
+  /* Dark-mode accent text needs a much brighter lift than outlines so deep,
+     saturated custom accents remain readable on dark cards. */
+  --highlight:color-mix(in srgb, var(--accent-line) 52%, #fff);
+  --highlight-ink:color-mix(in srgb, var(--accent-line) 38%, #fff);
   --highlight-wash:color-mix(in srgb, var(--accent-line) 18%, transparent);
 }
 
-/* Panels, cards and containers get the stronger red-tinted edge. (The auth
-   card is absent on purpose: its border-image tricolor ribbon wins over any
-   border-color, so it already carries the full blue / white / red edge.) */
+/* Panels, cards and containers get the stronger accent-tinted edge. (The auth
+   card is absent on purpose: its border-image ribbon wins over any border-color,
+   so it already carries the full three-color decorative edge.) */
 .qb-section,
 .stat-card, .team-stat-card, .overall-ranking,
 .an-stat-box, .an-player-card, .an-cat-card, .an-team-card, .an-lb-row,
 .log-container, .session-info, .sidebar-jump-menu,
 .custom-theme-panel, .updates-release-card { border-color:var(--panel-border); }
-/* Hovering a panel deepens the red edge instead of turning it blue. */
+/* Hovering a panel deepens the accent edge instead of turning it blue. */
 .qb-section:hover, .stat-card:hover, .team-stat-card:hover { border-color:var(--border-strong); }
-/* Team cards keep their colored rule, but the rule is the companion red now. */
+/* Team cards keep their colored rule, but the rule now follows the accent color. */
 .team-stat-card, .an-team-card { border-left-color:var(--accent-line); }
 
 /* Highlighted text and emphasis. */
 .player-score, .team-score, .stat-value, .session-info-row strong,
 .player-card-rank, .an-stat-box .an-val, .an-player-pts, .an-lb-rank,
 .an-lb-pts, .an-team-pts, .h3-primary { color:var(--highlight); }
-/* The active jump-nav entry is marked with a red wash instead of plain gray. */
+/* The active jump-nav entry is marked with an accent wash instead of plain gray. */
 .sidebar-jump-menu button.active-item { color:var(--highlight); background:var(--highlight-wash); }
-/* Clickable player names and section headings underline in red. */
+/* Clickable player names and section headings underline in the accent color. */
 .an-player-name { color:var(--highlight); }
 .an-player-name:hover { color:var(--highlight-ink); }
 .qb-section h2:hover { color:var(--highlight); }
@@ -530,15 +530,7 @@ body::before {
   box-shadow:0 2px 16px color-mix(in srgb, var(--primary) 28%, transparent);
 }
 .qb-header::after {
-  content:'';
-  position:absolute;
-  left:0;
-  right:0;
-  bottom:0;
-  height:4px;
-  background:linear-gradient(90deg, var(--hse-blue) 0 33.333%, var(--hse-white) 33.333% 66.666%, var(--hse-red) 66.666% 100%);
-  opacity:.95;
-  pointer-events:none;
+  content:none;
 }
 
 /* Reusable tricolor edge for panels, cards, and the auth experience. */
@@ -554,7 +546,7 @@ body::before {
 .theme-swatch-chip {
   position:relative;
   overflow:hidden;
-  background:var(--swatch-blue, var(--hse-blue));
+  background:var(--swatch-left, var(--hse-blue));
 }
 .theme-swatch-chip::before, .theme-swatch-chip::after {
   content:'';
@@ -563,8 +555,8 @@ body::before {
   bottom:0;
   width:33.333%;
 }
-.theme-swatch-chip::before { left:33.333%; background:var(--swatch-white, #fff); }
-.theme-swatch-chip::after { right:0; background:var(--swatch-red, var(--hse-red)); }
+.theme-swatch-chip::before { left:33.333%; background:var(--swatch-mid, #fff); }
+.theme-swatch-chip::after { right:0; background:var(--swatch-right, var(--hse-red)); }
 .theme-swatch-chip { box-shadow:inset 0 1px 3px rgba(255,255,255,.24), inset 0 0 0 1px rgba(0,0,0,.12); }
 
 /* Small tricolor accents add hierarchy without overpowering readable text. */
@@ -592,8 +584,8 @@ body::before {
 html[data-accent-style="stripes"] .qb-header {
   background-color:var(--primary);
   background-image:
-    repeating-linear-gradient(135deg, color-mix(in srgb, var(--accent-line) var(--stripe-header-mix), transparent) 0 2px, transparent 2px 16px),
-    repeating-linear-gradient(135deg, rgba(255,255,255,.05) 0 2px, transparent 2px 9px),
+    repeating-linear-gradient(135deg, color-mix(in srgb, var(--accent-line) var(--stripe-header-mix), transparent) 0 2px, transparent 2px 12px),
+    repeating-linear-gradient(135deg, rgba(255,255,255,.05) 0 2px, transparent 2px 12px),
     linear-gradient(135deg, var(--primary), var(--secondary));
 }
 
@@ -604,7 +596,7 @@ html[data-accent-style="stripes"] .qb-header::after {
 }
 html[data-accent-style="stripes"] .qb-section > h2::before,
 html[data-accent-style="stripes"] .analytics-header::before {
-  background:repeating-linear-gradient(135deg, var(--stripe-band-a) 0 8px, var(--stripe-band-b) 8px 13px, var(--stripe-band-c) 13px 18px);
+  background:repeating-linear-gradient(135deg, var(--stripe-band-a) 0 6px, var(--stripe-band-b) 6px 12px, var(--stripe-band-c) 12px 18px);
 }
 
 /* Panels pick up the strongest companion-tinted outline plus a whisper of
@@ -612,7 +604,7 @@ html[data-accent-style="stripes"] .analytics-header::before {
    shared rules above — the tint is never stripes-only. */
 html[data-accent-style="stripes"] .qb-section {
   border-color:var(--border-strong);
-  background-image:repeating-linear-gradient(135deg, color-mix(in srgb, var(--accent-line) var(--stripe-surface-mix), transparent) 0 2px, transparent 2px 13px);
+  background-image:repeating-linear-gradient(135deg, color-mix(in srgb, var(--accent-line) var(--stripe-surface-mix), transparent) 0 2px, transparent 2px 12px);
 }
 html[data-accent-style="stripes"] .stat-card,
 html[data-accent-style="stripes"] .team-stat-card,
@@ -628,11 +620,11 @@ html[data-accent-style="stripes"] .team-stat-card { border-left-color:var(--acce
 html[data-accent-style="stripes"] .theme-swatch-chip::before,
 html[data-accent-style="stripes"] .theme-swatch-chip::after { content:none; }
 html[data-accent-style="stripes"] .theme-swatch-chip {
-  background:repeating-linear-gradient(135deg, var(--swatch-blue, var(--hse-blue)) 0 10px, color-mix(in srgb, var(--swatch-blue, var(--hse-blue)) 58%, var(--swatch-red, var(--hse-red))) 10px 15px, var(--swatch-red, var(--hse-red)) 15px 20px);
+  background:repeating-linear-gradient(135deg, var(--swatch-left, var(--hse-blue)) 0 6px, var(--swatch-mid, #fff) 6px 12px, var(--swatch-right, var(--hse-red)) 12px 18px);
 }
 
 /* Auth card + release summary edges go diagonal too. */
 html[data-accent-style="stripes"] .auth-card,
 html[data-accent-style="stripes"] .updates-current-summary {
-  border-image:repeating-linear-gradient(135deg, var(--stripe-band-a) 0 10px, var(--stripe-band-b) 10px 15px, var(--stripe-band-c) 15px 20px) 1;
+  border-image:repeating-linear-gradient(135deg, var(--stripe-band-a) 0 6px, var(--stripe-band-b) 6px 12px, var(--stripe-band-c) 12px 18px) 1;
 }
