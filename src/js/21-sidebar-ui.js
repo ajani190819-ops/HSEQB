@@ -156,10 +156,21 @@ function _paintColors(primary, secondary, tertiary, accent){
   const accentTone = adapt(accent || secondary || _shadeHex(primary, -0.45));
   const white = dark ? '#f4f6fb' : (tertiary || '#ffffff');
   // Pinstripe style: gradients stay in the primary family while the accent
-  // color drives outlines/highlights and only the surface pinstripes, not the
-  // light banner texture.
+  // color drives outlines/highlights and surface pinstripes. Banner treatment
+  // stays light by default except for Tricolor pinstripes, which keep the red
+  // banner stripes and banner outline unless manually overridden.
   const stripes = (typeof accentStyle === 'undefined') || accentStyle !== 'gradient';
   const gradEnd = stripes ? _mixHex(blue, dark ? '#dfe6f5' : '#ffffff', dark ? 0.30 : 0.32) : gradientEnd;
+  const tricolorPinstripes = stripes && colorTheme === 'tricolor';
+  const autoBannerStripe = tricolorPinstripes
+    ? accentTone
+    : _mixHex(white, _shadeHex(blue, dark ? 0.24 : 0.28), dark ? 0.28 : 0.22);
+  const manualBannerStripe = _isHex(advancedThemeColors?.bannerStripe) ? advancedThemeColors.bannerStripe.toLowerCase() : '';
+  const bannerStripe = manualBannerStripe || autoBannerStripe;
+  const bannerStripeSoft = manualBannerStripe
+    ? _mixHex(white, bannerStripe, dark ? 0.34 : 0.22)
+    : (tricolorPinstripes ? _mixHex(white, accentTone, dark ? 0.24 : 0.14) : _mixHex(white, autoBannerStripe, dark ? 0.34 : 0.22));
+  const bannerOutline = _isHex(advancedThemeColors?.bannerOutline) ? advancedThemeColors.bannerOutline.toLowerCase() : accentTone;
   root.setProperty('--primary', blue);
   root.setProperty('--primary-light', _shadeHex(blue, dark ? 0.24 : 0.28));
   root.setProperty('--primary-dark',  _shadeHex(blue, -0.28));
@@ -169,12 +180,16 @@ function _paintColors(primary, secondary, tertiary, accent){
   root.setProperty('--hse-blue', blue);
   root.setProperty('--hse-red', accentTone);
   root.setProperty('--hse-white', white);
+  root.setProperty('--banner-stripe', bannerStripe);
+  root.setProperty('--banner-stripe-soft', bannerStripeSoft);
+  root.setProperty('--banner-outline', bannerOutline);
 }
 function applyColorTheme(id, persistLocal, syncRemote){
   const custom = id === 'custom';
   const theme = custom ? null : getColorTheme(id);
   if (!custom && !theme) return applyColorTheme(DEFAULT_COLOR_THEME, persistLocal, syncRemote);
   colorTheme = custom ? 'custom' : theme.id;
+  document.documentElement.dataset.colorTheme = colorTheme;
   const primary   = custom ? customThemeColors.primary   : theme.primary;
   const secondary = custom ? customThemeColors.secondary : theme.secondary;
   const tertiary  = custom ? customThemeColors.tertiary : theme.tertiary;
@@ -210,6 +225,7 @@ function applyAccentStyle(style, persistLocal, syncRemote){
   if (palette) _paintColors(palette.primary, palette.secondary, palette.tertiary, palette.accent);
   if (persistLocal !== false) localStorage.setItem('accentStyle', accentStyle);
   syncAccentStyleControls();
+  syncAdvancedThemeControls();
   if (typeof _chartInstances !== 'undefined' && _chartInstances){
     Object.values(_chartInstances).forEach(chart =>{ try{ chart.update(); }catch(e){} });
   }
@@ -225,7 +241,7 @@ function syncAccentStyleControls(){
   if (hint){
     hint.textContent = accentStyle === 'gradient'
       ? 'Classic look: the primary and gradient colors blend directly into each other. Panels still keep a light palette tint.'
-      : 'Pinstripe look: softer primary-family gradients, light banner texture, evenly spaced surface stripes, and a separate accent color for outlines and highlights.';
+      : 'Pinstripe look: softer primary-family gradients, evenly spaced surface stripes, and accent-led outlines/highlights. Most themes keep a light banner texture; Tricolor keeps red banner stripes by default.';
   }
 }
 function setCustomThemeColor(which, value){
@@ -233,6 +249,43 @@ function setCustomThemeColor(which, value){
   const key = which === 'secondary' ? 'secondary' : which === 'accent' ? 'accent' : 'primary';
   customThemeColors[key] = value.toLowerCase();
   applyColorTheme('custom', true, true);
+}
+function applyAdvancedThemeOverrides(overrides, persistLocal, syncRemote){
+  advancedThemeColors = {
+    bannerStripe:_isHex(overrides?.bannerStripe) ? overrides.bannerStripe.toLowerCase() : '',
+    bannerOutline:_isHex(overrides?.bannerOutline) ? overrides.bannerOutline.toLowerCase() : ''
+  };
+  if (persistLocal !== false){
+    if (advancedThemeColors.bannerStripe) localStorage.setItem('customBannerStripe', advancedThemeColors.bannerStripe);
+    else localStorage.removeItem('customBannerStripe');
+    if (advancedThemeColors.bannerOutline) localStorage.setItem('customBannerOutline', advancedThemeColors.bannerOutline);
+    else localStorage.removeItem('customBannerOutline');
+  }
+  const palette = colorTheme === 'custom' ? customThemeColors : getColorTheme(colorTheme);
+  if (palette) _paintColors(palette.primary, palette.secondary, palette.tertiary, palette.accent);
+  syncAdvancedThemeControls();
+  if (syncRemote !== false) scheduleUserProfileSave();
+}
+function setAdvancedThemeColor(which, value){
+  if (!_isHex(value)) return;
+  const key = which === 'bannerOutline' ? 'bannerOutline' : 'bannerStripe';
+  applyAdvancedThemeOverrides({ ...advancedThemeColors, [key]:value }, true, true);
+}
+function resetAdvancedThemeColors(){
+  applyAdvancedThemeOverrides({}, true, true);
+}
+function syncAdvancedThemeControls(){
+  const stripe = document.documentElement.style.getPropertyValue('--banner-stripe').trim() || '#ffffff';
+  const outline = document.documentElement.style.getPropertyValue('--banner-outline').trim() || document.documentElement.style.getPropertyValue('--accent-line').trim() || '#000000';
+  const stripeInput = $('customBannerStripeInput'); if (stripeInput) stripeInput.value = stripe;
+  const stripeHex = $('customBannerStripeHex'); if (stripeHex) stripeHex.value = stripe;
+  const outlineInput = $('customBannerOutlineInput'); if (outlineInput) outlineInput.value = outline;
+  const outlineHex = $('customBannerOutlineHex'); if (outlineHex) outlineHex.value = outline;
+  const status = $('advancedThemeStatus');
+  if (status){
+    const manual = !!(advancedThemeColors.bannerStripe || advancedThemeColors.bannerOutline);
+    status.textContent = manual ? 'Manual override active' : 'Automatic';
+  }
 }
 function resetCustomTheme(){
   const base = getColorTheme(DEFAULT_COLOR_THEME);
@@ -270,6 +323,7 @@ function syncColorThemeControls(){
   const active = colorTheme === 'custom' ? { name:'Custom', sub:'Your colors' } : getColorTheme(colorTheme);
   const label = $('activeThemeLabel');
   if (label && active) label.textContent = active.name + ' — ' + active.sub;
+  syncAdvancedThemeControls();
 }
 // Back-compat: older profiles and LOCAL_SETTINGS store a bare accent hex.
 function setAccentColor(color, persistLocal, syncRemote){

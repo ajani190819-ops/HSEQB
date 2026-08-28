@@ -208,7 +208,10 @@ Score and are excluded from the team average and automatic `k`.
 
 The default palette is **Royal** (`DEFAULT_COLOR_THEME = 'royal'` in
 `01-constants.js`: primary `#0b41a8`, gradient `#002b7f`, white). The default
-accent style is **Gradient** (`DEFAULT_ACCENT_STYLE = 'gradient'`). These
+accent style is **Gradient** (`DEFAULT_ACCENT_STYLE = 'gradient'`). Tricolor +
+pinstripe is the one automatic exception for the banner: it keeps red banner
+stripes and a red banner outline unless the user overrides them in Visual
+Settings. These
 defaults must agree at three levels or the first frame drifts off-brand:
 
 1. `css/core.css` `:root` / `html.dark-mode` carry the **exact** values
@@ -235,7 +238,8 @@ highlights all follow the palette and the light/dark mode automatically:
 | `--border-strong` | hover state for panels |
 | `--input-border` | inputs, subtlest tint |
 | `--highlight` / `--highlight-ink` / `--highlight-wash` | accent emphasis text, its contrast-adjusted hover shade, and a matching wash |
-| `--banner-stripe` / `--banner-stripe-soft` | light-only header texture so the accent color can stay reserved for outlines/highlights |
+| `--banner-stripe` / `--banner-stripe-soft` | banner stripe colors; auto-chosen per theme/style but overridable from Visual Settings advanced controls |
+| `--banner-outline` | bottom rule on the top banner; normally accent-colored, with a manual override available in Visual Settings |
 
 Two rules keep this from breaking:
 

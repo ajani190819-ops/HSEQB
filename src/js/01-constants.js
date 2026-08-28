@@ -51,6 +51,7 @@ let themeMode = 'device';
 let colorTheme = DEFAULT_COLOR_THEME;
 let accentStyle = DEFAULT_ACCENT_STYLE;
 let customThemeColors = { primary:'#0b41a8', secondary:'#002b7f', tertiary:'#ffffff', accent:'#002b7f' };
+let advancedThemeColors = { bannerStripe:'', bannerOutline:'' };
 let _deviceThemeQuery = null;
 let _profileSaveTimer = null;
 let _profileLoadSequence = 0;

@@ -12,16 +12,20 @@ function restoreVisualSettings(){
   const hideEl=$('hideScrollbarsToggle'); if(hideEl) hideEl.checked=hide;
   localStorage.setItem('hideScrollbars',hide ? 'true' : 'false');
   const cp=get('customPrimary',null), cs=get('customSecondary',null), ca=get('customAccent',null);
+  const cbs=get('customBannerStripe',null), cbo=get('customBannerOutline',null);
   if(/^#[0-9a-f]{6}$/i.test(cp||'')) customThemeColors.primary=String(cp).toLowerCase();
   if(/^#[0-9a-f]{6}$/i.test(cs||'')) customThemeColors.secondary=String(cs).toLowerCase();
   if(/^#[0-9a-f]{6}$/i.test(ca||'')) customThemeColors.accent=String(ca).toLowerCase();
   else customThemeColors.accent=customThemeColors.secondary;
+  advancedThemeColors.bannerStripe = /^#[0-9a-f]{6}$/i.test(cbs||'') ? String(cbs).toLowerCase() : '';
+  advancedThemeColors.bannerOutline = /^#[0-9a-f]{6}$/i.test(cbo||'') ? String(cbo).toLowerCase() : '';
   const ct=get('colorTheme',null);
   const ac=get('accentColor',null);
   if(ct==='custom' || getColorTheme(ct)) applyColorTheme(ct,true,false);
   else if(/^#[0-9a-f]{6}$/i.test(ac||'')) setAccentColor(ac,true,false);   // pre-theme files
   else applyColorTheme(DEFAULT_COLOR_THEME,true,false);
   applyAccentStyle(get('accentStyle',null) || DEFAULT_ACCENT_STYLE,true,false);
+  applyAdvancedThemeOverrides(advancedThemeColors, true, false);
   syncThemeControls();
 }
 function renderAll(){

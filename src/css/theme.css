@@ -377,6 +377,18 @@ button, .button, .ql-btn, .ql-cat-chip, .ql-confirm-btn, .ql-cancel-btn, .header
 .custom-hex-input { flex:1; min-width:0; padding:7px 9px; border:1.5px solid var(--border); border-radius:6px; background:var(--input-bg); color:var(--input-text);
   font-family:monospace; font-size:.85em; text-transform:lowercase; }
 .vs-reset-btn { width:100%; margin-top:4px; }
+.vs-advanced-panel { margin-top:10px; border:1.5px solid var(--border); border-radius:var(--radius-sm); background:var(--sec-bg); overflow:hidden; }
+.vs-advanced-summary { list-style:none; display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; cursor:pointer; user-select:none; }
+.vs-advanced-summary::-webkit-details-marker { display:none; }
+.vs-advanced-summary::after { content:'▾'; font-size:.82em; color:var(--text3); transition:transform .2s ease; }
+.vs-advanced-panel[open] .vs-advanced-summary::after { transform:rotate(180deg); }
+.vs-advanced-copy { display:flex; flex-direction:column; gap:2px; min-width:0; }
+.vs-advanced-copy strong { font-size:.84em; color:var(--text); }
+.vs-advanced-copy span { font-size:.72em; color:var(--text3); font-weight:600; line-height:1.35; }
+.vs-advanced-status { font-size:.72em; font-weight:700; color:var(--text3); white-space:nowrap; }
+.vs-advanced-body { padding:0 12px 12px; border-top:1.5px solid var(--border); }
+.vs-advanced-panel .custom-theme-row:first-of-type { margin-top:2px; }
+.vs-advanced-panel .custom-theme-row label { flex-basis:94px; }
 
 /* Interface toggles */
 .vs-toggle-row { display:flex; align-items:center; gap:11px; }
@@ -531,6 +543,7 @@ body::before {
   background-color:var(--primary);
   background-image:repeating-linear-gradient(135deg, color-mix(in srgb, var(--banner-stripe) 34%, transparent) 0 2px, transparent 2px 9px), linear-gradient(135deg, var(--primary), var(--secondary));
   box-shadow:0 2px 16px color-mix(in srgb, var(--primary) 28%, transparent);
+  border-bottom-color:var(--banner-outline, rgba(0,0,0,0.25));
 }
 .qb-header::after {
   content:none;
@@ -574,9 +587,10 @@ body::before {
 /* ── Accent style: Pinstripe vs Gradient ─────────────────────────────────
    'gradient' keeps the classic two-color blends. 'stripes' keeps the softer
    primary-family gradients, reserves the accent color for outlines/highlights,
-   and uses light banner texture instead of darker flag-like header stripes. */
+   and usually uses lighter banner texture — with Tricolor retaining red banner
+   stripes by default unless the user overrides them. */
 
-/* Header: gradient base + light diagonal lines, never the outline accent. */
+/* Header: gradient base + banner lines driven by the auto/manual banner vars. */
 html[data-accent-style="stripes"] .qb-header {
   background-color:var(--primary);
   background-image:
