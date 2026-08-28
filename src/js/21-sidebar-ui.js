@@ -35,7 +35,8 @@ key:       i => Object.keys(_memStore)[i] || null,
 get length(){ return Object.keys(_memStore).length; }
 };
 try{ Object.defineProperty(window, 'localStorage',{ get:() => _safeLS }); } catch(e){}
-document.body.classList.add('dark-mode'); }
+}
+if (document.body) document.body.classList.toggle('dark-mode', document.documentElement.classList.contains('dark-mode'));
 var _iframeDebugActive = false;
 function toggleSidebar(){
 const sidebar=$('mainSidebar');
