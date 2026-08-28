@@ -85,15 +85,15 @@ const [R,G,B] = [1,3,5].map(i => parseInt(hex.slice(i, i + 2), 16));
 return `rgba(${R},${G},${B},${alpha})`;
 }
 const isDark=document.body.classList.contains('dark-mode');
-const gridColor=isDark?'rgba(255,255,255,.08)':'rgba(0,0,0,.07)', labelColor=isDark?'#9ba3c0':'#5a6178';
+const gridColor=isDark?'rgba(255,255,255,.10)':'rgba(0,0,0,.08)', labelColor=isDark?'#b8c0d8':'#3f475f';
 const tooltipBg=isDark?'#1c2128':'#fff', tooltipTxt=isDark?'#e6eaf4':'#1a1a2e';
 const baseFont={family:"-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif",size:12};
 const dm=()=>document.body.classList.contains('dark-mode');
 const pluginDefaults ={
 legend:{ labels:{ color:labelColor, font:baseFont, boxWidth:14, padding:12 } },
 tooltip:{
-backgroundColor:()=>dm()?'#1c2128':'#fff', titleColor:()=>dm()?'#e6eaf4':'#1a1a2e',
-bodyColor:()=>dm()?'#9ba3c0':'#5a6178', borderColor:()=>dm()?'#2d3340':'#dde1ea',
+backgroundColor:()=>dm()?'#1c2128':'#fff', titleColor:()=>dm()?'#eef1f8':'#121a33',
+bodyColor:()=>dm()?'#b8c0d8':'#3f475f', borderColor:()=>dm()?'#2d3340':'#dde1ea',
 borderWidth:1, padding:10, cornerRadius:8, position:'nearest', caretSize:6
 }
 };
@@ -251,12 +251,26 @@ html += `</div>`;
 el.innerHTML = html;
 if (powers + tossups + bonuses + negs + misses + deads > 0){
 const typeLabels = [], typeData = [], typeColors = [];
-if (powers) { typeLabels.push('TU ⚡︎ Power'); typeData.push(powers);  typeColors.push('#11998e'); }
-if (tossups){ typeLabels.push('Toss-up');     typeData.push(tossups); typeColors.push('#667eea'); }
-if (bonuses){ typeLabels.push('Bonus');   typeData.push(bonuses); typeColors.push('#764ba2'); }
-if (negs)   { typeLabels.push('Neg');     typeData.push(negs);    typeColors.push('#e74c5c'); }
-if (misses) { typeLabels.push('Miss');    typeData.push(misses);  typeColors.push('#f39c12'); }
-if (deads)  { typeLabels.push('Dead');    typeData.push(deads);   typeColors.push('#9ba3b8'); }
+// Remapped palette: toss-ups green, bonus blue, neg red, miss grey, dead dark grey
+function ptColor(name){
+  const s = getComputedStyle(document.documentElement);
+  const v = (n, fb) => (s.getPropertyValue(n).trim() || fb);
+  const map = {
+    Power: v('--pt-power', '#15803d'),
+    'Toss-up': v('--pt-tossup', '#16a34a'),
+    Bonus: v('--pt-bonus', '#2563eb'),
+    Neg: v('--pt-neg', '#dc2626'),
+    Miss: v('--pt-miss', '#6b7280'),
+    Dead: v('--pt-dead', '#1f2937')
+  };
+  return map[name] || '#888';
+}
+if (powers) { typeLabels.push('TU ⚡︎ Power'); typeData.push(powers);  typeColors.push(ptColor('Power')); }
+if (tossups){ typeLabels.push('Toss-up');     typeData.push(tossups); typeColors.push(ptColor('Toss-up')); }
+if (bonuses){ typeLabels.push('Bonus');   typeData.push(bonuses); typeColors.push(ptColor('Bonus')); }
+if (negs)   { typeLabels.push('Neg');     typeData.push(negs);    typeColors.push(ptColor('Neg')); }
+if (misses) { typeLabels.push('Miss');    typeData.push(misses);  typeColors.push(ptColor('Miss')); }
+if (deads)  { typeLabels.push('Dead');    typeData.push(deads);   typeColors.push(ptColor('Dead')); }
 makeChart('chart-type-pie',{ type:'doughnut',
 data:{ labels:typeLabels, datasets:[{ data:typeData, backgroundColor:typeColors, borderColor:'transparent', borderWidth:0 }] },
 options:{ ...pieOpts, plugins:{ ...pieOpts.plugins, legend:{ ...pieOpts.plugins.legend, position:'right' } } }
@@ -268,11 +282,12 @@ options:pieOpts}); }
 if (allCatsByVol.length){
 makeChart('chart-cat-breakdown',{ type:'bar',
 data:{labels:allCatsByVol,datasets:[
-{label:'Powered TUs', data:allCatsByVol.map(c=>catByType[c]?.Power||0), backgroundColor:'#11998ecc',borderColor:'#11998e',borderWidth:3,borderRadius:3},
-{label:'Toss-ups', data:allCatsByVol.map(c=>catByType[c]?.['Toss-up']||0), backgroundColor:'#667eeacc',borderColor:'#667eea',borderWidth:3,borderRadius:3},
-{label:'Bonuses',  data:allCatsByVol.map(c=>catByType[c]?.Bonus||0),       backgroundColor:'#764ba2cc',borderColor:'#764ba2',borderWidth:3,borderRadius:3},
-{label:'Negs',     data:allCatsByVol.map(c=>catByType[c]?.Neg||0),         backgroundColor:'#e74c5ccc',borderColor:'#e74c5c',borderWidth:3,borderRadius:3},
-{label:'Misses',   data:allCatsByVol.map(c=>catByType[c]?.Miss||0),        backgroundColor:'#f39c12cc',borderColor:'#f39c12',borderWidth:3,borderRadius:3},
+{label:'Powered TUs', data:allCatsByVol.map(c=>catByType[c]?.Power||0), backgroundColor:ptColor('Power')+'cc',borderColor:ptColor('Power'),borderWidth:3,borderRadius:3},
+{label:'Toss-ups', data:allCatsByVol.map(c=>catByType[c]?.['Toss-up']||0), backgroundColor:ptColor('Toss-up')+'cc',borderColor:ptColor('Toss-up'),borderWidth:3,borderRadius:3},
+{label:'Bonuses',  data:allCatsByVol.map(c=>catByType[c]?.Bonus||0),       backgroundColor:ptColor('Bonus')+'cc',borderColor:ptColor('Bonus'),borderWidth:3,borderRadius:3},
+{label:'Negs',     data:allCatsByVol.map(c=>catByType[c]?.Neg||0),         backgroundColor:ptColor('Neg')+'cc',borderColor:ptColor('Neg'),borderWidth:3,borderRadius:3},
+{label:'Misses',   data:allCatsByVol.map(c=>catByType[c]?.Miss||0),        backgroundColor:ptColor('Miss')+'cc',borderColor:ptColor('Miss'),borderWidth:3,borderRadius:3},
+{label:'Dead',     data:allCatsByVol.map(c=>catByType[c]?.Dead||0),        backgroundColor:ptColor('Dead')+'cc',borderColor:ptColor('Dead'),borderWidth:3,borderRadius:3},
 ]},
 options:{ ...barOpts, scales:{ ...barScales, x:{ ...barScales.x, stacked:true }, y:{ ...barScales.y, stacked:true } } }
 }); }
@@ -399,10 +414,11 @@ makeChart('chart-player-breakdown',{ type:'bar',
 data:{
 labels:pNames,
 datasets:[
-{ label:'Powered TUs', data:activePlayers.map(p => p.powers), backgroundColor:'#11998ecc', borderColor:'#11998e', borderWidth:3, borderRadius:3 },
-{ label:'Regular TUs', data:activePlayers.map(p => p.tossupsCorrect), backgroundColor:'#667eeacc', borderColor:'#667eea', borderWidth:3, borderRadius:3 },
-{ label:'Negs', data:activePlayers.map(p => p.negs), backgroundColor:'#e74c5ccc', borderColor:'#e74c5c', borderWidth:3, borderRadius:3 },
-{ label:'Misses', data:activePlayers.map(p => p.misses || 0), backgroundColor:'#f39c12cc', borderColor:'#f39c12', borderWidth:3, borderRadius:3 },
+{ label:'Powered TUs', data:activePlayers.map(p => p.powers), backgroundColor:ptColor('Power')+'cc', borderColor:ptColor('Power'), borderWidth:3, borderRadius:3 },
+{ label:'Regular TUs', data:activePlayers.map(p => p.tossupsCorrect), backgroundColor:ptColor('Toss-up')+'cc', borderColor:ptColor('Toss-up'), borderWidth:3, borderRadius:3 },
+{ label:'Negs', data:activePlayers.map(p => p.negs), backgroundColor:ptColor('Neg')+'cc', borderColor:ptColor('Neg'), borderWidth:3, borderRadius:3 },
+{ label:'Misses', data:activePlayers.map(p => p.misses || 0), backgroundColor:ptColor('Miss')+'cc', borderColor:ptColor('Miss'), borderWidth:3, borderRadius:3 },
+{ label:'Dead', data:activePlayers.map(p => p.deads || 0), backgroundColor:ptColor('Dead')+'cc', borderColor:ptColor('Dead'), borderWidth:3, borderRadius:3 },
 ]
 },
 options:{ ...barOpts, scales:{ ...barScales, x:{ ...barScales.x, stacked:true }, y:{ ...barScales.y, stacked:true } } }
