@@ -1,5 +1,8 @@
 var _chartInstances ={};
 var _lastChartFingerprint = null;
+var _lastAnswers = null;
+var _lastPlayers = null;
+var _globalTHeard = null;
 function destroyChart(id){ if (_chartInstances[id]){ _chartInstances[id].destroy(); delete _chartInstances[id]; } }
 Chart.register({
 id:'doughnutGaps',
@@ -56,6 +59,7 @@ const players  = ps.filter(p => p.totalAnswers > 0).map(p => p.name).sort().join
 const cats     = [...new Set(log.map(a => a.category).filter(Boolean))].sort().join('|');
 return log.length + '|' + totalPts + '|' + players + '|' + cats; }
 function renderAnalyticsCharts(allAnswers, ps, globalTHeard){
+_lastAnswers = allAnswers; _lastPlayers = ps; _globalTHeard = globalTHeard;
 const el = $('an-charts'); if (!el) return;
 Object.keys(_chartInstances).forEach(id => destroyChart(id));
 if (!allAnswers.length){

@@ -464,7 +464,7 @@ html.dark-mode { --hse-blue:#0c4cc6; --hse-red:#ff4765; --hse-white:#f4f6fb; --a
 
 /* Dark surfaces need a little more chroma in the mix for the same tint to
    read with the same energy they have on light cards. */
-.dark-mode {
+html.dark-mode, body.dark-mode, .dark-mode {
   --bg-neutral:#0d1117;
   --sec-bg-neutral:#161b22;
   --card-neutral:#1c2128;
