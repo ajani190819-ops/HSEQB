@@ -159,11 +159,21 @@ ${(team.eBonus === null && team.eTotal === null) ? '<div style="font-size:.8em;c
 });
 html += '</div>';
 el.innerHTML = html;
+const searchEl = $('teamCompSearch');
+if (searchEl) searchEl.value = _teamCompSearchQuery || '';
 expandedTeamCards.forEach(id =>{
 const panel = $(id);
 const arrow = $(id + '_arrow');
 if (panel) panel.style.display = 'block';
 if (arrow) arrow.style.transform = 'rotate(180deg)'; });
+// Re-apply any active player-count filter / search query so the user's
+// selection survives the periodic renderAll() triggered by autosave.
+if (_currentTeamFilterCount > 0 || (_teamCompSearchQuery || '').trim()){
+document.querySelectorAll('[id^="tcfilter-"]').forEach(btn => btn.classList.remove('active'));
+const btn = $('tcfilter-' + (_currentTeamFilterCount === 0 ? 'all' : _currentTeamFilterCount));
+if (btn) btn.classList.add('active');
+filterTeamCards(_teamCompSearchQuery || '');
+}
 }
 function toggleTeamCard(id){
 const panel = $(id);
@@ -173,7 +183,9 @@ const open = panel.style.display === 'none';
 panel.style.display = open ? 'block' :'none';
 if (arrow) arrow.style.transform = open ? 'rotate(180deg)' :'';
 if (open) expandedTeamCards.add(id); else expandedTeamCards.delete(id); }
+var _teamCompSearchQuery = '';
 function filterTeamCards(query){
+_teamCompSearchQuery = query || '';
 const q = query.trim().toLowerCase();
 const cards = document.querySelectorAll('.team-comp-card');
 let visible = 0;
