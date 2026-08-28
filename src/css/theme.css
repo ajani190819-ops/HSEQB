@@ -394,10 +394,10 @@ button, .button, .ql-btn, .ql-cat-chip, .ql-confirm-btn, .ql-cancel-btn, .header
    values are painted by _paintColors so accents respond to light and dark mode. */
 :root {
   --tertiary:#fff;
-  --hse-blue:#2656b2;
-  --hse-red:#335699;
+  --hse-blue:#003da5;
+  --hse-red:#c8102e;
   --hse-white:#fff;
-  --accent-line:#335699;
+  --accent-line:#c8102e;
   --primary-ink:var(--primary);
   --primary-ink-hover:color-mix(in srgb, var(--primary) 72%, #000);
   --primary-wash:color-mix(in srgb, var(--primary) 12%, transparent);
@@ -453,7 +453,7 @@ button, .button, .ql-btn, .ql-cat-chip, .ql-confirm-btn, .ql-cancel-btn, .header
 /* Pre-paint dark defaults for palette-owned values. Scoped to html.dark-mode on
    purpose: body carries .dark-mode too, and a stylesheet value there would beat
    the inline colors painted on <html>, flattening every custom palette. */
-html.dark-mode { --hse-blue:#0c4cc6; --hse-red:#0045cb; --hse-white:#f4f6fb; --accent-line:#0045cb; }
+html.dark-mode { --hse-blue:#0c4cc6; --hse-red:#ff4765; --hse-white:#f4f6fb; --accent-line:#ff4765; }
 
 /* Dark surfaces need a little more chroma in the mix for the same tint to
    read with the same energy they have on light cards. */
@@ -617,6 +617,15 @@ html[data-accent-style="stripes"] .qb-header {
   background-image:
     repeating-linear-gradient(135deg, color-mix(in srgb, var(--banner-stripe) 42%, transparent) 0 2px, transparent 2px 12px),
     repeating-linear-gradient(135deg, color-mix(in srgb, var(--banner-stripe-soft) 24%, transparent) 0 2px, transparent 2px 12px),
+    linear-gradient(135deg, var(--primary), var(--secondary));
+  border-bottom-color:var(--accent-line);
+}
+
+/* Tricolor pinstripe mode restores the red banner accent the user asked for. */
+html[data-accent-style="stripes"][data-color-theme="tricolor"] .qb-header {
+  background-image:
+    repeating-linear-gradient(135deg, color-mix(in srgb, var(--accent-line) 44%, transparent) 0 2px, transparent 2px 12px),
+    repeating-linear-gradient(135deg, color-mix(in srgb, var(--hse-white) 18%, transparent) 0 2px, transparent 2px 12px),
     linear-gradient(135deg, var(--primary), var(--secondary));
 }
 

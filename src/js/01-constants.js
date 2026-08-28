@@ -1,7 +1,7 @@
 const VERSION = '3.12.0'; // auto-managed by bump.js
 const DOWNLOAD_URL = 'https://raw.githubusercontent.com/ajani190819-ops/HSEQB/main/index.html';
-const DEFAULT_ACCENT = '#0b41a8'; // Royal blue from the default HSE palette
-const DEFAULT_COLOR_THEME = 'royal';
+const DEFAULT_ACCENT = '#003da5'; // Tricolor blue from the default HSE palette
+const DEFAULT_COLOR_THEME = 'tricolor';
 // Named color themes. Each palette supplies a primary color, a gradient partner,
 // and (where useful) a third decorative color. _paintColors can also route a
 // separate accent color into outlines/highlights for the active appearance.
@@ -23,7 +23,7 @@ function getColorTheme(id){ return COLOR_THEMES.find(t => t.id === id) || null; 
 //                 highlights, and surface pinstripe tinting.
 //  - 'gradient' : the classic primary -> gradient-partner two-color blend.
 const ACCENT_STYLES = ['stripes', 'gradient'];
-const DEFAULT_ACCENT_STYLE = 'gradient';
+const DEFAULT_ACCENT_STYLE = 'stripes';
 const GITHUB_REPO_URL     = 'https://github.com/ajani190819-ops/HSEQB';
 const GITHUB_ISSUES_URL   = GITHUB_REPO_URL + '/issues';
 const GITHUB_RELEASES_URL = GITHUB_REPO_URL + '/releases';
@@ -50,7 +50,7 @@ const THEME_MODES = ['light', 'dark', 'device'];
 let themeMode = 'device';
 let colorTheme = DEFAULT_COLOR_THEME;
 let accentStyle = DEFAULT_ACCENT_STYLE;
-let customThemeColors = { primary:'#0b41a8', secondary:'#002b7f', tertiary:'#ffffff', accent:'#002b7f' };
+let customThemeColors = { primary:'#003da5', secondary:'#c8102e', tertiary:'#ffffff', accent:'#c8102e' };
 let _deviceThemeQuery = null;
 let _profileSaveTimer = null;
 let _profileLoadSequence = 0;

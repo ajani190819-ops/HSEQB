@@ -175,6 +175,7 @@ function applyColorTheme(id, persistLocal, syncRemote){
   const theme = custom ? null : getColorTheme(id);
   if (!custom && !theme) return applyColorTheme(DEFAULT_COLOR_THEME, persistLocal, syncRemote);
   colorTheme = custom ? 'custom' : theme.id;
+  document.documentElement.dataset.colorTheme = colorTheme;
   const primary   = custom ? customThemeColors.primary   : theme.primary;
   const secondary = custom ? customThemeColors.secondary : theme.secondary;
   const tertiary  = custom ? customThemeColors.tertiary : theme.tertiary;
