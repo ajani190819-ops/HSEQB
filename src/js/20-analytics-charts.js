@@ -143,7 +143,7 @@ box-shadow:var(--shadow-sm);
 flex:1 1 280px;
 box-sizing:border-box;
 overflow:hidden; }
-.ch-title{ font-size:.95em; font-weight:700; color:var(--primary-ink); margin-bottom:14px; }
+.ch-title{ font-size:.95em; font-weight:700; color:var(--primary); margin-bottom:14px; }
 .ch-section{
 width:100%;
 font-size:.75em;

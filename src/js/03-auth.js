@@ -1,125 +1,5 @@
-const AUTH_EMAIL_CACHE_PREFIX = 'qb_authEmailForUid:';
-const AUTH_RECOVERY_NOTICE_KEY = 'qb_authRecoveryNotice';
 function authMessage(msg){ const e=$('authError'); if(e)e.textContent=msg||''; }
 function authEmail(){ return ($('authEmail')?.value||'').trim().toLowerCase(); }
-function userIdSignInUid(){ return ($('userIdSignInUid')?.value||'').trim(); }
-function setUserIdSignInStatus(message, color){
-  const el = $('userIdSignInStatus');
-  if (!el) return;
-  el.textContent = message || '';
-  el.style.color = color || '';
-}
-function stageAuthRecoveryNotice(uid, email, notice){
-  const nextUid = String(uid || '').trim();
-  const nextEmail = String(email || '').trim().toLowerCase();
-  if (nextUid) localStorage.setItem('qb_lastAuthUid', nextUid);
-  if (nextUid && nextEmail) localStorage.setItem(AUTH_EMAIL_CACHE_PREFIX + nextUid, nextEmail);
-  if (notice) localStorage.setItem(AUTH_RECOVERY_NOTICE_KEY, notice);
-  else localStorage.removeItem(AUTH_RECOVERY_NOTICE_KEY);
-}
-function hydrateAuthRecoveryFields(){
-  const uid = localStorage.getItem('qb_lastAuthUid') || localStorage.getItem('qb_profileOwnerUid') || '';
-  const email = uid ? (localStorage.getItem(AUTH_EMAIL_CACHE_PREFIX + uid) || '').trim().toLowerCase() : '';
-  const emailInput = $('authEmail');
-  const passwordInput = $('authPassword');
-  const notice = (localStorage.getItem(AUTH_RECOVERY_NOTICE_KEY) || '').trim();
-  let hydrated = false;
-  if (emailInput && email && (!emailInput.value || notice)){
-    emailInput.value = email;
-    hydrated = true;
-  }
-  if (passwordInput) passwordInput.value = '';
-  if (notice){
-    authMessage(notice);
-    localStorage.removeItem(AUTH_RECOVERY_NOTICE_KEY);
-    hydrated = true;
-  }
-  if (hydrated && email && $('authGate')?.style.display !== 'none') passwordInput?.focus();
-  return hydrated;
-}
-function lookupAuthRecoveryIdentity(uid){
-  const normalizedUid = String(uid || '').trim();
-  if (!normalizedUid) return Promise.resolve({ uid:'', email:'', hasRecord:false, isAnonymousAccount:false, source:'empty' });
-  const cachedEmail = (localStorage.getItem(AUTH_EMAIL_CACHE_PREFIX + normalizedUid) || '').trim().toLowerCase();
-  if (cachedEmail) return Promise.resolve({ uid:normalizedUid, email:cachedEmail, hasRecord:true, isAnonymousAccount:false, source:'device' });
-  if (isIframe) return Promise.resolve({ uid:normalizedUid, email:'', hasRecord:false, isAnonymousAccount:false, source:'preview' });
-  const profilePromise = userProfilesRef?.child ? userProfilesRef.child(normalizedUid).once('value').catch(() => null) : Promise.resolve(null);
-  const identityPromise = userIdentitiesRef?.child ? userIdentitiesRef.child(normalizedUid).once('value').catch(() => null) : Promise.resolve(null);
-  return Promise.all([profilePromise, identityPromise]).then(([profileSnap, identitySnap]) => {
-    const profile = profileSnap?.val?.() || {};
-    const identity = identitySnap?.val?.() || {};
-    const email = String(profile.email || identity.email || '').trim().toLowerCase();
-    const hasRecord = !!(Object.keys(profile).length || Object.keys(identity).length);
-    const isAnonymousAccount = profile.isAnonymous === true || identity.isAnonymous === true;
-    if (email) localStorage.setItem(AUTH_EMAIL_CACHE_PREFIX + normalizedUid, email);
-    return { uid:normalizedUid, email, hasRecord, isAnonymousAccount, source:'firebase' };
-  });
-}
-function cacheAuthRecoveryIdentity(user, profile){
-  const uid = String(user?.uid || '').trim();
-  if (!uid) return;
-  localStorage.setItem('qb_lastAuthUid', uid);
-  const email = String(user?.email || profile?.email || '').trim().toLowerCase();
-  if (email) localStorage.setItem(AUTH_EMAIL_CACHE_PREFIX + uid, email);
-  if (isIframe || !email) return;
-  const lastSeen = new Date().toISOString();
-  const name = String(profile?.displayName || profile?.name || user?.displayName || '').trim();
-  if (userProfileRef) userProfileRef.update({ email, isAnonymous:!!user?.isAnonymous, lastSeen }).catch(() => {});
-  if (userIdentitiesRef?.child){
-    const identity = { email, uid, lastSeen };
-    if (name) identity.name = name;
-    userIdentitiesRef.child(uid).update(identity).catch(() => {});
-  }
-}
-function continueUserIdPanelSignIn(uid, email){
-  const normalizedUid = String(uid || '').trim();
-  const normalizedEmail = String(email || '').trim().toLowerCase();
-  if (!normalizedUid || !normalizedEmail) return Promise.resolve();
-  stageAuthRecoveryNotice(normalizedUid, normalizedEmail, 'Email filled from User ID settings. Enter your password to sign in.');
-  const emailInput = $('authEmail');
-  if (emailInput) emailInput.value = normalizedEmail;
-  if (!authUser){
-    authMessage('Email filled from User ID settings. Enter your password to sign in.');
-    $('authPassword')?.focus();
-    return Promise.resolve();
-  }
-  setUserIdSignInStatus('Signing out and opening the password screen…', 'var(--text2)');
-  return firebase.auth().signOut().then(() => setUserIdSignInStatus(''));
-}
-function prepareUserIdPanelSignIn(){
-  const uid = userIdSignInUid();
-  if (!uid){ setUserIdSignInStatus('Enter the Firebase UID you want to sign in with.', 'var(--danger)'); return; }
-  if (uid.length > 128 || /\s/.test(uid)){ setUserIdSignInStatus('That does not look like a valid Firebase UID.', 'var(--danger)'); return; }
-  if (authUser?.uid === uid && !authUser?.isAnonymous){ setUserIdSignInStatus('You are already signed in as that Firebase UID.', 'var(--success)'); return; }
-  localStorage.setItem('qb_lastAuthUid', uid);
-  setUserIdSignInStatus('Looking up that UID…', 'var(--text2)');
-  lookupAuthRecoveryIdentity(uid).then(result => {
-    if (result.email){
-      const prompt = 'We found ' + result.email + ' for that UID. Sign out and continue to the password screen?';
-      const run = () => continueUserIdPanelSignIn(uid, result.email)
-        .catch(err => setUserIdSignInStatus('Could not switch sign-in: ' + err.message, 'var(--danger)'));
-      if (authUser){
-        showConfirm(prompt, 'Continue').then(ok => {
-          if (!ok){ setUserIdSignInStatus('Sign-in switch cancelled.', 'var(--text2)'); return; }
-          run();
-        });
-        return;
-      }
-      run();
-      return;
-    }
-    if (result.source === 'preview'){
-      setUserIdSignInStatus('UID lookup is unavailable in preview mode unless this device already knows that account email.', 'var(--danger)');
-      return;
-    }
-    if (result.isAnonymousAccount || result.hasRecord){
-      setUserIdSignInStatus('That UID belongs to a guest account or an account without email sign-in. Firebase still requires the original sign-in method.', 'var(--warning)');
-      return;
-    }
-    setUserIdSignInStatus('No saved sign-in details were found for that UID.', 'var(--danger)');
-  }).catch(err => setUserIdSignInStatus('Could not look up that UID: ' + err.message, 'var(--danger)'));
-}
-function prepareUidSignIn(){ prepareUserIdPanelSignIn(); }
 function submitAuth(e){
   e.preventDefault();
   authMessage('Signing in…');
@@ -156,10 +36,9 @@ function resetAuthPassword(){
 }
 function getUserCustomization(){
   const inlineAccent = document.documentElement.style.getPropertyValue('--primary').trim();
-  const customization = {
+  return {
     themeMode: normalizeThemeMode(themeMode),
     accentStyle: normalizeAccentStyle(accentStyle),
-    visualStyle: normalizeVisualStyle(visualStyle),
     accentColor: inlineAccent || localStorage.getItem('accentColor') || DEFAULT_ACCENT,
     colorTheme: colorTheme || DEFAULT_COLOR_THEME,
     customPrimary: customThemeColors.primary,
@@ -168,10 +47,6 @@ function getUserCustomization(){
     hideScrollbars: !!document.body?.classList.contains('hide-scrollbars'),
     sidebarCollapsed: !!$('mainSidebar')?.classList.contains('collapsed')
   };
-  ADVANCED_THEME_KEYS.forEach(key => {
-    if (_isHex(advancedThemeColors[key])) customization[ADVANCED_THEME_STORAGE_KEYS[key]] = advancedThemeColors[key];
-  });
-  return customization;
 }
 function setProfileSyncStatus(message, color){
   ['profileSyncStatus','visualSettingsSyncStatus'].forEach(id =>{
@@ -212,22 +87,18 @@ function resetLocalCustomizationForAccountSwitch(){
   localStorage.removeItem('accentColor');
   localStorage.removeItem('colorTheme');
   localStorage.removeItem('accentStyle');
-  localStorage.removeItem('visualStyle');
   localStorage.removeItem('customPrimary');
   localStorage.removeItem('customSecondary');
   localStorage.removeItem('customAccent');
-  ADVANCED_THEME_KEYS.forEach(key => localStorage.removeItem(ADVANCED_THEME_STORAGE_KEYS[key]));
   localStorage.removeItem('hideScrollbars');
   localStorage.removeItem('sidebarCollapsed');
   applyTheme('device', true, false);
-  ['--primary','--primary-light','--primary-dark','--secondary','--accent-line','--tertiary','--hse-blue','--hse-red','--hse-white','--panel-accent','--surface-stripe','--highlight-base','--button-primary','--button-secondary','--banner-stripe','--banner-stripe-soft','--banner-outline','--filled-control-bg','--filled-control-border','--filled-control-shadow','--stripe-fill-mid'].forEach(v => document.documentElement.style.removeProperty(v));
+  ['--primary','--primary-light','--primary-dark','--secondary','--accent-line','--tertiary','--hse-blue','--hse-red','--hse-white'].forEach(v => document.documentElement.style.removeProperty(v));
   document.body.classList.remove('hide-scrollbars');
   const hideToggle=$('hideScrollbarsToggle'); if(hideToggle) hideToggle.checked=false;
   const base=getColorTheme(DEFAULT_COLOR_THEME);
   customThemeColors={ primary:base.primary, secondary:base.secondary, tertiary:base.tertiary || '#ffffff', accent:base.accent || base.secondary };
-  advancedThemeColors = ADVANCED_THEME_KEYS.reduce((acc, key) => ({ ...acc, [key]:'' }), {});
   applyColorTheme(DEFAULT_COLOR_THEME, true, false);
-  applyVisualStyle(DEFAULT_VISUAL_STYLE, true, false);
   applyAccentStyle(DEFAULT_ACCENT_STYLE, true, false);
 }
 function extractProfileCustomization(profile){
@@ -238,14 +109,9 @@ function extractProfileCustomization(profile){
   if (typeof source.accentColor === 'string' && /^#[0-9a-f]{6}$/i.test(source.accentColor)) result.accentColor = source.accentColor;
   if (source.colorTheme === 'custom' || getColorTheme(source.colorTheme)) result.colorTheme = source.colorTheme;
   if (ACCENT_STYLES.includes(String(source.accentStyle || '').toLowerCase())) result.accentStyle = String(source.accentStyle).toLowerCase();
-  if (VISUAL_STYLES.includes(String(source.visualStyle || '').toLowerCase())) result.visualStyle = String(source.visualStyle).toLowerCase();
   if (typeof source.customPrimary === 'string' && /^#[0-9a-f]{6}$/i.test(source.customPrimary)) result.customPrimary = source.customPrimary;
   if (typeof source.customSecondary === 'string' && /^#[0-9a-f]{6}$/i.test(source.customSecondary)) result.customSecondary = source.customSecondary;
   if (typeof source.customAccent === 'string' && /^#[0-9a-f]{6}$/i.test(source.customAccent)) result.customAccent = source.customAccent;
-  ADVANCED_THEME_KEYS.forEach(key => {
-    const storageKey = ADVANCED_THEME_STORAGE_KEYS[key];
-    if (typeof source[storageKey] === 'string' && /^#[0-9a-f]{6}$/i.test(source[storageKey])) result[storageKey] = source[storageKey];
-  });
   if (typeof source.hideScrollbars === 'boolean') result.hideScrollbars = source.hideScrollbars;
   if (typeof source.sidebarCollapsed === 'boolean') result.sidebarCollapsed = source.sidebarCollapsed;
   return result;
@@ -281,18 +147,9 @@ function applyAuthenticatedUserProfile(profile, user){
   if (customization.customSecondary) customThemeColors.secondary = customization.customSecondary.toLowerCase();
   if (customization.customAccent) customThemeColors.accent = customization.customAccent.toLowerCase();
   else if (customization.customSecondary) customThemeColors.accent = customization.customSecondary.toLowerCase();
-  advancedThemeColors = ADVANCED_THEME_KEYS.reduce((acc, key) => {
-    const storageKey = ADVANCED_THEME_STORAGE_KEYS[key];
-    acc[key] = (typeof customization[storageKey] === 'string' && /^#[0-9a-f]{6}$/i.test(customization[storageKey]))
-      ? customization[storageKey].toLowerCase()
-      : '';
-    return acc;
-  }, {});
   if (customization.colorTheme) applyColorTheme(customization.colorTheme, true, false);
   else if (customization.accentColor) setAccentColor(customization.accentColor, true, false);
-  applyVisualStyle(customization.visualStyle || visualStyle, true, false);
   applyAccentStyle(customization.accentStyle || accentStyle, true, false);
-  applyAdvancedThemeOverrides(advancedThemeColors, true, false);
   if (typeof customization.hideScrollbars === 'boolean'){
     document.body.classList.toggle('hide-scrollbars', customization.hideScrollbars);
     const toggle=$('hideScrollbarsToggle'); if(toggle) toggle.checked=customization.hideScrollbars;
@@ -321,7 +178,6 @@ function initAuth(){
   setupDeviceThemeListener();
   restoreVisualSettings();
   syncThemeControls();
-  hydrateAuthRecoveryFields();
   const gate=$('authGate');
   if (gate && !firebase.auth().currentUser) gate.style.display='flex';
   firebase.auth().onAuthStateChanged(user =>{
@@ -331,8 +187,7 @@ function initAuth(){
       userProfileRef=null;
       updateAuthUI(null);
       if (gate) gate.style.display='flex';
-      const hydrated = hydrateAuthRecoveryFields();
-      if (!hydrated) authMessage('');
+      authMessage('');
       return;
     }
     clientId=user.uid;
@@ -350,7 +205,6 @@ function initAuth(){
       .then(profile =>{
         if (sequence !== _profileLoadSequence || authUser?.uid !== user.uid) return;
         applyAuthenticatedUserProfile(profile || {}, user);
-        cacheAuthRecoveryIdentity(user, profile || {});
         updateAuthUI(user);
         authMessage('');
         if (gate) gate.style.display='none';

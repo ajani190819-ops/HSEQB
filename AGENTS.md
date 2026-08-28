@@ -206,16 +206,13 @@ Score and are excluded from the team average and automatic `k`.
 
 ## Theming (HSE palette)
 
-The default palette is **Tricolor** (`DEFAULT_COLOR_THEME = 'tricolor'` in
-`01-constants.js`: primary `#003da5`, gradient `#c8102e`, white). The default
-accent style is **Gradient** (`DEFAULT_ACCENT_STYLE = 'gradient'`). Tricolor +
-pinstripe is the one automatic exception for the banner: it keeps red banner
-stripes and a red banner outline unless the user overrides them in Visual
-Settings. These
+The default palette is **Royal** (`DEFAULT_COLOR_THEME = 'royal'` in
+`01-constants.js`: primary `#0b41a8`, gradient `#002b7f`, white). The default
+accent style is **Gradient** (`DEFAULT_ACCENT_STYLE = 'gradient'`). These
 defaults must agree at three levels or the first frame drifts off-brand:
 
 1. `css/core.css` `:root` / `html.dark-mode` carry the **exact** values
-   `_paintColors('#003da5','#c8102e','#ffffff','#c8102e')` produces, so the pre-boot
+   `_paintColors('#0b41a8','#002b7f','#ffffff')` produces, so the pre-boot
    paint already looks like the default theme. Recompute them with the real
    `_shadeHex` / `_mixHex` / `_hexLum` helpers if a palette value changes —
    never by eye.
@@ -238,11 +235,7 @@ highlights all follow the palette and the light/dark mode automatically:
 | `--border-strong` | hover state for panels |
 | `--input-border` | inputs, subtlest tint |
 | `--highlight` / `--highlight-ink` / `--highlight-wash` | accent emphasis text, its contrast-adjusted hover shade, and a matching wash |
-| `--panel-accent` / `--surface-stripe` | outline tint and panel-pinstripe tint; both can be auto-routed or manually overridden from Advanced Theme Tuning |
-| `--highlight-base` | source color for contrast-adjusted highlight text and washes |
-| `--button-primary` / `--button-secondary` | strong sitewide gradient surfaces (buttons, selected chips, tabs, avatars, hero strips) |
-| `--banner-stripe` / `--banner-stripe-soft` | banner stripe colors; auto-chosen per theme/style but overridable from Visual Settings advanced controls |
-| `--banner-outline` | bottom rule on the top banner; normally accent-colored, with a manual override available in Visual Settings |
+| `--banner-stripe` / `--banner-stripe-soft` | light-only header texture so the accent color can stay reserved for outlines/highlights |
 
 Two rules keep this from breaking:
 

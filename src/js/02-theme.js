@@ -48,7 +48,6 @@ function applyTheme(mode, persistLocal, syncRemote){
     localStorage.setItem('darkMode', dark ? 'true' : 'false');
   }
   syncThemeControls();
-  if (typeof syncAdvancedThemeControls === 'function') syncAdvancedThemeControls();
   if (typeof _chartInstances !== 'undefined' && _chartInstances){
     Object.values(_chartInstances).forEach(chart =>{ try{ chart.update(); }catch(e){} });
   }
