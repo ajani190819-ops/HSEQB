@@ -503,7 +503,7 @@ html.dark-mode { --hse-blue:#0c4cc6; --hse-red:#ff4765; --hse-white:#f4f6fb; --a
   --header-control-text-muted:rgba(255,255,255,.74);
   /* Dark-mode accent text needs a much brighter lift than outlines so deep,
      saturated custom accents remain readable on dark cards. */
-  --highlight:color-mix(in srgb, var(--accent-line) 52%, #fff);
+  --highlight:color-mix(in srgb, var(--accent-line) 58%, #fff);
   --highlight-ink:color-mix(in srgb, var(--accent-line) 38%, #fff);
   --highlight-wash:color-mix(in srgb, var(--accent-line) 18%, transparent);
 }
@@ -772,4 +772,13 @@ html[data-accent-style="stripes"] .theme-swatch-chip {
 html[data-accent-style="stripes"] .auth-card,
 html[data-accent-style="stripes"] .updates-current-summary {
   border-image:repeating-linear-gradient(135deg, var(--stripe-band-a) 0 6px, var(--stripe-band-b) 6px 12px, var(--stripe-band-c) 12px 18px) 1;
+}
+
+/* Ensure HSE Team Overview and similar h2 remain readable in dark + pinstripe + tricolor */
+.dark-mode .qb-section h2{
+  text-shadow:0 1px 2px rgba(0,0,0,.35);
+}
+html[data-accent-style="stripes"] .qb-section h2{
+  position:relative;
+  z-index:1;
 }
