@@ -115,8 +115,38 @@ html.dark-mode { color-scheme: dark; }
   filter: brightness(1.04);
 }
 .sidebar-jump-menu {
-  margin-top: 8px;
   box-shadow: var(--shadow-xl);
+}
+
+/* Keep both Enhanced and Legacy rounded. Use the existing radius tokens so
+   the enhanced mode stays close to the classic scale instead of turning sharp. */
+.qb-section, .stat-card, .team-stat-card, .overall-ranking,
+.an-stat-box, .an-player-card, .an-cat-card, .an-lb-row, .an-team-card,
+.log-container, .session-info, .session-card, .player-card-wrap,
+.user-account-meta, .user-id-status, .custom-theme-panel, .vs-advanced-panel,
+.updates-current-summary, .updates-release-card, .row-card, .uid-signin-helper,
+.sidebar-jump-menu, .modal-content, .ql-row, .team-section, #playerPoolDisplay {
+  border-radius: var(--radius);
+}
+.button, .button-secondary, .button-danger, .button-success,
+.button-point-type, .button-category, .button-player,
+.header-btn, .sidebar-jump-btn, .sidebar-close-btn,
+.vs-mode-btn, .theme-swatch, .theme-swatch-chip,
+.custom-color-input, .custom-hex-input, .close-modal,
+input[type="file"], input[type="file"]::file-selector-button,
+.cat-group-label, .cat-group-chip, .updates-release-prompt,
+.btn-sm-primary, .btn-icon-32, .btn-icon-success, .btn-icon-danger, .btn-icon-20,
+.session-bulk-bar, .skill-panel-header {
+  border-radius: var(--radius-sm);
+}
+.auth-card input, .auth-card select, .uid-signin-helper input,
+.input-group input, .input-group textarea, .input-group select,
+.inp-std, .inp-sm, .updates-textarea {
+  border-radius: var(--radius-sm);
+}
+.analytics-tab, .sort-pill, .an-lb-chip, .pd-chip, .player-pool-item,
+.ql-cat-chip, .ql-confirm-btn, .ql-cancel-btn, .admin-current-pill, .admin-legacy-pill {
+  border-radius: 999px;
 }
 
 /* ===== iPad & coarse-pointer accessibility ===== */
@@ -684,6 +714,12 @@ input[type="file"]::file-selector-button, .button:not(.button-secondary):not(.bu
 .button-success {
   background:var(--filled-control-bg);
   box-shadow:var(--filled-control-shadow);
+}
+html[data-accent-style="stripes"] .button-secondary {
+  background:repeating-linear-gradient(135deg, #6c757d 0 8px, #98a1a9 8px 16px, #5a6268 16px 24px);
+}
+html[data-accent-style="stripes"] .button-danger {
+  background:repeating-linear-gradient(135deg, var(--danger) 0 8px, color-mix(in srgb, var(--danger) 52%, #fff) 8px 16px, var(--danger2) 16px 24px);
 }
 .an-bar-fill, .pd-bar-mini {
   background:linear-gradient(90deg, var(--button-primary), var(--button-secondary));
