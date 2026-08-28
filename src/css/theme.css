@@ -34,6 +34,9 @@ html.dark-mode { color-scheme: dark; }
   font: inherit;
 }
 .auth-card input:focus, .auth-card select:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 12%, transparent); }
+.auth-uid-helper { margin-top: 12px; padding: 11px 12px; border: 1.5px solid var(--border); border-radius: 10px; background: var(--sec-bg); }
+.auth-uid-helper-title { font-size: .82em; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.auth-uid-helper p { margin: 0 0 8px; font-size: .76em; line-height: 1.45; color: var(--text2); }
 .auth-corner-theme {
   position: absolute;
   top: 14px;

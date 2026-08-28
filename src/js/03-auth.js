@@ -1,5 +1,67 @@
+const AUTH_EMAIL_CACHE_PREFIX = 'qb_authEmailForUid:';
 function authMessage(msg){ const e=$('authError'); if(e)e.textContent=msg||''; }
 function authEmail(){ return ($('authEmail')?.value||'').trim().toLowerCase(); }
+function authUid(){ return ($('authUid')?.value||'').trim(); }
+function hydrateAuthRecoveryFields(){
+  const uid = localStorage.getItem('qb_lastAuthUid') || localStorage.getItem('qb_profileOwnerUid') || '';
+  const uidInput = $('authUid');
+  if (uidInput && uid && !uidInput.value) uidInput.value = uid;
+  const email = uid ? (localStorage.getItem(AUTH_EMAIL_CACHE_PREFIX + uid) || '').trim().toLowerCase() : '';
+  const emailInput = $('authEmail');
+  if (emailInput && email && !emailInput.value) emailInput.value = email;
+}
+function cacheAuthRecoveryIdentity(user, profile){
+  const uid = String(user?.uid || '').trim();
+  if (!uid) return;
+  localStorage.setItem('qb_lastAuthUid', uid);
+  const email = String(user?.email || profile?.email || '').trim().toLowerCase();
+  if (email) localStorage.setItem(AUTH_EMAIL_CACHE_PREFIX + uid, email);
+  if (isIframe || !email) return;
+  const lastSeen = new Date().toISOString();
+  const name = String(profile?.displayName || profile?.name || user?.displayName || '').trim();
+  if (userProfileRef) userProfileRef.update({ email, isAnonymous:!!user?.isAnonymous, lastSeen }).catch(() => {});
+  if (userIdentitiesRef?.child){
+    const identity = { email, uid, lastSeen };
+    if (name) identity.name = name;
+    userIdentitiesRef.child(uid).update(identity).catch(() => {});
+  }
+}
+function prepareUidSignIn(){
+  const uid = authUid();
+  if (!uid){ authMessage('Enter your Firebase UID first.'); return; }
+  if (uid.length > 128 || /\s/.test(uid)){ authMessage('That does not look like a valid Firebase UID.'); return; }
+  localStorage.setItem('qb_lastAuthUid', uid);
+  const cachedEmail = (localStorage.getItem(AUTH_EMAIL_CACHE_PREFIX + uid) || '').trim().toLowerCase();
+  if (cachedEmail){
+    const emailInput = $('authEmail'); if (emailInput) emailInput.value = cachedEmail;
+    authMessage('Email filled from this device. Enter your password to sign in.');
+    $('authPassword')?.focus();
+    return;
+  }
+  if (isIframe){ authMessage('UID lookup is unavailable in preview mode.'); return; }
+  authMessage('Looking up that UID…');
+  const profilePromise = userProfilesRef?.child ? userProfilesRef.child(uid).once('value').catch(() => null) : Promise.resolve(null);
+  const identityPromise = userIdentitiesRef?.child ? userIdentitiesRef.child(uid).once('value').catch(() => null) : Promise.resolve(null);
+  Promise.all([profilePromise, identityPromise]).then(([profileSnap, identitySnap]) => {
+    const profile = profileSnap?.val?.() || {};
+    const identity = identitySnap?.val?.() || {};
+    const email = String(profile.email || identity.email || '').trim().toLowerCase();
+    const hasRecord = !!(Object.keys(profile).length || Object.keys(identity).length);
+    const isAnonymousAccount = profile.isAnonymous === true;
+    if (email){
+      const emailInput = $('authEmail'); if (emailInput) emailInput.value = email;
+      localStorage.setItem(AUTH_EMAIL_CACHE_PREFIX + uid, email);
+      authMessage('Email found for that UID. Enter your password to sign in.');
+      $('authPassword')?.focus();
+      return;
+    }
+    if (isAnonymousAccount || hasRecord){
+      authMessage('That UID belongs to a guest account or an account without email sign-in. Firebase still requires the original sign-in method.');
+      return;
+    }
+    authMessage('No saved sign-in details were found for that UID.');
+  }).catch(err => authMessage('Could not look up that UID: ' + err.message));
+}
 function submitAuth(e){
   e.preventDefault();
   authMessage('Signing in…');
@@ -196,6 +258,7 @@ function initAuth(){
   setupDeviceThemeListener();
   restoreVisualSettings();
   syncThemeControls();
+  hydrateAuthRecoveryFields();
   const gate=$('authGate');
   if (gate && !firebase.auth().currentUser) gate.style.display='flex';
   firebase.auth().onAuthStateChanged(user =>{
@@ -205,6 +268,7 @@ function initAuth(){
       userProfileRef=null;
       updateAuthUI(null);
       if (gate) gate.style.display='flex';
+      hydrateAuthRecoveryFields();
       authMessage('');
       return;
     }
@@ -223,6 +287,7 @@ function initAuth(){
       .then(profile =>{
         if (sequence !== _profileLoadSequence || authUser?.uid !== user.uid) return;
         applyAuthenticatedUserProfile(profile || {}, user);
+        cacheAuthRecoveryIdentity(user, profile || {});
         updateAuthUI(user);
         authMessage('');
         if (gate) gate.style.display='none';
