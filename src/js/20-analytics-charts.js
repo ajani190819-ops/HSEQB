@@ -77,6 +77,14 @@ const PALETTE=['#667eea','#764ba2','#11998e','#f39c12','#e74c5c','#3498db','#2ec
 const _CC={'Literature':'#3b82f6','Science':'#11998e','History':'#f97316','Social Studies':'#eab308','Pop Culture':'#a855f7','Fine Arts':'#06b6d4'};
 function catColor(p){return catColors[p]||_CC[p]||PALETTE[Object.keys(CATEGORY_TREE).indexOf(p)%PALETTE.length];}
 function mixColor(hex,bg,r){const[R,G,B]=[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16));return`rgb(${Math.round(R*r+bg[0]*(1-r))},${Math.round(G*r+bg[1]*(1-r))},${Math.round(B*r+bg[2]*(1-r))})`;}
+// Canvas fills can't read CSS custom properties, so pull the painted accent
+// (the HSE blue by default) and derive translucent chart colors from it.
+function accentRgba(alpha, fb){
+const v = (getComputedStyle(document.documentElement).getPropertyValue('--primary') || '').trim();
+const hex = /^#[0-9a-f]{6}$/i.test(v) ? v : fb;
+const [R,G,B] = [1,3,5].map(i => parseInt(hex.slice(i, i + 2), 16));
+return `rgba(${R},${G},${B},${alpha})`;
+}
 const isDark=document.body.classList.contains('dark-mode');
 const gridColor=isDark?'rgba(255,255,255,.08)':'rgba(0,0,0,.07)', labelColor=isDark?'#9ba3c0':'#5a6178';
 const tooltipBg=isDark?'#1c2128':'#fff', tooltipTxt=isDark?'#e6eaf4':'#1a1a2e';
@@ -129,7 +137,7 @@ let html = `<style>
 .ch-player-row .ch-card > div:last-child{ flex:1; }
 .ch-card{
 background:var(--card);
-border:2px solid var(--border);
+border:2px solid var(--panel-border);
 border-radius:10px;
 padding:18px;
 box-shadow:var(--shadow-sm);
@@ -446,7 +454,7 @@ const pdf = Math.exp(-0.5 * Math.pow((x - idealMean) / idealSd, 2)) / (idealSd *
 ideal.push({ x, y:pdf * binW * 100 });
 }
 const isDarkDist = document.body.classList.contains('dark-mode');
-const barFill = isDarkDist ? 'rgba(102,126,234,.5)' : 'rgba(102,126,234,.45)';
+const barFill = isDarkDist ? accentRgba(.5, '#527cc2') : accentRgba(.45, '#2257b1');
 const scoreBandTooltip = { ...pluginDefaults.tooltip, callbacks:{
 title:items =>{
 const it = items && items[0];

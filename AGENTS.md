@@ -204,6 +204,54 @@ Score and are excluded from the team average and automatic `k`.
   + `icons/icon.png` + `apple-touch-icon` support "Add to Home Screen" as a
   standalone app. Pinch-zoom is intentionally left enabled for accessibility.
 
+## Theming (HSE palette)
+
+The default palette is **Tricolor** (`DEFAULT_COLOR_THEME = 'tricolor'` in
+`01-constants.js`: HSE blue `#003da5`, red `#c8102e`, white). It is the default
+at three levels, and all three must agree or the first frame drifts off-brand:
+
+1. `css/core.css` `:root` / `html.dark-mode` carry the **exact** values
+   `_paintColors('#003da5','#c8102e','#ffffff')` produces, so the pre-boot
+   paint already looks like the default theme. Recompute them with the real
+   `_shadeHex` / `_mixHex` / `_hexLum` helpers if a palette value changes —
+   never by eye.
+2. `restoreVisualSettings()` falls back to `DEFAULT_COLOR_THEME` when nothing
+   is stored, and `resetLocalCustomizationForAccountSwitch()` strips the inline
+   custom properties back to those same defaults.
+3. `css/theme.css` holds the HSE color language (see below).
+
+**Palette tokens** — `_paintColors()` (`21-sidebar-ui.js`) is the only place
+that writes inline custom properties: `--primary`, `--primary-light`,
+`--primary-dark`, `--secondary`, `--accent-line`, `--tertiary`, `--hse-blue`,
+`--hse-red`, `--hse-white`. Everything else is **derived in CSS** from
+`--accent-line` with `color-mix()` in `theme.css`, so it follows the palette and
+the light/dark mode automatically:
+
+| Token | Role |
+| --- | --- |
+| `--border` | hairlines and dividers — light companion-color tint over the neutral base |
+| `--panel-border` | panels, cards, containers — stronger tint, so outlines are never flat gray |
+| `--border-strong` | hover state for panels |
+| `--input-border` | inputs, subtlest tint |
+| `--highlight` / `--highlight-ink` / `--highlight-wash` | red emphasis text, its hover shade, and a red wash |
+
+Two rules keep this from breaking:
+
+- **Never declare a `_paintColors`-owned property (`--primary`, `--accent-line`,
+  …) inside a bare `.dark-mode` rule.** `body` carries `.dark-mode` too
+  (`02-theme.js`), and a stylesheet value there beats the value inherited from
+  the inline style on `<html>`, flattening every custom palette back to HSE.
+  Pre-paint dark defaults belong on `html.dark-mode`.
+- Blue stays the structural/interactive color; the companion red is for
+  emphasis (scores, ranks, player links, help headings) and outlines. Canvas
+  colors cannot read custom properties — use `accentRgba()` in
+  `20-analytics-charts.js` rather than a hardcoded hex.
+
+`core.css` keeps the plain neutral values (`--border:#c9cfdd`,
+`--input-border:#dde1ea`, dark `#444e63` / `#2d3340`) ahead of the `color-mix()`
+redeclarations in `theme.css`, so a browser without `color-mix()` support
+degrades to a gray outline instead of none.
+
 ## Gotchas
 
 1. **`renamePlayer` is defined twice** — once in `16-rename-substitute.js`

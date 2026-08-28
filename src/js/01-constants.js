@@ -1,4 +1,4 @@
-const VERSION = '3.11.0'; // auto-managed by bump.js
+const VERSION = '3.12.0'; // auto-managed by bump.js
 const DOWNLOAD_URL = 'https://raw.githubusercontent.com/ajani190819-ops/HSEQB/main/index.html';
 const DEFAULT_ACCENT = '#003da5'; // HSE blue from the default blue / white / red system
 const DEFAULT_COLOR_THEME = 'tricolor';
