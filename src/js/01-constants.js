@@ -1,12 +1,12 @@
 const VERSION = '3.12.0'; // auto-managed by bump.js
 const DOWNLOAD_URL = 'https://raw.githubusercontent.com/ajani190819-ops/HSEQB/main/index.html';
-const DEFAULT_ACCENT = '#0b41a8'; // Royal blue from the default HSE palette
-const DEFAULT_COLOR_THEME = 'royal';
+const DEFAULT_ACCENT = '#003da5'; // Tricolor blue from the default HSE palette
+const DEFAULT_COLOR_THEME = 'tricolor';
 // Named color themes. Each palette supplies a primary color, a gradient partner,
 // and (where useful) a third decorative color. _paintColors can also route a
 // separate accent color into outlines/highlights for the active appearance.
 const COLOR_THEMES = [
-  { id:'tricolor',name:'Tricolor',sub:'HSE',    primary:'#003da5', secondary:'#c8102e', tertiary:'#ffffff' },
+  { id:'tricolor',name:'Tricolor',sub:'HSE',    primary:'#003da5', secondary:'#c8102e', tertiary:'#ffffff', accent:'#c8102e' },
   { id:'royal',   name:'Royal',   sub:'HSE',      primary:'#0b41a8', secondary:'#002b7f', tertiary:'#ffffff' },
   { id:'indigo',  name:'Indigo',  sub:'Classic',  primary:'#667eea', secondary:'#764ba2' },
   { id:'teal',    name:'Teal',    sub:'Fresh',    primary:'#11998e', secondary:'#38ef7d' },
@@ -18,9 +18,10 @@ const COLOR_THEMES = [
 ];
 function getColorTheme(id){ return COLOR_THEMES.find(t => t.id === id) || null; }
 // How the palette is expressed across the UI:
-//  - 'stripes'  : gradients stay in the primary family, header texture stays
-//                 light, and the accent color is reserved for outlines,
-//                 highlights, and surface pinstripe tinting.
+//  - 'stripes'  : gradients stay in the primary family, banner texture usually
+//                 stays light, and the accent color is reserved for outlines,
+//                 highlights, and surface pinstripe tinting. Tricolor is the
+//                 exception: its pinstripe banner keeps red by default.
 //  - 'gradient' : the classic primary -> gradient-partner two-color blend.
 const ACCENT_STYLES = ['stripes', 'gradient'];
 const DEFAULT_ACCENT_STYLE = 'gradient';
@@ -50,8 +51,27 @@ const THEME_MODES = ['light', 'dark', 'device'];
 let themeMode = 'device';
 let colorTheme = DEFAULT_COLOR_THEME;
 let accentStyle = DEFAULT_ACCENT_STYLE;
-let customThemeColors = { primary:'#0b41a8', secondary:'#002b7f', tertiary:'#ffffff', accent:'#002b7f' };
-let advancedThemeColors = { bannerStripe:'', bannerOutline:'' };
+let customThemeColors = { primary:'#003da5', secondary:'#c8102e', tertiary:'#ffffff', accent:'#c8102e' };
+let advancedThemeColors = { bannerStripe:'', bannerOutline:'', surfaceStripe:'', panelOutline:'', highlightText:'', buttonPrimary:'', buttonSecondary:'' };
+const ADVANCED_THEME_STORAGE_KEYS = {
+  bannerStripe:'customBannerStripe',
+  bannerOutline:'customBannerOutline',
+  surfaceStripe:'customSurfaceStripe',
+  panelOutline:'customPanelOutline',
+  highlightText:'customHighlightText',
+  buttonPrimary:'customButtonPrimary',
+  buttonSecondary:'customButtonSecondary'
+};
+const ADVANCED_THEME_CSS_VARS = {
+  bannerStripe:'--banner-stripe',
+  bannerOutline:'--banner-outline',
+  surfaceStripe:'--surface-stripe',
+  panelOutline:'--panel-accent',
+  highlightText:'--highlight-base',
+  buttonPrimary:'--button-primary',
+  buttonSecondary:'--button-secondary'
+};
+const ADVANCED_THEME_KEYS = Object.keys(ADVANCED_THEME_STORAGE_KEYS);
 let _deviceThemeQuery = null;
 let _profileSaveTimer = null;
 let _profileLoadSequence = 0;

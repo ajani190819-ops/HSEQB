@@ -12,13 +12,15 @@ function restoreVisualSettings(){
   const hideEl=$('hideScrollbarsToggle'); if(hideEl) hideEl.checked=hide;
   localStorage.setItem('hideScrollbars',hide ? 'true' : 'false');
   const cp=get('customPrimary',null), cs=get('customSecondary',null), ca=get('customAccent',null);
-  const cbs=get('customBannerStripe',null), cbo=get('customBannerOutline',null);
   if(/^#[0-9a-f]{6}$/i.test(cp||'')) customThemeColors.primary=String(cp).toLowerCase();
   if(/^#[0-9a-f]{6}$/i.test(cs||'')) customThemeColors.secondary=String(cs).toLowerCase();
   if(/^#[0-9a-f]{6}$/i.test(ca||'')) customThemeColors.accent=String(ca).toLowerCase();
   else customThemeColors.accent=customThemeColors.secondary;
-  advancedThemeColors.bannerStripe = /^#[0-9a-f]{6}$/i.test(cbs||'') ? String(cbs).toLowerCase() : '';
-  advancedThemeColors.bannerOutline = /^#[0-9a-f]{6}$/i.test(cbo||'') ? String(cbo).toLowerCase() : '';
+  advancedThemeColors = ADVANCED_THEME_KEYS.reduce((acc, key) => {
+    const raw = get(ADVANCED_THEME_STORAGE_KEYS[key], null);
+    acc[key] = /^#[0-9a-f]{6}$/i.test(raw||'') ? String(raw).toLowerCase() : '';
+    return acc;
+  }, {});
   const ct=get('colorTheme',null);
   const ac=get('accentColor',null);
   if(ct==='custom' || getColorTheme(ct)) applyColorTheme(ct,true,false);

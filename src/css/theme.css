@@ -361,7 +361,7 @@ button, .button, .ql-btn, .ql-cat-chip, .ql-confirm-btn, .ql-cancel-btn, .header
 .theme-swatch { display:flex; flex-direction:column; align-items:center; gap:4px; padding:9px 5px; border:2px solid var(--border); border-radius:var(--radius-sm);
   background:var(--card); cursor:pointer; font-family:inherit; transition:border-color .15s, transform .12s, box-shadow .15s; touch-action:manipulation; }
 .theme-swatch:hover { border-color:var(--primary-light); transform:translateY(-1px); }
-.theme-swatch.active { border-color:var(--primary); box-shadow:0 0 0 2px color-mix(in srgb, var(--primary) 28%, transparent); }
+.theme-swatch.active { border-color:var(--primary-ink); box-shadow:0 0 0 2px color-mix(in srgb, var(--primary-ink) 28%, transparent); }
 .theme-swatch-chip { width:100%; height:26px; border-radius:6px; border:1.5px solid rgba(0,0,0,.18); box-shadow:inset 0 1px 3px rgba(255,255,255,.25); }
 .theme-swatch-name { font-size:.76em; font-weight:700; color:var(--text); line-height:1.1; }
 .theme-swatch-sub { font-size:.65em; font-weight:600; color:var(--text3); line-height:1.1; }
@@ -377,18 +377,20 @@ button, .button, .ql-btn, .ql-cat-chip, .ql-confirm-btn, .ql-cancel-btn, .header
 .custom-hex-input { flex:1; min-width:0; padding:7px 9px; border:1.5px solid var(--border); border-radius:6px; background:var(--input-bg); color:var(--input-text);
   font-family:monospace; font-size:.85em; text-transform:lowercase; }
 .vs-reset-btn { width:100%; margin-top:4px; }
-.vs-advanced-panel { margin-top:10px; border:1.5px solid var(--border); border-radius:var(--radius-sm); background:var(--sec-bg); overflow:hidden; }
-.vs-advanced-summary { list-style:none; display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; cursor:pointer; user-select:none; }
+.vs-advanced-panel { margin-top:10px; margin-bottom:4px; border:1.5px solid var(--panel-border); border-radius:var(--radius-sm); background:var(--sec-bg); overflow:hidden; box-shadow:var(--shadow-xs); }
+.vs-advanced-summary { list-style:none; display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; cursor:pointer; user-select:none; background:color-mix(in srgb, var(--surface-stripe) 5%, var(--sec-bg)); }
 .vs-advanced-summary::-webkit-details-marker { display:none; }
 .vs-advanced-summary::after { content:'▾'; font-size:.82em; color:var(--text3); transition:transform .2s ease; }
 .vs-advanced-panel[open] .vs-advanced-summary::after { transform:rotate(180deg); }
+.vs-advanced-panel[open] .vs-advanced-summary { border-bottom:1.5px solid var(--border); }
 .vs-advanced-copy { display:flex; flex-direction:column; gap:2px; min-width:0; }
 .vs-advanced-copy strong { font-size:.84em; color:var(--text); }
 .vs-advanced-copy span { font-size:.72em; color:var(--text3); font-weight:600; line-height:1.35; }
 .vs-advanced-status { font-size:.72em; font-weight:700; color:var(--text3); white-space:nowrap; }
-.vs-advanced-body { padding:0 12px 12px; border-top:1.5px solid var(--border); }
-.vs-advanced-panel .custom-theme-row:first-of-type { margin-top:2px; }
-.vs-advanced-panel .custom-theme-row label { flex-basis:94px; }
+.vs-advanced-body { padding:12px; background:var(--card); }
+.vs-advanced-grid { display:grid; gap:10px; }
+.vs-advanced-panel .custom-theme-row { margin-bottom:0; }
+.vs-advanced-panel .custom-theme-row label { flex-basis:110px; }
 
 /* Interface toggles */
 .vs-toggle-row { display:flex; align-items:center; gap:11px; }
@@ -406,10 +408,19 @@ button, .button, .ql-btn, .ql-cat-chip, .ql-confirm-btn, .ql-cancel-btn, .header
    values are painted by _paintColors so accents respond to light and dark mode. */
 :root {
   --tertiary:#fff;
-  --hse-blue:#2656b2;
-  --hse-red:#335699;
+  --hse-blue:#2257b1;
+  --hse-red:#cf2e49;
   --hse-white:#fff;
-  --accent-line:#335699;
+  --accent-line:#cf2e49;
+  --panel-accent:var(--accent-line);
+  --surface-stripe:var(--panel-accent);
+  --highlight-base:var(--accent-line);
+  --button-primary:var(--primary);
+  --button-secondary:var(--secondary);
+  --banner-outline:var(--panel-accent);
+  --primary-ink:var(--primary);
+  --primary-ink-hover:color-mix(in srgb, var(--primary) 72%, #000);
+  --primary-wash:color-mix(in srgb, var(--primary) 12%, transparent);
   /* Surface neutrals are kept as a fallback, then lightly tinted toward the
      active palette so the app reads as themed rather than plain gray. */
   --bg-neutral:#f7f9fd;
@@ -448,21 +459,21 @@ button, .button, .ql-btn, .ql-cat-chip, .ql-confirm-btn, .ql-cancel-btn, .header
   /* Panel outlines always carry a tint of the palette's accent color instead
      of flat gray. Panels take the strongest tint, the hairlines inside them the
      softest, so the hierarchy still reads. */
-  --border:color-mix(in srgb, var(--accent-line) var(--border-mix), var(--border-neutral));
-  --panel-border:color-mix(in srgb, var(--accent-line) var(--panel-border-mix), var(--border-neutral));
-  --border-strong:color-mix(in srgb, var(--accent-line) var(--border-strong-mix), var(--border-neutral));
-  --input-border:color-mix(in srgb, var(--accent-line) var(--input-border-mix), var(--input-border-neutral));
+  --border:color-mix(in srgb, var(--panel-accent) var(--border-mix), var(--border-neutral));
+  --panel-border:color-mix(in srgb, var(--panel-accent) var(--panel-border-mix), var(--border-neutral));
+  --border-strong:color-mix(in srgb, var(--panel-accent) var(--border-strong-mix), var(--border-neutral));
+  --input-border:color-mix(in srgb, var(--panel-accent) var(--input-border-mix), var(--input-border-neutral));
   /* Highlighted text — scores, ranks, player links, doc headings — reads in the
-     accent color while blue stays the structural and interactive color. */
-  --highlight:var(--accent-line);
-  --highlight-ink:color-mix(in srgb, var(--accent-line) 72%, #000);
-  --highlight-wash:color-mix(in srgb, var(--accent-line) 12%, transparent);
+     accent role while blue stays the structural and interactive color. */
+  --highlight:var(--highlight-base);
+  --highlight-ink:color-mix(in srgb, var(--highlight-base) 72%, #000);
+  --highlight-wash:color-mix(in srgb, var(--highlight-base) 12%, transparent);
 }
 
 /* Pre-paint dark defaults for palette-owned values. Scoped to html.dark-mode on
    purpose: body carries .dark-mode too, and a stylesheet value there would beat
    the inline colors painted on <html>, flattening every custom palette. */
-html.dark-mode { --hse-blue:#0c4cc6; --hse-red:#0045cb; --hse-white:#f4f6fb; --accent-line:#0045cb; }
+html.dark-mode { --hse-blue:#004ac7; --hse-red:#e61134; --hse-white:#f4f6fb; --accent-line:#e61134; }
 
 /* Dark surfaces need a little more chroma in the mix for the same tint to
    read with the same energy they have on light cards. */
@@ -493,11 +504,14 @@ html.dark-mode { --hse-blue:#0c4cc6; --hse-red:#0045cb; --hse-white:#f4f6fb; --a
   --banner-stripe:color-mix(in srgb, var(--hse-white) 72%, var(--primary-light));
   --banner-stripe-soft:color-mix(in srgb, var(--hse-white) 48%, var(--primary-light));
   --stripe-surface-mix:7%;
+  --primary-ink:color-mix(in srgb, var(--primary) 52%, #fff);
+  --primary-ink-hover:color-mix(in srgb, var(--primary) 36%, #fff);
+  --primary-wash:color-mix(in srgb, var(--primary) 18%, transparent);
   /* Dark-mode accent text needs a much brighter lift than outlines so deep,
      saturated custom accents remain readable on dark cards. */
-  --highlight:color-mix(in srgb, var(--accent-line) 52%, #fff);
-  --highlight-ink:color-mix(in srgb, var(--accent-line) 38%, #fff);
-  --highlight-wash:color-mix(in srgb, var(--accent-line) 18%, transparent);
+  --highlight:color-mix(in srgb, var(--highlight-base) 52%, #fff);
+  --highlight-ink:color-mix(in srgb, var(--highlight-base) 38%, #fff);
+  --highlight-wash:color-mix(in srgb, var(--highlight-base) 18%, transparent);
 }
 
 /* Panels, cards and containers get the stronger accent-tinted edge. (The auth
@@ -511,7 +525,15 @@ html.dark-mode { --hse-blue:#0c4cc6; --hse-red:#0045cb; --hse-white:#f4f6fb; --a
 /* Hovering a panel deepens the accent edge instead of turning it blue. */
 .qb-section:hover, .stat-card:hover, .team-stat-card:hover { border-color:var(--border-strong); }
 /* Team cards keep their colored rule, but the rule now follows the accent color. */
-.team-stat-card, .an-team-card { border-left-color:var(--accent-line); }
+.team-stat-card, .an-team-card { border-left-color:var(--panel-accent); }
+
+#activeThemeLabel, .theme-swatch.active .theme-swatch-name, .theme-swatch.active .theme-swatch-sub,
+.cat-group-label, .cat-group-chip:hover, .an-cat-title, .ch-title, .session-card-title,
+.mono-primary, .primary, .m12-fs11, .an-lb-chip.power { color:var(--primary-ink); }
+.cat-group-label { background:color-mix(in srgb, var(--primary-ink) 12%, transparent); border-color:color-mix(in srgb, var(--primary-ink) 30%, transparent); }
+.cat-group-label:hover, .sort-pill:hover { color:var(--primary-ink-hover); border-color:var(--primary-ink); background:color-mix(in srgb, var(--primary-ink) 20%, transparent); }
+.cat-group-chip:hover { color:var(--primary-ink); border-color:var(--primary-ink); background:color-mix(in srgb, var(--primary-ink) 8%, transparent); }
+.an-lb-chip.power { background:var(--primary-wash); border-color:var(--primary-ink); }
 
 /* Highlighted text and emphasis. */
 .player-score, .team-score, .stat-value, .session-info-row strong,
@@ -537,8 +559,9 @@ body::before {
 }
 .qb-container, .auth-gate { position:relative; z-index:1; }
 
-/* The header keeps its gradient, but its diagonal texture now stays in a light
-   lane so the accent color can do the outlining/highlight work elsewhere. */
+/* The header keeps its gradient. Most themes use a lighter stripe lane so the
+   accent color can do the outlining/highlight work elsewhere; Tricolor
+   pinstripes keep their red banner stripe by default. */
 .qb-header {
   background-color:var(--primary);
   background-image:repeating-linear-gradient(135deg, color-mix(in srgb, var(--banner-stripe) 34%, transparent) 0 2px, transparent 2px 9px), linear-gradient(135deg, var(--primary), var(--secondary));
@@ -579,7 +602,21 @@ body::before {
 .qb-section > h2::before, .analytics-header::before {
   content:none;
 }
-.button-success { background-color:var(--hse-blue); background-image:repeating-linear-gradient(135deg, rgba(255,255,255,.08) 0 2px, transparent 2px 8px); }
+input[type="file"]::file-selector-button, .button:not(.button-secondary):not(.button-danger):not(.button-success),
+.vs-mode-btn.active, .analytics-tab.active, input:checked + .slider,
+.button-point-type.selected, .button-category.selected, .button-player.selected,
+.cat-group-label.selected, .cat-group-chip.selected, .sort-pill.active,
+#welcomeToast .wt-btn-primary, .sidebar-nav, .pd-hero, .avatar-lg, .avatar-circle {
+  background:linear-gradient(135deg, var(--button-primary), var(--button-secondary));
+  box-shadow:0 2px 8px color-mix(in srgb, var(--button-primary) 28%, transparent);
+}
+.analytics-tab.active, .vs-mode-btn.active, .button-point-type.selected, .button-category.selected, .button-player.selected,
+.cat-group-label.selected, .cat-group-chip.selected, .sort-pill.active { border-color:transparent; }
+.button-success {
+  background-color:var(--button-primary);
+  background-image:repeating-linear-gradient(135deg, rgba(255,255,255,.08) 0 2px, transparent 2px 8px), linear-gradient(135deg, var(--button-primary), var(--button-secondary));
+  box-shadow:0 2px 8px color-mix(in srgb, var(--button-primary) 28%, transparent);
+}
 @media (prefers-reduced-motion: reduce) {
   .theme-swatch:hover { transform:none; }
 }
@@ -609,7 +646,7 @@ html[data-accent-style="stripes"] .qb-header::after {
    shared rules above — the tint is never stripes-only. */
 html[data-accent-style="stripes"] .qb-section {
   border-color:var(--border-strong);
-  background-image:repeating-linear-gradient(135deg, color-mix(in srgb, var(--accent-line) var(--stripe-surface-mix), transparent) 0 2px, transparent 2px 12px);
+  background-image:repeating-linear-gradient(135deg, color-mix(in srgb, var(--surface-stripe) var(--stripe-surface-mix), transparent) 0 2px, transparent 2px 12px);
 }
 html[data-accent-style="stripes"] .stat-card,
 html[data-accent-style="stripes"] .team-stat-card,

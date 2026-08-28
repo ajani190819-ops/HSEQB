@@ -162,6 +162,11 @@ function _paintColors(primary, secondary, tertiary, accent){
   const stripes = (typeof accentStyle === 'undefined') || accentStyle !== 'gradient';
   const gradEnd = stripes ? _mixHex(blue, dark ? '#dfe6f5' : '#ffffff', dark ? 0.30 : 0.32) : gradientEnd;
   const tricolorPinstripes = stripes && colorTheme === 'tricolor';
+  const panelAccent = _isHex(advancedThemeColors?.panelOutline) ? advancedThemeColors.panelOutline.toLowerCase() : accentTone;
+  const surfaceStripe = _isHex(advancedThemeColors?.surfaceStripe) ? advancedThemeColors.surfaceStripe.toLowerCase() : panelAccent;
+  const highlightBase = _isHex(advancedThemeColors?.highlightText) ? advancedThemeColors.highlightText.toLowerCase() : accentTone;
+  const buttonPrimary = _isHex(advancedThemeColors?.buttonPrimary) ? advancedThemeColors.buttonPrimary.toLowerCase() : blue;
+  const buttonSecondary = _isHex(advancedThemeColors?.buttonSecondary) ? advancedThemeColors.buttonSecondary.toLowerCase() : gradientEnd;
   const autoBannerStripe = tricolorPinstripes
     ? accentTone
     : _mixHex(white, _shadeHex(blue, dark ? 0.24 : 0.28), dark ? 0.28 : 0.22);
@@ -170,7 +175,9 @@ function _paintColors(primary, secondary, tertiary, accent){
   const bannerStripeSoft = manualBannerStripe
     ? _mixHex(white, bannerStripe, dark ? 0.34 : 0.22)
     : (tricolorPinstripes ? _mixHex(white, accentTone, dark ? 0.24 : 0.14) : _mixHex(white, autoBannerStripe, dark ? 0.34 : 0.22));
-  const bannerOutline = _isHex(advancedThemeColors?.bannerOutline) ? advancedThemeColors.bannerOutline.toLowerCase() : accentTone;
+  const bannerOutline = _isHex(advancedThemeColors?.bannerOutline)
+    ? advancedThemeColors.bannerOutline.toLowerCase()
+    : (tricolorPinstripes ? accentTone : panelAccent);
   root.setProperty('--primary', blue);
   root.setProperty('--primary-light', _shadeHex(blue, dark ? 0.24 : 0.28));
   root.setProperty('--primary-dark',  _shadeHex(blue, -0.28));
@@ -180,6 +187,11 @@ function _paintColors(primary, secondary, tertiary, accent){
   root.setProperty('--hse-blue', blue);
   root.setProperty('--hse-red', accentTone);
   root.setProperty('--hse-white', white);
+  root.setProperty('--panel-accent', panelAccent);
+  root.setProperty('--surface-stripe', surfaceStripe);
+  root.setProperty('--highlight-base', highlightBase);
+  root.setProperty('--button-primary', buttonPrimary);
+  root.setProperty('--button-secondary', buttonSecondary);
   root.setProperty('--banner-stripe', bannerStripe);
   root.setProperty('--banner-stripe-soft', bannerStripeSoft);
   root.setProperty('--banner-outline', bannerOutline);
@@ -251,15 +263,16 @@ function setCustomThemeColor(which, value){
   applyColorTheme('custom', true, true);
 }
 function applyAdvancedThemeOverrides(overrides, persistLocal, syncRemote){
-  advancedThemeColors = {
-    bannerStripe:_isHex(overrides?.bannerStripe) ? overrides.bannerStripe.toLowerCase() : '',
-    bannerOutline:_isHex(overrides?.bannerOutline) ? overrides.bannerOutline.toLowerCase() : ''
-  };
+  advancedThemeColors = ADVANCED_THEME_KEYS.reduce((acc, key) => {
+    acc[key] = _isHex(overrides?.[key]) ? overrides[key].toLowerCase() : '';
+    return acc;
+  }, {});
   if (persistLocal !== false){
-    if (advancedThemeColors.bannerStripe) localStorage.setItem('customBannerStripe', advancedThemeColors.bannerStripe);
-    else localStorage.removeItem('customBannerStripe');
-    if (advancedThemeColors.bannerOutline) localStorage.setItem('customBannerOutline', advancedThemeColors.bannerOutline);
-    else localStorage.removeItem('customBannerOutline');
+    ADVANCED_THEME_KEYS.forEach(key => {
+      const storageKey = ADVANCED_THEME_STORAGE_KEYS[key];
+      if (advancedThemeColors[key]) localStorage.setItem(storageKey, advancedThemeColors[key]);
+      else localStorage.removeItem(storageKey);
+    });
   }
   const palette = colorTheme === 'custom' ? customThemeColors : getColorTheme(colorTheme);
   if (palette) _paintColors(palette.primary, palette.secondary, palette.tertiary, palette.accent);
@@ -267,24 +280,33 @@ function applyAdvancedThemeOverrides(overrides, persistLocal, syncRemote){
   if (syncRemote !== false) scheduleUserProfileSave();
 }
 function setAdvancedThemeColor(which, value){
-  if (!_isHex(value)) return;
-  const key = which === 'bannerOutline' ? 'bannerOutline' : 'bannerStripe';
-  applyAdvancedThemeOverrides({ ...advancedThemeColors, [key]:value }, true, true);
+  if (!_isHex(value) || !ADVANCED_THEME_KEYS.includes(which)) return;
+  applyAdvancedThemeOverrides({ ...advancedThemeColors, [which]:value }, true, true);
 }
 function resetAdvancedThemeColors(){
   applyAdvancedThemeOverrides({}, true, true);
 }
 function syncAdvancedThemeControls(){
-  const stripe = document.documentElement.style.getPropertyValue('--banner-stripe').trim() || '#ffffff';
-  const outline = document.documentElement.style.getPropertyValue('--banner-outline').trim() || document.documentElement.style.getPropertyValue('--accent-line').trim() || '#000000';
-  const stripeInput = $('customBannerStripeInput'); if (stripeInput) stripeInput.value = stripe;
-  const stripeHex = $('customBannerStripeHex'); if (stripeHex) stripeHex.value = stripe;
-  const outlineInput = $('customBannerOutlineInput'); if (outlineInput) outlineInput.value = outline;
-  const outlineHex = $('customBannerOutlineHex'); if (outlineHex) outlineHex.value = outline;
+  const fallbacks = {
+    bannerStripe: document.documentElement.style.getPropertyValue('--primary-light').trim() || '#ffffff',
+    bannerOutline: document.documentElement.style.getPropertyValue('--accent-line').trim() || '#000000',
+    surfaceStripe: document.documentElement.style.getPropertyValue('--accent-line').trim() || '#000000',
+    panelOutline: document.documentElement.style.getPropertyValue('--accent-line').trim() || '#000000',
+    highlightText: document.documentElement.style.getPropertyValue('--accent-line').trim() || '#000000',
+    buttonPrimary: document.documentElement.style.getPropertyValue('--primary').trim() || '#000000',
+    buttonSecondary: document.documentElement.style.getPropertyValue('--secondary').trim() || '#000000'
+  };
+  ADVANCED_THEME_KEYS.forEach(key => {
+    const cssVar = ADVANCED_THEME_CSS_VARS[key];
+    const value = document.documentElement.style.getPropertyValue(cssVar).trim() || fallbacks[key];
+    const cap = key.charAt(0).toUpperCase() + key.slice(1);
+    const input = $('custom' + cap + 'Input'); if (input) input.value = value;
+    const hex = $('custom' + cap + 'Hex'); if (hex) hex.value = value;
+  });
   const status = $('advancedThemeStatus');
   if (status){
-    const manual = !!(advancedThemeColors.bannerStripe || advancedThemeColors.bannerOutline);
-    status.textContent = manual ? 'Manual override active' : 'Automatic';
+    const manualCount = ADVANCED_THEME_KEYS.filter(key => !!advancedThemeColors[key]).length;
+    status.textContent = manualCount ? `Manual · ${manualCount}` : 'Automatic';
   }
 }
 function resetCustomTheme(){

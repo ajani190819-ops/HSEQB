@@ -47,8 +47,9 @@ function getUserCustomization(){
     hideScrollbars: !!document.body?.classList.contains('hide-scrollbars'),
     sidebarCollapsed: !!$('mainSidebar')?.classList.contains('collapsed')
   };
-  if (_isHex(advancedThemeColors.bannerStripe)) customization.customBannerStripe = advancedThemeColors.bannerStripe;
-  if (_isHex(advancedThemeColors.bannerOutline)) customization.customBannerOutline = advancedThemeColors.bannerOutline;
+  ADVANCED_THEME_KEYS.forEach(key => {
+    if (_isHex(advancedThemeColors[key])) customization[ADVANCED_THEME_STORAGE_KEYS[key]] = advancedThemeColors[key];
+  });
   return customization;
 }
 function setProfileSyncStatus(message, color){
@@ -93,17 +94,16 @@ function resetLocalCustomizationForAccountSwitch(){
   localStorage.removeItem('customPrimary');
   localStorage.removeItem('customSecondary');
   localStorage.removeItem('customAccent');
-  localStorage.removeItem('customBannerStripe');
-  localStorage.removeItem('customBannerOutline');
+  ADVANCED_THEME_KEYS.forEach(key => localStorage.removeItem(ADVANCED_THEME_STORAGE_KEYS[key]));
   localStorage.removeItem('hideScrollbars');
   localStorage.removeItem('sidebarCollapsed');
   applyTheme('device', true, false);
-  ['--primary','--primary-light','--primary-dark','--secondary','--accent-line','--tertiary','--hse-blue','--hse-red','--hse-white','--banner-stripe','--banner-stripe-soft','--banner-outline'].forEach(v => document.documentElement.style.removeProperty(v));
+  ['--primary','--primary-light','--primary-dark','--secondary','--accent-line','--tertiary','--hse-blue','--hse-red','--hse-white','--panel-accent','--surface-stripe','--highlight-base','--button-primary','--button-secondary','--banner-stripe','--banner-stripe-soft','--banner-outline'].forEach(v => document.documentElement.style.removeProperty(v));
   document.body.classList.remove('hide-scrollbars');
   const hideToggle=$('hideScrollbarsToggle'); if(hideToggle) hideToggle.checked=false;
   const base=getColorTheme(DEFAULT_COLOR_THEME);
   customThemeColors={ primary:base.primary, secondary:base.secondary, tertiary:base.tertiary || '#ffffff', accent:base.accent || base.secondary };
-  advancedThemeColors={ bannerStripe:'', bannerOutline:'' };
+  advancedThemeColors = ADVANCED_THEME_KEYS.reduce((acc, key) => ({ ...acc, [key]:'' }), {});
   applyColorTheme(DEFAULT_COLOR_THEME, true, false);
   applyAccentStyle(DEFAULT_ACCENT_STYLE, true, false);
 }
@@ -118,8 +118,10 @@ function extractProfileCustomization(profile){
   if (typeof source.customPrimary === 'string' && /^#[0-9a-f]{6}$/i.test(source.customPrimary)) result.customPrimary = source.customPrimary;
   if (typeof source.customSecondary === 'string' && /^#[0-9a-f]{6}$/i.test(source.customSecondary)) result.customSecondary = source.customSecondary;
   if (typeof source.customAccent === 'string' && /^#[0-9a-f]{6}$/i.test(source.customAccent)) result.customAccent = source.customAccent;
-  if (typeof source.customBannerStripe === 'string' && /^#[0-9a-f]{6}$/i.test(source.customBannerStripe)) result.customBannerStripe = source.customBannerStripe;
-  if (typeof source.customBannerOutline === 'string' && /^#[0-9a-f]{6}$/i.test(source.customBannerOutline)) result.customBannerOutline = source.customBannerOutline;
+  ADVANCED_THEME_KEYS.forEach(key => {
+    const storageKey = ADVANCED_THEME_STORAGE_KEYS[key];
+    if (typeof source[storageKey] === 'string' && /^#[0-9a-f]{6}$/i.test(source[storageKey])) result[storageKey] = source[storageKey];
+  });
   if (typeof source.hideScrollbars === 'boolean') result.hideScrollbars = source.hideScrollbars;
   if (typeof source.sidebarCollapsed === 'boolean') result.sidebarCollapsed = source.sidebarCollapsed;
   return result;
@@ -155,10 +157,13 @@ function applyAuthenticatedUserProfile(profile, user){
   if (customization.customSecondary) customThemeColors.secondary = customization.customSecondary.toLowerCase();
   if (customization.customAccent) customThemeColors.accent = customization.customAccent.toLowerCase();
   else if (customization.customSecondary) customThemeColors.accent = customization.customSecondary.toLowerCase();
-  advancedThemeColors = {
-    bannerStripe:(typeof customization.customBannerStripe === 'string' && /^#[0-9a-f]{6}$/i.test(customization.customBannerStripe)) ? customization.customBannerStripe.toLowerCase() : '',
-    bannerOutline:(typeof customization.customBannerOutline === 'string' && /^#[0-9a-f]{6}$/i.test(customization.customBannerOutline)) ? customization.customBannerOutline.toLowerCase() : ''
-  };
+  advancedThemeColors = ADVANCED_THEME_KEYS.reduce((acc, key) => {
+    const storageKey = ADVANCED_THEME_STORAGE_KEYS[key];
+    acc[key] = (typeof customization[storageKey] === 'string' && /^#[0-9a-f]{6}$/i.test(customization[storageKey]))
+      ? customization[storageKey].toLowerCase()
+      : '';
+    return acc;
+  }, {});
   if (customization.colorTheme) applyColorTheme(customization.colorTheme, true, false);
   else if (customization.accentColor) setAccentColor(customization.accentColor, true, false);
   applyAccentStyle(customization.accentStyle || accentStyle, true, false);
