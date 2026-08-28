@@ -103,59 +103,27 @@ html.dark-mode { color-scheme: dark; }
 .profile-sync-status { min-height: 1.2em; margin: 4px 0 7px; color: var(--text2); font-size: .8em; }
 @media (max-width: 480px) { .auth-card { padding: 24px 20px; } }
 
-/* Restore softer corners after the broader theme pass so panels, tabs,
-   and controls keep the rounded feel the app had before the accent retune. */
-:root { --radius:14px; --radius-sm:10px; --radius-pill:999px; }
-.qb-section, .stat-card, .team-stat-card, .overall-ranking,
-.an-stat-box, .an-player-card, .an-cat-card, .an-lb-row, .an-team-card,
-.log-container, .session-info, .session-card, .player-card-wrap,
-.user-account-meta, .user-id-status, .custom-theme-panel, .vs-advanced-panel,
-.updates-current-summary, .updates-release-card, .row-card,
-.uid-signin-helper, .sidebar-jump-menu {
-  border-radius: var(--radius);
-}
-.button, .button-secondary, .button-danger, .button-success,
-.button-point-type, .button-category, .button-player,
-.cat-group-label, .cat-group-chip,
-.vs-mode-btn, .theme-swatch,
-.sidebar-jump-btn, .sidebar-close-btn,
-.header-btn, .session-card-actions button,
-input[type="file"]::file-selector-button {
-  border-radius: calc(var(--radius-sm) + 2px);
-}
-.analytics-tab, .sort-pill, .an-lb-chip, .pd-chip,
-.ql-cat-chip, .ql-confirm-btn, .ql-cancel-btn {
-  border-radius: var(--radius-pill);
-}
+/* Keep the top sidebar controls as separate rounded buttons instead of a
+   single merged gradient slab. The rest of the app keeps its original radii
+   from core.css so roundness matches the pre-retune layout. */
 .sidebar-nav {
   padding: 0;
-  gap: 10px;
+  gap: 8px;
   background: none;
   box-shadow: none;
   border-radius: 0;
 }
 .sidebar-jump-btn, .sidebar-close-btn {
-  min-height: 42px;
-  border: 1.5px solid color-mix(in srgb, var(--button-primary) 24%, rgba(255,255,255,.2));
   background: linear-gradient(135deg, var(--button-primary), var(--button-secondary));
-  box-shadow: 0 4px 14px color-mix(in srgb, var(--button-primary) 24%, transparent);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--button-primary) 28%, transparent);
+  border-color: color-mix(in srgb, var(--button-primary) 22%, rgba(255,255,255,.25));
 }
 .sidebar-jump-btn:hover, .sidebar-close-btn:hover {
   filter: brightness(1.04);
-  background: linear-gradient(135deg,
-    color-mix(in srgb, var(--button-primary) 88%, #fff),
-    color-mix(in srgb, var(--button-secondary) 88%, #fff));
 }
 .sidebar-jump-menu {
   margin-top: 8px;
   box-shadow: var(--shadow-xl);
-}
-.analytics-tab {
-  border-radius: var(--radius-pill);
-  padding-inline: 18px;
-}
-.analytics-tab.active {
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--button-primary) 28%, transparent);
 }
 
 /* ===== iPad & coarse-pointer accessibility ===== */
