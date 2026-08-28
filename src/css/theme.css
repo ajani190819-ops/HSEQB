@@ -403,14 +403,22 @@ button, .button, .ql-btn, .ql-cat-chip, .ql-confirm-btn, .ql-cancel-btn, .header
      gray outline instead of no outline at all. */
   --border-neutral:#c9cfdd;
   --input-border-neutral:#dde1ea;
+  --border-mix:22%;
+  --panel-border-mix:32%;
+  --border-strong-mix:44%;
+  --input-border-mix:16%;
+  --surface-dot-mix:10%;
+  --surface-dot-opacity:.34;
+  --stripe-header-mix:14%;
+  --stripe-surface-mix:4%;
   /* Panel outlines always carry a tint of the palette's companion color — the
      HSE red on the default tricolor palette — instead of flat gray, in light
      mode and dark mode alike. Panels take the strongest tint, the hairlines
      inside them the softest, so the hierarchy still reads. */
-  --border:color-mix(in srgb, var(--accent-line) 22%, var(--border-neutral));
-  --panel-border:color-mix(in srgb, var(--accent-line) 32%, var(--border-neutral));
-  --border-strong:color-mix(in srgb, var(--accent-line) 44%, var(--border-neutral));
-  --input-border:color-mix(in srgb, var(--accent-line) 16%, var(--input-border-neutral));
+  --border:color-mix(in srgb, var(--accent-line) var(--border-mix), var(--border-neutral));
+  --panel-border:color-mix(in srgb, var(--accent-line) var(--panel-border-mix), var(--border-neutral));
+  --border-strong:color-mix(in srgb, var(--accent-line) var(--border-strong-mix), var(--border-neutral));
+  --input-border:color-mix(in srgb, var(--accent-line) var(--input-border-mix), var(--input-border-neutral));
   /* Highlighted text — scores, ranks, player links, doc headings — reads in the
      companion red the way the school's own site uses red for emphasis; blue
      stays the structural and interactive color. */
@@ -424,20 +432,26 @@ button, .button, .ql-btn, .ql-cat-chip, .ql-confirm-btn, .ql-cancel-btn, .header
    purpose: body carries .dark-mode too, and a stylesheet value there would
    beat the inline --accent-line painted on <html>, flattening every custom
    palette back to the HSE red. */
-html.dark-mode { --accent-line:#d95b70; }
+html.dark-mode { --accent-line:#e61134; }
 
-/* Dark surfaces need a little more red in the mix for the same tint to read. */
+/* Dark surfaces need a little more chroma in the mix for the same tint to
+   read with the same energy they have on light cards. */
 .dark-mode {
   --border-neutral:#444e63;
   --input-border-neutral:#2d3340;
-  --border:color-mix(in srgb, var(--accent-line) 28%, var(--border-neutral));
-  --panel-border:color-mix(in srgb, var(--accent-line) 40%, var(--border-neutral));
-  --border-strong:color-mix(in srgb, var(--accent-line) 52%, var(--border-neutral));
-  --input-border:color-mix(in srgb, var(--accent-line) 20%, var(--input-border-neutral));
+  --border-mix:34%;
+  --panel-border-mix:46%;
+  --border-strong-mix:58%;
+  --input-border-mix:24%;
+  --surface-dot-mix:14%;
+  --surface-dot-opacity:.22;
+  --stripe-header-mix:19%;
+  --stripe-surface-mix:7%;
   /* Text highlights lift a little on dark surfaces to stay above 4.5:1 while
      the outlines keep the deeper red. */
-  --highlight:color-mix(in srgb, var(--accent-line) 88%, #fff);
-  --highlight-ink:color-mix(in srgb, var(--accent-line) 80%, #fff);
+  --highlight:color-mix(in srgb, var(--accent-line) 84%, #fff);
+  --highlight-ink:color-mix(in srgb, var(--accent-line) 72%, #fff);
+  --highlight-wash:color-mix(in srgb, var(--accent-line) 18%, transparent);
 }
 
 /* Panels, cards and containers get the stronger red-tinted edge. (The auth
@@ -471,8 +485,8 @@ body::before {
   inset:0;
   pointer-events:none;
   z-index:0;
-  opacity:.34;
-  background-image:radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--primary) 10%, transparent) 1px, transparent 1.2px);
+  opacity:var(--surface-dot-opacity);
+  background-image:radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--primary) var(--surface-dot-mix), transparent) 1px, transparent 1.2px);
   background-size:18px 18px;
 }
 .qb-container, .auth-gate { position:relative; z-index:1; }
@@ -533,7 +547,6 @@ body::before {
   box-shadow:0 0 0 1px color-mix(in srgb, var(--border) 55%, transparent);
 }
 .button-success { background-color:var(--hse-blue); background-image:repeating-linear-gradient(135deg, rgba(255,255,255,.08) 0 2px, transparent 2px 8px); }
-.dark-mode body::before { opacity:.18; }
 @media (prefers-reduced-motion: reduce) {
   .theme-swatch:hover { transform:none; }
 }
@@ -550,7 +563,7 @@ body::before {
 html[data-accent-style="stripes"] .qb-header {
   background-color:var(--primary);
   background-image:
-    repeating-linear-gradient(135deg, color-mix(in srgb, var(--accent-line) 14%, transparent) 0 2px, transparent 2px 16px),
+    repeating-linear-gradient(135deg, color-mix(in srgb, var(--accent-line) var(--stripe-header-mix), transparent) 0 2px, transparent 2px 16px),
     repeating-linear-gradient(135deg, rgba(255,255,255,.05) 0 2px, transparent 2px 9px),
     linear-gradient(135deg, var(--primary), var(--secondary));
 }
@@ -568,7 +581,7 @@ html[data-accent-style="stripes"] .analytics-header::before {
    rules above — the tint is never stripes-only. */
 html[data-accent-style="stripes"] .qb-section {
   border-color:var(--border-strong);
-  background-image:repeating-linear-gradient(135deg, color-mix(in srgb, var(--accent-line) 4%, transparent) 0 2px, transparent 2px 13px);
+  background-image:repeating-linear-gradient(135deg, color-mix(in srgb, var(--accent-line) var(--stripe-surface-mix), transparent) 0 2px, transparent 2px 13px);
 }
 html[data-accent-style="stripes"] .stat-card,
 html[data-accent-style="stripes"] .team-stat-card,
@@ -591,9 +604,4 @@ html[data-accent-style="stripes"] .theme-swatch-chip {
 html[data-accent-style="stripes"] .auth-card,
 html[data-accent-style="stripes"] .updates-current-summary {
   border-image:repeating-linear-gradient(135deg, var(--hse-blue) 0 10px, var(--hse-white) 10px 15px, var(--hse-red) 15px 20px) 1;
-}
-
-/* Slightly stronger lines on dark surfaces so the texture stays visible. */
-html.dark-mode[data-accent-style="stripes"] .qb-section {
-  background-image:repeating-linear-gradient(135deg, color-mix(in srgb, var(--accent-line) 6%, transparent) 0 2px, transparent 2px 13px);
 }

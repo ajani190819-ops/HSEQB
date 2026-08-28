@@ -1,6 +1,14 @@
 var _chartInstances ={};
 var _lastChartFingerprint = null;
 function destroyChart(id){ if (_chartInstances[id]){ _chartInstances[id].destroy(); delete _chartInstances[id]; } }
+function chartThemeColor(name, fallback){
+try{
+const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+return value || fallback;
+}catch(e){
+return fallback;
+}
+}
 Chart.register({
 id:'doughnutGaps',
 afterDatasetsDraw(chart){
@@ -8,10 +16,9 @@ if (chart.config.type !== 'doughnut') return;
 const meta0 = chart.getDatasetMeta(0);
 if (!meta0?.data?.length) return;
 const{ ctx } = chart;
-const isDark = document.body.classList.contains('dark-mode');
 const _isDarkNow = document.body.classList.contains('dark-mode');
-const gapCol     = _isDarkNow ? '#1c2128' :'#ffffff';
-const outlineCol = _isDarkNow ? 'rgba(255,255,255,0.55)' :'rgba(0,0,0,0.38)';
+const gapCol     = chartThemeColor('--card', _isDarkNow ? '#1c2128' :'#ffffff');
+const outlineCol = chartThemeColor('--panel-border', _isDarkNow ? 'rgba(230,17,52,.7)' :'rgba(0,0,0,.38)');
 const gapW    = 3;   // gap line width
 const borderW = 2;   // outline width
 meta0.data.forEach(arc =>{

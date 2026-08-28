@@ -93,17 +93,62 @@ function _mixHex(a, b, t){
   const mix = s => Math.round(ch(pa, s) + (ch(pb, s) - ch(pa, s)) * t);
   return '#' + ((1 << 24) + (mix(16) << 16) + (mix(8) << 8) + mix(0)).toString(16).slice(1);
 }
-// Paint the accent properties from the palette's base colors. Deep colors are
-// lifted proportionally to how dark they are: in light mode navy/crimson get a
-// noticeable boost so they never read as near-black on white, and in dark mode
-// they are brightened further so they stay legible on dark surfaces.
+function _clamp01(v){ return Math.max(0, Math.min(1, v)); }
+function _hexToRgb(hex){
+  const n = parseInt(hex.slice(1), 16);
+  return { r:(n >> 16) & 255, g:(n >> 8) & 255, b:n & 255 };
+}
+function _hexToHsl(hex){
+  const { r, g, b } = _hexToRgb(hex);
+  const rr = r / 255, gg = g / 255, bb = b / 255;
+  const max = Math.max(rr, gg, bb), min = Math.min(rr, gg, bb);
+  const l = (max + min) / 2;
+  if (max === min) return { h:0, s:0, l };
+  const d = max - min;
+  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+  const h = (max === rr
+    ? ((gg - bb) / d) + (gg < bb ? 6 : 0)
+    : max === gg
+      ? ((bb - rr) / d) + 2
+      : ((rr - gg) / d) + 4) * 60;
+  return { h, s, l };
+}
+function _hslToHex(h, s, l){
+  const hue = ((h % 360) + 360) % 360;
+  const sat = _clamp01(s), light = _clamp01(l);
+  const c = (1 - Math.abs(2 * light - 1)) * sat;
+  const hp = hue / 60;
+  const x = c * (1 - Math.abs(hp % 2 - 1));
+  let rgb = [0, 0, 0];
+  if (hp < 1) rgb = [c, x, 0];
+  else if (hp < 2) rgb = [x, c, 0];
+  else if (hp < 3) rgb = [0, c, x];
+  else if (hp < 4) rgb = [0, x, c];
+  else if (hp < 5) rgb = [x, 0, c];
+  else rgb = [c, 0, x];
+  const m = light - c / 2;
+  return '#' + rgb.map(v => Math.round((v + m) * 255).toString(16).padStart(2, '0')).join('');
+}
+function _boostHexForDarkSurface(hex){
+  if (!_isHex(hex)) return hex;
+  const { h, s, l } = _hexToHsl(hex);
+  const lum = _hexLum(hex);
+  const sat = _clamp01(s < 0.75 ? s + 0.06 : s * 1.01);
+  const lift = 0.05 + Math.max(0, 0.30 - lum) * 0.16;
+  const floor = 0.39 + Math.max(0, 0.22 - lum) * 0.14;
+  return _hslToHex(h, sat, Math.min(0.58, Math.max(l + lift, floor)));
+}
+// Paint the accent properties from the palette's base colors. Light mode keeps
+// the calmer, slightly lifted treatment for white surfaces; dark mode now lifts
+// colors with a small saturation boost too, so outlines and gradients stay
+// vivid instead of drifting toward gray.
 function _paintColors(primary, secondary, tertiary){
   const root = document.documentElement.style;
   const dark = themeIsDark(themeMode);
   const adapt = (hex) => {
     if (!_isHex(hex)) return hex;
+    if (dark) return _boostHexForDarkSurface(hex);
     const lum = _hexLum(hex);
-    if (dark) return _shadeHex(hex, 0.20 + Math.max(0, 0.34 - lum));
     return lum < 0.34 ? _shadeHex(hex, (0.34 - lum) * 1.1) : hex;
   };
   const blue = adapt(primary);
@@ -113,7 +158,7 @@ function _paintColors(primary, secondary, tertiary){
   // color (blue -> white) while the companion color moves into thin diagonal
   // lines and panel outlines instead of a solid French-flag color block.
   const stripes = (typeof accentStyle === 'undefined') || accentStyle !== 'gradient';
-  const gradEnd = stripes ? _mixHex(blue, dark ? '#dfe6f5' : '#ffffff', 0.32) : companion;
+  const gradEnd = stripes ? _mixHex(blue, dark ? '#dfe6f5' : '#ffffff', dark ? 0.30 : 0.32) : companion;
   root.setProperty('--primary', blue);
   root.setProperty('--primary-light', _shadeHex(blue, dark ? 0.24 : 0.28));
   root.setProperty('--primary-dark',  _shadeHex(blue, -0.28));
