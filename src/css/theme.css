@@ -389,15 +389,33 @@ button, .button, .ql-btn, .ql-cat-chip, .ql-confirm-btn, .ql-cancel-btn, .header
   .custom-hex-input { font-size:16px; }
 }
 
-/* HSE color language: a quiet blue / white / red system with texture instead
-   of relying on a single two-color gradient everywhere. The inline values are
-   painted by _paintColors so accents respond to light and dark mode. */
+/* Palette language: surfaces stay mostly neutral but borrow a little color from
+   the active theme so the app feels branded instead of plain gray. The inline
+   values are painted by _paintColors so accents respond to light and dark mode. */
 :root {
   --tertiary:#fff;
-  --hse-blue:#003da5;
-  --hse-red:#c8102e;
+  --hse-blue:#2656b2;
+  --hse-red:#335699;
   --hse-white:#fff;
-  --accent-line:#c8102e;
+  --accent-line:#335699;
+  /* Surface neutrals are kept as a fallback, then lightly tinted toward the
+     active palette so the app reads as themed rather than plain gray. */
+  --bg-neutral:#f7f9fd;
+  --sec-bg-neutral:#f2f5fb;
+  --card-neutral:#ffffff;
+  --input-bg-neutral:#ffffff;
+  --hover-neutral:#f0f3fa;
+  --surface-tint:color-mix(in srgb, var(--primary) 60%, var(--secondary));
+  --bg-tint-mix:4%;
+  --sec-bg-tint-mix:7%;
+  --card-tint-mix:5%;
+  --input-bg-tint-mix:4%;
+  --hover-tint-mix:9%;
+  --bg:color-mix(in srgb, var(--surface-tint) var(--bg-tint-mix), var(--bg-neutral));
+  --sec-bg:color-mix(in srgb, var(--surface-tint) var(--sec-bg-tint-mix), var(--sec-bg-neutral));
+  --card:color-mix(in srgb, var(--surface-tint) var(--card-tint-mix), var(--card-neutral));
+  --input-bg:color-mix(in srgb, var(--surface-tint) var(--input-bg-tint-mix), var(--input-bg-neutral));
+  --hover:color-mix(in srgb, var(--surface-tint) var(--hover-tint-mix), var(--hover-neutral));
   /* Neutral bases the companion color is tinted over. core.css carries the
      same plain values first, so a browser without color-mix() still gets a
      gray outline instead of no outline at all. */
@@ -411,32 +429,46 @@ button, .button, .ql-btn, .ql-cat-chip, .ql-confirm-btn, .ql-cancel-btn, .header
   --surface-dot-opacity:.34;
   --stripe-header-mix:14%;
   --stripe-surface-mix:4%;
-  /* Panel outlines always carry a tint of the palette's companion color — the
-     HSE red on the default tricolor palette — instead of flat gray, in light
-     mode and dark mode alike. Panels take the strongest tint, the hairlines
-     inside them the softest, so the hierarchy still reads. */
+  --stripe-band-a:var(--primary);
+  --stripe-band-b:color-mix(in srgb, var(--primary) 58%, var(--secondary));
+  --stripe-band-c:var(--secondary);
+  /* Panel outlines always carry a tint of the palette's companion color instead
+     of flat gray. Panels take the strongest tint, the hairlines inside them the
+     softest, so the hierarchy still reads. */
   --border:color-mix(in srgb, var(--accent-line) var(--border-mix), var(--border-neutral));
   --panel-border:color-mix(in srgb, var(--accent-line) var(--panel-border-mix), var(--border-neutral));
   --border-strong:color-mix(in srgb, var(--accent-line) var(--border-strong-mix), var(--border-neutral));
   --input-border:color-mix(in srgb, var(--accent-line) var(--input-border-mix), var(--input-border-neutral));
   /* Highlighted text — scores, ranks, player links, doc headings — reads in the
-     companion red the way the school's own site uses red for emphasis; blue
-     stays the structural and interactive color. */
+     companion color while blue stays the structural and interactive color. */
   --highlight:var(--accent-line);
   --highlight-ink:color-mix(in srgb, var(--accent-line) 72%, #000);
   --highlight-wash:color-mix(in srgb, var(--accent-line) 12%, transparent);
 }
 
-/* Pre-paint dark default for the companion color — the value _paintColors
-   derives for the HSE palette on dark surfaces. Scoped to html.dark-mode on
-   purpose: body carries .dark-mode too, and a stylesheet value there would
-   beat the inline --accent-line painted on <html>, flattening every custom
-   palette back to the HSE red. */
-html.dark-mode { --accent-line:#e61134; }
+/* Pre-paint dark defaults for palette-owned values. Scoped to html.dark-mode on
+   purpose: body carries .dark-mode too, and a stylesheet value there would beat
+   the inline colors painted on <html>, flattening every custom palette. */
+html.dark-mode { --hse-blue:#0c4cc6; --hse-red:#0045cb; --hse-white:#f4f6fb; --accent-line:#0045cb; }
 
 /* Dark surfaces need a little more chroma in the mix for the same tint to
    read with the same energy they have on light cards. */
 .dark-mode {
+  --bg-neutral:#0d1117;
+  --sec-bg-neutral:#161b22;
+  --card-neutral:#1c2128;
+  --input-bg-neutral:#0d1117;
+  --hover-neutral:#1e2530;
+  --bg-tint-mix:10%;
+  --sec-bg-tint-mix:15%;
+  --card-tint-mix:13%;
+  --input-bg-tint-mix:9%;
+  --hover-tint-mix:20%;
+  --bg:color-mix(in srgb, var(--surface-tint) var(--bg-tint-mix), var(--bg-neutral));
+  --sec-bg:color-mix(in srgb, var(--surface-tint) var(--sec-bg-tint-mix), var(--sec-bg-neutral));
+  --card:color-mix(in srgb, var(--surface-tint) var(--card-tint-mix), var(--card-neutral));
+  --input-bg:color-mix(in srgb, var(--surface-tint) var(--input-bg-tint-mix), var(--input-bg-neutral));
+  --hover:color-mix(in srgb, var(--surface-tint) var(--hover-tint-mix), var(--hover-neutral));
   --border-neutral:#444e63;
   --input-border-neutral:#2d3340;
   --border-mix:34%;
@@ -448,7 +480,7 @@ html.dark-mode { --accent-line:#e61134; }
   --stripe-header-mix:19%;
   --stripe-surface-mix:7%;
   /* Text highlights lift a little on dark surfaces to stay above 4.5:1 while
-     the outlines keep the deeper red. */
+     the outlines keep the deeper accent. */
   --highlight:color-mix(in srgb, var(--accent-line) 84%, #fff);
   --highlight-ink:color-mix(in srgb, var(--accent-line) 72%, #fff);
   --highlight-wash:color-mix(in srgb, var(--accent-line) 18%, transparent);
@@ -552,12 +584,9 @@ body::before {
 }
 
 /* ── Accent style: Pinstripe vs Gradient ─────────────────────────────────
-   'gradient' keeps the classic two-color blends. 'stripes' expresses tricolor
-   palettes the way the title banner does: primary -> white gradients, with the
-   companion color as fine diagonal lines and tinted panel outlines — so the
-   HSE palette reads as texture instead of a French flag. _paintColors already
-   swaps --secondary to a blue -> white blend in stripe mode; the rules below
-   add the diagonal-line texture and the companion-tinted outlines. */
+   'gradient' keeps the classic two-color blends. 'stripes' keeps the softer
+   primary-family gradients, then uses the companion color as diagonal texture,
+   tinted outlines, and two-color bands instead of flag-like tricolor blocks. */
 
 /* Header: gradient base + faint companion-color diagonal lines over the white texture. */
 html[data-accent-style="stripes"] .qb-header {
@@ -568,17 +597,19 @@ html[data-accent-style="stripes"] .qb-header {
     linear-gradient(135deg, var(--primary), var(--secondary));
 }
 
-/* The tricolor ribbons become slanted stripes instead of three flat thirds. */
-html[data-accent-style="stripes"] .qb-header::after,
+/* Pinstripe mode drops the flag-like header ribbon; section accents become
+   palette-colored diagonal bands instead of tricolor blocks. */
+html[data-accent-style="stripes"] .qb-header::after {
+  content:none;
+}
 html[data-accent-style="stripes"] .qb-section > h2::before,
 html[data-accent-style="stripes"] .analytics-header::before {
-  background:repeating-linear-gradient(135deg, var(--hse-blue) 0 9px, var(--hse-white) 9px 14px, var(--hse-red) 14px 19px);
+  background:repeating-linear-gradient(135deg, var(--stripe-band-a) 0 8px, var(--stripe-band-b) 8px 13px, var(--stripe-band-c) 13px 18px);
 }
 
-/* Panels pick up the strongest red-tinted outline (e.g. the Record Answer
-   panel gets a firm red edge on the HSE palette) plus a whisper of diagonal
-   pinstripe. Gradient mode keeps the same tinted outlines from the shared
-   rules above — the tint is never stripes-only. */
+/* Panels pick up the strongest companion-tinted outline plus a whisper of
+   diagonal pinstripe. Gradient mode keeps the same tinted outlines from the
+   shared rules above — the tint is never stripes-only. */
 html[data-accent-style="stripes"] .qb-section {
   border-color:var(--border-strong);
   background-image:repeating-linear-gradient(135deg, color-mix(in srgb, var(--accent-line) var(--stripe-surface-mix), transparent) 0 2px, transparent 2px 13px);
@@ -597,11 +628,11 @@ html[data-accent-style="stripes"] .team-stat-card { border-left-color:var(--acce
 html[data-accent-style="stripes"] .theme-swatch-chip::before,
 html[data-accent-style="stripes"] .theme-swatch-chip::after { content:none; }
 html[data-accent-style="stripes"] .theme-swatch-chip {
-  background:repeating-linear-gradient(135deg, var(--swatch-blue, var(--hse-blue)) 0 10px, var(--swatch-white, #fff) 10px 15px, var(--swatch-red, var(--hse-red)) 15px 20px);
+  background:repeating-linear-gradient(135deg, var(--swatch-blue, var(--hse-blue)) 0 10px, color-mix(in srgb, var(--swatch-blue, var(--hse-blue)) 58%, var(--swatch-red, var(--hse-red))) 10px 15px, var(--swatch-red, var(--hse-red)) 15px 20px);
 }
 
 /* Auth card + release summary edges go diagonal too. */
 html[data-accent-style="stripes"] .auth-card,
 html[data-accent-style="stripes"] .updates-current-summary {
-  border-image:repeating-linear-gradient(135deg, var(--hse-blue) 0 10px, var(--hse-white) 10px 15px, var(--hse-red) 15px 20px) 1;
+  border-image:repeating-linear-gradient(135deg, var(--stripe-band-a) 0 10px, var(--stripe-band-b) 10px 15px, var(--stripe-band-c) 15px 20px) 1;
 }

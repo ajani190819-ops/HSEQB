@@ -202,7 +202,7 @@ function normalizeAccentStyle(v){
 function applyAccentStyle(style, persistLocal, syncRemote){
   accentStyle = normalizeAccentStyle(style);
   document.documentElement.dataset.accentStyle = accentStyle;
-  // Repaint so --secondary swaps between the blue->white blend and the companion color.
+  // Repaint so --secondary swaps between the softer primary-family blend and the companion color.
   const palette = colorTheme === 'custom' ? customThemeColors : getColorTheme(colorTheme);
   if (palette) _paintColors(palette.primary, palette.secondary, palette.tertiary);
   if (persistLocal !== false) localStorage.setItem('accentStyle', accentStyle);

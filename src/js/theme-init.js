@@ -10,6 +10,6 @@
     document.documentElement.dataset.theme = mode;
     document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
     var style = localStorage.getItem('accentStyle');
-    document.documentElement.dataset.accentStyle = style === 'gradient' ? 'gradient' : 'stripes';
+    document.documentElement.dataset.accentStyle = style === 'stripes' ? 'stripes' : 'gradient';
   } catch (e) { /* Storage can be unavailable in private browsing; light remains the fallback. */ }
 }());
