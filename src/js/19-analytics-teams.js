@@ -101,7 +101,7 @@ html += `<button class="button" onclick="filterTeamsByPlayerCount(${count})" id=
 });
 html += `  </div>
 </div>
-<div id="teamCompSummary" style="background:rgba(118,75,162,.08);border:1px solid var(--secondary);border-radius:8px;padding:10px 14px;margin-bottom:var(--sp);font-size:.85em;color:var(--secondary);font-weight:600;">
+<div id="teamCompSummary" style="background:color-mix(in srgb,var(--accent-line) 9%,transparent);border:1px solid var(--panel-border);border-radius:8px;padding:10px 14px;margin-bottom:var(--sp);font-size:.85em;color:var(--primary);font-weight:600;">
 ${allTeamCards.length} unique team composition${allTeamCards.length !== 1 ? 's' :''} across <strong>${sessionCount} session${sessionCount !== 1 ? 's' :''}</strong>
 </div>
 <div id="teamCompList">`;

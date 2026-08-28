@@ -33,7 +33,7 @@ html.dark-mode { color-scheme: dark; }
   color: var(--input-text);
   font: inherit;
 }
-.auth-card input:focus, .auth-card select:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(102,126,234,.12); }
+.auth-card input:focus, .auth-card select:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 12%, transparent); }
 .auth-corner-theme {
   position: absolute;
   top: 14px;
@@ -63,7 +63,7 @@ html.dark-mode { color-scheme: dark; }
   transition: background .15s, color .15s;
 }
 .auth-theme-btn:hover { background: var(--hover); color: var(--text); }
-.auth-theme-btn.active { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: #fff; box-shadow: 0 1px 4px rgba(102,126,234,.45); }
+.auth-theme-btn.active { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: #fff; box-shadow: 0 1px 4px color-mix(in srgb, var(--primary) 45%, transparent); }
 @media (max-width: 480px) { .auth-corner-theme { top: 10px; right: 10px; } .auth-theme-btn { width: 28px; height: 25px; font-size: .9em; } }
 .theme-select { cursor: pointer; }
 .user-account-meta {
@@ -122,13 +122,13 @@ button, .button, .ql-btn, .ql-cat-chip, .ql-confirm-btn, .ql-cancel-btn, .header
 @media (hover: none) {
   .ql-btn:active { background: var(--hover); color: var(--text); }
   .ql-btn.ql-power:active { background: rgba(17,153,142,.16); color: var(--success); }
-  .ql-btn.ql-tu:active { background: rgba(102,126,234,.14); color: var(--primary); }
-  .ql-btn.ql-bonus:active { background: rgba(102,126,234,.09); color: var(--primary); }
+  .ql-btn.ql-tu:active { background: color-mix(in srgb, var(--primary) 14%, transparent); color: var(--primary); }
+  .ql-btn.ql-bonus:active { background: color-mix(in srgb, var(--primary) 9%, transparent); color: var(--primary); }
   .ql-btn.ql-neg:active { background: rgba(220,53,69,.12); color: var(--danger); }
   .ql-btn.ql-miss:active { background: rgba(140,140,140,.14); color: var(--text2); }
   .ql-cat-chip:active { border-color: var(--primary); color: var(--primary); }
   .ql-cat-chip.selected:active { background: var(--primary-dark); }
-  .button-point-type:active, .button-category:active, .button-player:active { border-color: var(--primary); background: rgba(102,126,234,.12); }
+  .button-point-type:active, .button-category:active, .button-player:active { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 12%, transparent); }
   .analytics-tab:active { border-color: var(--primary-light); color: var(--primary); }
   .header-btn:active { background: rgba(255,255,255,.32); }
   .button:active { filter: brightness(.96); }
@@ -192,9 +192,9 @@ button, .button, .ql-btn, .ql-cat-chip, .ql-confirm-btn, .ql-cancel-btn, .header
 .updates-modal-subtitle { margin-top: 4px; color: var(--text2); font-size: .83em; }
 .updates-current-summary {
   padding: 16px 18px;
-  border: 2px solid rgba(102,126,234,.3);
+  border: 2px solid var(--panel-border);
   border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, rgba(102,126,234,.11), rgba(118,75,162,.09));
+  background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 11%, transparent), color-mix(in srgb, var(--accent-line) 8%, transparent));
 }
 .updates-current-kicker {
   color: var(--primary);
@@ -233,13 +233,13 @@ button, .button, .ql-btn, .ql-cat-chip, .ql-confirm-btn, .ql-cancel-btn, .header
 }
 .updates-admin-pill { background: rgba(17,153,142,.14); color: var(--success); }
 .updates-current-pill { background: rgba(17,153,142,.13); color: var(--success); }
-.updates-preview-pill { background: rgba(102,126,234,.12); color: var(--primary); }
+.updates-preview-pill { background: color-mix(in srgb, var(--primary) 12%, transparent); color: var(--primary); }
 .updates-release-prompt {
   margin: 0 0 13px;
   padding: 9px 11px;
   border-left: 3px solid var(--primary);
   border-radius: 5px;
-  background: rgba(102,126,234,.09);
+  background: color-mix(in srgb, var(--primary) 9%, transparent);
   color: var(--text2);
   font-size: .76em;
   line-height: 1.45;
@@ -265,7 +265,7 @@ button, .button, .ql-btn, .ql-cat-chip, .ql-confirm-btn, .ql-cancel-btn, .header
   color: var(--input-text);
 }
 .updates-textarea-small { min-height: 56px; }
-.updates-textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(102,126,234,.12); }
+.updates-textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 12%, transparent); }
 .updates-publish-btn { width: 100%; margin-top: 2px; }
 .updates-upload-status { min-height: 1.35em; padding-top: 7px; color: var(--text2); font-size: .75em; line-height: 1.4; }
 .updates-history-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin: 2px 0 11px; }
@@ -276,7 +276,7 @@ button, .button, .ql-btn, .ql-cat-chip, .ql-confirm-btn, .ql-cancel-btn, .header
 .updates-release-rail { position: relative; width: 8px; flex-shrink: 0; }
 .updates-release-rail::after { content: ''; position: absolute; top: 18px; bottom: -28px; left: 3px; width: 2px; background: var(--border); }
 .updates-release-card:last-child .updates-release-rail::after { display: none; }
-.updates-release-dot { display: block; width: 8px; height: 8px; margin-top: 5px; border-radius: 50%; background: var(--primary); box-shadow: 0 0 0 3px rgba(102,126,234,.13); }
+.updates-release-dot { display: block; width: 8px; height: 8px; margin-top: 5px; border-radius: 50%; background: var(--primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 13%, transparent); }
 .updates-release-card.is-current .updates-release-dot { background: var(--success); box-shadow: 0 0 0 3px rgba(17,153,142,.13); }
 .updates-release-content { min-width: 0; flex: 1; }
 .updates-release-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; margin-bottom: 6px; color: var(--text3); font-size: .7em; }
@@ -288,8 +288,8 @@ button, .button, .ql-btn, .ql-cat-chip, .ql-confirm-btn, .ql-cancel-btn, .header
 .updates-empty { display: flex; align-items: center; flex-direction: column; gap: 6px; padding: 28px 15px; border: 1.5px dashed var(--border); border-radius: var(--radius-sm); color: var(--text2); text-align: center; font-size: .82em; }
 .updates-empty strong { color: var(--text); }
 .updates-empty-icon { color: var(--primary); font-size: 1.8em; }
-.admin-updates-link { display: flex; align-items: center; gap: 10px; padding: 12px; border: 1.5px solid rgba(102,126,234,.3); border-radius: var(--radius-sm); background: rgba(102,126,234,.06); }
-.admin-updates-link-icon { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; flex-shrink: 0; border-radius: 9px; background: rgba(102,126,234,.15); color: var(--primary); font-size: 1.2em; }
+.admin-updates-link { display: flex; align-items: center; gap: 10px; padding: 12px; border: 1.5px solid color-mix(in srgb, var(--primary) 30%, transparent); border-radius: var(--radius-sm); background: color-mix(in srgb, var(--primary) 6%, transparent); }
+.admin-updates-link-icon { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; flex-shrink: 0; border-radius: 9px; background: color-mix(in srgb, var(--primary) 15%, transparent); color: var(--primary); font-size: 1.2em; }
 .admin-updates-link-copy { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 2px; }
 .admin-updates-link-copy strong { color: var(--text); font-size: .84em; }
 .admin-updates-link-copy span { color: var(--text2); font-size: .72em; line-height: 1.4; }
@@ -398,7 +398,71 @@ button, .button, .ql-btn, .ql-cat-chip, .ql-confirm-btn, .ql-cancel-btn, .header
   --hse-red:#c8102e;
   --hse-white:#fff;
   --accent-line:#c8102e;
+  /* Neutral bases the companion color is tinted over. core.css carries the
+     same plain values first, so a browser without color-mix() still gets a
+     gray outline instead of no outline at all. */
+  --border-neutral:#c9cfdd;
+  --input-border-neutral:#dde1ea;
+  /* Panel outlines always carry a tint of the palette's companion color — the
+     HSE red on the default tricolor palette — instead of flat gray, in light
+     mode and dark mode alike. Panels take the strongest tint, the hairlines
+     inside them the softest, so the hierarchy still reads. */
+  --border:color-mix(in srgb, var(--accent-line) 22%, var(--border-neutral));
+  --panel-border:color-mix(in srgb, var(--accent-line) 32%, var(--border-neutral));
+  --border-strong:color-mix(in srgb, var(--accent-line) 44%, var(--border-neutral));
+  --input-border:color-mix(in srgb, var(--accent-line) 16%, var(--input-border-neutral));
+  /* Highlighted text — scores, ranks, player links, doc headings — reads in the
+     companion red the way the school's own site uses red for emphasis; blue
+     stays the structural and interactive color. */
+  --highlight:var(--accent-line);
+  --highlight-ink:color-mix(in srgb, var(--accent-line) 72%, #000);
+  --highlight-wash:color-mix(in srgb, var(--accent-line) 12%, transparent);
 }
+
+/* Pre-paint dark default for the companion color — the value _paintColors
+   derives for the HSE palette on dark surfaces. Scoped to html.dark-mode on
+   purpose: body carries .dark-mode too, and a stylesheet value there would
+   beat the inline --accent-line painted on <html>, flattening every custom
+   palette back to the HSE red. */
+html.dark-mode { --accent-line:#d95b70; }
+
+/* Dark surfaces need a little more red in the mix for the same tint to read. */
+.dark-mode {
+  --border-neutral:#444e63;
+  --input-border-neutral:#2d3340;
+  --border:color-mix(in srgb, var(--accent-line) 28%, var(--border-neutral));
+  --panel-border:color-mix(in srgb, var(--accent-line) 40%, var(--border-neutral));
+  --border-strong:color-mix(in srgb, var(--accent-line) 52%, var(--border-neutral));
+  --input-border:color-mix(in srgb, var(--accent-line) 20%, var(--input-border-neutral));
+  /* Text highlights lift a little on dark surfaces to stay above 4.5:1 while
+     the outlines keep the deeper red. */
+  --highlight:color-mix(in srgb, var(--accent-line) 88%, #fff);
+  --highlight-ink:color-mix(in srgb, var(--accent-line) 80%, #fff);
+}
+
+/* Panels, cards and containers get the stronger red-tinted edge. (The auth
+   card is absent on purpose: its border-image tricolor ribbon wins over any
+   border-color, so it already carries the full blue / white / red edge.) */
+.qb-section,
+.stat-card, .team-stat-card, .overall-ranking,
+.an-stat-box, .an-player-card, .an-cat-card, .an-team-card, .an-lb-row,
+.log-container, .session-info, .sidebar-jump-menu,
+.custom-theme-panel, .updates-release-card { border-color:var(--panel-border); }
+/* Hovering a panel deepens the red edge instead of turning it blue. */
+.qb-section:hover, .stat-card:hover, .team-stat-card:hover { border-color:var(--border-strong); }
+/* Team cards keep their colored rule, but the rule is the companion red now. */
+.team-stat-card, .an-team-card { border-left-color:var(--accent-line); }
+
+/* Highlighted text and emphasis. */
+.player-score, .team-score, .stat-value, .session-info-row strong,
+.player-card-rank, .an-stat-box .an-val, .an-player-pts, .an-lb-rank,
+.an-lb-pts, .an-team-pts, .h3-primary { color:var(--highlight); }
+/* The active jump-nav entry is marked with a red wash instead of plain gray. */
+.sidebar-jump-menu button.active-item { color:var(--highlight); background:var(--highlight-wash); }
+/* Clickable player names and section headings underline in red. */
+.an-player-name { color:var(--highlight); }
+.an-player-name:hover { color:var(--highlight-ink); }
+.qb-section h2:hover { color:var(--highlight); }
 
 /* A low-contrast paper-like pattern keeps large surfaces from feeling flat. */
 body::before {
@@ -498,10 +562,12 @@ html[data-accent-style="stripes"] .analytics-header::before {
   background:repeating-linear-gradient(135deg, var(--hse-blue) 0 9px, var(--hse-white) 9px 14px, var(--hse-red) 14px 19px);
 }
 
-/* Panels pick up a companion-tinted outline (e.g. the Record Answer panel gets
-   a soft red edge on the HSE palette) plus a whisper of diagonal pinstripe. */
+/* Panels pick up the strongest red-tinted outline (e.g. the Record Answer
+   panel gets a firm red edge on the HSE palette) plus a whisper of diagonal
+   pinstripe. Gradient mode keeps the same tinted outlines from the shared
+   rules above — the tint is never stripes-only. */
 html[data-accent-style="stripes"] .qb-section {
-  border-color:color-mix(in srgb, var(--accent-line) 26%, var(--border));
+  border-color:var(--border-strong);
   background-image:repeating-linear-gradient(135deg, color-mix(in srgb, var(--accent-line) 4%, transparent) 0 2px, transparent 2px 13px);
 }
 html[data-accent-style="stripes"] .stat-card,
@@ -510,7 +576,7 @@ html[data-accent-style="stripes"] .an-stat-box,
 html[data-accent-style="stripes"] .an-player-card,
 html[data-accent-style="stripes"] .an-cat-card,
 html[data-accent-style="stripes"] .session-info {
-  border-color:color-mix(in srgb, var(--accent-line) 16%, var(--border));
+  border-color:var(--panel-border);
 }
 html[data-accent-style="stripes"] .team-stat-card { border-left-color:var(--accent-line); }
 

@@ -176,8 +176,8 @@ function syncAccentStyleControls(){
   const hint = $('accentStyleHint');
   if (hint){
     hint.textContent = accentStyle === 'gradient'
-      ? 'Classic look: the two theme colors blend directly into each other.'
-      : 'Primary + white gradients; the companion color appears as faint diagonal lines and tinted panel outlines.';
+      ? 'Classic look: the two theme colors blend directly into each other. Panel outlines keep their companion-color tint either way.'
+      : 'Primary + white gradients; the companion color appears as faint diagonal lines and firmer tinted panel outlines.';
   }
 }
 function setCustomThemeColor(which, value){
