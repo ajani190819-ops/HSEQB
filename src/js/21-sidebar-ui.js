@@ -156,7 +156,8 @@ function _paintColors(primary, secondary, tertiary, accent){
   const accentTone = adapt(accent || secondary || _shadeHex(primary, -0.45));
   const white = dark ? '#f4f6fb' : (tertiary || '#ffffff');
   // Pinstripe style: gradients stay in the primary family while the accent
-  // color moves into thin diagonal lines, tinted panels, and outline accents.
+  // color drives outlines/highlights and only the surface pinstripes, not the
+  // light banner texture.
   const stripes = (typeof accentStyle === 'undefined') || accentStyle !== 'gradient';
   const gradEnd = stripes ? _mixHex(blue, dark ? '#dfe6f5' : '#ffffff', dark ? 0.30 : 0.32) : gradientEnd;
   root.setProperty('--primary', blue);
@@ -224,7 +225,7 @@ function syncAccentStyleControls(){
   if (hint){
     hint.textContent = accentStyle === 'gradient'
       ? 'Classic look: the primary and gradient colors blend directly into each other. Panels still keep a light palette tint.'
-      : 'Pinstripe look: softer primary-family gradients, evenly spaced diagonal texture, and a separate accent color for outlines and highlights.';
+      : 'Pinstripe look: softer primary-family gradients, light banner texture, evenly spaced surface stripes, and a separate accent color for outlines and highlights.';
   }
 }
 function setCustomThemeColor(which, value){

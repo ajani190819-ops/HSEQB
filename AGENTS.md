@@ -207,7 +207,7 @@ Score and are excluded from the team average and automatic `k`.
 ## Theming (HSE palette)
 
 The default palette is **Royal** (`DEFAULT_COLOR_THEME = 'royal'` in
-`01-constants.js`: primary `#0b41a8`, companion `#002b7f`, white). The default
+`01-constants.js`: primary `#0b41a8`, gradient `#002b7f`, white). The default
 accent style is **Gradient** (`DEFAULT_ACCENT_STYLE = 'gradient'`). These
 defaults must agree at three levels or the first frame drifts off-brand:
 
@@ -230,11 +230,12 @@ highlights all follow the palette and the light/dark mode automatically:
 
 | Token | Role |
 | --- | --- |
-| `--border` | hairlines and dividers — light companion-color tint over the neutral base |
+| `--border` | hairlines and dividers — light accent-color tint over the neutral base |
 | `--panel-border` | panels, cards, containers — stronger tint, so outlines are never flat gray |
 | `--border-strong` | hover state for panels |
 | `--input-border` | inputs, subtlest tint |
 | `--highlight` / `--highlight-ink` / `--highlight-wash` | accent emphasis text, its contrast-adjusted hover shade, and a matching wash |
+| `--banner-stripe` / `--banner-stripe-soft` | light-only header texture so the accent color can stay reserved for outlines/highlights |
 
 Two rules keep this from breaking:
 

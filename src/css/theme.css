@@ -416,7 +416,7 @@ button, .button, .ql-btn, .ql-cat-chip, .ql-confirm-btn, .ql-cancel-btn, .header
   --card:color-mix(in srgb, var(--surface-tint) var(--card-tint-mix), var(--card-neutral));
   --input-bg:color-mix(in srgb, var(--surface-tint) var(--input-bg-tint-mix), var(--input-bg-neutral));
   --hover:color-mix(in srgb, var(--surface-tint) var(--hover-tint-mix), var(--hover-neutral));
-  /* Neutral bases the companion color is tinted over. core.css carries the
+  /* Neutral bases the accent color is tinted over. core.css carries the
      same plain values first, so a browser without color-mix() still gets a
      gray outline instead of no outline at all. */
   --border-neutral:#c9cfdd;
@@ -427,12 +427,13 @@ button, .button, .ql-btn, .ql-cat-chip, .ql-confirm-btn, .ql-cancel-btn, .header
   --input-border-mix:16%;
   --surface-dot-mix:10%;
   --surface-dot-opacity:.34;
-  --stripe-header-mix:14%;
+  --banner-stripe:color-mix(in srgb, var(--hse-white) 78%, var(--primary-light));
+  --banner-stripe-soft:color-mix(in srgb, var(--hse-white) 58%, var(--primary-light));
   --stripe-surface-mix:4%;
   --stripe-band-a:var(--primary);
   --stripe-band-b:color-mix(in srgb, var(--primary) 58%, var(--secondary));
   --stripe-band-c:var(--secondary);
-  /* Panel outlines always carry a tint of the palette's companion color instead
+  /* Panel outlines always carry a tint of the palette's accent color instead
      of flat gray. Panels take the strongest tint, the hairlines inside them the
      softest, so the hierarchy still reads. */
   --border:color-mix(in srgb, var(--accent-line) var(--border-mix), var(--border-neutral));
@@ -440,7 +441,7 @@ button, .button, .ql-btn, .ql-cat-chip, .ql-confirm-btn, .ql-cancel-btn, .header
   --border-strong:color-mix(in srgb, var(--accent-line) var(--border-strong-mix), var(--border-neutral));
   --input-border:color-mix(in srgb, var(--accent-line) var(--input-border-mix), var(--input-border-neutral));
   /* Highlighted text — scores, ranks, player links, doc headings — reads in the
-     companion color while blue stays the structural and interactive color. */
+     accent color while blue stays the structural and interactive color. */
   --highlight:var(--accent-line);
   --highlight-ink:color-mix(in srgb, var(--accent-line) 72%, #000);
   --highlight-wash:color-mix(in srgb, var(--accent-line) 12%, transparent);
@@ -477,7 +478,8 @@ html.dark-mode { --hse-blue:#0c4cc6; --hse-red:#0045cb; --hse-white:#f4f6fb; --a
   --input-border-mix:24%;
   --surface-dot-mix:14%;
   --surface-dot-opacity:.22;
-  --stripe-header-mix:19%;
+  --banner-stripe:color-mix(in srgb, var(--hse-white) 72%, var(--primary-light));
+  --banner-stripe-soft:color-mix(in srgb, var(--hse-white) 48%, var(--primary-light));
   --stripe-surface-mix:7%;
   /* Dark-mode accent text needs a much brighter lift than outlines so deep,
      saturated custom accents remain readable on dark cards. */
@@ -523,10 +525,11 @@ body::before {
 }
 .qb-container, .auth-gate { position:relative; z-index:1; }
 
-/* The header gets an HSE ribbon plus fine diagonal texture over its gradient. */
+/* The header keeps its gradient, but its diagonal texture now stays in a light
+   lane so the accent color can do the outlining/highlight work elsewhere. */
 .qb-header {
   background-color:var(--primary);
-  background-image:repeating-linear-gradient(135deg, rgba(255,255,255,.055) 0 2px, transparent 2px 9px), linear-gradient(135deg, var(--primary), var(--secondary));
+  background-image:repeating-linear-gradient(135deg, color-mix(in srgb, var(--banner-stripe) 34%, transparent) 0 2px, transparent 2px 9px), linear-gradient(135deg, var(--primary), var(--secondary));
   box-shadow:0 2px 16px color-mix(in srgb, var(--primary) 28%, transparent);
 }
 .qb-header::after {
@@ -559,16 +562,9 @@ body::before {
 .theme-swatch-chip::after { right:0; background:var(--swatch-right, var(--hse-red)); }
 .theme-swatch-chip { box-shadow:inset 0 1px 3px rgba(255,255,255,.24), inset 0 0 0 1px rgba(0,0,0,.12); }
 
-/* Small tricolor accents add hierarchy without overpowering readable text. */
+/* Retire the tiny top-left tags so panel headings stay cleaner. */
 .qb-section > h2::before, .analytics-header::before {
-  content:'';
-  display:inline-block;
-  width:18px;
-  height:4px;
-  margin:0 7px 3px 0;
-  border-radius:3px;
-  background:linear-gradient(90deg, var(--hse-blue) 0 33.333%, var(--hse-white) 33.333% 66.666%, var(--hse-red) 66.666%);
-  box-shadow:0 0 0 1px color-mix(in srgb, var(--border) 55%, transparent);
+  content:none;
 }
 .button-success { background-color:var(--hse-blue); background-image:repeating-linear-gradient(135deg, rgba(255,255,255,.08) 0 2px, transparent 2px 8px); }
 @media (prefers-reduced-motion: reduce) {
@@ -577,29 +573,24 @@ body::before {
 
 /* ── Accent style: Pinstripe vs Gradient ─────────────────────────────────
    'gradient' keeps the classic two-color blends. 'stripes' keeps the softer
-   primary-family gradients, then uses the companion color as diagonal texture,
-   tinted outlines, and two-color bands instead of flag-like tricolor blocks. */
+   primary-family gradients, reserves the accent color for outlines/highlights,
+   and uses light banner texture instead of darker flag-like header stripes. */
 
-/* Header: gradient base + faint companion-color diagonal lines over the white texture. */
+/* Header: gradient base + light diagonal lines, never the outline accent. */
 html[data-accent-style="stripes"] .qb-header {
   background-color:var(--primary);
   background-image:
-    repeating-linear-gradient(135deg, color-mix(in srgb, var(--accent-line) var(--stripe-header-mix), transparent) 0 2px, transparent 2px 12px),
-    repeating-linear-gradient(135deg, rgba(255,255,255,.05) 0 2px, transparent 2px 12px),
+    repeating-linear-gradient(135deg, color-mix(in srgb, var(--banner-stripe) 42%, transparent) 0 2px, transparent 2px 12px),
+    repeating-linear-gradient(135deg, color-mix(in srgb, var(--banner-stripe-soft) 24%, transparent) 0 2px, transparent 2px 12px),
     linear-gradient(135deg, var(--primary), var(--secondary));
 }
 
-/* Pinstripe mode drops the flag-like header ribbon; section accents become
-   palette-colored diagonal bands instead of tricolor blocks. */
+/* Pinstripe mode still drops the old header ribbon entirely. */
 html[data-accent-style="stripes"] .qb-header::after {
   content:none;
 }
-html[data-accent-style="stripes"] .qb-section > h2::before,
-html[data-accent-style="stripes"] .analytics-header::before {
-  background:repeating-linear-gradient(135deg, var(--stripe-band-a) 0 6px, var(--stripe-band-b) 6px 12px, var(--stripe-band-c) 12px 18px);
-}
 
-/* Panels pick up the strongest companion-tinted outline plus a whisper of
+/* Panels pick up the strongest accent-tinted outline plus a whisper of
    diagonal pinstripe. Gradient mode keeps the same tinted outlines from the
    shared rules above — the tint is never stripes-only. */
 html[data-accent-style="stripes"] .qb-section {
