@@ -11,6 +11,8 @@
     document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
     var style = localStorage.getItem('accentStyle');
     document.documentElement.dataset.accentStyle = style === 'stripes' ? 'stripes' : 'gradient';
+    var visualStyle = localStorage.getItem('visualStyle');
+    document.documentElement.dataset.visualStyle = visualStyle === 'legacy' ? 'legacy' : 'enhanced';
     document.documentElement.dataset.colorTheme = localStorage.getItem('colorTheme') || 'tricolor';
   } catch (e) { /* Storage can be unavailable in private browsing; light remains the fallback. */ }
 }());

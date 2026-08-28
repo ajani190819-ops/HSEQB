@@ -25,6 +25,8 @@ function getColorTheme(id){ return COLOR_THEMES.find(t => t.id === id) || null; 
 //  - 'gradient' : the classic primary -> gradient-partner two-color blend.
 const ACCENT_STYLES = ['stripes', 'gradient'];
 const DEFAULT_ACCENT_STYLE = 'gradient';
+const VISUAL_STYLES = ['enhanced', 'legacy'];
+const DEFAULT_VISUAL_STYLE = 'enhanced';
 const GITHUB_REPO_URL     = 'https://github.com/ajani190819-ops/HSEQB';
 const GITHUB_ISSUES_URL   = GITHUB_REPO_URL + '/issues';
 const GITHUB_RELEASES_URL = GITHUB_REPO_URL + '/releases';
@@ -51,6 +53,7 @@ const THEME_MODES = ['light', 'dark', 'device'];
 let themeMode = 'device';
 let colorTheme = DEFAULT_COLOR_THEME;
 let accentStyle = DEFAULT_ACCENT_STYLE;
+let visualStyle = DEFAULT_VISUAL_STYLE;
 let customThemeColors = { primary:'#003da5', secondary:'#c8102e', tertiary:'#ffffff', accent:'#c8102e' };
 let advancedThemeColors = { bannerStripe:'', bannerOutline:'', surfaceStripe:'', panelOutline:'', highlightText:'', buttonPrimary:'', buttonSecondary:'' };
 const ADVANCED_THEME_STORAGE_KEYS = {

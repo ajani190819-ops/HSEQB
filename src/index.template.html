@@ -114,6 +114,15 @@
     </div>
 
     <div class="vs-block">
+      <div class="vs-block-head"><span class="vs-block-title">Visual Style</span><span class="vs-block-sub" id="visualStyleLabel">Enhanced theme system</span></div>
+      <div class="vs-mode-row" role="group" aria-label="Visual style">
+        <button type="button" class="vs-mode-btn vs-visual-btn" data-visual-style="enhanced" onclick="setVisualStyle('enhanced')"><span class="vs-mode-icon">◈</span>Enhanced</button>
+        <button type="button" class="vs-mode-btn vs-visual-btn" data-visual-style="legacy" onclick="setVisualStyle('legacy')"><span class="vs-mode-icon">◌</span>Legacy</button>
+      </div>
+      <div id="visualStyleHint" class="vs-hint"></div>
+    </div>
+
+    <div class="vs-block">
       <div class="vs-block-head"><span class="vs-block-title">Accent Style</span><span class="vs-block-sub">How theme colors are used</span></div>
       <div class="vs-mode-row" role="group" aria-label="Accent style">
         <button type="button" class="vs-mode-btn vs-style-btn" data-style="stripes"  onclick="setAccentStyle('stripes')"><span class="vs-mode-icon">&#9585;&#9585;</span>Pinstripe</button>

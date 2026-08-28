@@ -159,6 +159,7 @@ function getUserCustomization(){
   const customization = {
     themeMode: normalizeThemeMode(themeMode),
     accentStyle: normalizeAccentStyle(accentStyle),
+    visualStyle: normalizeVisualStyle(visualStyle),
     accentColor: inlineAccent || localStorage.getItem('accentColor') || DEFAULT_ACCENT,
     colorTheme: colorTheme || DEFAULT_COLOR_THEME,
     customPrimary: customThemeColors.primary,
@@ -211,6 +212,7 @@ function resetLocalCustomizationForAccountSwitch(){
   localStorage.removeItem('accentColor');
   localStorage.removeItem('colorTheme');
   localStorage.removeItem('accentStyle');
+  localStorage.removeItem('visualStyle');
   localStorage.removeItem('customPrimary');
   localStorage.removeItem('customSecondary');
   localStorage.removeItem('customAccent');
@@ -218,13 +220,14 @@ function resetLocalCustomizationForAccountSwitch(){
   localStorage.removeItem('hideScrollbars');
   localStorage.removeItem('sidebarCollapsed');
   applyTheme('device', true, false);
-  ['--primary','--primary-light','--primary-dark','--secondary','--accent-line','--tertiary','--hse-blue','--hse-red','--hse-white','--panel-accent','--surface-stripe','--highlight-base','--button-primary','--button-secondary','--banner-stripe','--banner-stripe-soft','--banner-outline'].forEach(v => document.documentElement.style.removeProperty(v));
+  ['--primary','--primary-light','--primary-dark','--secondary','--accent-line','--tertiary','--hse-blue','--hse-red','--hse-white','--panel-accent','--surface-stripe','--highlight-base','--button-primary','--button-secondary','--banner-stripe','--banner-stripe-soft','--banner-outline','--filled-control-bg','--filled-control-border','--filled-control-shadow','--stripe-fill-mid'].forEach(v => document.documentElement.style.removeProperty(v));
   document.body.classList.remove('hide-scrollbars');
   const hideToggle=$('hideScrollbarsToggle'); if(hideToggle) hideToggle.checked=false;
   const base=getColorTheme(DEFAULT_COLOR_THEME);
   customThemeColors={ primary:base.primary, secondary:base.secondary, tertiary:base.tertiary || '#ffffff', accent:base.accent || base.secondary };
   advancedThemeColors = ADVANCED_THEME_KEYS.reduce((acc, key) => ({ ...acc, [key]:'' }), {});
   applyColorTheme(DEFAULT_COLOR_THEME, true, false);
+  applyVisualStyle(DEFAULT_VISUAL_STYLE, true, false);
   applyAccentStyle(DEFAULT_ACCENT_STYLE, true, false);
 }
 function extractProfileCustomization(profile){
@@ -235,6 +238,7 @@ function extractProfileCustomization(profile){
   if (typeof source.accentColor === 'string' && /^#[0-9a-f]{6}$/i.test(source.accentColor)) result.accentColor = source.accentColor;
   if (source.colorTheme === 'custom' || getColorTheme(source.colorTheme)) result.colorTheme = source.colorTheme;
   if (ACCENT_STYLES.includes(String(source.accentStyle || '').toLowerCase())) result.accentStyle = String(source.accentStyle).toLowerCase();
+  if (VISUAL_STYLES.includes(String(source.visualStyle || '').toLowerCase())) result.visualStyle = String(source.visualStyle).toLowerCase();
   if (typeof source.customPrimary === 'string' && /^#[0-9a-f]{6}$/i.test(source.customPrimary)) result.customPrimary = source.customPrimary;
   if (typeof source.customSecondary === 'string' && /^#[0-9a-f]{6}$/i.test(source.customSecondary)) result.customSecondary = source.customSecondary;
   if (typeof source.customAccent === 'string' && /^#[0-9a-f]{6}$/i.test(source.customAccent)) result.customAccent = source.customAccent;
@@ -286,6 +290,7 @@ function applyAuthenticatedUserProfile(profile, user){
   }, {});
   if (customization.colorTheme) applyColorTheme(customization.colorTheme, true, false);
   else if (customization.accentColor) setAccentColor(customization.accentColor, true, false);
+  applyVisualStyle(customization.visualStyle || visualStyle, true, false);
   applyAccentStyle(customization.accentStyle || accentStyle, true, false);
   applyAdvancedThemeOverrides(advancedThemeColors, true, false);
   if (typeof customization.hideScrollbars === 'boolean'){

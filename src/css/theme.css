@@ -76,7 +76,7 @@ html.dark-mode { color-scheme: dark; }
   transition: background .15s, color .15s;
 }
 .auth-theme-btn:hover { background: var(--hover); color: var(--text); }
-.auth-theme-btn.active { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: #fff; box-shadow: 0 1px 4px color-mix(in srgb, var(--primary) 45%, transparent); }
+.auth-theme-btn.active { background: var(--filled-control-bg); color: #fff; box-shadow: var(--filled-control-shadow); }
 @media (max-width: 480px) { .auth-corner-theme { top: 10px; right: 10px; } .auth-theme-btn { width: 28px; height: 25px; font-size: .9em; } }
 .theme-select { cursor: pointer; }
 .user-account-meta {
@@ -106,9 +106,10 @@ html.dark-mode { color-scheme: dark; }
   border-radius: 0;
 }
 .sidebar-jump-btn, .sidebar-close-btn {
-  background: linear-gradient(135deg, var(--button-primary), var(--button-secondary));
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--button-primary) 28%, transparent);
-  border-color: color-mix(in srgb, var(--button-primary) 22%, rgba(255,255,255,.25));
+  border-radius: var(--radius-sm);
+  background: var(--filled-control-bg);
+  box-shadow: var(--filled-control-shadow);
+  border-color: var(--filled-control-border);
 }
 .sidebar-jump-btn:hover, .sidebar-close-btn:hover {
   filter: brightness(1.04);
@@ -453,6 +454,10 @@ button, .button, .ql-btn, .ql-cat-chip, .ql-confirm-btn, .ql-cancel-btn, .header
   --highlight-base:var(--accent-line);
   --button-primary:var(--primary);
   --button-secondary:var(--secondary);
+  --filled-control-bg:linear-gradient(135deg, var(--button-primary), var(--button-secondary));
+  --filled-control-border:var(--button-primary);
+  --filled-control-shadow:0 2px 8px color-mix(in srgb, var(--button-primary) 28%, transparent);
+  --stripe-fill-mid:#ffffff;
   --banner-outline:var(--panel-accent);
   --primary-ink:var(--primary);
   --primary-ink-hover:color-mix(in srgb, var(--primary) 72%, #000);
@@ -550,14 +555,44 @@ html.dark-mode { --hse-blue:#004ac7; --hse-red:#e61134; --hse-white:#f4f6fb; --a
   --highlight-wash:color-mix(in srgb, var(--highlight-base) 18%, transparent);
 }
 
-/* Panels, cards and containers get the stronger accent-tinted edge. (The auth
-   card is absent on purpose: its border-image ribbon wins over any border-color,
-   so it already carries the full three-color decorative edge.) */
-.qb-section,
+/* Legacy visual style restores the calmer pre-overhaul look while keeping the
+   current theme picker, account sync, and stripe/gradient mode toggles. */
+html[data-visual-style="legacy"] {
+  --radius:14px;
+  --radius-sm:10px;
+  --bg-tint-mix:0%;
+  --sec-bg-tint-mix:0%;
+  --card-tint-mix:0%;
+  --input-bg-tint-mix:0%;
+  --hover-tint-mix:0%;
+  --border-mix:0%;
+  --panel-border-mix:0%;
+  --border-strong-mix:0%;
+  --input-border-mix:0%;
+  --surface-dot-opacity:0;
+  --stripe-surface-mix:0%;
+}
+html[data-visual-style="legacy"] .qb-section,
+html[data-visual-style="legacy"] .stat-card,
+html[data-visual-style="legacy"] .team-stat-card,
+html[data-visual-style="legacy"] .an-stat-box,
+html[data-visual-style="legacy"] .an-player-card,
+html[data-visual-style="legacy"] .an-cat-card,
+html[data-visual-style="legacy"] .an-team-card,
+html[data-visual-style="legacy"] .overall-ranking,
+html[data-visual-style="legacy"] .session-info,
+html[data-visual-style="legacy"] .custom-theme-panel,
+html[data-visual-style="legacy"] .vs-advanced-summary,
+html[data-visual-style="legacy"] .updates-current-summary {
+  background-image:none !important;
+}
+
+/* Panels, cards and containers get the stronger accent-tinted edge. */
+.qb-section, .auth-card,
 .stat-card, .team-stat-card, .overall-ranking,
 .an-stat-box, .an-player-card, .an-cat-card, .an-team-card, .an-lb-row,
 .log-container, .session-info, .sidebar-jump-menu,
-.custom-theme-panel, .updates-release-card { border-color:var(--panel-border); }
+.custom-theme-panel, .updates-release-card, .updates-current-summary { border-color:var(--panel-border); }
 /* Hovering a panel deepens the accent edge instead of turning it blue. */
 .qb-section:hover, .stat-card:hover, .team-stat-card:hover { border-color:var(--border-strong); }
 /* Team cards keep their colored rule, but the rule now follows the accent color. */
@@ -608,10 +643,8 @@ body::before {
   content:none;
 }
 
-/* Reusable tricolor edge for panels, cards, and the auth experience. */
-.auth-card, .updates-current-summary {
-  border-image:linear-gradient(90deg, var(--hse-blue) 0 33.333%, var(--hse-white) 33.333% 66.666%, var(--hse-red) 66.666% 100%) 1;
-}
+/* The auth surface keeps a calm themed backdrop, but outlines stay solid so
+   rounded corners render cleanly instead of turning into square gradient rims. */
 .auth-gate {
   background-color:var(--bg);
   background-image:linear-gradient(135deg, color-mix(in srgb, var(--hse-blue) 6%, transparent), transparent 42%), linear-gradient(315deg, color-mix(in srgb, var(--hse-red) 5%, transparent), transparent 42%);
@@ -643,15 +676,21 @@ input[type="file"]::file-selector-button, .button:not(.button-secondary):not(.bu
 .button-point-type.selected, .button-category.selected, .button-player.selected,
 .cat-group-label.selected, .cat-group-chip.selected, .sort-pill.active,
 #welcomeToast .wt-btn-primary, .pd-hero, .avatar-lg, .avatar-circle {
-  background:linear-gradient(135deg, var(--button-primary), var(--button-secondary));
-  box-shadow:0 2px 8px color-mix(in srgb, var(--button-primary) 28%, transparent);
+  background:var(--filled-control-bg);
+  box-shadow:var(--filled-control-shadow);
 }
 .analytics-tab.active, .vs-mode-btn.active, .button-point-type.selected, .button-category.selected, .button-player.selected,
-.cat-group-label.selected, .cat-group-chip.selected, .sort-pill.active { border-color:transparent; }
+.cat-group-label.selected, .cat-group-chip.selected, .sort-pill.active { border-color:var(--filled-control-border); }
 .button-success {
-  background-color:var(--button-primary);
-  background-image:repeating-linear-gradient(135deg, rgba(255,255,255,.08) 0 2px, transparent 2px 8px), linear-gradient(135deg, var(--button-primary), var(--button-secondary));
-  box-shadow:0 2px 8px color-mix(in srgb, var(--button-primary) 28%, transparent);
+  background:var(--filled-control-bg);
+  box-shadow:var(--filled-control-shadow);
+}
+.an-bar-fill, .pd-bar-mini {
+  background:linear-gradient(90deg, var(--button-primary), var(--button-secondary));
+}
+html[data-accent-style="stripes"] .an-bar-fill,
+html[data-accent-style="stripes"] .pd-bar-mini {
+  background:repeating-linear-gradient(90deg, var(--button-primary) 0 10px, var(--stripe-fill-mid) 10px 20px, var(--button-secondary) 20px 30px);
 }
 @media (prefers-reduced-motion: reduce) {
   .theme-swatch:hover { transform:none; }
@@ -701,8 +740,3 @@ html[data-accent-style="stripes"] .theme-swatch-chip {
   background:repeating-linear-gradient(135deg, var(--swatch-left, var(--hse-blue)) 0 6px, var(--swatch-mid, #fff) 6px 12px, var(--swatch-right, var(--hse-red)) 12px 18px);
 }
 
-/* Auth card + release summary edges go diagonal too. */
-html[data-accent-style="stripes"] .auth-card,
-html[data-accent-style="stripes"] .updates-current-summary {
-  border-image:repeating-linear-gradient(135deg, var(--stripe-band-a) 0 6px, var(--stripe-band-b) 6px 12px, var(--stripe-band-c) 12px 18px) 1;
-}

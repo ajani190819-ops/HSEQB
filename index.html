@@ -84,7 +84,7 @@ html.dark-mode { color-scheme: dark; }
   transition: background .15s, color .15s;
 }
 .auth-theme-btn:hover { background: var(--hover); color: var(--text); }
-.auth-theme-btn.active { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: #fff; box-shadow: 0 1px 4px color-mix(in srgb, var(--primary) 45%, transparent); }
+.auth-theme-btn.active { background: var(--filled-control-bg); color: #fff; box-shadow: var(--filled-control-shadow); }
 @media (max-width: 480px) { .auth-corner-theme { top: 10px; right: 10px; } .auth-theme-btn { width: 28px; height: 25px; font-size: .9em; } }
 .theme-select { cursor: pointer; }
 .user-account-meta {
@@ -114,9 +114,10 @@ html.dark-mode { color-scheme: dark; }
   border-radius: 0;
 }
 .sidebar-jump-btn, .sidebar-close-btn {
-  background: linear-gradient(135deg, var(--button-primary), var(--button-secondary));
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--button-primary) 28%, transparent);
-  border-color: color-mix(in srgb, var(--button-primary) 22%, rgba(255,255,255,.25));
+  border-radius: var(--radius-sm);
+  background: var(--filled-control-bg);
+  box-shadow: var(--filled-control-shadow);
+  border-color: var(--filled-control-border);
 }
 .sidebar-jump-btn:hover, .sidebar-close-btn:hover {
   filter: brightness(1.04);
@@ -461,6 +462,10 @@ button, .button, .ql-btn, .ql-cat-chip, .ql-confirm-btn, .ql-cancel-btn, .header
   --highlight-base:var(--accent-line);
   --button-primary:var(--primary);
   --button-secondary:var(--secondary);
+  --filled-control-bg:linear-gradient(135deg, var(--button-primary), var(--button-secondary));
+  --filled-control-border:var(--button-primary);
+  --filled-control-shadow:0 2px 8px color-mix(in srgb, var(--button-primary) 28%, transparent);
+  --stripe-fill-mid:#ffffff;
   --banner-outline:var(--panel-accent);
   --primary-ink:var(--primary);
   --primary-ink-hover:color-mix(in srgb, var(--primary) 72%, #000);
@@ -558,14 +563,44 @@ html.dark-mode { --hse-blue:#004ac7; --hse-red:#e61134; --hse-white:#f4f6fb; --a
   --highlight-wash:color-mix(in srgb, var(--highlight-base) 18%, transparent);
 }
 
-/* Panels, cards and containers get the stronger accent-tinted edge. (The auth
-   card is absent on purpose: its border-image ribbon wins over any border-color,
-   so it already carries the full three-color decorative edge.) */
-.qb-section,
+/* Legacy visual style restores the calmer pre-overhaul look while keeping the
+   current theme picker, account sync, and stripe/gradient mode toggles. */
+html[data-visual-style="legacy"] {
+  --radius:14px;
+  --radius-sm:10px;
+  --bg-tint-mix:0%;
+  --sec-bg-tint-mix:0%;
+  --card-tint-mix:0%;
+  --input-bg-tint-mix:0%;
+  --hover-tint-mix:0%;
+  --border-mix:0%;
+  --panel-border-mix:0%;
+  --border-strong-mix:0%;
+  --input-border-mix:0%;
+  --surface-dot-opacity:0;
+  --stripe-surface-mix:0%;
+}
+html[data-visual-style="legacy"] .qb-section,
+html[data-visual-style="legacy"] .stat-card,
+html[data-visual-style="legacy"] .team-stat-card,
+html[data-visual-style="legacy"] .an-stat-box,
+html[data-visual-style="legacy"] .an-player-card,
+html[data-visual-style="legacy"] .an-cat-card,
+html[data-visual-style="legacy"] .an-team-card,
+html[data-visual-style="legacy"] .overall-ranking,
+html[data-visual-style="legacy"] .session-info,
+html[data-visual-style="legacy"] .custom-theme-panel,
+html[data-visual-style="legacy"] .vs-advanced-summary,
+html[data-visual-style="legacy"] .updates-current-summary {
+  background-image:none !important;
+}
+
+/* Panels, cards and containers get the stronger accent-tinted edge. */
+.qb-section, .auth-card,
 .stat-card, .team-stat-card, .overall-ranking,
 .an-stat-box, .an-player-card, .an-cat-card, .an-team-card, .an-lb-row,
 .log-container, .session-info, .sidebar-jump-menu,
-.custom-theme-panel, .updates-release-card { border-color:var(--panel-border); }
+.custom-theme-panel, .updates-release-card, .updates-current-summary { border-color:var(--panel-border); }
 /* Hovering a panel deepens the accent edge instead of turning it blue. */
 .qb-section:hover, .stat-card:hover, .team-stat-card:hover { border-color:var(--border-strong); }
 /* Team cards keep their colored rule, but the rule now follows the accent color. */
@@ -616,10 +651,8 @@ body::before {
   content:none;
 }
 
-/* Reusable tricolor edge for panels, cards, and the auth experience. */
-.auth-card, .updates-current-summary {
-  border-image:linear-gradient(90deg, var(--hse-blue) 0 33.333%, var(--hse-white) 33.333% 66.666%, var(--hse-red) 66.666% 100%) 1;
-}
+/* The auth surface keeps a calm themed backdrop, but outlines stay solid so
+   rounded corners render cleanly instead of turning into square gradient rims. */
 .auth-gate {
   background-color:var(--bg);
   background-image:linear-gradient(135deg, color-mix(in srgb, var(--hse-blue) 6%, transparent), transparent 42%), linear-gradient(315deg, color-mix(in srgb, var(--hse-red) 5%, transparent), transparent 42%);
@@ -651,15 +684,21 @@ input[type="file"]::file-selector-button, .button:not(.button-secondary):not(.bu
 .button-point-type.selected, .button-category.selected, .button-player.selected,
 .cat-group-label.selected, .cat-group-chip.selected, .sort-pill.active,
 #welcomeToast .wt-btn-primary, .pd-hero, .avatar-lg, .avatar-circle {
-  background:linear-gradient(135deg, var(--button-primary), var(--button-secondary));
-  box-shadow:0 2px 8px color-mix(in srgb, var(--button-primary) 28%, transparent);
+  background:var(--filled-control-bg);
+  box-shadow:var(--filled-control-shadow);
 }
 .analytics-tab.active, .vs-mode-btn.active, .button-point-type.selected, .button-category.selected, .button-player.selected,
-.cat-group-label.selected, .cat-group-chip.selected, .sort-pill.active { border-color:transparent; }
+.cat-group-label.selected, .cat-group-chip.selected, .sort-pill.active { border-color:var(--filled-control-border); }
 .button-success {
-  background-color:var(--button-primary);
-  background-image:repeating-linear-gradient(135deg, rgba(255,255,255,.08) 0 2px, transparent 2px 8px), linear-gradient(135deg, var(--button-primary), var(--button-secondary));
-  box-shadow:0 2px 8px color-mix(in srgb, var(--button-primary) 28%, transparent);
+  background:var(--filled-control-bg);
+  box-shadow:var(--filled-control-shadow);
+}
+.an-bar-fill, .pd-bar-mini {
+  background:linear-gradient(90deg, var(--button-primary), var(--button-secondary));
+}
+html[data-accent-style="stripes"] .an-bar-fill,
+html[data-accent-style="stripes"] .pd-bar-mini {
+  background:repeating-linear-gradient(90deg, var(--button-primary) 0 10px, var(--stripe-fill-mid) 10px 20px, var(--button-secondary) 20px 30px);
 }
 @media (prefers-reduced-motion: reduce) {
   .theme-swatch:hover { transform:none; }
@@ -709,11 +748,6 @@ html[data-accent-style="stripes"] .theme-swatch-chip {
   background:repeating-linear-gradient(135deg, var(--swatch-left, var(--hse-blue)) 0 6px, var(--swatch-mid, #fff) 6px 12px, var(--swatch-right, var(--hse-red)) 12px 18px);
 }
 
-/* Auth card + release summary edges go diagonal too. */
-html[data-accent-style="stripes"] .auth-card,
-html[data-accent-style="stripes"] .updates-current-summary {
-  border-image:repeating-linear-gradient(135deg, var(--stripe-band-a) 0 6px, var(--stripe-band-b) 6px 12px, var(--stripe-band-c) 12px 18px) 1;
-}
 </style>
 <script>
 /* Apply the cached choice before the sign-in form paints, including on a cold load. */
@@ -728,6 +762,8 @@ html[data-accent-style="stripes"] .updates-current-summary {
     document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
     var style = localStorage.getItem('accentStyle');
     document.documentElement.dataset.accentStyle = style === 'stripes' ? 'stripes' : 'gradient';
+    var visualStyle = localStorage.getItem('visualStyle');
+    document.documentElement.dataset.visualStyle = visualStyle === 'legacy' ? 'legacy' : 'enhanced';
     document.documentElement.dataset.colorTheme = localStorage.getItem('colorTheme') || 'tricolor';
   } catch (e) { /* Storage can be unavailable in private browsing; light remains the fallback. */ }
 }());
@@ -841,6 +877,15 @@ html[data-accent-style="stripes"] .updates-current-summary {
         <p class="vs-hint">Primary drives the main UI, Gradient blends into headers and toggles, and Accent controls outlines plus highlighted text. Accent text is automatically lifted for contrast in dark mode.</p>
         <button class="button button-secondary vs-reset-btn" onclick="resetCustomTheme()">Reset custom colors</button>
       </div>
+    </div>
+
+    <div class="vs-block">
+      <div class="vs-block-head"><span class="vs-block-title">Visual Style</span><span class="vs-block-sub" id="visualStyleLabel">Enhanced theme system</span></div>
+      <div class="vs-mode-row" role="group" aria-label="Visual style">
+        <button type="button" class="vs-mode-btn vs-visual-btn" data-visual-style="enhanced" onclick="setVisualStyle('enhanced')"><span class="vs-mode-icon">◈</span>Enhanced</button>
+        <button type="button" class="vs-mode-btn vs-visual-btn" data-visual-style="legacy" onclick="setVisualStyle('legacy')"><span class="vs-mode-icon">◌</span>Legacy</button>
+      </div>
+      <div id="visualStyleHint" class="vs-hint"></div>
     </div>
 
     <div class="vs-block">
@@ -981,6 +1026,8 @@ function getColorTheme(id){ return COLOR_THEMES.find(t => t.id === id) || null; 
 //  - 'gradient' : the classic primary -> gradient-partner two-color blend.
 const ACCENT_STYLES = ['stripes', 'gradient'];
 const DEFAULT_ACCENT_STYLE = 'gradient';
+const VISUAL_STYLES = ['enhanced', 'legacy'];
+const DEFAULT_VISUAL_STYLE = 'enhanced';
 const GITHUB_REPO_URL     = 'https://github.com/ajani190819-ops/HSEQB';
 const GITHUB_ISSUES_URL   = GITHUB_REPO_URL + '/issues';
 const GITHUB_RELEASES_URL = GITHUB_REPO_URL + '/releases';
@@ -1007,6 +1054,7 @@ const THEME_MODES = ['light', 'dark', 'device'];
 let themeMode = 'device';
 let colorTheme = DEFAULT_COLOR_THEME;
 let accentStyle = DEFAULT_ACCENT_STYLE;
+let visualStyle = DEFAULT_VISUAL_STYLE;
 let customThemeColors = { primary:'#003da5', secondary:'#c8102e', tertiary:'#ffffff', accent:'#c8102e' };
 let advancedThemeColors = { bannerStripe:'', bannerOutline:'', surfaceStripe:'', panelOutline:'', highlightText:'', buttonPrimary:'', buttonSecondary:'' };
 const ADVANCED_THEME_STORAGE_KEYS = {
@@ -1261,6 +1309,7 @@ function getUserCustomization(){
   const customization = {
     themeMode: normalizeThemeMode(themeMode),
     accentStyle: normalizeAccentStyle(accentStyle),
+    visualStyle: normalizeVisualStyle(visualStyle),
     accentColor: inlineAccent || localStorage.getItem('accentColor') || DEFAULT_ACCENT,
     colorTheme: colorTheme || DEFAULT_COLOR_THEME,
     customPrimary: customThemeColors.primary,
@@ -1313,6 +1362,7 @@ function resetLocalCustomizationForAccountSwitch(){
   localStorage.removeItem('accentColor');
   localStorage.removeItem('colorTheme');
   localStorage.removeItem('accentStyle');
+  localStorage.removeItem('visualStyle');
   localStorage.removeItem('customPrimary');
   localStorage.removeItem('customSecondary');
   localStorage.removeItem('customAccent');
@@ -1320,13 +1370,14 @@ function resetLocalCustomizationForAccountSwitch(){
   localStorage.removeItem('hideScrollbars');
   localStorage.removeItem('sidebarCollapsed');
   applyTheme('device', true, false);
-  ['--primary','--primary-light','--primary-dark','--secondary','--accent-line','--tertiary','--hse-blue','--hse-red','--hse-white','--panel-accent','--surface-stripe','--highlight-base','--button-primary','--button-secondary','--banner-stripe','--banner-stripe-soft','--banner-outline'].forEach(v => document.documentElement.style.removeProperty(v));
+  ['--primary','--primary-light','--primary-dark','--secondary','--accent-line','--tertiary','--hse-blue','--hse-red','--hse-white','--panel-accent','--surface-stripe','--highlight-base','--button-primary','--button-secondary','--banner-stripe','--banner-stripe-soft','--banner-outline','--filled-control-bg','--filled-control-border','--filled-control-shadow','--stripe-fill-mid'].forEach(v => document.documentElement.style.removeProperty(v));
   document.body.classList.remove('hide-scrollbars');
   const hideToggle=$('hideScrollbarsToggle'); if(hideToggle) hideToggle.checked=false;
   const base=getColorTheme(DEFAULT_COLOR_THEME);
   customThemeColors={ primary:base.primary, secondary:base.secondary, tertiary:base.tertiary || '#ffffff', accent:base.accent || base.secondary };
   advancedThemeColors = ADVANCED_THEME_KEYS.reduce((acc, key) => ({ ...acc, [key]:'' }), {});
   applyColorTheme(DEFAULT_COLOR_THEME, true, false);
+  applyVisualStyle(DEFAULT_VISUAL_STYLE, true, false);
   applyAccentStyle(DEFAULT_ACCENT_STYLE, true, false);
 }
 function extractProfileCustomization(profile){
@@ -1337,6 +1388,7 @@ function extractProfileCustomization(profile){
   if (typeof source.accentColor === 'string' && /^#[0-9a-f]{6}$/i.test(source.accentColor)) result.accentColor = source.accentColor;
   if (source.colorTheme === 'custom' || getColorTheme(source.colorTheme)) result.colorTheme = source.colorTheme;
   if (ACCENT_STYLES.includes(String(source.accentStyle || '').toLowerCase())) result.accentStyle = String(source.accentStyle).toLowerCase();
+  if (VISUAL_STYLES.includes(String(source.visualStyle || '').toLowerCase())) result.visualStyle = String(source.visualStyle).toLowerCase();
   if (typeof source.customPrimary === 'string' && /^#[0-9a-f]{6}$/i.test(source.customPrimary)) result.customPrimary = source.customPrimary;
   if (typeof source.customSecondary === 'string' && /^#[0-9a-f]{6}$/i.test(source.customSecondary)) result.customSecondary = source.customSecondary;
   if (typeof source.customAccent === 'string' && /^#[0-9a-f]{6}$/i.test(source.customAccent)) result.customAccent = source.customAccent;
@@ -1388,6 +1440,7 @@ function applyAuthenticatedUserProfile(profile, user){
   }, {});
   if (customization.colorTheme) applyColorTheme(customization.colorTheme, true, false);
   else if (customization.accentColor) setAccentColor(customization.accentColor, true, false);
+  applyVisualStyle(customization.visualStyle || visualStyle, true, false);
   applyAccentStyle(customization.accentStyle || accentStyle, true, false);
   applyAdvancedThemeOverrides(advancedThemeColors, true, false);
   if (typeof customization.hideScrollbars === 'boolean'){
@@ -3955,6 +4008,7 @@ function _boostHexForDarkSurface(hex){
 function _paintColors(primary, secondary, tertiary, accent){
   const root = document.documentElement.style;
   const dark = themeIsDark(themeMode);
+  const legacyVisual = normalizeVisualStyle(visualStyle) === 'legacy';
   const adapt = (hex) => {
     if (!_isHex(hex)) return hex;
     if (dark) return _boostHexForDarkSurface(hex);
@@ -3970,13 +4024,23 @@ function _paintColors(primary, secondary, tertiary, accent){
   // stays light by default except for Tricolor pinstripes, which keep the red
   // banner stripes and banner outline unless manually overridden.
   const stripes = (typeof accentStyle === 'undefined') || accentStyle !== 'gradient';
-  const gradEnd = stripes ? _mixHex(blue, dark ? '#dfe6f5' : '#ffffff', dark ? 0.30 : 0.32) : gradientEnd;
+  const structuralSecondary = stripes ? _mixHex(blue, dark ? '#dfe6f5' : '#ffffff', dark ? 0.30 : 0.32) : gradientEnd;
   const tricolorPinstripes = stripes && colorTheme === 'tricolor';
-  const panelAccent = _isHex(advancedThemeColors?.panelOutline) ? advancedThemeColors.panelOutline.toLowerCase() : accentTone;
-  const surfaceStripe = _isHex(advancedThemeColors?.surfaceStripe) ? advancedThemeColors.surfaceStripe.toLowerCase() : panelAccent;
-  const highlightBase = _isHex(advancedThemeColors?.highlightText) ? advancedThemeColors.highlightText.toLowerCase() : accentTone;
+  const automaticPanelAccent = legacyVisual ? blue : accentTone;
+  const panelAccent = _isHex(advancedThemeColors?.panelOutline) ? advancedThemeColors.panelOutline.toLowerCase() : automaticPanelAccent;
+  const automaticSurfaceStripe = legacyVisual ? blue : panelAccent;
+  const surfaceStripe = _isHex(advancedThemeColors?.surfaceStripe) ? advancedThemeColors.surfaceStripe.toLowerCase() : automaticSurfaceStripe;
+  const automaticHighlightBase = legacyVisual ? blue : accentTone;
+  const highlightBase = _isHex(advancedThemeColors?.highlightText) ? advancedThemeColors.highlightText.toLowerCase() : automaticHighlightBase;
   const buttonPrimary = _isHex(advancedThemeColors?.buttonPrimary) ? advancedThemeColors.buttonPrimary.toLowerCase() : blue;
   const buttonSecondary = _isHex(advancedThemeColors?.buttonSecondary) ? advancedThemeColors.buttonSecondary.toLowerCase() : gradientEnd;
+  const fillMid = tricolorPinstripes
+    ? white
+    : _mixHex(buttonPrimary, white, dark ? 0.26 : 0.36);
+  const filledControlBg = stripes
+    ? `repeating-linear-gradient(135deg, ${buttonPrimary} 0 8px, ${fillMid} 8px 16px, ${buttonSecondary} 16px 24px)`
+    : `linear-gradient(135deg, ${buttonPrimary}, ${buttonSecondary})`;
+  const filledControlBorder = stripes ? buttonPrimary : _shadeHex(buttonPrimary, -0.14);
   const autoBannerStripe = tricolorPinstripes
     ? accentTone
     : _mixHex(white, _shadeHex(blue, dark ? 0.24 : 0.28), dark ? 0.28 : 0.22);
@@ -3987,11 +4051,11 @@ function _paintColors(primary, secondary, tertiary, accent){
     : (tricolorPinstripes ? _mixHex(white, accentTone, dark ? 0.24 : 0.14) : _mixHex(white, autoBannerStripe, dark ? 0.34 : 0.22));
   const bannerOutline = _isHex(advancedThemeColors?.bannerOutline)
     ? advancedThemeColors.bannerOutline.toLowerCase()
-    : (tricolorPinstripes ? accentTone : panelAccent);
+    : (tricolorPinstripes ? accentTone : (legacyVisual ? _shadeHex(blue, -0.18) : panelAccent));
   root.setProperty('--primary', blue);
   root.setProperty('--primary-light', _shadeHex(blue, dark ? 0.24 : 0.28));
   root.setProperty('--primary-dark',  _shadeHex(blue, -0.28));
-  root.setProperty('--secondary', gradEnd);
+  root.setProperty('--secondary', structuralSecondary);
   root.setProperty('--accent-line', accentTone);
   root.setProperty('--tertiary', white);
   root.setProperty('--hse-blue', blue);
@@ -4002,6 +4066,10 @@ function _paintColors(primary, secondary, tertiary, accent){
   root.setProperty('--highlight-base', highlightBase);
   root.setProperty('--button-primary', buttonPrimary);
   root.setProperty('--button-secondary', buttonSecondary);
+  root.setProperty('--filled-control-bg', filledControlBg);
+  root.setProperty('--filled-control-border', filledControlBorder);
+  root.setProperty('--filled-control-shadow', `0 2px 8px color-mix(in srgb, ${buttonPrimary} 28%, transparent)`);
+  root.setProperty('--stripe-fill-mid', fillMid);
   root.setProperty('--banner-stripe', bannerStripe);
   root.setProperty('--banner-stripe-soft', bannerStripeSoft);
   root.setProperty('--banner-outline', bannerOutline);
@@ -4033,6 +4101,25 @@ function applyColorTheme(id, persistLocal, syncRemote){
   if (syncRemote !== false) scheduleUserProfileSave();
 }
 function setColorTheme(id){ applyColorTheme(id, true, true); }
+function normalizeVisualStyle(v){
+  const value = String(v || '').toLowerCase();
+  return VISUAL_STYLES.includes(value) ? value : DEFAULT_VISUAL_STYLE;
+}
+function applyVisualStyle(style, persistLocal, syncRemote){
+  visualStyle = normalizeVisualStyle(style);
+  document.documentElement.dataset.visualStyle = visualStyle;
+  const palette = colorTheme === 'custom' ? customThemeColors : getColorTheme(colorTheme);
+  if (palette) _paintColors(palette.primary, palette.secondary, palette.tertiary, palette.accent);
+  if (persistLocal !== false) localStorage.setItem('visualStyle', visualStyle);
+  syncVisualStyleControls();
+  syncAccentStyleControls();
+  syncAdvancedThemeControls();
+  if (typeof _chartInstances !== 'undefined' && _chartInstances){
+    Object.values(_chartInstances).forEach(chart =>{ try{ chart.update(); }catch(e){} });
+  }
+  if (syncRemote !== false) scheduleUserProfileSave();
+}
+function setVisualStyle(style){ applyVisualStyle(style, true, true); }
 // Accent style: 'stripes' (pinstripe texture + tinted outlines) or 'gradient'
 // (classic two-color blends). Stored per account like the color theme.
 function normalizeAccentStyle(v){
@@ -4062,8 +4149,23 @@ function syncAccentStyleControls(){
   const hint = $('accentStyleHint');
   if (hint){
     hint.textContent = accentStyle === 'gradient'
-      ? 'Classic look: the primary and gradient colors blend directly into each other. Panels still keep a light palette tint.'
-      : 'Pinstripe look: softer primary-family gradients, evenly spaced surface stripes, and accent-led outlines/highlights. Most themes keep a light banner texture; Tricolor keeps red banner stripes by default.';
+      ? 'Gradient mode uses smooth fills and solid outlines. Filled controls follow the theme gradient; outlines stay single-color.'
+      : 'Pinstripe mode swaps filled controls into pinstripes too. Outlines stay solid, Tricolor keeps its red banner stripe by default, and the legacy visual style can mute the newer panel treatments.';
+  }
+}
+function syncVisualStyleControls(){
+  document.querySelectorAll('.vs-visual-btn').forEach(b => {
+    const active = b.dataset.visualStyle === visualStyle;
+    b.classList.toggle('active', active);
+    b.setAttribute('aria-pressed', active ? 'true' : 'false');
+  });
+  const label = $('visualStyleLabel');
+  if (label) label.textContent = visualStyle === 'legacy' ? 'Classic layout feel' : 'Enhanced theme system';
+  const hint = $('visualStyleHint');
+  if (hint){
+    hint.textContent = visualStyle === 'legacy'
+      ? 'Legacy keeps the older rounder, calmer look: more neutral surfaces, simpler outlines, and fewer decorative theme treatments.'
+      : 'Enhanced keeps the broader site theming: tinted surfaces, accent-driven highlights, and advanced theme-role tuning.';
   }
 }
 function setCustomThemeColor(which, value){
@@ -4218,6 +4320,7 @@ function restoreVisualSettings(){
   if(ct==='custom' || getColorTheme(ct)) applyColorTheme(ct,true,false);
   else if(/^#[0-9a-f]{6}$/i.test(ac||'')) setAccentColor(ac,true,false);   // pre-theme files
   else applyColorTheme(DEFAULT_COLOR_THEME,true,false);
+  applyVisualStyle(get('visualStyle',null) || DEFAULT_VISUAL_STYLE,true,false);
   applyAccentStyle(get('accentStyle',null) || DEFAULT_ACCENT_STYLE,true,false);
   applyAdvancedThemeOverrides(advancedThemeColors, true, false);
   syncThemeControls();

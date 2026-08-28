@@ -145,6 +145,7 @@ function _boostHexForDarkSurface(hex){
 function _paintColors(primary, secondary, tertiary, accent){
   const root = document.documentElement.style;
   const dark = themeIsDark(themeMode);
+  const legacyVisual = normalizeVisualStyle(visualStyle) === 'legacy';
   const adapt = (hex) => {
     if (!_isHex(hex)) return hex;
     if (dark) return _boostHexForDarkSurface(hex);
@@ -160,13 +161,23 @@ function _paintColors(primary, secondary, tertiary, accent){
   // stays light by default except for Tricolor pinstripes, which keep the red
   // banner stripes and banner outline unless manually overridden.
   const stripes = (typeof accentStyle === 'undefined') || accentStyle !== 'gradient';
-  const gradEnd = stripes ? _mixHex(blue, dark ? '#dfe6f5' : '#ffffff', dark ? 0.30 : 0.32) : gradientEnd;
+  const structuralSecondary = stripes ? _mixHex(blue, dark ? '#dfe6f5' : '#ffffff', dark ? 0.30 : 0.32) : gradientEnd;
   const tricolorPinstripes = stripes && colorTheme === 'tricolor';
-  const panelAccent = _isHex(advancedThemeColors?.panelOutline) ? advancedThemeColors.panelOutline.toLowerCase() : accentTone;
-  const surfaceStripe = _isHex(advancedThemeColors?.surfaceStripe) ? advancedThemeColors.surfaceStripe.toLowerCase() : panelAccent;
-  const highlightBase = _isHex(advancedThemeColors?.highlightText) ? advancedThemeColors.highlightText.toLowerCase() : accentTone;
+  const automaticPanelAccent = legacyVisual ? blue : accentTone;
+  const panelAccent = _isHex(advancedThemeColors?.panelOutline) ? advancedThemeColors.panelOutline.toLowerCase() : automaticPanelAccent;
+  const automaticSurfaceStripe = legacyVisual ? blue : panelAccent;
+  const surfaceStripe = _isHex(advancedThemeColors?.surfaceStripe) ? advancedThemeColors.surfaceStripe.toLowerCase() : automaticSurfaceStripe;
+  const automaticHighlightBase = legacyVisual ? blue : accentTone;
+  const highlightBase = _isHex(advancedThemeColors?.highlightText) ? advancedThemeColors.highlightText.toLowerCase() : automaticHighlightBase;
   const buttonPrimary = _isHex(advancedThemeColors?.buttonPrimary) ? advancedThemeColors.buttonPrimary.toLowerCase() : blue;
   const buttonSecondary = _isHex(advancedThemeColors?.buttonSecondary) ? advancedThemeColors.buttonSecondary.toLowerCase() : gradientEnd;
+  const fillMid = tricolorPinstripes
+    ? white
+    : _mixHex(buttonPrimary, white, dark ? 0.26 : 0.36);
+  const filledControlBg = stripes
+    ? `repeating-linear-gradient(135deg, ${buttonPrimary} 0 8px, ${fillMid} 8px 16px, ${buttonSecondary} 16px 24px)`
+    : `linear-gradient(135deg, ${buttonPrimary}, ${buttonSecondary})`;
+  const filledControlBorder = stripes ? buttonPrimary : _shadeHex(buttonPrimary, -0.14);
   const autoBannerStripe = tricolorPinstripes
     ? accentTone
     : _mixHex(white, _shadeHex(blue, dark ? 0.24 : 0.28), dark ? 0.28 : 0.22);
@@ -177,11 +188,11 @@ function _paintColors(primary, secondary, tertiary, accent){
     : (tricolorPinstripes ? _mixHex(white, accentTone, dark ? 0.24 : 0.14) : _mixHex(white, autoBannerStripe, dark ? 0.34 : 0.22));
   const bannerOutline = _isHex(advancedThemeColors?.bannerOutline)
     ? advancedThemeColors.bannerOutline.toLowerCase()
-    : (tricolorPinstripes ? accentTone : panelAccent);
+    : (tricolorPinstripes ? accentTone : (legacyVisual ? _shadeHex(blue, -0.18) : panelAccent));
   root.setProperty('--primary', blue);
   root.setProperty('--primary-light', _shadeHex(blue, dark ? 0.24 : 0.28));
   root.setProperty('--primary-dark',  _shadeHex(blue, -0.28));
-  root.setProperty('--secondary', gradEnd);
+  root.setProperty('--secondary', structuralSecondary);
   root.setProperty('--accent-line', accentTone);
   root.setProperty('--tertiary', white);
   root.setProperty('--hse-blue', blue);
@@ -192,6 +203,10 @@ function _paintColors(primary, secondary, tertiary, accent){
   root.setProperty('--highlight-base', highlightBase);
   root.setProperty('--button-primary', buttonPrimary);
   root.setProperty('--button-secondary', buttonSecondary);
+  root.setProperty('--filled-control-bg', filledControlBg);
+  root.setProperty('--filled-control-border', filledControlBorder);
+  root.setProperty('--filled-control-shadow', `0 2px 8px color-mix(in srgb, ${buttonPrimary} 28%, transparent)`);
+  root.setProperty('--stripe-fill-mid', fillMid);
   root.setProperty('--banner-stripe', bannerStripe);
   root.setProperty('--banner-stripe-soft', bannerStripeSoft);
   root.setProperty('--banner-outline', bannerOutline);
@@ -223,6 +238,25 @@ function applyColorTheme(id, persistLocal, syncRemote){
   if (syncRemote !== false) scheduleUserProfileSave();
 }
 function setColorTheme(id){ applyColorTheme(id, true, true); }
+function normalizeVisualStyle(v){
+  const value = String(v || '').toLowerCase();
+  return VISUAL_STYLES.includes(value) ? value : DEFAULT_VISUAL_STYLE;
+}
+function applyVisualStyle(style, persistLocal, syncRemote){
+  visualStyle = normalizeVisualStyle(style);
+  document.documentElement.dataset.visualStyle = visualStyle;
+  const palette = colorTheme === 'custom' ? customThemeColors : getColorTheme(colorTheme);
+  if (palette) _paintColors(palette.primary, palette.secondary, palette.tertiary, palette.accent);
+  if (persistLocal !== false) localStorage.setItem('visualStyle', visualStyle);
+  syncVisualStyleControls();
+  syncAccentStyleControls();
+  syncAdvancedThemeControls();
+  if (typeof _chartInstances !== 'undefined' && _chartInstances){
+    Object.values(_chartInstances).forEach(chart =>{ try{ chart.update(); }catch(e){} });
+  }
+  if (syncRemote !== false) scheduleUserProfileSave();
+}
+function setVisualStyle(style){ applyVisualStyle(style, true, true); }
 // Accent style: 'stripes' (pinstripe texture + tinted outlines) or 'gradient'
 // (classic two-color blends). Stored per account like the color theme.
 function normalizeAccentStyle(v){
@@ -252,8 +286,23 @@ function syncAccentStyleControls(){
   const hint = $('accentStyleHint');
   if (hint){
     hint.textContent = accentStyle === 'gradient'
-      ? 'Classic look: the primary and gradient colors blend directly into each other. Panels still keep a light palette tint.'
-      : 'Pinstripe look: softer primary-family gradients, evenly spaced surface stripes, and accent-led outlines/highlights. Most themes keep a light banner texture; Tricolor keeps red banner stripes by default.';
+      ? 'Gradient mode uses smooth fills and solid outlines. Filled controls follow the theme gradient; outlines stay single-color.'
+      : 'Pinstripe mode swaps filled controls into pinstripes too. Outlines stay solid, Tricolor keeps its red banner stripe by default, and the legacy visual style can mute the newer panel treatments.';
+  }
+}
+function syncVisualStyleControls(){
+  document.querySelectorAll('.vs-visual-btn').forEach(b => {
+    const active = b.dataset.visualStyle === visualStyle;
+    b.classList.toggle('active', active);
+    b.setAttribute('aria-pressed', active ? 'true' : 'false');
+  });
+  const label = $('visualStyleLabel');
+  if (label) label.textContent = visualStyle === 'legacy' ? 'Classic layout feel' : 'Enhanced theme system';
+  const hint = $('visualStyleHint');
+  if (hint){
+    hint.textContent = visualStyle === 'legacy'
+      ? 'Legacy keeps the older rounder, calmer look: more neutral surfaces, simpler outlines, and fewer decorative theme treatments.'
+      : 'Enhanced keeps the broader site theming: tinted surfaces, accent-driven highlights, and advanced theme-role tuning.';
   }
 }
 function setCustomThemeColor(which, value){

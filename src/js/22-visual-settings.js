@@ -26,6 +26,7 @@ function restoreVisualSettings(){
   if(ct==='custom' || getColorTheme(ct)) applyColorTheme(ct,true,false);
   else if(/^#[0-9a-f]{6}$/i.test(ac||'')) setAccentColor(ac,true,false);   // pre-theme files
   else applyColorTheme(DEFAULT_COLOR_THEME,true,false);
+  applyVisualStyle(get('visualStyle',null) || DEFAULT_VISUAL_STYLE,true,false);
   applyAccentStyle(get('accentStyle',null) || DEFAULT_ACCENT_STYLE,true,false);
   applyAdvancedThemeOverrides(advancedThemeColors, true, false);
   syncThemeControls();
