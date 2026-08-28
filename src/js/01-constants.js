@@ -1,11 +1,13 @@
 const VERSION = '3.10.0'; // auto-managed by bump.js
 const DOWNLOAD_URL = 'https://raw.githubusercontent.com/ajani190819-ops/HSEQB/main/index.html';
-const DEFAULT_ACCENT = '#0b41a8'; // Royal — HSE High School royal blue
-const DEFAULT_COLOR_THEME = 'royal';
-// Named color themes: independent of light/dark mode, each supplies the accent
-// (--primary) and the gradient partner (--secondary). 'custom' is user-defined.
+const DEFAULT_ACCENT = '#003da5'; // HSE blue from the default blue / white / red system
+const DEFAULT_COLOR_THEME = 'tricolor';
+// Named color themes. Each palette supplies the blue accent, a companion color,
+// and (where useful) a third color for the HSE tricolor treatment. The colors
+// are adapted by _paintColors for the active light/dark appearance.
 const COLOR_THEMES = [
-  { id:'royal',   name:'Royal',   sub:'HSE',      primary:'#0b41a8', secondary:'#002b7f' },
+  { id:'tricolor',name:'Tricolor',sub:'HSE',    primary:'#003da5', secondary:'#c8102e', tertiary:'#ffffff' },
+  { id:'royal',   name:'Royal',   sub:'HSE',      primary:'#0b41a8', secondary:'#002b7f', tertiary:'#ffffff' },
   { id:'indigo',  name:'Indigo',  sub:'Classic',  primary:'#667eea', secondary:'#764ba2' },
   { id:'teal',    name:'Teal',    sub:'Fresh',    primary:'#11998e', secondary:'#38ef7d' },
   { id:'crimson', name:'Crimson', sub:'Bold',     primary:'#dc3545', secondary:'#8e1b26' },
@@ -40,7 +42,7 @@ let authUser = null; let authStarted = false; let appStarted = false;
 const THEME_MODES = ['light', 'dark', 'device'];
 let themeMode = 'device';
 let colorTheme = DEFAULT_COLOR_THEME;
-let customThemeColors = { primary:'#0b41a8', secondary:'#002b7f' };
+let customThemeColors = { primary:'#003da5', secondary:'#c8102e', tertiary:'#ffffff' };
 let _deviceThemeQuery = null;
 let _profileSaveTimer = null;
 let _profileLoadSequence = 0;

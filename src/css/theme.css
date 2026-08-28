@@ -388,3 +388,87 @@ button, .button, .ql-btn, .ql-cat-chip, .ql-confirm-btn, .ql-cancel-btn, .header
   .vs-mode-btn, .theme-swatch { min-height:56px; }
   .custom-hex-input { font-size:16px; }
 }
+
+/* HSE color language: a quiet blue / white / red system with texture instead
+   of relying on a single two-color gradient everywhere. The inline values are
+   painted by _paintColors so accents respond to light and dark mode. */
+:root {
+  --tertiary:#fff;
+  --hse-blue:#003da5;
+  --hse-red:#c8102e;
+  --hse-white:#fff;
+}
+
+/* A low-contrast paper-like pattern keeps large surfaces from feeling flat. */
+body::before {
+  content:'';
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:0;
+  opacity:.34;
+  background-image:radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--primary) 10%, transparent) 1px, transparent 1.2px);
+  background-size:18px 18px;
+}
+.qb-container, .auth-gate { position:relative; z-index:1; }
+
+/* The header gets an HSE ribbon plus fine diagonal texture. */
+.qb-header {
+  background-color:var(--primary);
+  background-image:repeating-linear-gradient(135deg, rgba(255,255,255,.055) 0 2px, transparent 2px 9px);
+  box-shadow:0 2px 16px color-mix(in srgb, var(--primary) 28%, transparent);
+}
+.qb-header::after {
+  content:'';
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  height:4px;
+  background:linear-gradient(90deg, var(--hse-blue) 0 33.333%, var(--hse-white) 33.333% 66.666%, var(--hse-red) 66.666% 100%);
+  opacity:.95;
+  pointer-events:none;
+}
+
+/* Reusable tricolor edge for panels, cards, and the auth experience. */
+.auth-card, .updates-current-summary {
+  border-image:linear-gradient(90deg, var(--hse-blue) 0 33.333%, var(--hse-white) 33.333% 66.666%, var(--hse-red) 66.666% 100%) 1;
+}
+.auth-gate {
+  background-color:var(--bg);
+  background-image:linear-gradient(135deg, color-mix(in srgb, var(--hse-blue) 6%, transparent), transparent 42%), linear-gradient(315deg, color-mix(in srgb, var(--hse-red) 5%, transparent), transparent 42%);
+}
+
+/* Swatches show three deliberate color fields, not a generic two-stop fade. */
+.theme-swatch-chip {
+  position:relative;
+  overflow:hidden;
+  background:var(--swatch-blue, var(--hse-blue));
+}
+.theme-swatch-chip::before, .theme-swatch-chip::after {
+  content:'';
+  position:absolute;
+  top:0;
+  bottom:0;
+  width:33.333%;
+}
+.theme-swatch-chip::before { left:33.333%; background:var(--swatch-white, #fff); }
+.theme-swatch-chip::after { right:0; background:var(--swatch-red, var(--hse-red)); }
+.theme-swatch-chip { box-shadow:inset 0 1px 3px rgba(255,255,255,.24), inset 0 0 0 1px rgba(0,0,0,.12); }
+
+/* Small tricolor accents add hierarchy without overpowering readable text. */
+.qb-section > h2::before, .analytics-header::before {
+  content:'';
+  display:inline-block;
+  width:18px;
+  height:4px;
+  margin:0 7px 3px 0;
+  border-radius:3px;
+  background:linear-gradient(90deg, var(--hse-blue) 0 33.333%, var(--hse-white) 33.333% 66.666%, var(--hse-red) 66.666%);
+  box-shadow:0 0 0 1px color-mix(in srgb, var(--border) 55%, transparent);
+}
+.button-success { background-color:var(--hse-blue); background-image:repeating-linear-gradient(135deg, rgba(255,255,255,.08) 0 2px, transparent 2px 8px); }
+.dark-mode body::before { opacity:.18; }
+@media (prefers-reduced-motion: reduce) {
+  .theme-swatch:hover { transform:none; }
+}

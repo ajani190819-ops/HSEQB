@@ -83,14 +83,24 @@ function _shadeHex(hex, amount){
   return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
 }
 function _isHex(v){ return /^#[0-9a-f]{6}$/i.test(v || ''); }
-// Paint the four accent custom properties. Everything else in the stylesheet
-// derives from these, so light/dark mode stays completely independent.
-function _paintColors(primary, secondary){
+// Paint the accent properties from the palette's base colors. Accents are
+// intentionally softened in light mode and lifted in dark mode so the same
+// HSE colors remain legible without becoming fluorescent or harsh.
+function _paintColors(primary, secondary, tertiary){
   const root = document.documentElement.style;
-  root.setProperty('--primary', primary);
-  root.setProperty('--primary-light', _shadeHex(primary, 0.28));
-  root.setProperty('--primary-dark',  _shadeHex(primary, -0.28));
-  root.setProperty('--secondary', secondary || _shadeHex(primary, -0.45));
+  const dark = themeIsDark(themeMode);
+  const adapt = (hex) => _isHex(hex) ? _shadeHex(hex, dark ? 0.22 : -0.10) : hex;
+  const blue = adapt(primary);
+  const companion = adapt(secondary || _shadeHex(primary, -0.45));
+  const white = dark ? '#f4f6fb' : (tertiary || '#ffffff');
+  root.setProperty('--primary', blue);
+  root.setProperty('--primary-light', _shadeHex(blue, dark ? 0.24 : 0.28));
+  root.setProperty('--primary-dark',  _shadeHex(blue, -0.28));
+  root.setProperty('--secondary', companion);
+  root.setProperty('--tertiary', white);
+  root.setProperty('--hse-blue', blue);
+  root.setProperty('--hse-red', companion);
+  root.setProperty('--hse-white', white);
 }
 function applyColorTheme(id, persistLocal, syncRemote){
   const custom = id === 'custom';
@@ -99,7 +109,8 @@ function applyColorTheme(id, persistLocal, syncRemote){
   colorTheme = custom ? 'custom' : theme.id;
   const primary   = custom ? customThemeColors.primary   : theme.primary;
   const secondary = custom ? customThemeColors.secondary : theme.secondary;
-  _paintColors(primary, secondary);
+  const tertiary  = custom ? customThemeColors.tertiary : theme.tertiary;
+  _paintColors(primary, secondary, tertiary);
   if (persistLocal !== false){
     localStorage.setItem('colorTheme', colorTheme);
     localStorage.setItem('accentColor', primary); // legacy key stays in sync
@@ -132,13 +143,13 @@ function renderColorThemeGrid(){
   grid.innerHTML = COLOR_THEMES.map(t => `
     <button type="button" class="theme-swatch${colorTheme === t.id ? ' active' : ''}" data-theme="${t.id}"
             onclick="setColorTheme('${t.id}')" aria-pressed="${colorTheme === t.id}" title="${t.name} — ${t.sub}">
-      <span class="theme-swatch-chip" style="background:linear-gradient(135deg,${t.primary},${t.secondary});"></span>
+      <span class="theme-swatch-chip" style="--swatch-blue:${t.primary};--swatch-red:${t.secondary};--swatch-white:${t.tertiary || '#fff'};"></span>
       <span class="theme-swatch-name">${t.name}</span>
       <span class="theme-swatch-sub">${t.sub}</span>
     </button>`).join('') + `
     <button type="button" class="theme-swatch theme-swatch-custom${colorTheme === 'custom' ? ' active' : ''}" data-theme="custom"
             onclick="setColorTheme('custom')" aria-pressed="${colorTheme === 'custom'}" title="Custom — pick your own colors">
-      <span class="theme-swatch-chip" style="background:linear-gradient(135deg,${customThemeColors.primary},${customThemeColors.secondary});"></span>
+      <span class="theme-swatch-chip" style="--swatch-blue:${customThemeColors.primary};--swatch-red:${customThemeColors.secondary};--swatch-white:#fff;"></span>
       <span class="theme-swatch-name">Custom</span>
       <span class="theme-swatch-sub">Your colors</span>
     </button>`;
