@@ -1,14 +1,59 @@
 const AUTH_EMAIL_CACHE_PREFIX = 'qb_authEmailForUid:';
+const AUTH_RECOVERY_NOTICE_KEY = 'qb_authRecoveryNotice';
 function authMessage(msg){ const e=$('authError'); if(e)e.textContent=msg||''; }
 function authEmail(){ return ($('authEmail')?.value||'').trim().toLowerCase(); }
-function authUid(){ return ($('authUid')?.value||'').trim(); }
+function userIdSignInUid(){ return ($('userIdSignInUid')?.value||'').trim(); }
+function setUserIdSignInStatus(message, color){
+  const el = $('userIdSignInStatus');
+  if (!el) return;
+  el.textContent = message || '';
+  el.style.color = color || '';
+}
+function stageAuthRecoveryNotice(uid, email, notice){
+  const nextUid = String(uid || '').trim();
+  const nextEmail = String(email || '').trim().toLowerCase();
+  if (nextUid) localStorage.setItem('qb_lastAuthUid', nextUid);
+  if (nextUid && nextEmail) localStorage.setItem(AUTH_EMAIL_CACHE_PREFIX + nextUid, nextEmail);
+  if (notice) localStorage.setItem(AUTH_RECOVERY_NOTICE_KEY, notice);
+  else localStorage.removeItem(AUTH_RECOVERY_NOTICE_KEY);
+}
 function hydrateAuthRecoveryFields(){
   const uid = localStorage.getItem('qb_lastAuthUid') || localStorage.getItem('qb_profileOwnerUid') || '';
-  const uidInput = $('authUid');
-  if (uidInput && uid && !uidInput.value) uidInput.value = uid;
   const email = uid ? (localStorage.getItem(AUTH_EMAIL_CACHE_PREFIX + uid) || '').trim().toLowerCase() : '';
   const emailInput = $('authEmail');
-  if (emailInput && email && !emailInput.value) emailInput.value = email;
+  const passwordInput = $('authPassword');
+  const notice = (localStorage.getItem(AUTH_RECOVERY_NOTICE_KEY) || '').trim();
+  let hydrated = false;
+  if (emailInput && email && (!emailInput.value || notice)){
+    emailInput.value = email;
+    hydrated = true;
+  }
+  if (passwordInput) passwordInput.value = '';
+  if (notice){
+    authMessage(notice);
+    localStorage.removeItem(AUTH_RECOVERY_NOTICE_KEY);
+    hydrated = true;
+  }
+  if (hydrated && email && $('authGate')?.style.display !== 'none') passwordInput?.focus();
+  return hydrated;
+}
+function lookupAuthRecoveryIdentity(uid){
+  const normalizedUid = String(uid || '').trim();
+  if (!normalizedUid) return Promise.resolve({ uid:'', email:'', hasRecord:false, isAnonymousAccount:false, source:'empty' });
+  const cachedEmail = (localStorage.getItem(AUTH_EMAIL_CACHE_PREFIX + normalizedUid) || '').trim().toLowerCase();
+  if (cachedEmail) return Promise.resolve({ uid:normalizedUid, email:cachedEmail, hasRecord:true, isAnonymousAccount:false, source:'device' });
+  if (isIframe) return Promise.resolve({ uid:normalizedUid, email:'', hasRecord:false, isAnonymousAccount:false, source:'preview' });
+  const profilePromise = userProfilesRef?.child ? userProfilesRef.child(normalizedUid).once('value').catch(() => null) : Promise.resolve(null);
+  const identityPromise = userIdentitiesRef?.child ? userIdentitiesRef.child(normalizedUid).once('value').catch(() => null) : Promise.resolve(null);
+  return Promise.all([profilePromise, identityPromise]).then(([profileSnap, identitySnap]) => {
+    const profile = profileSnap?.val?.() || {};
+    const identity = identitySnap?.val?.() || {};
+    const email = String(profile.email || identity.email || '').trim().toLowerCase();
+    const hasRecord = !!(Object.keys(profile).length || Object.keys(identity).length);
+    const isAnonymousAccount = profile.isAnonymous === true || identity.isAnonymous === true;
+    if (email) localStorage.setItem(AUTH_EMAIL_CACHE_PREFIX + normalizedUid, email);
+    return { uid:normalizedUid, email, hasRecord, isAnonymousAccount, source:'firebase' };
+  });
 }
 function cacheAuthRecoveryIdentity(user, profile){
   const uid = String(user?.uid || '').trim();
@@ -26,42 +71,55 @@ function cacheAuthRecoveryIdentity(user, profile){
     userIdentitiesRef.child(uid).update(identity).catch(() => {});
   }
 }
-function prepareUidSignIn(){
-  const uid = authUid();
-  if (!uid){ authMessage('Enter your Firebase UID first.'); return; }
-  if (uid.length > 128 || /\s/.test(uid)){ authMessage('That does not look like a valid Firebase UID.'); return; }
-  localStorage.setItem('qb_lastAuthUid', uid);
-  const cachedEmail = (localStorage.getItem(AUTH_EMAIL_CACHE_PREFIX + uid) || '').trim().toLowerCase();
-  if (cachedEmail){
-    const emailInput = $('authEmail'); if (emailInput) emailInput.value = cachedEmail;
-    authMessage('Email filled from this device. Enter your password to sign in.');
+function continueUserIdPanelSignIn(uid, email){
+  const normalizedUid = String(uid || '').trim();
+  const normalizedEmail = String(email || '').trim().toLowerCase();
+  if (!normalizedUid || !normalizedEmail) return Promise.resolve();
+  stageAuthRecoveryNotice(normalizedUid, normalizedEmail, 'Email filled from User ID settings. Enter your password to sign in.');
+  const emailInput = $('authEmail');
+  if (emailInput) emailInput.value = normalizedEmail;
+  if (!authUser){
+    authMessage('Email filled from User ID settings. Enter your password to sign in.');
     $('authPassword')?.focus();
-    return;
+    return Promise.resolve();
   }
-  if (isIframe){ authMessage('UID lookup is unavailable in preview mode.'); return; }
-  authMessage('Looking up that UID…');
-  const profilePromise = userProfilesRef?.child ? userProfilesRef.child(uid).once('value').catch(() => null) : Promise.resolve(null);
-  const identityPromise = userIdentitiesRef?.child ? userIdentitiesRef.child(uid).once('value').catch(() => null) : Promise.resolve(null);
-  Promise.all([profilePromise, identityPromise]).then(([profileSnap, identitySnap]) => {
-    const profile = profileSnap?.val?.() || {};
-    const identity = identitySnap?.val?.() || {};
-    const email = String(profile.email || identity.email || '').trim().toLowerCase();
-    const hasRecord = !!(Object.keys(profile).length || Object.keys(identity).length);
-    const isAnonymousAccount = profile.isAnonymous === true;
-    if (email){
-      const emailInput = $('authEmail'); if (emailInput) emailInput.value = email;
-      localStorage.setItem(AUTH_EMAIL_CACHE_PREFIX + uid, email);
-      authMessage('Email found for that UID. Enter your password to sign in.');
-      $('authPassword')?.focus();
-      return;
-    }
-    if (isAnonymousAccount || hasRecord){
-      authMessage('That UID belongs to a guest account or an account without email sign-in. Firebase still requires the original sign-in method.');
-      return;
-    }
-    authMessage('No saved sign-in details were found for that UID.');
-  }).catch(err => authMessage('Could not look up that UID: ' + err.message));
+  setUserIdSignInStatus('Signing out and opening the password screen…', 'var(--text2)');
+  return firebase.auth().signOut().then(() => setUserIdSignInStatus(''));
 }
+function prepareUserIdPanelSignIn(){
+  const uid = userIdSignInUid();
+  if (!uid){ setUserIdSignInStatus('Enter the Firebase UID you want to sign in with.', 'var(--danger)'); return; }
+  if (uid.length > 128 || /\s/.test(uid)){ setUserIdSignInStatus('That does not look like a valid Firebase UID.', 'var(--danger)'); return; }
+  if (authUser?.uid === uid && !authUser?.isAnonymous){ setUserIdSignInStatus('You are already signed in as that Firebase UID.', 'var(--success)'); return; }
+  localStorage.setItem('qb_lastAuthUid', uid);
+  setUserIdSignInStatus('Looking up that UID…', 'var(--text2)');
+  lookupAuthRecoveryIdentity(uid).then(result => {
+    if (result.email){
+      const prompt = 'We found ' + result.email + ' for that UID. Sign out and continue to the password screen?';
+      const run = () => continueUserIdPanelSignIn(uid, result.email)
+        .catch(err => setUserIdSignInStatus('Could not switch sign-in: ' + err.message, 'var(--danger)'));
+      if (authUser){
+        showConfirm(prompt, 'Continue').then(ok => {
+          if (!ok){ setUserIdSignInStatus('Sign-in switch cancelled.', 'var(--text2)'); return; }
+          run();
+        });
+        return;
+      }
+      run();
+      return;
+    }
+    if (result.source === 'preview'){
+      setUserIdSignInStatus('UID lookup is unavailable in preview mode unless this device already knows that account email.', 'var(--danger)');
+      return;
+    }
+    if (result.isAnonymousAccount || result.hasRecord){
+      setUserIdSignInStatus('That UID belongs to a guest account or an account without email sign-in. Firebase still requires the original sign-in method.', 'var(--warning)');
+      return;
+    }
+    setUserIdSignInStatus('No saved sign-in details were found for that UID.', 'var(--danger)');
+  }).catch(err => setUserIdSignInStatus('Could not look up that UID: ' + err.message, 'var(--danger)'));
+}
+function prepareUidSignIn(){ prepareUserIdPanelSignIn(); }
 function submitAuth(e){
   e.preventDefault();
   authMessage('Signing in…');
@@ -268,8 +326,8 @@ function initAuth(){
       userProfileRef=null;
       updateAuthUI(null);
       if (gate) gate.style.display='flex';
-      hydrateAuthRecoveryFields();
-      authMessage('');
+      const hydrated = hydrateAuthRecoveryFields();
+      if (!hydrated) authMessage('');
       return;
     }
     clientId=user.uid;

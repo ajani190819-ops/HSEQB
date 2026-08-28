@@ -34,9 +34,19 @@ html.dark-mode { color-scheme: dark; }
   font: inherit;
 }
 .auth-card input:focus, .auth-card select:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 12%, transparent); }
-.auth-uid-helper { margin-top: 12px; padding: 11px 12px; border: 1.5px solid var(--border); border-radius: 10px; background: var(--sec-bg); }
-.auth-uid-helper-title { font-size: .82em; font-weight: 700; color: var(--text); margin-bottom: 4px; }
-.auth-uid-helper p { margin: 0 0 8px; font-size: .76em; line-height: 1.45; color: var(--text2); }
+.uid-signin-helper { margin: 0 0 14px; padding: 11px 12px; border: 1.5px solid var(--border); border-radius: 10px; background: var(--sec-bg); }
+.uid-signin-title { font-size: .82em; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.uid-signin-helper p { margin: 0 0 8px; font-size: .76em; line-height: 1.45; color: var(--text2); }
+.uid-signin-helper input {
+  width: 100%;
+  padding: 10px 11px;
+  border: 1.5px solid var(--input-border);
+  border-radius: 7px;
+  background: var(--input-bg);
+  color: var(--input-text);
+  font: inherit;
+}
+.uid-signin-helper input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 12%, transparent); }
 .auth-corner-theme {
   position: absolute;
   top: 14px;

@@ -42,9 +42,19 @@ html.dark-mode { color-scheme: dark; }
   font: inherit;
 }
 .auth-card input:focus, .auth-card select:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 12%, transparent); }
-.auth-uid-helper { margin-top: 12px; padding: 11px 12px; border: 1.5px solid var(--border); border-radius: 10px; background: var(--sec-bg); }
-.auth-uid-helper-title { font-size: .82em; font-weight: 700; color: var(--text); margin-bottom: 4px; }
-.auth-uid-helper p { margin: 0 0 8px; font-size: .76em; line-height: 1.45; color: var(--text2); }
+.uid-signin-helper { margin: 0 0 14px; padding: 11px 12px; border: 1.5px solid var(--border); border-radius: 10px; background: var(--sec-bg); }
+.uid-signin-title { font-size: .82em; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.uid-signin-helper p { margin: 0 0 8px; font-size: .76em; line-height: 1.45; color: var(--text2); }
+.uid-signin-helper input {
+  width: 100%;
+  padding: 10px 11px;
+  border: 1.5px solid var(--input-border);
+  border-radius: 7px;
+  background: var(--input-bg);
+  color: var(--input-text);
+  font: inherit;
+}
+.uid-signin-helper input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 12%, transparent); }
 .auth-corner-theme {
   position: absolute;
   top: 14px;
@@ -714,12 +724,6 @@ html[data-accent-style="stripes"] .updates-current-summary {
     <input id="authEmail" required type="email" autocomplete="username" placeholder="you@example.com">
     <label for="authPassword">Password</label>
     <input id="authPassword" required minlength="6" type="password" autocomplete="current-password" placeholder="At least 6 characters">
-    <div class="auth-uid-helper">
-      <div class="auth-uid-helper-title">Know your Firebase UID?</div>
-      <p>We can use it to refill the saved email for this account when available. You still sign in with the normal password.</p>
-      <input id="authUid" type="text" autocomplete="off" spellcheck="false" placeholder="Paste your Firebase UID">
-      <button class="button button-secondary" type="button" onclick="prepareUidSignIn()" style="width:100%;margin-top:8px">Use UID to fill email</button>
-    </div>
     <div id="authError" role="alert" style="color:var(--danger);font-size:.85em;min-height:1.5em;margin-top:10px"></div>
     <button class="button button-success" type="submit" style="width:100%;margin-top:10px">Sign in</button>
     <button class="button" type="button" onclick="createAuthAccount()" style="width:100%;margin-top:8px">Create account</button>
@@ -734,7 +738,7 @@ html[data-accent-style="stripes"] .updates-current-summary {
     </script><div class="qb-header" id="qbHeader"><div class="qb-header-left"><button class="header-btn sidebar-open-btn hidden" id="sidebarOpenBtn" >&#9654; Menu</button></div><div class="qb-header-center"><h1 data-short="HSE QB" data-medium="HSE QB Tracker">HSE Quiz Bowl Tracker <span class="version-badge" id="versionBadge"></span></h1><div class="header-session-name" id="headerSessionName"></div></div><div class="header-controls"><div style="display:flex;align-items:center;gap:6px;user-select:none;" title="Switch between Tracker and Analytics"><span id="toggleLabelTracker" class="header-toggle-label" style="color:rgba(255,255,255,.95);">Tracker</span><div onclick="toggleAnalytics()" id="viewToggleSwitch" style="width:48px;height:24px;background:rgba(255,255,255,.25);border-radius:12px;border:2px solid rgba(255,255,255,.4);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;"><div id="viewToggleKnob" style="width:16px;height:16px;background:#fff;border-radius:50%;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,.3);"></div></div><span id="toggleLabelAnalytics" class="header-toggle-label" style="color:rgba(255,255,255,.55);">Stats</span></div><button class="header-btn updates-header-btn" onclick="openUpdatesModal()" title="Updates &amp; changelog"><span class="updates-header-icon">↻</span><span class="updates-header-label">Updates</span><span id="updatesUnreadBadge" class="updates-unread-badge" aria-label="New updates"></span></button><button class="header-btn round" onclick="openHelpModal()" title="Help / Tutorial">?</button><span id="autosaveStatus" class="auto-save-indicator state-connecting"><span class="save-ring"><svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="8" r="6" stroke="rgba(255,255,255,0.25)" stroke-width="2"/><path d="M8 2 A6 6 0 0 1 14 8" stroke="white" stroke-width="2" stroke-linecap="round"/></svg><span class="save-ring-dot"></span></span><span class="save-label">Connecting…</span></span></div></div><div id="updateBanner"></div><div class="qb-body"><aside class="qb-sidebar" id="mainSidebar"><div class="sidebar-nav"><div class="sidebar-jump-wrapper" id="sidebarJumpWrapper"><button class="sidebar-jump-btn" onclick="toggleJumpDropdown()" type="button"><span id="sidebarJumpLabel">Setup</span><span class="sidebar-jump-arrow">&#9662;</span></button><div class="sidebar-jump-menu"><div class="sidebar-sec-hdr">Setup</div><button onclick="showSection('sec-session')">Session</button><button onclick="showSection('sec-players')">Players</button><button onclick="showSection('sec-teams')">Teams</button><button onclick="showSection('sec-categories')">Categories</button><div class="sidebar-sec-hdr">Settings</div><button onclick="showSection('sec-userid')">User ID</button><button onclick="showSection('sec-visual')">Visual Settings</button><button id="jumpBtn-sec-admin" onclick="showSection('sec-admin')" class="hidden">Admin Panel</button><div class="sidebar-sec-hdr">Session & Data</div><button onclick="showSection('sec-export')">Export / Import</button><button id="jumpBtn-sec-danger" onclick="showSection('sec-danger')" class="hidden">Data Management</button><button id="jumpBtn-sec-debug" onclick="showSection('sec-debug')" class="hidden">Debug Menu</button></div></div><button class="sidebar-close-btn" onclick="toggleSidebar()">&#9664; Hide</button></div><div class="sidebar-sections"><div class="qb-section" id="sec-session"><h2>Session <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div class="session-info"><div class="session-info-row"><span>Name:</span><strong id="sessionName">&#8212;</strong></div><div class="session-info-row"><span>Created:</span><strong id="sessionCreated">&#8212;</strong></div><div class="session-info-row"><span>Last Updated:</span><strong id="sessionLastUpdated">&#8212;</strong></div><div class="session-info-row"><span>Answers:</span><strong id="sessionAnswerCount">0</strong></div></div><div class="input-group"><label>New Session Name:</label><input type="text" id="newSessionName" placeholder="Session name..." /></div><div class="session-controls"><button class="button button-success" onclick="createNewSession()">+ New Session</button><button class="button" onclick="openSessionsModal()">Load</button></div></div></div><div class="qb-section" id="sec-players"><h2>Players <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div class="input-group"><label>Add Player:</label><input type="text" id="playerInput" placeholder="Player name..." onkeydown="if(event.key==='Enter') addToPlayerPool()" /></div><div class="button-group mb-14" ><button class="button" onclick="addToPlayerPool()">Add Player</button><button class="button button-danger" onclick="clearPlayerPool()">Clear All</button></div><div style="padding-bottom:14px;border-bottom:1.5px solid var(--border);margin-bottom:14px;"><div style="font-weight:600;font-size:.85em;margin-bottom:8px;color:var(--text);">Player Management</div><div style="font-size:.78em;color:var(--text2);margin-bottom:10px;">Rename players to fix typos. To merge, click <strong>Merge</strong> on the player you want to <em>remove</em> — their stats will be combined into whichever player you select next.</div><div id="playerMgmtContainer" style="display:flex;flex-direction:column;gap:8px;"></div></div><div class="input-group"><label>Import from File (CSV/TXT):</label><input type="file" accept=".csv,.txt" onchange="handlePlayerImport(event)" /></div><div id="playerPoolDisplay"></div></div></div><div class="qb-section" id="sec-teams"><h2>Teams <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div class="input-group"><label>Team Name:</label><input type="text" id="teamNameInput" placeholder="Team name..." /></div><button class="button" onclick="addTeam()">Add Team</button><div id="teamsContainer" style="margin-top:20px;"></div></div></div><div class="qb-section" id="sec-categories"><h2>Categories <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><p style="font-size:.85em;color:var(--text2);margin-bottom:10px;">Categories and subcategories are fixed. Select a parent category when recording answers to reveal its subcategories.</p><div style="display:flex;flex-direction:column;gap:6px;"></div><div id="categoryTreeDisplay"></div><div id="catFreqSection" style="display:none;margin-top:16px;padding-top:14px;border-top:1.5px solid var(--border);"><div style="font-weight:600;font-size:.85em;margin-bottom:4px;color:var(--text);">Expected Subcategory Frequencies <span class="fw4-82-ml6">Admin only — synced for all users</span></div><p style="font-size:.76em;color:var(--text3);margin-bottom:10px;line-height:1.5;">Enter the expected % of tossups for each subcategory at a typical tournament. Shown under each subcategory breakdown chart.</p><div id="catFreqPickers" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;"></div><div class="button-group"><button class="button" onclick="saveCatFreqs()">Save Frequencies</button><button class="button" style="background:var(--sec-bg);color:var(--text2);border:1.5px solid var(--border);" onclick="resetCatFreqs()">Reset Defaults</button></div><div id="catFreqStatus" class="fs-8-success-mt6"></div></div></div></div><div class="qb-section" id="sec-export"><h2>Export Data <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><p style="margin-bottom:8px;font-weight:600;">Select what to include:</p><div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:var(--sp);"><button class="button-category selected" id="exportPlayers" onclick="this.classList.toggle('selected')">Players &amp; Scores</button><button class="button-category selected" id="exportAnswerLog" onclick="this.classList.toggle('selected')">Answer Log</button><button class="button-category selected" id="exportTeamStats" onclick="this.classList.toggle('selected')">Team Statistics</button></div><div class="button-group"><button class="button button-success" onclick="exportToExcel()">Export to Excel</button><button class="button button-secondary" onclick="exportToJSON()">Export as JSON</button></div><div style="margin-top:22px;padding-top:18px;border-top:1.5px solid var(--border);"><p style="font-weight:600;margin-bottom:6px;">Import Session</p><p style="font-size:.85em;color:var(--text2);margin-bottom:12px;">Load a previously exported JSON file.</p><div class="input-group"><label>Select JSON file:</label><input type="file" id="importSessionFile" accept=".json" onchange="importFromJSON(event)" /></div><div id="importStatus" style="font-size:.85em;margin-top:8px;display:none;"></div></div></div></div><div class="qb-section" id="sec-userid">
   <h2>User ID <span class="toggle-icon">&#9660;</span></h2>
   <div class="collapsible-content">
-    <p style="font-size:.82em;color:var(--text2);margin-bottom:14px;line-height:1.5;">Your Firebase account identifies your synced data. Add a display name so teammates can recognize you across devices. If you ever need to sign back in, this Firebase UID can also help refill the saved email on the sign-in screen.</p>
+    <p style="font-size:.82em;color:var(--text2);margin-bottom:14px;line-height:1.5;">Your Firebase account identifies your synced data. Add a display name so teammates can recognize you across devices. If you saved another account's Firebase UID, you can also use this panel to reopen the normal password sign-in flow with that account's saved email when available.</p>
     <div class="user-id-status" id="userIdStatus">
       <div class="avatar-circle" id="userIdAvatar" style="width:42px;height:42px;font-size:1.05em;">?</div>
       <div style="min-width:0;">
@@ -747,6 +751,13 @@ html[data-accent-style="stripes"] .updates-current-summary {
       <div class="user-account-row"><span>Account type</span><strong id="userAuthType">&#8212;</strong></div>
       <div class="user-account-row"><span>Firebase UID</span><code id="userClientIdDisplay">&#8212;</code></div>
     </div>
+    <div class="uid-signin-helper">
+      <div class="uid-signin-title">Switch sign-in by Firebase UID</div>
+      <p>Paste a saved UID from another account. If we know the matching email from this device or Firebase, we'll sign you out and take you back to the normal password screen with that email filled in.</p>
+      <input id="userIdSignInUid" type="text" autocomplete="off" spellcheck="false" placeholder="Paste the account UID you want to sign in with" onkeydown="if(event.key==='Enter') prepareUserIdPanelSignIn()" />
+      <button class="button button-secondary" type="button" onclick="prepareUserIdPanelSignIn()" style="width:100%;margin-top:8px">Use UID to switch sign-in</button>
+    </div>
+    <div id="userIdSignInStatus" class="profile-sync-status"></div>
     <div class="input-group">
       <label for="userDisplayNameInput">Display name</label>
       <input type="text" id="userDisplayNameInput" placeholder="e.g. Alex Smith" maxlength="61" autocomplete="name" onkeydown="if(event.key==='Enter') saveUserId()" />
@@ -1067,16 +1078,61 @@ function setupDeviceThemeListener(){
   else if (_deviceThemeQuery.addListener) _deviceThemeQuery.addListener(onChange);
 }
 const AUTH_EMAIL_CACHE_PREFIX = 'qb_authEmailForUid:';
+const AUTH_RECOVERY_NOTICE_KEY = 'qb_authRecoveryNotice';
 function authMessage(msg){ const e=$('authError'); if(e)e.textContent=msg||''; }
 function authEmail(){ return ($('authEmail')?.value||'').trim().toLowerCase(); }
-function authUid(){ return ($('authUid')?.value||'').trim(); }
+function userIdSignInUid(){ return ($('userIdSignInUid')?.value||'').trim(); }
+function setUserIdSignInStatus(message, color){
+  const el = $('userIdSignInStatus');
+  if (!el) return;
+  el.textContent = message || '';
+  el.style.color = color || '';
+}
+function stageAuthRecoveryNotice(uid, email, notice){
+  const nextUid = String(uid || '').trim();
+  const nextEmail = String(email || '').trim().toLowerCase();
+  if (nextUid) localStorage.setItem('qb_lastAuthUid', nextUid);
+  if (nextUid && nextEmail) localStorage.setItem(AUTH_EMAIL_CACHE_PREFIX + nextUid, nextEmail);
+  if (notice) localStorage.setItem(AUTH_RECOVERY_NOTICE_KEY, notice);
+  else localStorage.removeItem(AUTH_RECOVERY_NOTICE_KEY);
+}
 function hydrateAuthRecoveryFields(){
   const uid = localStorage.getItem('qb_lastAuthUid') || localStorage.getItem('qb_profileOwnerUid') || '';
-  const uidInput = $('authUid');
-  if (uidInput && uid && !uidInput.value) uidInput.value = uid;
   const email = uid ? (localStorage.getItem(AUTH_EMAIL_CACHE_PREFIX + uid) || '').trim().toLowerCase() : '';
   const emailInput = $('authEmail');
-  if (emailInput && email && !emailInput.value) emailInput.value = email;
+  const passwordInput = $('authPassword');
+  const notice = (localStorage.getItem(AUTH_RECOVERY_NOTICE_KEY) || '').trim();
+  let hydrated = false;
+  if (emailInput && email && (!emailInput.value || notice)){
+    emailInput.value = email;
+    hydrated = true;
+  }
+  if (passwordInput) passwordInput.value = '';
+  if (notice){
+    authMessage(notice);
+    localStorage.removeItem(AUTH_RECOVERY_NOTICE_KEY);
+    hydrated = true;
+  }
+  if (hydrated && email && $('authGate')?.style.display !== 'none') passwordInput?.focus();
+  return hydrated;
+}
+function lookupAuthRecoveryIdentity(uid){
+  const normalizedUid = String(uid || '').trim();
+  if (!normalizedUid) return Promise.resolve({ uid:'', email:'', hasRecord:false, isAnonymousAccount:false, source:'empty' });
+  const cachedEmail = (localStorage.getItem(AUTH_EMAIL_CACHE_PREFIX + normalizedUid) || '').trim().toLowerCase();
+  if (cachedEmail) return Promise.resolve({ uid:normalizedUid, email:cachedEmail, hasRecord:true, isAnonymousAccount:false, source:'device' });
+  if (isIframe) return Promise.resolve({ uid:normalizedUid, email:'', hasRecord:false, isAnonymousAccount:false, source:'preview' });
+  const profilePromise = userProfilesRef?.child ? userProfilesRef.child(normalizedUid).once('value').catch(() => null) : Promise.resolve(null);
+  const identityPromise = userIdentitiesRef?.child ? userIdentitiesRef.child(normalizedUid).once('value').catch(() => null) : Promise.resolve(null);
+  return Promise.all([profilePromise, identityPromise]).then(([profileSnap, identitySnap]) => {
+    const profile = profileSnap?.val?.() || {};
+    const identity = identitySnap?.val?.() || {};
+    const email = String(profile.email || identity.email || '').trim().toLowerCase();
+    const hasRecord = !!(Object.keys(profile).length || Object.keys(identity).length);
+    const isAnonymousAccount = profile.isAnonymous === true || identity.isAnonymous === true;
+    if (email) localStorage.setItem(AUTH_EMAIL_CACHE_PREFIX + normalizedUid, email);
+    return { uid:normalizedUid, email, hasRecord, isAnonymousAccount, source:'firebase' };
+  });
 }
 function cacheAuthRecoveryIdentity(user, profile){
   const uid = String(user?.uid || '').trim();
@@ -1094,42 +1150,55 @@ function cacheAuthRecoveryIdentity(user, profile){
     userIdentitiesRef.child(uid).update(identity).catch(() => {});
   }
 }
-function prepareUidSignIn(){
-  const uid = authUid();
-  if (!uid){ authMessage('Enter your Firebase UID first.'); return; }
-  if (uid.length > 128 || /\s/.test(uid)){ authMessage('That does not look like a valid Firebase UID.'); return; }
-  localStorage.setItem('qb_lastAuthUid', uid);
-  const cachedEmail = (localStorage.getItem(AUTH_EMAIL_CACHE_PREFIX + uid) || '').trim().toLowerCase();
-  if (cachedEmail){
-    const emailInput = $('authEmail'); if (emailInput) emailInput.value = cachedEmail;
-    authMessage('Email filled from this device. Enter your password to sign in.');
+function continueUserIdPanelSignIn(uid, email){
+  const normalizedUid = String(uid || '').trim();
+  const normalizedEmail = String(email || '').trim().toLowerCase();
+  if (!normalizedUid || !normalizedEmail) return Promise.resolve();
+  stageAuthRecoveryNotice(normalizedUid, normalizedEmail, 'Email filled from User ID settings. Enter your password to sign in.');
+  const emailInput = $('authEmail');
+  if (emailInput) emailInput.value = normalizedEmail;
+  if (!authUser){
+    authMessage('Email filled from User ID settings. Enter your password to sign in.');
     $('authPassword')?.focus();
-    return;
+    return Promise.resolve();
   }
-  if (isIframe){ authMessage('UID lookup is unavailable in preview mode.'); return; }
-  authMessage('Looking up that UID…');
-  const profilePromise = userProfilesRef?.child ? userProfilesRef.child(uid).once('value').catch(() => null) : Promise.resolve(null);
-  const identityPromise = userIdentitiesRef?.child ? userIdentitiesRef.child(uid).once('value').catch(() => null) : Promise.resolve(null);
-  Promise.all([profilePromise, identityPromise]).then(([profileSnap, identitySnap]) => {
-    const profile = profileSnap?.val?.() || {};
-    const identity = identitySnap?.val?.() || {};
-    const email = String(profile.email || identity.email || '').trim().toLowerCase();
-    const hasRecord = !!(Object.keys(profile).length || Object.keys(identity).length);
-    const isAnonymousAccount = profile.isAnonymous === true;
-    if (email){
-      const emailInput = $('authEmail'); if (emailInput) emailInput.value = email;
-      localStorage.setItem(AUTH_EMAIL_CACHE_PREFIX + uid, email);
-      authMessage('Email found for that UID. Enter your password to sign in.');
-      $('authPassword')?.focus();
-      return;
-    }
-    if (isAnonymousAccount || hasRecord){
-      authMessage('That UID belongs to a guest account or an account without email sign-in. Firebase still requires the original sign-in method.');
-      return;
-    }
-    authMessage('No saved sign-in details were found for that UID.');
-  }).catch(err => authMessage('Could not look up that UID: ' + err.message));
+  setUserIdSignInStatus('Signing out and opening the password screen…', 'var(--text2)');
+  return firebase.auth().signOut().then(() => setUserIdSignInStatus(''));
 }
+function prepareUserIdPanelSignIn(){
+  const uid = userIdSignInUid();
+  if (!uid){ setUserIdSignInStatus('Enter the Firebase UID you want to sign in with.', 'var(--danger)'); return; }
+  if (uid.length > 128 || /\s/.test(uid)){ setUserIdSignInStatus('That does not look like a valid Firebase UID.', 'var(--danger)'); return; }
+  if (authUser?.uid === uid && !authUser?.isAnonymous){ setUserIdSignInStatus('You are already signed in as that Firebase UID.', 'var(--success)'); return; }
+  localStorage.setItem('qb_lastAuthUid', uid);
+  setUserIdSignInStatus('Looking up that UID…', 'var(--text2)');
+  lookupAuthRecoveryIdentity(uid).then(result => {
+    if (result.email){
+      const prompt = 'We found ' + result.email + ' for that UID. Sign out and continue to the password screen?';
+      const run = () => continueUserIdPanelSignIn(uid, result.email)
+        .catch(err => setUserIdSignInStatus('Could not switch sign-in: ' + err.message, 'var(--danger)'));
+      if (authUser){
+        showConfirm(prompt, 'Continue').then(ok => {
+          if (!ok){ setUserIdSignInStatus('Sign-in switch cancelled.', 'var(--text2)'); return; }
+          run();
+        });
+        return;
+      }
+      run();
+      return;
+    }
+    if (result.source === 'preview'){
+      setUserIdSignInStatus('UID lookup is unavailable in preview mode unless this device already knows that account email.', 'var(--danger)');
+      return;
+    }
+    if (result.isAnonymousAccount || result.hasRecord){
+      setUserIdSignInStatus('That UID belongs to a guest account or an account without email sign-in. Firebase still requires the original sign-in method.', 'var(--warning)');
+      return;
+    }
+    setUserIdSignInStatus('No saved sign-in details were found for that UID.', 'var(--danger)');
+  }).catch(err => setUserIdSignInStatus('Could not look up that UID: ' + err.message, 'var(--danger)'));
+}
+function prepareUidSignIn(){ prepareUserIdPanelSignIn(); }
 function submitAuth(e){
   e.preventDefault();
   authMessage('Signing in…');
@@ -1336,8 +1405,8 @@ function initAuth(){
       userProfileRef=null;
       updateAuthUI(null);
       if (gate) gate.style.display='flex';
-      hydrateAuthRecoveryFields();
-      authMessage('');
+      const hydrated = hydrateAuthRecoveryFields();
+      if (!hydrated) authMessage('');
       return;
     }
     clientId=user.uid;
