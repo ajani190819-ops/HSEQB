@@ -301,8 +301,10 @@ $pbPreview.Add_Paint({
     $pc = $pal.Count
     $bright = $trkBright.Value / 100.0
 
+    # The preview is a smooth strip: it shows the gradient as it travels
+    # across the physical width, which is what the keyboard now does.
     for ($i = 0; $i -lt $n; $i++) {
-        $f = ((($i / [double]$n) + $script:phase) % 1.0) * $pc
+        $f = ((($i / [double]($n - 1)) + $script:phase) % 1.0) * $pc
         if ($f -lt 0) { $f += $pc }
         $a = [int][Math]::Floor($f)
         $u = $f - $a

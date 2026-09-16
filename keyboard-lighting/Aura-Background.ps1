@@ -119,6 +119,11 @@ public class LampEngine {
   public bool   Reverse    = false;
   public int[]  PalR, PalG, PalB;
 
+  // Normalised physical position of each slot, 0.0 = far left, 1.0 = far right.
+  // Position-based effects use this instead of the slot index, because the
+  // zones are NOT evenly spaced across the keyboard.
+  public double[] SlotPos;
+
   public string LastError = "";
 
   IntPtr h = IntPtr.Zero;
@@ -152,7 +157,14 @@ public class LampEngine {
       bufs[bi] = b;
     }
     fr = new int[LampCount]; fg = new int[LampCount]; fb = new int[LampCount];
+    pr = new int[LampCount]; pg = new int[LampCount]; pb = new int[LampCount];
+    for (int i = 0; i < LampCount; i++) { pr[i] = -1; pg[i] = -1; pb[i] = -1; }
     heat = new double[LampCount];
+    if (SlotPos == null || SlotPos.Length != LampCount) {
+      SlotPos = new double[LampCount];
+      for (int i = 0; i < LampCount; i++)
+        SlotPos[i] = (LampCount > 1) ? (i / (double)(LampCount - 1)) : 0.0;
+    }
     return true;
   }
 
@@ -171,7 +183,22 @@ public class LampEngine {
     fr[i] = rr; fg[i] = gg; fb[i] = bb;
   }
 
-  void Push() {
+  int[] pr, pg, pb;   // last values actually sent
+
+  void Push() { Push(false); }
+
+  void Push(bool force) {
+    // Skip the whole frame if not a single channel byte changed. Sending
+    // identical frames gains nothing and adds bus traffic that shows up
+    // as flicker.
+    if (!force) {
+      bool same = true;
+      for (int i = 0; i < LampCount; i++) {
+        if (fr[i] != pr[i] || fg[i] != pg[i] || fb[i] != pb[i]) { same = false; break; }
+      }
+      if (same) return;
+    }
+
     int last = nbatch - 1;
     for (int bi = 0; bi < nbatch; bi++) {
       byte[] b = bufs[bi];
@@ -186,6 +213,8 @@ public class LampEngine {
       b[OffFlags] = (bi == last) ? (byte)1 : (byte)0;
       HidD_SetFeature(h, b, b.Length);
     }
+
+    for (int i = 0; i < LampCount; i++) { pr[i] = fr[i]; pg[i] = fg[i]; pb[i] = fb[i]; }
   }
 
   static void Hsv(double hDeg, double s, double v, out double r, out double g, out double b) {
@@ -227,7 +256,9 @@ public class LampEngine {
         double phase = t * 0.25 * dir;
         for (int i = 0; i < N; i++) {
           double r, g, b;
-          Pal((i / (double)N) + phase, out r, out g, out b);
+          // Use real physical position so the gradient travels evenly across
+          // the keyboard. Slot index would bunch it at the edges.
+          Pal(SlotPos[i] + phase, out r, out g, out b);
           SetZone(i, r, g, b);
         }
         break;
@@ -235,7 +266,7 @@ public class LampEngine {
       case "rainbow": {
         for (int i = 0; i < N; i++) {
           double r, g, b;
-          Hsv((i / (double)N) * 360.0 + t * 90.0 * dir, 1.0, 1.0, out r, out g, out b);
+          Hsv(SlotPos[i] * 360.0 + t * 90.0 * dir, 1.0, 1.0, out r, out g, out b);
           SetZone(i, r, g, b);
         }
         break;
@@ -245,27 +276,29 @@ public class LampEngine {
         int p1 = PalR.Length > 1 ? 1 : 0;
         double r1 = PalR[p1], g1 = PalG[p1], b1 = PalB[p1];
         for (int i = 0; i < N; i++) {
-          double ph = (t * 1.2 * dir) - (i / (double)N) * 2.0;
+          double ph = (t * 1.2 * dir) - SlotPos[i] * 2.0;
           double w = (1.0 + Math.Sin(ph * Math.PI)) / 2.0; w = w * w;
           SetZone(i, r0*w + r1*(1-w)*0.15, g0*w + g1*(1-w)*0.15, b0*w + b1*(1-w)*0.15);
         }
         break;
       }
       case "comet": {
-        double head = (t * 6.0) % N; if (head < 0) head += N;
+        // Head travels 0..1 across the real width, wrapping.
+        double head = (t * 0.45 * dir) % 1.0; if (head < 0) head += 1.0;
         for (int i = 0; i < N; i++) {
-          double d = head - i; if (d < 0) d += N;
-          double w = Math.Exp(-d * 0.9);
+          double d = head - SlotPos[i];
+          if (d < 0) d += 1.0;
+          double w = Math.Exp(-d * 9.0);
           SetZone(i, PalR[0]*w, PalG[0]*w, PalB[0]*w);
         }
         break;
       }
       case "scanner": {
-        double span = (N - 1) * 2.0;
-        double p = (t * 7.0) % span; if (p < 0) p += span;
-        if (p > (N - 1)) p = span - p;
+        double p = (t * 0.55) % 2.0; if (p < 0) p += 2.0;
+        if (p > 1.0) p = 2.0 - p;           // bounce 0..1..0
         for (int i = 0; i < N; i++) {
-          double w = 1.0 - (Math.Abs(i - p) / 2.2); if (w < 0) w = 0; w = w * w;
+          double w = 1.0 - (Math.Abs(SlotPos[i] - p) / 0.18);
+          if (w < 0) w = 0; w = w * w;
           SetZone(i, PalR[0]*w, PalG[0]*w, PalB[0]*w);
         }
         break;
@@ -343,7 +376,7 @@ public class LampEngine {
 
   public void Blank() {
     for (int i = 0; i < LampCount; i++) { fr[i]=0; fg[i]=0; fb[i]=0; }
-    Push();
+    Push(true);
   }
 
   public void Solid(int r, int g, int b) {
@@ -353,7 +386,7 @@ public class LampEngine {
       if(rr<0)rr=0; if(gg<0)gg=0; if(bb<0)bb=0;
       fr[i]=rr; fg[i]=gg; fb[i]=bb;
     }
-    Push();
+    Push(true);
   }
 
   public void Close() {
@@ -466,14 +499,22 @@ function Get-Val($r,$buf,[int]$usage) {
     return [int]$v
 }
 
-$lampCount=0; $RMAX=255;$GMAX=255;$BMAX=255;$IMAX=255
+$U_MINUPD=0x08
+$lampCount=0; $RMAX=255;$GMAX=255;$BMAX=255;$IMAX=255; $minUpdUs=0
 if ($rAttr) {
     $b=New-Rpt $rAttr
-    if ([HidNative]::HidD_GetFeature($h,$b,$b.Length)) { $v=Get-Val $rAttr $b $U_LAMPCOUNT; if ($v) { $lampCount=$v } }
+    if ([HidNative]::HidD_GetFeature($h,$b,$b.Length)) {
+        $v=Get-Val $rAttr $b $U_LAMPCOUNT; if ($v) { $lampCount=$v }
+        # The device declares how fast it can actually accept updates.
+        # Pushing faster than this is what causes visible flicker.
+        $v=Get-Val $rAttr $b $U_MINUPD;    if ($v) { $minUpdUs=$v }
+    }
 }
 if ($lampCount -le 0) { $lampCount=16 }
 
 $order=@(0..($lampCount-1))
+$posX=New-Object int[] $lampCount
+for ($i=0;$i -lt $lampCount;$i++) { $posX[$i]=$i*1000 }
 if ($rReq -and $rResp) {
     $pos=New-Object object[] $lampCount
     for ($i=0;$i -lt $lampCount;$i++) {
@@ -488,6 +529,7 @@ if ($rReq -and $rResp) {
                 $v=Get-Val $rResp $rb $U_INTLVL; if ($v) { $IMAX=$v }
             }
         }
+        $posX[$i]=$x
         $pos[$i]=[pscustomobject]@{Idx=$i;X=$x}
     }
     $order=@($pos|Sort-Object X|ForEach-Object{$_.Idx})
@@ -667,7 +709,29 @@ $eng.MaxI       = $IMAX
 $eng.Effect     = $Effect
 $eng.Speed      = $Speed
 $eng.Brightness = $Brightness
-$eng.Fps        = $Fps
+
+# Never drive the device faster than it says it can accept, or it flickers.
+$fpsCap = $Fps
+if ($minUpdUs -gt 0) {
+    $devMax = [int][Math]::Floor(1000000.0 / $minUpdUs)
+    if ($devMax -ge 1 -and $devMax -lt $fpsCap) {
+        Say ("  Device max update rate is {0} fps (min interval {1} us). Capping." -f $devMax,$minUpdUs) 'Yellow'
+        $fpsCap = $devMax
+    }
+}
+$eng.Fps        = $fpsCap
+
+# Normalised physical position per slot: 0.0 far left, 1.0 far right.
+$xs = @($order | ForEach-Object { $posX[$_] })
+$xmin = ($xs | Measure-Object -Minimum).Minimum
+$xmax = ($xs | Measure-Object -Maximum).Maximum
+$span = $xmax - $xmin
+$sp = New-Object double[] $lampCount
+for ($s=0; $s -lt $lampCount; $s++) {
+    if ($span -gt 0) { $sp[$s] = ($xs[$s] - $xmin) / [double]$span }
+    else { $sp[$s] = if ($lampCount -gt 1) { $s / [double]($lampCount-1) } else { 0.0 } }
+}
+$eng.SlotPos    = $sp
 $eng.Mirror     = [bool]$Mirror
 $eng.Reverse    = [bool]$Reverse
 $eng.PalR       = [int[]]@($stops | ForEach-Object { $_[0] })
