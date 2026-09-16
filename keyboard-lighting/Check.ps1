@@ -33,10 +33,10 @@ $problems = New-Object System.Collections.ArrayList
 
 Write-Host ''
 Write-Host '  ===============================================================' -ForegroundColor Cyan
-Write-Host '   KEYBOARD LIGHTING - DIAGNOSTIC  (check v10)' -ForegroundColor Cyan
+Write-Host '   KEYBOARD LIGHTING - DIAGNOSTIC  (check v11)' -ForegroundColor Cyan
 Write-Host '  ===============================================================' -ForegroundColor Cyan
 Log '  ==============================================================='
-Log '   KEYBOARD LIGHTING - DIAGNOSTIC  (check v10)'
+Log '   KEYBOARD LIGHTING - DIAGNOSTIC  (check v11)'
 Log '  ==============================================================='
 Log ("   {0}" -f (Get-Date).ToString('yyyy-MM-dd HH:mm:ss'))
 try {

@@ -53,6 +53,7 @@ param(
 
     # across = left-to-right. loop = travels around the chassis perimeter,
     # so the light bar genuinely circles instead of pulsing as one block.
+    [switch]$NoLive,
     [ValidateSet('across','loop')]
     [string]$Layout = 'loop'
 )
@@ -339,8 +340,22 @@ public class LampEngine {
 
   // Live control. The panel writes a small file; the engine picks it up
   // without restarting, so changes apply instantly.
-  public volatile int  LiveBrightness = -1;   // 0..1000, -1 = untouched
-  public volatile bool LiveDirty = false;
+  // ---- live control ------------------------------------------------
+  // Written from the PowerShell thread, read on the render thread. Only
+  // types C# allows to be volatile are used, so doubles travel as ints.
+  public volatile int    LiveBrightness = -1;   // 0..1000, -1 = untouched
+  public volatile int    LiveSpeedMilli = -1;   // Speed * 1000
+  public volatile string LiveEffect     = null;
+  public volatile int[]  LivePalR       = null;
+  public volatile int[]  LivePalG       = null;
+  public volatile int[]  LivePalB       = null;
+  public volatile int    LiveFlags      = -1;   // 1 mirror 2 reverse 4 equalise 8 loop
+  public volatile bool   LiveDirty      = false;
+
+  // Both layouts are worked out up front so the loop/across switch can be
+  // flipped live without tearing the engine down.
+  public double[] SlotPosAcross;
+  public double[] SlotPosLoop;
 
   // Per-stop gain applied in linear light, computed once at startup.
   double[] palGain;
@@ -425,9 +440,36 @@ public class LampEngine {
 
   void Frame(double t, double dt) {
     if (LiveDirty) {
+      LiveDirty = false;        // clear first, so a write mid-apply is not lost
+      bool repal = false;
+
       int lb = LiveBrightness;
       if (lb >= 0) Brightness = lb / 1000.0;
-      LiveDirty = false;
+
+      int ls = LiveSpeedMilli;
+      if (ls >= 0) Speed = ls / 1000.0;
+
+      string le = LiveEffect;
+      if (le != null && le.Length > 0) Effect = le;
+
+      int[] pr = LivePalR, pg = LivePalG, pb = LivePalB;
+      if (pr != null && pg != null && pb != null && pr.Length > 0 &&
+          pr.Length == pg.Length && pr.Length == pb.Length) {
+        PalR = pr; PalG = pg; PalB = pb; repal = true;
+      }
+
+      int lf = LiveFlags;
+      if (lf >= 0) {
+        Mirror  = (lf & 1) != 0;
+        Reverse = (lf & 2) != 0;
+        bool eq = (lf & 4) != 0;
+        if (eq != Equalise) { Equalise = eq; repal = true; }
+        bool lp = (lf & 8) != 0;
+        double[] want = lp ? SlotPosLoop : SlotPosAcross;
+        if (want != null && want.Length == LampCount) SlotPos = want;
+      }
+
+      if (repal) PrepPalette();
     }
     int N = LampCount;
     double dir = Reverse ? -1.0 : 1.0;
@@ -537,6 +579,7 @@ public class LampEngine {
     timeBeginPeriod(1);
     Stopwatch sw = Stopwatch.StartNew();
     double lastNow = 0.0;
+    double phase   = 0.0;
     long freq = Stopwatch.Frequency;
     long per  = freq / Fps;
     long next = sw.ElapsedTicks + per;
@@ -545,7 +588,10 @@ public class LampEngine {
         double now = sw.ElapsedTicks / (double)freq;
         double dt  = now - lastNow; lastNow = now;
         if (dt <= 0 || dt > 0.25) dt = 1.0 / Fps;
-        Frame(now * Speed, dt);
+        // Accumulate phase rather than using now*Speed: that would teleport
+        // the animation every time the speed slider moved.
+        phase += dt * Speed;
+        Frame(phase, dt);
         Push();
 
         long remain = next - sw.ElapsedTicks;
@@ -620,7 +666,7 @@ $U_IDSTART=0x61; $U_IDEND=0x62; $U_AUTONOMOUS=0x71
 # DISCOVERY  (proven working; unchanged in shape)
 # ============================================================================
 Say ""
-Say ("AURA-BACKGROUND v10   effect={0}  fps={1}  speed={2}" -f $Effect,$Fps,$Speed) 'Cyan'
+Say ("AURA-BACKGROUND v11   effect={0}  fps={1}  speed={2}" -f $Effect,$Fps,$Speed) 'Cyan'
 Say ""
 
 # A laptop exposes MANY HID collections on the same VID/PID, and more than
@@ -1070,6 +1116,33 @@ $spanY = $ymax - $ymin
 
 $sp = New-Object double[] $lampCount
 
+# Both layouts are always computed so the control panel can switch between
+# them live without restarting the engine.
+$spAcross = New-Object double[] $lampCount
+for ($s=0; $s -lt $lampCount; $s++) {
+    if ($spanX -gt 0) { $spAcross[$s] = ($xs[$s] - $xmin) / [double]$spanX }
+    elseif ($lampCount -gt 1) { $spAcross[$s] = $s / [double]($lampCount-1) }
+    else { $spAcross[$s] = 0.0 }
+}
+
+$spLoop = $null
+if ($spanX -gt 0 -and $spanY -gt 0) {
+    $perimA = 2.0 * ($spanX + $spanY)
+    $innerA = 0.12 * [Math]::Min($spanX, $spanY)
+    $spLoop = New-Object double[] $lampCount
+    for ($s=0; $s -lt $lampCount; $s++) {
+        $x = $xs[$s] - $xmin
+        $y = $ys[$s] - $ymin
+        $dT = $y; $dB = $spanY - $y; $dL = $x; $dR = $spanX - $x
+        $mm = [Math]::Min([Math]::Min($dT,$dB),[Math]::Min($dL,$dR))
+        if     ($mm -gt $innerA) { $spLoop[$s] = $x / $perimA }
+        elseif ($mm -eq $dT)     { $spLoop[$s] = $x / $perimA }
+        elseif ($mm -eq $dR)     { $spLoop[$s] = ($spanX + $y) / $perimA }
+        elseif ($mm -eq $dB)     { $spLoop[$s] = ($spanX + $spanY + ($spanX - $x)) / $perimA }
+        else                     { $spLoop[$s] = ($spanX + $spanY + $spanX + ($spanY - $y)) / $perimA }
+    }
+}
+
 if ($Layout -eq 'loop' -and $spanX -gt 0 -and $spanY -gt 0) {
     # Walk the rectangle clockwise from the top-left corner.
     $perim = 2.0 * ($spanX + $spanY)
@@ -1101,7 +1174,9 @@ else {
     }
     if ($Layout -eq 'loop') { Say "  Layout: loop requested but zones are in a line; using across." 'Yellow' }
 }
-$eng.SlotPos    = $sp
+$eng.SlotPos       = $sp
+$eng.SlotPosAcross = $spAcross
+if ($spLoop) { $eng.SlotPosLoop = $spLoop } else { $eng.SlotPosLoop = $spAcross }
 $eng.Mirror     = [bool]$Mirror
 $eng.Reverse    = [bool]$Reverse
 $eng.PalR       = [int[]]@($stops | ForEach-Object { $_[0] })
@@ -1122,7 +1197,12 @@ if ($Effect -eq 'off') {
     Say "  OFF applied." 'Green'
     return
 }
-if ($Effect -eq 'static') {
+# NOTE: 'static' deliberately falls through to the normal run loop. It used
+# to paint once and exit, which meant the app could not change the colour,
+# brightness or effect afterwards without killing and relaunching. The
+# render loop handles it through the default branch (solid palette[0]) and
+# costs nothing, so live control keeps working.
+if ($Effect -eq 'static' -and $NoLive) {
     $eng.Solid($stops[0][0],$stops[0][1],$stops[0][2]); $eng.Close()
     Say "  Solid colour applied." 'Green'
     return
@@ -1150,7 +1230,14 @@ $eng.Start()
 $stateDir  = Join-Path $env:LOCALAPPDATA 'KeyboardLighting'
 if (-not (Test-Path $stateDir)) { New-Item -ItemType Directory -Force -Path $stateDir | Out-Null }
 $liveFile  = Join-Path $stateDir 'live.txt'
+$themeFile = Join-Path $stateDir 'theme.json'
 $script:LiveLevel = [int]([Math]::Round($Brightness * 1000))
+# Ignore whatever theme file is already on disk: the arguments we were
+# launched with already describe it. Only react to later writes.
+$script:ThemeStamp = 0
+if (Test-Path $themeFile) {
+    try { $script:ThemeStamp = (Get-Item $themeFile).LastWriteTimeUtc.Ticks } catch { }
+}
 
 function Set-Live([int]$level) {
     if ($level -lt 0)    { $level = 0 }
@@ -1194,7 +1281,7 @@ try {
             }
         }
 
-        # --- panel-written state file ---
+        # --- panel-written brightness file (kept: the Fn keys use it too) ---
         if (Test-Path $liveFile) {
             try {
                 $txt = (Get-Content $liveFile -Raw -ErrorAction Stop).Trim()
@@ -1205,6 +1292,62 @@ try {
                         $eng.LiveBrightness = $val
                         $eng.LiveDirty = $true
                     }
+                }
+            } catch { }
+        }
+
+        # --- full live theme: effect, colours, speed and the toggles ---
+        # The control panel writes this whenever anything changes, so the
+        # lighting follows along without being torn down and restarted.
+        if (Test-Path $themeFile) {
+            try {
+                $stamp = (Get-Item $themeFile -ErrorAction Stop).LastWriteTimeUtc.Ticks
+                if ($stamp -ne $script:ThemeStamp) {
+                    $script:ThemeStamp = $stamp
+                    $j = Get-Content $themeFile -Raw -ErrorAction Stop | ConvertFrom-Json
+
+                    if ($j.Effect) { $eng.LiveEffect = [string]$j.Effect }
+
+                    if ($null -ne $j.Speed) {
+                        $eng.LiveSpeedMilli = [int]([Math]::Round([double]$j.Speed * 1000))
+                    }
+
+                    if ($j.Colors) {
+                        $ns = @()
+                        foreach ($cs in ([string]$j.Colors -split ',')) {
+                            if ($cs.Trim()) { $ns += ,(ConvertFrom-Hex $cs) }
+                        }
+                        if ($ns.Count -eq 1) { $ns = @($ns[0], $ns[0]) }
+                        if ($ns.Count -gt 2 -and
+                            $ns[0][0] -eq $ns[-1][0] -and
+                            $ns[0][1] -eq $ns[-1][1] -and
+                            $ns[0][2] -eq $ns[-1][2]) {
+                            $ns = @($ns[0..($ns.Count-2)])
+                        }
+                        if ($ns.Count -gt 0) {
+                            $eng.LivePalR = [int[]]@($ns | ForEach-Object { $_[0] })
+                            $eng.LivePalG = [int[]]@($ns | ForEach-Object { $_[1] })
+                            $eng.LivePalB = [int[]]@($ns | ForEach-Object { $_[2] })
+                        }
+                    }
+
+                    $fl = 0
+                    if ([bool]$j.Mirror)   { $fl = $fl -bor 1 }
+                    if ([bool]$j.Reverse)  { $fl = $fl -bor 2 }
+                    if ([bool]$j.Equalise) { $fl = $fl -bor 4 }
+                    if ([bool]$j.Loop)     { $fl = $fl -bor 8 }
+                    $eng.LiveFlags = $fl
+
+                    if ($null -ne $j.Brightness) {
+                        $bv = [int]([Math]::Round([double]$j.Brightness * 1000))
+                        if ($bv -lt 0) { $bv = 0 }
+                        if ($bv -gt 1000) { $bv = 1000 }
+                        $script:LiveLevel = $bv
+                        $eng.LiveBrightness = $bv
+                        try { Set-Content -Path $liveFile -Value $bv -Encoding ASCII -ErrorAction SilentlyContinue } catch { }
+                    }
+
+                    $eng.LiveDirty = $true
                 }
             } catch { }
         }

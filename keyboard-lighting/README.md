@@ -84,4 +84,4 @@ Edit `MyEffect.ps1`. It must end with a block shaped like this:
 ## Troubleshooting
 
 Run **Check.bat** - it re-downloads everything and prints a diagnostic.
-The banner should say **v10**.
+The banner should say **v11**.

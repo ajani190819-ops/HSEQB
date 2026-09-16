@@ -56,7 +56,7 @@ try { [Net.ServicePointManager]::SecurityProtocol = 'Tls12' } catch { }
 
 $files = @('Aura-Background.ps1','Lighting-Panel.ps1','Tray.ps1','Install.ps1',
            'Check.ps1','Check.bat','Update.ps1','Update.bat',
-           'Lighting-Panel.bat','MyEffect.ps1','Find-Lamps.ps1','README.md')
+           'Lighting-Panel.bat','MyEffect.ps1','Find-Lamps.ps1','README.md','app.ico')
 $got = 0
 foreach ($f in $files) {
     try {
@@ -108,8 +108,12 @@ class Launcher {
         psi.FileName = "powershell.exe";
         psi.Arguments = "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File \"" + tray + "\"" + extra;
         psi.WorkingDirectory = dir;
+        // UseShellExecute=false + CreateNoWindow=true is what stops a console
+        // window from ever being created. WindowStyle alone only hides one
+        // that has already flashed up on screen.
         psi.UseShellExecute = false;
         psi.CreateNoWindow = true;
+        psi.WindowStyle = ProcessWindowStyle.Hidden;
         try { Process.Start(psi); }
         catch (Exception ex) {
             System.Windows.Forms.MessageBox.Show("Could not start:\n" + ex.Message, "Keyboard Lighting");
@@ -121,11 +125,17 @@ class Launcher {
 '@
     Set-Content -Path $src -Value $code -Encoding UTF8
 
-    # /target:winexe = no console window ever appears
-    $args = @('/nologo','/target:winexe','/optimize+',
-              '/reference:System.Windows.Forms.dll','/reference:System.dll',
-              ('/out:"{0}"' -f $exePath), ('"{0}"' -f $src))
-    $p = Start-Process -FilePath $csc -ArgumentList $args -NoNewWindow -Wait -PassThru `
+    # /target:winexe = no console window ever appears.
+    # NOTE: do not call this $args - that is a PowerShell automatic
+    # variable and assigning to it behaves unpredictably.
+    $cscArgs = @('/nologo','/target:winexe','/optimize+',
+                 '/reference:System.Windows.Forms.dll','/reference:System.dll')
+    # Give the exe a real icon so the Start menu and taskbar look right.
+    $icoPath = Join-Path $Here 'app.ico'
+    if (Test-Path $icoPath) { $cscArgs += ('/win32icon:"{0}"' -f $icoPath) }
+    $cscArgs += ('/out:"{0}"' -f $exePath)
+    $cscArgs += ('"{0}"' -f $src)
+    $p = Start-Process -FilePath $csc -ArgumentList $cscArgs -NoNewWindow -Wait -PassThru `
          -RedirectStandardOutput (Join-Path $env:TEMP 'kbl_csc_out.txt') `
          -RedirectStandardError  (Join-Path $env:TEMP 'kbl_csc_err.txt')
 
@@ -166,7 +176,10 @@ function New-Shortcut($path) {
         }
         $lnk.WorkingDirectory = $Here
         $lnk.Description = 'Keyboard Lighting'
-        $lnk.IconLocation = "$env:WinDir\System32\shell32.dll,176"
+        $ico = Join-Path $Here 'app.ico'
+        if (Test-Path $ico) { $lnk.IconLocation = $ico }
+        elseif (-not $usePs) { $lnk.IconLocation = $target }
+        else { $lnk.IconLocation = "$env:WinDir\System32\shell32.dll,176" }
         $lnk.Save()
         return $true
     } catch { return $false }
