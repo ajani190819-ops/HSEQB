@@ -521,6 +521,10 @@ public class LampEngine {
         if (i > 0) sb.Append(',');
         sb.Append(gr.Idx[ord[i]].ToString());
       }
+      // Tell the panel whether this group is a closed ring, so it can
+      // blend across the seam instead of stopping at the last lamp.
+      sb.Append('\n').Append(names[gi]).Append("ring=")
+        .Append(gr.Loop ? "1" : "0");
       sb.Append('\n').Append(names[gi]).Append("pos=");
       double lo = gr.Pos[ord[0]], hi = gr.Pos[ord[gr.N - 1]], sp = hi - lo;
       for (int i = 0; i < gr.N; i++) {
@@ -2419,8 +2423,18 @@ function New-Zone {
         if ($aMax -gt $aMin) { $acr[$k] = ($aVals[$k] - $aMin) / ($aMax - $aMin) }
         elseif ($n -gt 1)    { $acr[$k] = $k / [double]($n - 1) }
         else                 { $acr[$k] = 0.0 }
-        if ($lMax -gt $lMin) { $lop[$k] = ($lVals[$k] - $lMin) / ($lMax - $lMin) }
-        elseif ($n -gt 1)    { $lop[$k] = $k / [double]($n - 1) }
+        # The loop map is a CLOSED ring: the first and last lamps are
+        # physically next to each other at the seam. Stretching them to
+        # exactly 0 and 1 puts them at opposite ends of the gradient, so
+        # the pattern ran 0..1 across the bar and then snapped back -
+        # which made the first colour appear to last far longer than the
+        # second. Normalise over the full ring instead, leaving one step
+        # of room for the seam so the pattern carries on around evenly.
+        if ($lMax -gt $lMin -and $n -gt 1) {
+            $lSpan = ($lMax - $lMin) * $n / [double]($n - 1)
+            $lop[$k] = ($lVals[$k] - $lMin) / $lSpan
+        }
+        elseif ($n -gt 1)    { $lop[$k] = $k / [double]$n }
         else                 { $lop[$k] = 0.0 }
     }
     $z.PosAcross = $acr

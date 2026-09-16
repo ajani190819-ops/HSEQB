@@ -868,6 +868,9 @@ $script:MapBar     = @(4,5,6,7,8,9,10,11,12,13,14,15)
 # are clustered with wide gaps, so even spacing would misplace them.
 $script:PosKbd     = $null
 $script:PosBar     = $null
+# True when the group is a closed ring (light bar around the chassis).
+$script:RingKbd    = $false
+$script:RingBar    = $false
 $script:LayStamp   = -1
 
 function Read-Layout {
@@ -877,7 +880,11 @@ function Read-Layout {
         $script:LayStamp = $fi.LastWriteTimeUtc.Ticks
         foreach ($ln in (Get-Content $script:LayoutFile -ErrorAction Stop)) {
             $t = $ln.Trim()
-            if ($t -like 'kbdpos=*') {
+            if ($t -like 'kbdring=*') {
+                $script:RingKbd = ($t.Substring(8).Trim() -eq '1')
+            } elseif ($t -like 'barring=*') {
+                $script:RingBar = ($t.Substring(8).Trim() -eq '1')
+            } elseif ($t -like 'kbdpos=*') {
                 $v = @($t.Substring(7) -split ',' | Where-Object { $_ -ne '' } | ForEach-Object { [double]$_ })
                 if ($v.Count -gt 0) { $script:PosKbd = [double[]]$v } else { $script:PosKbd = $null }
             } elseif ($t -like 'barpos=*') {
@@ -926,16 +933,40 @@ function Read-Frame {
 
         # Re-order into physical order: keyboard first, then the bar.
         Read-Layout
-        $seq = @($script:MapKbd) + @($script:MapBar)
-        $cols = New-Object 'System.Drawing.Color[]' $seq.Count
-        for ($k = 0; $k -lt $seq.Count; $k++) {
-            $ix = $seq[$k]
-            if ($ix -ge 0 -and $ix -lt $n) { $cols[$k] = $raw[$ix] }
-            else { $cols[$k] = [System.Drawing.Color]::Black }
+        # Only draw lamps this frame actually reported. Anything else used
+        # to be painted pure black, which invented holes in the pattern
+        # that the keyboard was never showing.
+        $kIdx = @(); $kPos = @()
+        for ($k = 0; $k -lt $script:MapKbd.Count; $k++) {
+            $ix = $script:MapKbd[$k]
+            if ($ix -ge 0 -and $ix -lt $n) {
+                $kIdx += $ix
+                if ($script:PosKbd -and $k -lt $script:PosKbd.Count) { $kPos += $script:PosKbd[$k] }
+            }
         }
-        $pbPreview.Split    = $script:MapKbd.Count
-        $pbPreview.PosLeft  = $script:PosKbd
-        $pbPreview.PosRight = $script:PosBar
+        $bIdx = @(); $bPos = @()
+        for ($k = 0; $k -lt $script:MapBar.Count; $k++) {
+            $ix = $script:MapBar[$k]
+            if ($ix -ge 0 -and $ix -lt $n) {
+                $bIdx += $ix
+                if ($script:PosBar -and $k -lt $script:PosBar.Count) { $bPos += $script:PosBar[$k] }
+            }
+        }
+        if ($kIdx.Count + $bIdx.Count -eq 0) { return $false }
+
+        $seq  = @($kIdx) + @($bIdx)
+        $cols = New-Object 'System.Drawing.Color[]' $seq.Count
+        for ($k = 0; $k -lt $seq.Count; $k++) { $cols[$k] = $raw[$seq[$k]] }
+
+        $pbPreview.Split     = $kIdx.Count
+        $pbPreview.LeftRing  = $script:RingKbd
+        $pbPreview.RightRing = $script:RingBar
+        if ($kPos.Count -eq $kIdx.Count -and $kIdx.Count -gt 0) {
+            $pbPreview.PosLeft = [double[]]$kPos
+        } else { $pbPreview.PosLeft = $null }
+        if ($bPos.Count -eq $bIdx.Count -and $bIdx.Count -gt 0) {
+            $pbPreview.PosRight = [double[]]$bPos
+        } else { $pbPreview.PosRight = $null }
         $script:FrameCols = $cols
         $script:FrameAge  = 0
         return $true

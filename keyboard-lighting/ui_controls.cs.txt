@@ -540,6 +540,11 @@ public class Preview : Control {
   // colour in the wrong place. Null falls back to even spacing.
   public double[] PosLeft = null;
   public double[] PosRight = null;
+  // True when that group is a closed ring (the light bar wraps around the
+  // chassis). The last lamp is then physically adjacent to the first, so
+  // the strip has to blend across the seam instead of stopping dead.
+  public bool LeftRing = false;
+  public bool RightRing = false;
 
   public Preview() {
     SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint |
@@ -552,7 +557,7 @@ public class Preview : Control {
   // nearest lamps, so a lamp appears at its real position and the space
   // between two lamps is a blend rather than a hard edge. This is what the
   // eye actually sees on the hardware: the diffuser blurs adjacent lamps.
-  void Band(Graphics g, Color[] c, int from, int to, double[] pos,
+  void Band(Graphics g, Color[] c, int from, int to, double[] pos, bool ring,
             float x, float w, float y, float h) {
     int n = to - from;
     if (n <= 0 || w <= 0) return;
@@ -567,7 +572,8 @@ public class Preview : Control {
     double[] p = pos;
     if (p == null || p.Length != n) {
       p = new double[n];
-      for (int i = 0; i < n; i++) p[i] = i / (double)(n - 1);
+      double div = ring ? n : (n - 1);
+      for (int i = 0; i < n; i++) p[i] = i / div;
     }
 
     int steps = (int)Math.Ceiling(w);
@@ -577,10 +583,20 @@ public class Preview : Control {
     for (int s = 0; s < steps; s++) {
       double u = (s + 0.5) / steps;
       while (seg < n - 2 && u > p[seg + 1]) seg++;
+
       double a = p[seg], b2 = p[seg + 1];
+      Color c0 = c[from + seg], c1 = c[from + seg + 1];
+
+      // Past the last lamp on a ring, blend back round to the first one
+      // rather than clamping - that stretch is the seam, and the light
+      // really does continue across it on the hardware.
+      if (ring && u > p[n - 1]) {
+        a = p[n - 1]; b2 = 1.0;
+        c0 = c[from + n - 1]; c1 = c[from];
+      }
+
       double f = (b2 > a) ? (u - a) / (b2 - a) : 0.0;
       if (f < 0) f = 0; if (f > 1) f = 1;
-      Color c0 = c[from + seg], c1 = c[from + seg + 1];
       int rr = (int)(c0.R + (c1.R - c0.R) * f);
       int gg = (int)(c0.G + (c1.G - c0.G) * f);
       int bb = (int)(c0.B + (c1.B - c0.B) * f);
@@ -600,7 +616,7 @@ public class Preview : Control {
       Rectangle r0 = new Rectangle(0, 0, Width - 1, Height - 1);
       using (GraphicsPath clip = Theme.Round(r0, 8)) {
         g.SetClip(clip);
-        Band(g, Colors, 0, n, PosLeft, 0f, Width, 0f, Height);
+        Band(g, Colors, 0, n, PosLeft, LeftRing, 0f, Width, 0f, Height);
         g.ResetClip();
         using (Pen pen = new Pen(Theme.Line)) g.DrawPath(pen, clip);
       }
@@ -620,14 +636,14 @@ public class Preview : Control {
     Rectangle lr = new Rectangle(0, 0, (int)lw, barH - 1);
     using (GraphicsPath clip = Theme.Round(lr, 7)) {
       g.SetClip(clip);
-      Band(g, Colors, 0, sp, PosLeft, 0f, lw, 0f, barH);
+      Band(g, Colors, 0, sp, PosLeft, LeftRing, 0f, lw, 0f, barH);
       g.ResetClip();
       using (Pen pen = new Pen(Theme.Line)) g.DrawPath(pen, clip);
     }
     Rectangle rr2 = new Rectangle((int)(lw + gap), 0, (int)rw, barH - 1);
     using (GraphicsPath clip = Theme.Round(rr2, 7)) {
       g.SetClip(clip);
-      Band(g, Colors, sp, n, PosRight, lw + gap, rw, 0f, barH);
+      Band(g, Colors, sp, n, PosRight, RightRing, lw + gap, rw, 0f, barH);
       g.ResetClip();
       using (Pen pen = new Pen(Theme.Line)) g.DrawPath(pen, clip);
     }
