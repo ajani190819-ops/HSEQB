@@ -427,12 +427,77 @@ public class LampEngine {
     double u = x - a;
     int n2 = (a + 1) % pc;
     a = a % pc;
+    // Hold near each colour and cross between them quickly. A plain
+    // smoothstep spends most of its time in the blend: purple to orange
+    // was 62% recognisably one of the two colours and the rest a wash of
+    // pink. Pushing w away from the middle raises that to ~85%.
     double w = u * u * (3.0 - 2.0 * u);
+    double s2 = 2.0 * w - 1.0;
+    double mag = Math.Pow(Math.Abs(s2), 1.0 / 2.4);
+    w = 0.5 + 0.5 * (s2 < 0 ? -mag : mag);
+
     double ga = gr.palGain[a], gb = gr.palGain[n2];
-    double lr = (gr.plR[a] * ga) + ((gr.plR[n2] * gb) - (gr.plR[a] * ga)) * w;
-    double lg = (gr.plG[a] * ga) + ((gr.plG[n2] * gb) - (gr.plG[a] * ga)) * w;
-    double lb = (gr.plB[a] * ga) + ((gr.plB[n2] * gb) - (gr.plB[a] * ga)) * w;
+
+    // Blend along the hue circle, not straight through linear RGB. Mixing
+    // purple and orange as RGB drags the blue channel down slowly, so the
+    // colour stays purple until blue finally dies and orange appears only
+    // at the very end - orange got 11% of the sweep. Walking the shorter
+    // way round the hue circle keeps the midpoint a real colour and shares
+    // the time evenly between the two ends.
+    double ar = gr.plR[a] * ga, ag = gr.plG[a] * ga, ab = gr.plB[a] * ga;
+    double br = gr.plR[n2] * gb, bg = gr.plG[n2] * gb, bb = gr.plB[n2] * gb;
+
+    double ha, sa, va, hb2, sb2, vb2;
+    RgbToHsv(ar, ag, ab, out ha, out sa, out va);
+    RgbToHsv(br, bg, bb, out hb2, out sb2, out vb2);
+
+    double lr, lg, lb;
+    // A greyscale or black endpoint has no meaningful hue; fall back to a
+    // straight blend rather than swinging through an arbitrary one.
+    if (sa < 0.02 || sb2 < 0.02 || va < 0.002 || vb2 < 0.002) {
+      lr = ar + (br - ar) * w;
+      lg = ag + (bg - ag) * w;
+      lb = ab + (bb - ab) * w;
+    } else {
+      double dh = hb2 - ha;
+      if (dh > 180.0) dh -= 360.0; else if (dh < -180.0) dh += 360.0;
+      HsvToRgb(ha + dh * w, sa + (sb2 - sa) * w, va + (vb2 - va) * w,
+               out lr, out lg, out lb);
+    }
     r = ToSrgb(lr); g = ToSrgb(lg); b = ToSrgb(lb);
+  }
+
+  // HSV helpers working in LINEAR light, so the hue walk happens in the
+  // same space the rest of the blending uses.
+  static void RgbToHsv(double r, double g, double b,
+                       out double h, out double s, out double v) {
+    double mx = Math.Max(r, Math.Max(g, b));
+    double mn = Math.Min(r, Math.Min(g, b));
+    double d = mx - mn;
+    v = mx;
+    s = (mx <= 0.0) ? 0.0 : d / mx;
+    if (d <= 0.0) { h = 0.0; return; }
+    if (mx == r)      h = 60.0 * (((g - b) / d) % 6.0);
+    else if (mx == g) h = 60.0 * (((b - r) / d) + 2.0);
+    else              h = 60.0 * (((r - g) / d) + 4.0);
+    if (h < 0) h += 360.0;
+  }
+
+  static void HsvToRgb(double h, double s, double v,
+                       out double r, out double g, out double b) {
+    h = h % 360.0; if (h < 0) h += 360.0;
+    if (s < 0) s = 0; else if (s > 1) s = 1;
+    if (v < 0) v = 0;
+    double c = v * s;
+    double x = c * (1.0 - Math.Abs(((h / 60.0) % 2.0) - 1.0));
+    double m = v - c;
+    if      (h <  60.0) { r = c; g = x; b = 0; }
+    else if (h < 120.0) { r = x; g = c; b = 0; }
+    else if (h < 180.0) { r = 0; g = c; b = x; }
+    else if (h < 240.0) { r = 0; g = x; b = c; }
+    else if (h < 300.0) { r = x; g = 0; b = c; }
+    else                { r = c; g = 0; b = x; }
+    r += m; g += m; b += m;
   }
 
   // Pull every group's live inbox into its active settings.
