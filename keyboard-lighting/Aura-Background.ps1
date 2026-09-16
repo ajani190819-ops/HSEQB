@@ -759,7 +759,7 @@ if ($Effect -eq 'static') {
 }
 
 Say ""
-Say ("  Running at {0} fps on a compiled thread. Ctrl+C to stop." -f $Fps) 'Green'
+Say (" Running at {0} fps on a compiled thread. Ctrl+C to stop." -f $eng.Fps) 'Green'
 Say ""
 
 $eng.Start()

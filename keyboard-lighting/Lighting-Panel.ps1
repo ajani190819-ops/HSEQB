@@ -15,7 +15,9 @@ Add-Type -AssemblyName System.Drawing
 
 # ---------------------------------------------------------------- paths
 $Here    = Split-Path -Parent $MyInvocation.MyCommand.Path
+$SelfPath = $MyInvocation.MyCommand.Path
 $Engine  = Join-Path $Here 'Aura-Background.ps1'
+$script:SkipSave = $false
 $CfgDir  = Join-Path $env:LOCALAPPDATA 'KeyboardLighting'
 $CfgFile = Join-Path $CfgDir 'panel.json'
 $TaskName = 'KeyboardLighting'
@@ -417,6 +419,18 @@ $form.Controls.Add($btnStop)
 $y += 50
 $lblStatus = New-Label '  Not running' 24 $y 400 $muted 9 $false
 
+# ---- check for updates (small, bottom right) ----
+$btnUpd = New-Object System.Windows.Forms.LinkLabel
+$btnUpd.Text          = 'Check for updates'
+$btnUpd.Location      = New-Object System.Drawing.Point(300, ($y + 1))
+$btnUpd.Size          = New-Object System.Drawing.Size(140, 20)
+$btnUpd.TextAlign     = 'MiddleRight'
+$btnUpd.Font          = New-Object System.Drawing.Font('Segoe UI', 8.5)
+$btnUpd.LinkColor     = $muted
+$btnUpd.ActiveLinkColor = $acc
+$btnUpd.Cursor        = 'Hand'
+$form.Controls.Add($btnUpd)
+
 # ---------------------------------------------------------------- wiring
 $cboEffect.Add_SelectedIndexChanged({
     $key = $cboEffect.SelectedItem
@@ -481,9 +495,59 @@ $form.Add_Shown({
     $timer.Start()
 })
 
+$btnUpd.Add_LinkClicked({
+    $btnUpd.Text = 'Checking...'
+    $form.Refresh()
+    $base  = 'https://raw.githubusercontent.com/ajani190819-ops/HSEQB/arena/01a0a5d4-hseqb/keyboard-lighting'
+    $files = @('Aura-Background.ps1','Lighting-Panel.ps1','Lighting-Panel.bat','Update.bat','Update.ps1','MyEffect.ps1','Find-Lamps.ps1')
+    $changed = @(); $failed = @()
+    try {
+        [Net.ServicePointManager]::SecurityProtocol = 'Tls12'
+        foreach ($f in $files) {
+            $dest = Join-Path $Here $f
+            $tmp  = Join-Path $env:TEMP ("kbl_" + $f)
+            try {
+                Invoke-WebRequest "$base/$f" -OutFile $tmp -UseBasicParsing -TimeoutSec 20
+                $newHash = (Get-FileHash $tmp -Algorithm SHA256).Hash
+                $oldHash = if (Test-Path $dest) { (Get-FileHash $dest -Algorithm SHA256).Hash } else { '' }
+                if ($newHash -ne $oldHash) {
+                    Copy-Item $tmp $dest -Force
+                    Unblock-File $dest
+                    $changed += $f
+                }
+                Remove-Item $tmp -Force -ErrorAction SilentlyContinue
+            } catch { $failed += $f }
+        }
+    } catch { $failed += 'connection' }
+
+    $btnUpd.Text = 'Check for updates'
+
+    if ($failed.Count -gt 0 -and $changed.Count -eq 0) {
+        [System.Windows.Forms.MessageBox]::Show(
+            "Could not reach the update server.`n`nCheck your internet connection and try again.",
+            'Update failed', 'OK', 'Warning') | Out-Null
+        return
+    }
+    if ($changed.Count -eq 0) {
+        [System.Windows.Forms.MessageBox]::Show(
+            "You already have the latest version.", 'Up to date', 'OK', 'Information') | Out-Null
+        return
+    }
+
+    $msg = "Updated:`n`n  " + ($changed -join "`n  ") +
+           "`n`nThe panel needs to restart to load the new version.`n`nRestart now?"
+    if ([System.Windows.Forms.MessageBox]::Show($msg,'Update installed','YesNo','Question') -eq 'Yes') {
+        Save-Config
+        Start-Process -FilePath 'powershell.exe' -ArgumentList @(
+            '-NoProfile','-ExecutionPolicy','Bypass','-WindowStyle','Hidden','-File',"`"$SelfPath`"")
+        $script:SkipSave = $true
+        $form.Close()
+    }
+})
+
 $form.Add_FormClosing({
     $timer.Stop()
-    Save-Config
+    if (-not $script:SkipSave) { Save-Config }
 })
 
 [void]$form.ShowDialog()
