@@ -10,17 +10,7 @@ $Here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $Base = 'https://raw.githubusercontent.com/ajani190819-ops/HSEQB/arena/01a0a5d4-hseqb/keyboard-lighting'
 
 $Files = @(
-    'Aura-Background.ps1',
-    'Lighting-Panel.ps1',
-    'Lighting-Panel.bat','Tray.ps1','Install.ps1','Install.bat','ui_controls.cs.txt','app.ico',
-    'Update.bat',
-    'Update.ps1',
-    'Check.bat',
-    'Check.ps1',
-    'MyEffect.ps1',
-    'Find-Lamps.ps1',
-    'Install-Autostart.ps1',
-    'README.md'
+    'Aura-Background.ps1','Tray.ps1','ui_controls.cs.txt','app.ico','Install.ps1','Install.bat','Check.ps1','Check.bat','Update.ps1','Update.bat','MyEffect.ps1','README.md'
 )
 
 Write-Host ''

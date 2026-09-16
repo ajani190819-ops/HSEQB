@@ -337,9 +337,7 @@ function Set-Autostart([bool]$on) {
 
 # ---------------------------------------------------------------- update
 function Invoke-SelfUpdate {
-    $files = @('Aura-Background.ps1','Lighting-Panel.ps1','Tray.ps1','Install.ps1','Install.bat',
-               'Check.ps1','Check.bat','Update.ps1','Update.bat',
-               'Lighting-Panel.bat','MyEffect.ps1','Find-Lamps.ps1','README.md','app.ico','ui_controls.cs.txt')
+    $files = @('Aura-Background.ps1','Tray.ps1','ui_controls.cs.txt','app.ico','Install.ps1','Install.bat','Check.ps1','Check.bat','Update.ps1','Update.bat','MyEffect.ps1','README.md')
     $changed = @()
     try { [Net.ServicePointManager]::SecurityProtocol = 'Tls12' } catch { }
     foreach ($f in $files) {
@@ -1044,6 +1042,14 @@ function Restart-App {
 }
 
 # ---------------------------------------------------------------- window behaviour
+# Every $script: flag the timers and handlers rely on, declared in one
+# place before anything can read it.
+$script:HintShown   = $false
+$script:UpdJob      = $null
+$script:UpdPrompted = $false
+$script:Pending     = $false
+$script:WakeAt      = 0
+
 function Show-HideHint {
     if ($script:HintShown) { return }
     $script:HintShown = $true
@@ -1115,8 +1121,7 @@ if (-not $NoUpdate) {
         param($b, $h)
         try { [Net.ServicePointManager]::SecurityProtocol = 'Tls12' } catch { }
         $hit = @()
-        foreach ($f in 'Aura-Background.ps1','Lighting-Panel.ps1','Tray.ps1','Install.ps1','Install.bat',
-                       'Check.ps1','Check.bat','Update.ps1','Update.bat','README.md','app.ico','ui_controls.cs.txt') {
+        foreach ($f in 'Aura-Background.ps1','Tray.ps1','ui_controls.cs.txt','app.ico','Install.ps1','Install.bat','Check.ps1','Check.bat','Update.ps1','Update.bat','MyEffect.ps1','README.md') {
             try {
                 $tmp = Join-Path $env:TEMP ('kblbg_' + $f)
                 Invoke-WebRequest "$b/$f" -OutFile $tmp -UseBasicParsing -TimeoutSec 20
@@ -1139,6 +1144,23 @@ Update-Status
 
 if (-not $Silent) { Show-Window }
 
+# The app must also notice a resume: if the engine died outright (rather
+# than just losing its handle) nothing else will bring the lighting back.
+# NOTE: no -Action scriptblock. That runs in its own scope, so a
+# $script: flag set inside it would never be visible here. Queue the
+# events instead and drain them from the timer, which is the same pattern
+# the engine uses for its hotkey watcher.
+$script:PowerOk = $false
+try {
+    Register-ObjectEvent -InputObject ([Microsoft.Win32.SystemEvents]) `
+        -EventName PowerModeChanged -SourceIdentifier 'TrayPower' `
+        -ErrorAction Stop | Out-Null
+    $script:PowerOk = $true
+    Log 'sleep/resume watch active'
+} catch {
+    Log 'sleep/resume watch unavailable' 'WARN'
+}
+
 $watch = New-Object System.Windows.Forms.Timer
 $watch.Interval = 500
 $script:tick = 0
@@ -1148,6 +1170,46 @@ $watch.Add_Tick({
         try { Remove-Item $ShowFile -Force -ErrorAction SilentlyContinue } catch { }
         Show-Window
     }
+    # --- came back from sleep ---
+    $woke = $false
+    if ($script:PowerOk) {
+        $pe = Get-Event -SourceIdentifier 'TrayPower' -ErrorAction SilentlyContinue
+        while ($pe) {
+            $mode = ''
+            try { $mode = [string]$pe.SourceEventArgs.Mode } catch { }
+            Remove-Event -EventIdentifier $pe.EventIdentifier -ErrorAction SilentlyContinue
+            if ($mode -eq 'Resume') { $woke = $true }
+            $pe = Get-Event -SourceIdentifier 'TrayPower' -ErrorAction SilentlyContinue
+        }
+    }
+    if ($woke) {
+        Log 'resumed from sleep'
+        # Do NOT sleep here - this runs on the UI thread and would freeze
+        # the window. Schedule the work a few ticks later instead, giving
+        # the USB stack time to re-enumerate the keyboard.
+        if ($script:WantOff) {
+            Log 'lighting was off before sleep - leaving it off'
+        } else {
+            $script:WakeAt = $script:tick + 4        # ~2 seconds
+        }
+    }
+
+    # deferred post-resume repair
+    if ($script:WakeAt -gt 0 -and $script:tick -ge $script:WakeAt) {
+        $script:WakeAt = 0
+        if (-not $script:WantOff) {
+            if (Test-EngineAlive) {
+                Write-Theme
+                Write-LiveBrightness
+                Log 'engine alive after resume - theme re-sent'
+            } else {
+                Log 'engine gone after resume - restarting'
+                [void](Start-Engine)
+            }
+            Update-Status
+        }
+    }
+
     $script:tick++
     if ($script:tick % 8 -eq 0) { Update-Status }
 
@@ -1180,6 +1242,7 @@ Log 'ready'
 [System.Windows.Forms.Application]::Run()
 
 if (-not $script:Quitting) { Stop-Engine }
+Unregister-Event -SourceIdentifier 'TrayPower' -ErrorAction SilentlyContinue
 $icon.Visible = $false
 try { Remove-Item $LockFile -Force -ErrorAction SilentlyContinue } catch { }
 Log 'exited'

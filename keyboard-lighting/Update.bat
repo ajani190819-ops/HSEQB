@@ -34,7 +34,6 @@ echo    Files are up to date.
 echo   ==============================================================
 echo.
 echo    Next: double-click  Check.bat   to run the diagnostic,
-echo          or            Lighting-Panel.bat   for the control panel.
 echo.
 pause
 exit /b 0

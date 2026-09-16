@@ -54,9 +54,7 @@ if (-not $isAdmin) {
 Step '1. Downloading the latest files'
 try { [Net.ServicePointManager]::SecurityProtocol = 'Tls12' } catch { }
 
-$files = @('Aura-Background.ps1','Lighting-Panel.ps1','Tray.ps1','Install.ps1',
-           'Check.ps1','Check.bat','Update.ps1','Update.bat',
-           'Lighting-Panel.bat','MyEffect.ps1','Find-Lamps.ps1','README.md','app.ico','ui_controls.cs.txt')
+$files = @('Aura-Background.ps1','Tray.ps1','ui_controls.cs.txt','app.ico','Install.ps1','Install.bat','Check.ps1','Check.bat','Update.ps1','Update.bat','MyEffect.ps1','README.md')
 $got = 0
 foreach ($f in $files) {
     try {

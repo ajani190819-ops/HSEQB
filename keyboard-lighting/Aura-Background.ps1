@@ -137,6 +137,13 @@ public class LampEngine {
 
   public string LastError = "";
 
+  // ---- device-loss recovery ----
+  // After sleep the USB port is power-cycled and this handle is dead.
+  // Writes then fail silently forever, so count them and rebuild.
+  public volatile bool DeviceLost = false;
+  public volatile int  Reopens = 0;
+  int failRun = 0;
+
   IntPtr h = IntPtr.Zero;
   Thread th;
   volatile bool running;
@@ -263,10 +270,50 @@ public class LampEngine {
     // Nothing moved, not even by one dithered step: skip the transfer.
     if (!changed) return;
 
+    bool allOk = true;
     for (int bi = 0; bi < nbatch; bi++) {
       byte[] b = bufs[bi];
-      HidD_SetFeature(h, b, b.Length);
+      if (!HidD_SetFeature(h, b, b.Length)) allOk = false;
     }
+
+    // One failed write is noise (a busy endpoint). A run of them means the
+    // handle is dead - almost always a resume from sleep.
+    if (allOk) { failRun = 0; }
+    else {
+      failRun++;
+      if (failRun >= 8) { DeviceLost = true; failRun = 0; }
+    }
+  }
+
+  // Rebuild the connection after the device has gone away and come back.
+  // Safe to call from the render thread.
+  public bool Reopen() {
+    try {
+      if (h != IntPtr.Zero && h != (IntPtr)(-1)) CloseHandle(h);
+    } catch { }
+    h = IntPtr.Zero;
+
+    IntPtr nh = CreateFileW(DevicePath, 0xC0000000, 3, IntPtr.Zero, 3, 0, IntPtr.Zero);
+    if (nh == (IntPtr)(-1)) nh = CreateFileW(DevicePath, 0x40000000, 3, IntPtr.Zero, 3, 0, IntPtr.Zero);
+    if (nh == (IntPtr)(-1)) { LastError = "reopen failed: " + Marshal.GetLastWin32Error(); return false; }
+    h = nh;
+
+    // The firmware reverts to autonomous mode across a power cycle, so it
+    // must be told again to hand control over.
+    if (CtrlOff != null) HidD_SetFeature(h, CtrlOff, CtrlOff.Length);
+
+    // Force a full repaint: the cached previous values no longer reflect
+    // anything the hardware is showing.
+    if (pr != null) {
+      for (int i = 0; i < LampCount; i++) { pr[i] = -1; pg[i] = -1; pb[i] = -1; }
+    }
+    if (er != null) {
+      for (int i = 0; i < LampCount; i++) { er[i] = 0; eg[i] = 0; eb[i] = 0; }
+    }
+    failRun = 0;
+    DeviceLost = false;
+    Reopens++;
+    return true;
   }
 
   static void Hsv(double hDeg, double s, double v, out double r, out double g, out double b) {
@@ -591,7 +638,21 @@ public class LampEngine {
         // Accumulate phase rather than using now*Speed: that would teleport
         // the animation every time the speed slider moved.
         phase += dt * Speed;
+
+        // Reconnect before drawing, so the very first frame after a resume
+        // already lands on the keyboard.
+        if (DeviceLost) {
+          if (!Reopen()) {
+            // Device not back yet. Wait a beat instead of hammering it.
+            Thread.Sleep(400);
+            next = sw.ElapsedTicks + per;
+            continue;
+          }
+        }
+
         Frame(phase, dt);
+        // Reopen() invalidates the previous-colour cache, so the first
+        // frame after a reconnect is a full repaint on its own.
         Push();
 
         long remain = next - sw.ElapsedTicks;
@@ -666,7 +727,7 @@ $U_IDSTART=0x61; $U_IDEND=0x62; $U_AUTONOMOUS=0x71
 # DISCOVERY  (proven working; unchanged in shape)
 # ============================================================================
 Say ""
-Say ("AURA-BACKGROUND v12   effect={0}  fps={1}  speed={2}" -f $Effect,$Fps,$Speed) 'Cyan'
+Say ("AURA-BACKGROUND v13   effect={0}  fps={1}  speed={2}" -f $Effect,$Fps,$Speed) 'Cyan'
 Say ""
 
 # A laptop exposes MANY HID collections on the same VID/PID, and more than
@@ -1248,6 +1309,22 @@ function Set-Live([int]$level) {
     try { Set-Content -Path $liveFile -Value $level -Encoding ASCII -ErrorAction SilentlyContinue } catch { }
 }
 
+# --- wake from sleep -------------------------------------------------
+# On resume the USB port has been power-cycled: the handle is dead and the
+# firmware is back in autonomous mode. The render loop notices failed
+# writes on its own, but this makes it immediate rather than ~8 frames
+# later, and covers the case where the device stops ACKing without
+# actually failing.
+$resumeOk = $false
+try {
+    Register-ObjectEvent -InputObject ([Microsoft.Win32.SystemEvents]) `
+        -EventName PowerModeChanged -SourceIdentifier 'AuraPower' `
+        -ErrorAction Stop | Out-Null
+    $resumeOk = $true
+} catch {
+    Say "  Sleep/resume watch: unavailable." 'DarkGray'
+}
+
 # --- hardware backlight keys via ASUS ATK WMI ---
 $wmiOk = $false
 try {
@@ -1262,6 +1339,24 @@ try {
 $step = 125    # 8 steps across the full range, like the firmware
 try {
     while ($true) {
+        # --- resume from sleep / display wake ---
+        if ($resumeOk) {
+            $pe = Get-Event -SourceIdentifier 'AuraPower' -ErrorAction SilentlyContinue
+            while ($pe) {
+                $mode = ''
+                try { $mode = [string]$pe.SourceEventArgs.Mode } catch { }
+                Remove-Event -EventIdentifier $pe.EventIdentifier -ErrorAction SilentlyContinue
+                if ($mode -eq 'Resume') {
+                    # Give the HID stack a moment to re-enumerate the device
+                    # before grabbing a new handle.
+                    Start-Sleep -Milliseconds 1200
+                    $eng.DeviceLost = $true
+                    $eng.LiveDirty  = $true
+                }
+                $pe = Get-Event -SourceIdentifier 'AuraPower' -ErrorAction SilentlyContinue
+            }
+        }
+
         if ($wmiOk) {
             $ev = Get-Event -SourceIdentifier 'AuraAtk' -ErrorAction SilentlyContinue
             while ($ev) {
@@ -1357,6 +1452,7 @@ try {
 }
 finally {
     Unregister-Event -SourceIdentifier 'AuraAtk' -ErrorAction SilentlyContinue
+    Unregister-Event -SourceIdentifier 'AuraPower' -ErrorAction SilentlyContinue
     Say ""
     Say "  Stopping. Handing lighting back to the keyboard firmware." 'Yellow'
     $eng.Stop()

@@ -83,15 +83,23 @@ Run it with:
 Aura-Background.ps1 -Custom MyEffect.ps1
 ```
 
+## Sleep
+
+When the laptop sleeps, Windows powers down the USB port and the keyboard
+comes back with its own default lighting. The app notices the wake, takes
+the keyboard back and re-applies your effect automatically, so you should
+not have to touch anything.
+
 ## If something goes wrong
 
 Run **Check.bat**. It re-downloads everything and prints a diagnostic;
-the banner should say **v12**. The log file is in the tray menu under
+the banner should say **v13**. The log file is in the tray menu under
 *Open log file*.
 
 ## How it works
 
 `Tray.ps1` is the application: window, tray icon, settings, updater.
+`ui_controls.cs.txt` is the interface, compiled at startup.
 `Aura-Background.ps1` is the lighting engine, a compiled C# render loop
 driving the keyboard's HID LampArray interface directly. The app talks to
 a running engine through `theme.json`, so changes apply without a
