@@ -2557,11 +2557,16 @@ if (Test-Path $zoneMapFile) {
 # two sides interleaved in the numbering. Use that unless the user has
 # saved their own order.
 if (-not $zoneOrderFromUser -and $barIdx.Count -gt 3) {
+    # One side carries the odd offsets, the other the even ones. Run up the
+    # first side, then back down the second. The lowest-numbered lamp is the
+    # LAST stop on the way back, not the first: it sits next to the start, so
+    # putting it first would make the return leg climb 4 -> 14 before
+    # descending, which is not how the strip runs.
     $sorted = @($barIdx | Sort-Object)
     $loB = $sorted[0]
     $sideA = @($sorted | Where-Object { ($_ - $loB) % 2 -eq 1 })
-    $sideB = @($sorted | Where-Object { ($_ - $loB) % 2 -eq 0 -and $_ -ne $loB } | Sort-Object -Descending)
-    $ringOrder = @(@($loB) + $sideA + $sideB)
+    $sideB = @($sorted | Where-Object { ($_ - $loB) % 2 -eq 0 } | Sort-Object -Descending)
+    $ringOrder = @($sideA + $sideB)
     if ($ringOrder.Count -eq $barIdx.Count) {
         $barIdx = New-Object System.Collections.ArrayList
         foreach ($v in $ringOrder) { [void]$barIdx.Add([int]$v) }

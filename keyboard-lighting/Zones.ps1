@@ -427,11 +427,11 @@ function Get-RingShape {
     $lo = $z[0]
     $odd  = @($z | Where-Object { ($_ - $lo) % 2 -eq 1 })
     $even = @($z | Where-Object { ($_ - $lo) % 2 -eq 0 })
-    $evenBack = @($even | Sort-Object -Descending | Where-Object { $_ -ne $lo })
+    $evenBack = @($even | Sort-Object -Descending)
     $oddBack  = @($odd  | Sort-Object -Descending)
     $half = [int][Math]::Floor($z.Count / 2)
     return [ordered]@{
-        'Up one side, back the other (most common)' = @(@($lo) + $odd + $evenBack)
+        'Up one side, back the other (most common)' = @($odd + $evenBack)
         'The other way round'                       = @($even + $oddBack)
         'Straight round in number order'            = @($z)
         'First half out, second half back'          = @($z[0..($half-1)] + @($z[$half..($z.Count-1)] | Sort-Object -Descending))
