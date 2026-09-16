@@ -870,6 +870,17 @@ public class LampEngine {
     for (int i = 0; i < gr.N; i++) SetZoneG(gr, i, 0, 0, 0);
   }
 
+  // Distance from a to b along the group. On a ring the short way round
+  // may cross the seam, so 0.95 and 0.02 are 0.07 apart, not 0.93. Without
+  // this a travelling head disappears at the seam instead of carrying on.
+  static double Gap(Zone gr, double a, double b) {
+    double d = a - b;
+    if (!gr.Loop) return d;
+    while (d > 0.5) d -= 1.0;
+    while (d < -0.5) d += 1.0;
+    return d;
+  }
+
   // Where slot i samples the effect from, 0..1 within the group.
   // Mirror folds this into a triangle so the pattern runs out from the
   // centre to both ends and is symmetric; without it this is just the
@@ -901,6 +912,12 @@ public class LampEngine {
             // 3 -> 0.42, 4 -> 0.38.
             int pcg = gr.PalR.Length; if (pcg < 1) pcg = 1;
             double span = (pcg <= 1) ? 1.0 : 1.0 / (1.0 + 0.5 * (double)pcg);
+            // A ring has no ends: the last lamp sits right next to the
+            // first, so the pattern has to close on itself. That only
+            // happens if a whole number of palette loops fits around it -
+            // any fraction leaves a visible break at the seam and the
+            // colours never appear to travel round. Use exactly one loop.
+            if (gr.Loop) span = 1.0;
             double phase = t * 0.25 * gr.Dir;
             for (int i = 0; i < gr.N; i++) {
               double r, g, b;
@@ -949,8 +966,11 @@ public class LampEngine {
             // two-colour comet visibly changes colour lap to lap and the
             // trail shades through the palette behind the head.
             for (int i = 0; i < gr.N; i++) {
+              // Distance behind the head, wrapping round the seam on a ring
+              // so the tail follows the comet all the way round.
               double d = head - PosOf(gr, i);
-              if (d < 0) d += 1.0;
+              if (gr.Loop) { while (d < 0) d += 1.0; while (d >= 1.0) d -= 1.0; }
+              else if (d < 0) d += 1.0;
               double w = Math.Exp(-d * 9.0);
               double pr2, pg2, pb2;
               GroupPal(gr, (t * 0.45 * gr.Dir) - d, out pr2, out pg2, out pb2);
@@ -961,15 +981,22 @@ public class LampEngine {
             break;
           }
           case "scanner": {
-            double p = (t * 0.55) % 2.0; if (p < 0) p += 2.0;
-            if (p > 1.0) p = 2.0 - p;           // bounce 0..1..0
+            // A ring has no ends to bounce off, so sweep continuously
+            // round it. Bouncing only makes sense on a straight run.
+            double p;
+            if (gr.Loop) {
+              p = (t * 0.55 * gr.Dir) % 1.0; if (p < 0) p += 1.0;
+            } else {
+              p = (t * 0.55) % 2.0; if (p < 0) p += 2.0;
+              if (p > 1.0) p = 2.0 - p;         // bounce 0..1..0
+            }
             // Take the colour from the palette at the sweep's position, so
             // a multi-colour scanner changes colour as it crosses instead
             // of always being colour 1.
             double sr, sg, sb;
             GroupPal(gr, t * 0.275 * gr.Dir, out sr, out sg, out sb);
             for (int i = 0; i < gr.N; i++) {
-              double w = 1.0 - (Math.Abs(PosOf(gr, i) - p) / 0.18);
+              double w = 1.0 - (Math.Abs(Gap(gr, PosOf(gr, i), p)) / 0.18);
               if (w < 0) w = 0; w = w * w;
               double cr, cg, cb;
               Fade(sr, sg, sb, w, out cr, out cg, out cb);
