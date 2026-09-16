@@ -116,14 +116,45 @@ function Get-EngineArgs {
     return $a
 }
 
+function Test-IsAdmin {
+    try {
+        $id = [Security.Principal.WindowsIdentity]::GetCurrent()
+        $pr = New-Object Security.Principal.WindowsPrincipal($id)
+        return $pr.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+    } catch { return $false }
+}
+
 function Apply-Lighting {
     Stop-Lighting
     Start-Sleep -Milliseconds 250
     try {
         $script:Running = Start-Process -FilePath 'powershell.exe' `
             -ArgumentList (Get-EngineArgs) -WindowStyle Hidden -PassThru
-        $lblStatus.Text      = '  Running'
-        $lblStatus.ForeColor = [System.Drawing.Color]::FromArgb(70,200,120)
+
+        # The engine exits immediately if it cannot open the keyboard
+        # (almost always: not running as Administrator). Give it a moment
+        # and check it is actually still alive, rather than claiming
+        # "Running" for a process that already died.
+        Start-Sleep -Milliseconds 900
+        $alive = $false
+        try { $alive = -not $script:Running.HasExited } catch { $alive = $false }
+
+        if ($alive) {
+            $lblStatus.Text      = '  Running'
+            $lblStatus.ForeColor = [System.Drawing.Color]::FromArgb(70,200,120)
+        } else {
+            $lblStatus.Text      = '  Could not control the keyboard'
+            $lblStatus.ForeColor = [System.Drawing.Color]::FromArgb(230,90,90)
+            if (-not (Test-IsAdmin)) {
+                [System.Windows.Forms.MessageBox]::Show(
+                    "The lighting engine could not open the keyboard.`n`nThis panel is not running as Administrator, which is required for direct keyboard access.`n`nClose this window, then right-click Lighting-Panel.bat and choose `"Run as administrator`".",
+                    'Administrator required','OK','Warning') | Out-Null
+            } else {
+                [System.Windows.Forms.MessageBox]::Show(
+                    "The lighting engine started but exited straight away.`n`nMost likely cause: Windows Dynamic Lighting is switched ON and is holding the keyboard.`n`nGo to Settings > Personalization > Dynamic Lighting and turn it OFF, then press Apply again.",
+                    'Could not control the keyboard','OK','Warning') | Out-Null
+            }
+        }
     } catch {
         $lblStatus.Text      = '  Failed to start'
         $lblStatus.ForeColor = [System.Drawing.Color]::FromArgb(230,90,90)
@@ -151,7 +182,7 @@ $acc   = [System.Drawing.Color]::FromArgb(0,180,255)
 
 $form = New-Object System.Windows.Forms.Form
 $form.Text            = 'Keyboard Lighting'
-$form.Size            = New-Object System.Drawing.Size(470, 560)
+$form.ClientSize      = New-Object System.Drawing.Size(462, 625)
 $form.StartPosition   = 'CenterScreen'
 $form.FormBorderStyle = 'FixedSingle'
 $form.MaximizeBox     = $false
