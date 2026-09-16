@@ -26,19 +26,52 @@ Apply button and nothing restarts while you adjust things.
 To pin it: Start menu, right-click **Keyboard Lighting**, then *Pin to
 Start* or *More > Pin to taskbar*.
 
+## The two sections
+
+Your laptop has two separate sets of lights, and this app treats them as
+two separate things:
+
+* **Keyboard** - the four zones under the keys.
+* **Light bar** - the twelve lights around the edge of the chassis.
+
+The **Keyboard / Light bar** switch near the top chooses which one you
+are editing. Everything below the switch - pattern, colours, speed,
+brightness, and the four toggles - applies only to the section that is
+selected. So you can run a slow blue breathing effect under the keys and
+a fast rainbow around the light bar at the same time.
+
+The strip at the top previews both at once: the short block on the left
+is the keyboard, the long block on the right is the light bar.
+
+* **This part is on** turns off just the section you are looking at.
+* **Match both** copies whatever you do to the other section as well.
+  Turn it on if you want them to stay identical.
+* **Master brightness** sits above the switch because it dims
+  everything. Each section also has its own brightness underneath, which
+  is applied on top of the master. The Fn brightness keys drive the
+  master.
+
 ## Controls
 
 | Control | What it does |
 |---|---|
-| Pattern | The animation: gradient, rainbow, wave, comet, scanner, breathing, pulse, fire, solid |
+| Keyboard / Light bar | Chooses which section the controls below affect |
+| This part is on | Turns the selected section off on its own |
+| Match both | Applies every change to both sections |
+| Master brightness | Dims everything. The Fn brightness keys use this |
+| Pattern | The animation. 22 of them, including music, screen mirror and meters |
 | Colours | Click a square to change it. `+` and `-` add and remove colours |
-| Speed | How fast the animation moves |
-| Brightness | Overall brightness. The Fn brightness keys also work while an effect runs |
+| Speed | How fast the animation moves in this section |
+| Brightness for this part | This section's own level, on top of the master |
 | Mirror | Mirrors the pattern around the middle |
-| Reverse direction | Runs the animation backwards |
-| Wrap around the light bar | Sends the gradient around the chassis instead of straight across |
-| Even colour brightness | Evens out how bright each colour looks, so blues are not lost next to yellows |
+| Reverse | Runs the animation backwards |
+| Wrap around | Sends the pattern around the loop instead of straight across |
+| Even brightness | Evens out how bright each colour looks, so blues are not lost next to yellows |
+| Flash the battery level | Briefly shows the battery when you plug in or unplug |
 | Start when I log in | Starts automatically with Windows |
+
+Every one of these takes effect the moment you change it. Nothing
+restarts and there is no Apply button.
 
 ## Updating
 
@@ -119,7 +152,7 @@ never have to restart anything.
 ## If something goes wrong
 
 Run **Check.bat**. It re-downloads everything and prints a diagnostic;
-the banner should say **v15**. The log file is in the tray menu under
+the banner should say **v16**. The log file is in the tray menu under
 *Open log file*.
 
 ## How it works
@@ -127,7 +160,10 @@ the banner should say **v15**. The log file is in the tray menu under
 `Tray.ps1` is the application: window, tray icon, settings, updater.
 `ui_controls.cs.txt` is the interface, compiled at startup.
 `Aura-Background.ps1` is the lighting engine, a compiled C# render loop
-driving the keyboard's HID LampArray interface directly. The app talks to
-a running engine through `theme.json`, so changes apply without a
-restart. `KeyboardLighting.exe` is a small launcher stub, compiled on
+driving the keyboard's HID LampArray interface directly. The sixteen
+lamps are split into two independent render groups - four keyboard zones
+and twelve light-bar zones - each with its own pattern, palette, speed,
+brightness and phase. The app talks to a running engine through
+`theme.json`, which carries a block per group, so every change applies
+without a restart. `KeyboardLighting.exe` is a small launcher stub, compiled on
 your machine by the C# compiler included with Windows.

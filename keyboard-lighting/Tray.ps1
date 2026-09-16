@@ -140,80 +140,107 @@ $Effects = [ordered]@{
     'Clock'                = 'clock'
 }
 
-# Which effects ignore the colour swatches, so the UI can say so.
-$NoPalette = @('rainbow','cycle','ambient','battery','cpu','clock','fire')
-# Effects that need a data source, for the status line.
+# Effects that choose their own colours, so the swatches do not apply.
+$NoPalette  = @('rainbow','cycle','ambient','battery','cpu','clock','fire')
 $NeedAudio  = @('spectrum','vumeter','beat','pulsebass')
 $NeedScreen = @('ambient')
 
-$script:Swatches = @('#FF0000','#FF7F00','#FFFF00','#00FF00','#0000FF','#8B00FF')
-$script:Cfg = [pscustomobject]@{
-    Effect     = 'Scrolling gradient'
-    Speed      = 10
-    Brightness = 100
-    Mirror     = $false
-    Reverse    = $false
-    Equalise   = $true
-    Loop       = $true
-    Overlay    = $true
+# ---- two independently controlled groups ----------------------------
+function New-GroupCfg {
+    param([string]$Effect, $Swatches, [bool]$Loop)
+    return [pscustomobject]@{
+        On         = $true
+        Effect     = $Effect
+        Speed      = 10
+        Brightness = 100
+        Mirror     = $false
+        Reverse    = $false
+        Equalise   = $true
+        Loop       = $Loop
+        Swatches   = [string[]]@($Swatches)
+    }
 }
-$script:Suppress  = $true    # no live updates until the window has loaded
-$script:Quitting  = $false
-$script:WantOff   = $false
-$script:EngineP   = $null
-$script:PalGain   = @()
-$script:phase     = 0.0
+
+$script:Cfg = [pscustomobject]@{
+    Brightness = 100          # master; this is what the Fn keys drive
+    Overlay    = $true
+    Link       = $false       # copy keyboard changes onto the bar
+    Kbd = New-GroupCfg 'Scrolling gradient' @('#FF0000','#FF7F00','#FFFF00','#00FF00','#0000FF','#8B00FF') $false
+    Bar = New-GroupCfg 'Rainbow'            @('#00B4FF','#FF0066')                                         $true
+}
+
+$script:Tab = 'Kbd'
+function Cur { if ($script:Tab -eq 'Bar') { return $script:Cfg.Bar } return $script:Cfg.Kbd }
 
 function Load-Cfg {
     if (-not (Test-Path $CfgFile)) { return }
     try {
         $o = Get-Content $CfgFile -Raw | ConvertFrom-Json
-        if ($o.Swatches) { $script:Swatches = @($o.Swatches) }
-        foreach ($p in 'Effect','Speed','Brightness','Mirror','Reverse','Equalise','Loop','Overlay') {
+        foreach ($p in 'Brightness','Overlay','Link') {
             if ($null -ne $o.$p) { $script:Cfg.$p = $o.$p }
+        }
+        # Files written before the split had one flat set of values; load
+        # them into the keyboard group so nothing is lost.
+        if ($null -eq $o.Kbd -and $null -ne $o.Effect) {
+            $g = $script:Cfg.Kbd
+            foreach ($p in 'Effect','Speed','Mirror','Reverse','Equalise','Loop') {
+                if ($null -ne $o.$p) { $g.$p = $o.$p }
+            }
+            if ($o.Swatches) { $g.Swatches = [string[]]@($o.Swatches) }
+            Log 'settings migrated from the old single-zone format'
+            return
+        }
+        foreach ($nm in 'Kbd','Bar') {
+            $src = $o.$nm
+            if (-not $src) { continue }
+            $g = $script:Cfg.$nm
+            foreach ($p in 'On','Effect','Speed','Brightness','Mirror','Reverse','Equalise','Loop') {
+                if ($null -ne $src.$p) { $g.$p = $src.$p }
+            }
+            if ($src.Swatches) { $g.Swatches = [string[]]@($src.Swatches) }
         }
         Log 'settings loaded'
     } catch { Log ("settings load failed: {0}" -f $_.Exception.Message) 'WARN' }
 }
+
 Load-Cfg
 
 function Save-Cfg {
-    $o = [pscustomobject]@{
-        Effect     = $script:Cfg.Effect
-        Swatches   = $script:Swatches
-        Speed      = $script:Cfg.Speed
-        Brightness = $script:Cfg.Brightness
-        Mirror     = $script:Cfg.Mirror
-        Reverse    = $script:Cfg.Reverse
-        Equalise   = $script:Cfg.Equalise
-        Loop       = $script:Cfg.Loop
-    }
-    try { $o | ConvertTo-Json -Depth 4 | Set-Content -Path $CfgFile -Encoding UTF8 } catch { }
+    try {
+        $script:Cfg | ConvertTo-Json -Depth 6 | Set-Content -Path $CfgFile -Encoding UTF8 -ErrorAction Stop
+    } catch { Log ("settings save failed: {0}" -f $_.Exception.Message) 'WARN' }
 }
 
-# ---------------------------------------------------------------- engine
 function Get-EffectToken {
-    $t = $Effects[[string]$script:Cfg.Effect]
+    param($g)
+    if (-not $g) { $g = Cur }
+    $t = $Effects[[string]$g.Effect]
     if (-not $t) { $t = 'gradient' }
     return $t
 }
 
-# Send the current settings to a running engine. It picks them up within
-# about a tenth of a second, so the keyboard follows the controls live
-# instead of being restarted.
-function Write-Theme {
-    $inv = [System.Globalization.CultureInfo]::InvariantCulture
-    $o = [pscustomobject]@{
-        Effect     = Get-EffectToken
-        Colors     = ($script:Swatches -join ',')
-        Speed      = [double]$script:Cfg.Speed / 10.0
-        Brightness = [double]$script:Cfg.Brightness / 100.0
-        Mirror     = [bool]$script:Cfg.Mirror
-        Reverse    = [bool]$script:Cfg.Reverse
-        Equalise   = [bool]$script:Cfg.Equalise
-        Loop       = [bool]$script:Cfg.Loop
+function New-ThemeBlock {
+    param($g)
+    return [pscustomobject]@{
+        On         = [bool]$g.On
+        Effect     = (Get-EffectToken $g)
+        Colors     = ($g.Swatches -join ',')
+        Speed      = [double]$g.Speed / 10.0
+        Brightness = [double]$g.Brightness / 100.0
+        Mirror     = [bool]$g.Mirror
+        Reverse    = [bool]$g.Reverse
+        Equalise   = [bool]$g.Equalise
+        Loop       = [bool]$g.Loop
     }
-    try { $o | ConvertTo-Json -Depth 4 | Set-Content -Path $ThemeFile -Encoding UTF8 -ErrorAction SilentlyContinue } catch { }
+}
+
+function Write-Theme {
+    $o = [pscustomobject]@{
+        Brightness = [double]$script:Cfg.Brightness / 100.0
+        Kbd        = (New-ThemeBlock $script:Cfg.Kbd)
+        Bar        = (New-ThemeBlock $script:Cfg.Bar)
+    }
+    try { $o | ConvertTo-Json -Depth 5 | Set-Content -Path $ThemeFile -Encoding UTF8 -ErrorAction SilentlyContinue } catch { }
 }
 
 function Write-LiveBrightness {
@@ -248,32 +275,55 @@ function Start-Engine {
     if (-not (Test-Path $Engine)) { Log 'engine script missing' 'ERROR'; return $false }
 
     $inv = [System.Globalization.CultureInfo]::InvariantCulture
-    $eff = Get-EffectToken
-    $spd = ([double]$script:Cfg.Speed / 10.0).ToString('0.##', $inv)
-    $brt = ([double]$script:Cfg.Brightness / 100.0).ToString('0.##', $inv)
-    $lay = 'across'
-    if ($script:Cfg.Loop) { $lay = 'loop' }
-    $eqv = 'off'
-    if ($script:Cfg.Equalise) { $eqv = 'on' }
+    $k  = $script:Cfg.Kbd
+    $bg = $script:Cfg.Bar
+    $mB = [double]$script:Cfg.Brightness / 100.0
+
+    $kEff = Get-EffectToken $k
+    $bEff = Get-EffectToken $bg
+    $kSpd = ([double]$k.Speed  / 10.0).ToString('0.##', $inv)
+    $bSpd = ([double]$bg.Speed / 10.0).ToString('0.##', $inv)
+    $kBrt = ([double]$k.Brightness  / 100.0).ToString('0.###', $inv)
+    $bBrt = ([double]$bg.Brightness / 100.0).ToString('0.###', $inv)
+    $mStr = $mB.ToString('0.###', $inv)
+    $kLay = 'across'; if ($k.Loop)  { $kLay = 'loop' }
+    $bLay = 'across'; if ($bg.Loop) { $bLay = 'loop' }
+    $kEq  = 'off';    if ($k.Equalise)  { $kEq = 'on' }
+    $bEq  = 'off';    if ($bg.Equalise) { $bEq = 'on' }
 
     $sb = New-Object System.Text.StringBuilder
     [void]$sb.Append('-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "')
     [void]$sb.Append($Engine)
-    [void]$sb.Append('" -Effect ');     [void]$sb.Append($eff)
-    [void]$sb.Append(' -Speed ');       [void]$sb.Append($spd)
-    [void]$sb.Append(' -Brightness ');  [void]$sb.Append($brt)
+    [void]$sb.Append('" -Effect ');     [void]$sb.Append($kEff)
+    [void]$sb.Append(' -Speed ');       [void]$sb.Append($kSpd)
+    [void]$sb.Append(' -Brightness ');  [void]$sb.Append($kBrt)
+    [void]$sb.Append(' -Master ');      [void]$sb.Append($mStr)
     [void]$sb.Append(' -Fps 60 -Quiet')
-    if ($script:Swatches.Count -gt 0) {
-        [void]$sb.Append(' -Colors "'); [void]$sb.Append(($script:Swatches -join ',')); [void]$sb.Append('"')
-        [void]$sb.Append(' -Color "');  [void]$sb.Append($script:Swatches[0]); [void]$sb.Append('"')
-        if ($script:Swatches.Count -gt 1) {
-            [void]$sb.Append(' -Color2 "'); [void]$sb.Append($script:Swatches[1]); [void]$sb.Append('"')
+    if ($k.Swatches.Count -gt 0) {
+        [void]$sb.Append(' -Colors "'); [void]$sb.Append(($k.Swatches -join ',')); [void]$sb.Append('"')
+        [void]$sb.Append(' -Color "');  [void]$sb.Append($k.Swatches[0]); [void]$sb.Append('"')
+        if ($k.Swatches.Count -gt 1) {
+            [void]$sb.Append(' -Color2 "'); [void]$sb.Append($k.Swatches[1]); [void]$sb.Append('"')
         }
     }
-    if ($script:Cfg.Mirror)  { [void]$sb.Append(' -Mirror') }
-    if ($script:Cfg.Reverse) { [void]$sb.Append(' -Reverse') }
-    [void]$sb.Append(' -Equalise '); [void]$sb.Append($eqv)
-    [void]$sb.Append(' -Layout ');   [void]$sb.Append($lay)
+    if ($k.Mirror)  { [void]$sb.Append(' -Mirror') }
+    if ($k.Reverse) { [void]$sb.Append(' -Reverse') }
+    [void]$sb.Append(' -Equalise '); [void]$sb.Append($kEq)
+    [void]$sb.Append(' -Layout ');   [void]$sb.Append($kLay)
+    if (-not $k.On) { [void]$sb.Append(' -KbdOff') }
+
+    # ---- light bar ----
+    [void]$sb.Append(' -BarEffect ');     [void]$sb.Append($bEff)
+    [void]$sb.Append(' -BarSpeed ');      [void]$sb.Append($bSpd)
+    [void]$sb.Append(' -BarBrightness '); [void]$sb.Append($bBrt)
+    if ($bg.Swatches.Count -gt 0) {
+        [void]$sb.Append(' -BarColors "'); [void]$sb.Append(($bg.Swatches -join ',')); [void]$sb.Append('"')
+    }
+    if ($bg.Mirror)  { [void]$sb.Append(' -BarMirror') }
+    if ($bg.Reverse) { [void]$sb.Append(' -BarReverse') }
+    [void]$sb.Append(' -BarEqualise '); [void]$sb.Append($bEq)
+    [void]$sb.Append(' -BarLayout ');   [void]$sb.Append($bLay)
+    if (-not $bg.On) { [void]$sb.Append(' -BarOff') }
     if ($script:Cfg.Overlay) { [void]$sb.Append(' -OverlayOn') }
 
     # Keep the live files consistent with what we are about to launch, so a
@@ -293,11 +343,11 @@ function Start-Engine {
         $script:WantOff = $false
         Start-Sleep -Milliseconds 900
         if ($script:EngineP.HasExited) {
-            Log ("engine exited immediately (effect={0})" -f $eff) 'ERROR'
+            Log ("engine exited immediately (kbd={0} bar={1})" -f $kEff,$bEff) 'ERROR'
             $script:EngineP = $null
             return $false
         }
-        Log ("engine started: effect={0} speed={1} bright={2} layout={3}" -f $eff,$spd,$brt,$lay)
+        Log ("engine started: kbd={0}/{1} bar={2}/{3} master={4}%" -f $kEff,$kLay,$bEff,$bLay,$script:Cfg.Brightness)
         return $true
     } catch {
         Log ("engine start failed: {0}" -f $_.Exception.Message) 'ERROR'
@@ -409,9 +459,8 @@ if (-not $script:CustomUi) {
     return
 }
 
-# ---------------------------------------------------------------- DPI
 # Without this the whole window is bitmap-stretched on a high-DPI laptop
-# and every edge looks soft. Must be called before any window exists.
+# and every edge looks soft. Must happen before any window exists.
 try { [KbLight.Dpi]::Enable() } catch { }
 
 # ---------------------------------------------------------------- icon
@@ -468,23 +517,20 @@ $form.Icon            = $AppIcon
 $form.ShowInTaskbar   = $true
 $form.KeyPreview      = $true
 # Must be set before any control is added, and the handle must NOT be
-# touched before then: WinForms scales at handle-creation time, so forcing
-# the handle early would leave every later control unscaled.
+# touched before then: WinForms scales at handle-creation time.
 $form.AutoScaleDimensions = New-Object System.Drawing.SizeF(96, 96)
 $form.AutoScaleMode       = 'Dpi'
 $form.ClientSize          = New-Object System.Drawing.Size(478, 700)
 
-# ---- title bar ----
 $bar = New-Object KbLight.TitleBar $form
 $bar.Text = 'Keyboard Lighting'
 $bar.Font = $fontBd
 try { $bar.Logo = $AppIcon.ToBitmap() } catch { }
 $form.Controls.Add($bar)
 
-# ---- scrollable body ----
 $body = New-Object System.Windows.Forms.Panel
-$body.Dock      = 'Fill'
-$body.BackColor = $Bg
+$body.Dock       = 'Fill'
+$body.BackColor  = $Bg
 $body.AutoScroll = $true
 $form.Controls.Add($body)
 $body.BringToFront()
@@ -501,21 +547,20 @@ function New-Head($text, $x, $y, $w) {
     return $l
 }
 
-$M  = 20          # outer margin
-$CW = 438         # card width
-$IW = 406         # inner width
+$M  = 20
+$CW = 438
+$IW = 406
+$y  = 12
 
-$y = 12
-
-# ================================================================ hero
+# ================================================================ hero + live preview
 $cardTop = New-Object KbLight.Card
 $cardTop.Location = New-Object System.Drawing.Point($M, $y)
-$cardTop.Size     = New-Object System.Drawing.Size($CW, 66)
+$cardTop.Size     = New-Object System.Drawing.Size($CW, 106)
 $body.Controls.Add($cardTop)
 
 $lblTitle = New-Object System.Windows.Forms.Label
 $lblTitle.Text      = 'ROG Strix G16'
-$lblTitle.Location  = New-Object System.Drawing.Point(16, 12)
+$lblTitle.Location  = New-Object System.Drawing.Point(16, 8)
 $lblTitle.Size      = New-Object System.Drawing.Size(280, 26)
 $lblTitle.ForeColor = $Txt
 $lblTitle.Font      = $fontH1
@@ -524,8 +569,8 @@ $cardTop.Controls.Add($lblTitle)
 
 $dot = New-Object System.Windows.Forms.Label
 $dot.Text      = [char]0x25CF
-$dot.Location  = New-Object System.Drawing.Point(16, 42)
-$dot.Size      = New-Object System.Drawing.Size(14, 18)
+$dot.Location  = New-Object System.Drawing.Point(16, 36)
+$dot.Size      = New-Object System.Drawing.Size(14, 16)
 $dot.Font      = $fontSm
 $dot.ForeColor = $T::Good
 $dot.BackColor = [System.Drawing.Color]::Transparent
@@ -533,18 +578,85 @@ $cardTop.Controls.Add($dot)
 
 $lblStatus = New-Object System.Windows.Forms.Label
 $lblStatus.Text      = 'Starting'
-$lblStatus.Location  = New-Object System.Drawing.Point(32, 42)
-$lblStatus.Size      = New-Object System.Drawing.Size(390, 18)
+$lblStatus.Location  = New-Object System.Drawing.Point(32, 36)
+$lblStatus.Size      = New-Object System.Drawing.Size(390, 16)
 $lblStatus.ForeColor = $Mut
 $lblStatus.Font      = $fontSm
 $lblStatus.BackColor = [System.Drawing.Color]::Transparent
 $cardTop.Controls.Add($lblStatus)
 
-$y += 66 + 12
+# Live preview of both groups: 4 keyboard cells then 12 light-bar cells.
+$pbPreview = New-Object KbLight.Preview
+$pbPreview.Location = New-Object System.Drawing.Point(16, 56)
+$pbPreview.Size     = New-Object System.Drawing.Size($IW, 40)
+$pbPreview.Split    = 4          # 4 keyboard cells, then the 12 light-bar cells
+$cardTop.Controls.Add($pbPreview)
+
+$y += 106 + 14
+
+# ================================================================ master brightness
+$cardMaster = New-Object KbLight.Card
+$cardMaster.Location = New-Object System.Drawing.Point($M, $y)
+$cardMaster.Size     = New-Object System.Drawing.Size($CW, 68)
+$body.Controls.Add($cardMaster)
+
+$lblMB = New-Object System.Windows.Forms.Label
+$lblMB.Text      = 'MASTER BRIGHTNESS'
+$lblMB.Location  = New-Object System.Drawing.Point(16, 12)
+$lblMB.Size      = New-Object System.Drawing.Size(240, 16)
+$lblMB.ForeColor = $Mut
+$lblMB.Font      = $fontLb
+$lblMB.BackColor = [System.Drawing.Color]::Transparent
+$cardMaster.Controls.Add($lblMB)
+
+$valMB = New-Object System.Windows.Forms.Label
+$valMB.Text      = '100%'
+$valMB.Location  = New-Object System.Drawing.Point(($CW - 86), 12)
+$valMB.Size      = New-Object System.Drawing.Size(70, 16)
+$valMB.ForeColor = $T::Accent
+$valMB.Font      = $fontVal
+$valMB.TextAlign = 'TopRight'
+$valMB.BackColor = [System.Drawing.Color]::Transparent
+$cardMaster.Controls.Add($valMB)
+
+$trkMaster = New-Object KbLight.Slider
+$trkMaster.Location = New-Object System.Drawing.Point(16, 32)
+$trkMaster.Size     = New-Object System.Drawing.Size($IW, 28)
+$trkMaster.Minimum  = 5
+$trkMaster.Maximum  = 100
+$trkMaster.Value    = 100
+$cardMaster.Controls.Add($trkMaster)
+
+$y += 68 + 16
+
+# ================================================================ which part am I editing
+$tabs = New-Object KbLight.Tabs
+$tabs.Location = New-Object System.Drawing.Point($M, $y)
+$tabs.Size     = New-Object System.Drawing.Size($CW, 36)
+$tabs.Font     = $fontBd
+[void]$tabs.Items.Add('Keyboard')
+[void]$tabs.Items.Add('Light bar')
+$body.Controls.Add($tabs)
+$y += 36 + 8
+
+$chkOn = New-Object KbLight.Toggle
+$chkOn.Text     = 'This part is on'
+$chkOn.Location = New-Object System.Drawing.Point(($M + 4), $y)
+$chkOn.Size     = New-Object System.Drawing.Size(200, 26)
+$chkOn.Font     = $fontSm
+$body.Controls.Add($chkOn)
+
+$chkLink = New-Object KbLight.Toggle
+$chkLink.Text     = 'Match both'
+$chkLink.Location = New-Object System.Drawing.Point(($M + 232), $y)
+$chkLink.Size     = New-Object System.Drawing.Size(206, 26)
+$chkLink.Font     = $fontSm
+$body.Controls.Add($chkLink)
+$y += 26 + 12
 
 # ================================================================ pattern
 New-Head 'PATTERN' $M $y 200 | Out-Null
-$y += 22
+$y += 20
 $cboEffect = New-Object KbLight.Picker
 $cboEffect.Location = New-Object System.Drawing.Point($M, $y)
 $cboEffect.Size     = New-Object System.Drawing.Size($CW, 40)
@@ -552,56 +664,47 @@ $cboEffect.Font     = $fontBd
 foreach ($k in $Effects.Keys) { [void]$cboEffect.Items.Add($k) }
 $cboEffect.SetQuiet(0)
 $body.Controls.Add($cboEffect)
-$y += 40 + 4
+$y += 40 + 3
 
 $lblEffInfo = New-Object System.Windows.Forms.Label
 $lblEffInfo.Text      = ''
 $lblEffInfo.Location  = New-Object System.Drawing.Point(($M + 2), $y)
-$lblEffInfo.Size      = New-Object System.Drawing.Size($CW, 16)
+$lblEffInfo.Size      = New-Object System.Drawing.Size($CW, 15)
 $lblEffInfo.ForeColor = [System.Drawing.Color]::FromArgb(96,102,122)
 $lblEffInfo.Font      = $fontSm
 $lblEffInfo.BackColor = [System.Drawing.Color]::Transparent
 $body.Controls.Add($lblEffInfo)
-$y += 16 + 8
+$y += 15 + 9
 
 # ================================================================ colours
 New-Head 'COLOURS' $M $y 200 | Out-Null
 $lblColHint = New-Object System.Windows.Forms.Label
 $lblColHint.Text      = 'click to change'
 $lblColHint.Location  = New-Object System.Drawing.Point(($M + 90), $y)
-$lblColHint.Size      = New-Object System.Drawing.Size(200, 18)
+$lblColHint.Size      = New-Object System.Drawing.Size(240, 16)
 $lblColHint.ForeColor = [System.Drawing.Color]::FromArgb(96,102,122)
 $lblColHint.Font      = $fontSm
 $lblColHint.BackColor = [System.Drawing.Color]::Transparent
 $body.Controls.Add($lblColHint)
-$y += 22
+$y += 20
 
 $pnlCol = New-Object System.Windows.Forms.Panel
 $pnlCol.Location  = New-Object System.Drawing.Point($M, $y)
-$pnlCol.Size      = New-Object System.Drawing.Size($CW, 46)
+$pnlCol.Size      = New-Object System.Drawing.Size($CW, 44)
 $pnlCol.BackColor = [System.Drawing.Color]::Transparent
 $body.Controls.Add($pnlCol)
-$y += 46 + 14
+$y += 44 + 12
 
-# ================================================================ preview
-New-Head 'PREVIEW' $M $y 200 | Out-Null
-$y += 22
-$pbPreview = New-Object KbLight.Preview
-$pbPreview.Location = New-Object System.Drawing.Point($M, $y)
-$pbPreview.Size     = New-Object System.Drawing.Size($CW, 44)
-$body.Controls.Add($pbPreview)
-$y += 44 + 16
-
-# ================================================================ sliders
+# ================================================================ speed + zone brightness
 $cardSl = New-Object KbLight.Card
 $cardSl.Location = New-Object System.Drawing.Point($M, $y)
-$cardSl.Size     = New-Object System.Drawing.Size($CW, 132)
+$cardSl.Size     = New-Object System.Drawing.Size($CW, 112)
 $body.Controls.Add($cardSl)
 
 $lblSpeed = New-Object System.Windows.Forms.Label
 $lblSpeed.Text      = 'SPEED'
-$lblSpeed.Location  = New-Object System.Drawing.Point(16, 14)
-$lblSpeed.Size      = New-Object System.Drawing.Size(200, 18)
+$lblSpeed.Location  = New-Object System.Drawing.Point(16, 10)
+$lblSpeed.Size      = New-Object System.Drawing.Size(200, 16)
 $lblSpeed.ForeColor = $Mut
 $lblSpeed.Font      = $fontLb
 $lblSpeed.BackColor = [System.Drawing.Color]::Transparent
@@ -609,8 +712,8 @@ $cardSl.Controls.Add($lblSpeed)
 
 $valSpeed = New-Object System.Windows.Forms.Label
 $valSpeed.Text      = '1.0x'
-$valSpeed.Location  = New-Object System.Drawing.Point(($CW - 86), 14)
-$valSpeed.Size      = New-Object System.Drawing.Size(70, 18)
+$valSpeed.Location  = New-Object System.Drawing.Point(($CW - 86), 10)
+$valSpeed.Size      = New-Object System.Drawing.Size(70, 16)
 $valSpeed.ForeColor = $T::Accent
 $valSpeed.Font      = $fontVal
 $valSpeed.TextAlign = 'TopRight'
@@ -618,7 +721,7 @@ $valSpeed.BackColor = [System.Drawing.Color]::Transparent
 $cardSl.Controls.Add($valSpeed)
 
 $trkSpeed = New-Object KbLight.Slider
-$trkSpeed.Location = New-Object System.Drawing.Point(16, 36)
+$trkSpeed.Location = New-Object System.Drawing.Point(16, 28)
 $trkSpeed.Size     = New-Object System.Drawing.Size($IW, 28)
 $trkSpeed.Minimum  = 1
 $trkSpeed.Maximum  = 50
@@ -626,9 +729,9 @@ $trkSpeed.Value    = 10
 $cardSl.Controls.Add($trkSpeed)
 
 $lblBright = New-Object System.Windows.Forms.Label
-$lblBright.Text      = 'BRIGHTNESS'
-$lblBright.Location  = New-Object System.Drawing.Point(16, 74)
-$lblBright.Size      = New-Object System.Drawing.Size(200, 18)
+$lblBright.Text      = 'BRIGHTNESS FOR THIS PART'
+$lblBright.Location  = New-Object System.Drawing.Point(16, 62)
+$lblBright.Size      = New-Object System.Drawing.Size(240, 16)
 $lblBright.ForeColor = $Mut
 $lblBright.Font      = $fontLb
 $lblBright.BackColor = [System.Drawing.Color]::Transparent
@@ -636,8 +739,8 @@ $cardSl.Controls.Add($lblBright)
 
 $valBright = New-Object System.Windows.Forms.Label
 $valBright.Text      = '100%'
-$valBright.Location  = New-Object System.Drawing.Point(($CW - 86), 74)
-$valBright.Size      = New-Object System.Drawing.Size(70, 18)
+$valBright.Location  = New-Object System.Drawing.Point(($CW - 86), 62)
+$valBright.Size      = New-Object System.Drawing.Size(70, 16)
 $valBright.ForeColor = $T::Accent
 $valBright.Font      = $fontVal
 $valBright.TextAlign = 'TopRight'
@@ -645,19 +748,19 @@ $valBright.BackColor = [System.Drawing.Color]::Transparent
 $cardSl.Controls.Add($valBright)
 
 $trkBright = New-Object KbLight.Slider
-$trkBright.Location = New-Object System.Drawing.Point(16, 96)
+$trkBright.Location = New-Object System.Drawing.Point(16, 80)
 $trkBright.Size     = New-Object System.Drawing.Size($IW, 28)
 $trkBright.Minimum  = 5
 $trkBright.Maximum  = 100
 $trkBright.Value    = 100
 $cardSl.Controls.Add($trkBright)
 
-$y += 132 + 16
+$y += 112 + 14
 
-# ================================================================ options
+# ================================================================ options for this part
 $cardOp = New-Object KbLight.Card
 $cardOp.Location = New-Object System.Drawing.Point($M, $y)
-$cardOp.Size     = New-Object System.Drawing.Size($CW, 154)
+$cardOp.Size     = New-Object System.Drawing.Size($CW, 78)
 $body.Controls.Add($cardOp)
 
 function New-Toggle($text, $xx, $yy, $ww) {
@@ -669,19 +772,32 @@ function New-Toggle($text, $xx, $yy, $ww) {
     $cardOp.Controls.Add($t)
     return $t
 }
-# Two columns: the short labels do not need the full card width, and this
-# keeps the window short enough for a laptop screen.
 $colL = 16
 $colR = 224
 $colW = 198
-$chkLoop    = New-Toggle 'Wrap light bar'      $colL  14 $colW
-$chkEq       = New-Toggle 'Even brightness'    $colR  14 $colW
-$chkMirror  = New-Toggle 'Mirror'              $colL  48 $colW
-$chkReverse = New-Toggle 'Reverse'             $colR  48 $colW
-$chkAuto    = New-Toggle 'Start when I log in' $colL  82 ($colW + 180)
-$chkOverlay = New-Toggle 'Flash battery on plug / unplug' $colL 116 ($colW + 180)
+$chkLoop    = New-Toggle 'Wrap around'     $colL 12 $colW
+$chkEq      = New-Toggle 'Even brightness' $colR 12 $colW
+$chkMirror  = New-Toggle 'Mirror'          $colL 44 $colW
+$chkReverse = New-Toggle 'Reverse'         $colR 44 $colW
 
-$y += 154 + 16
+$y += 78 + 14
+
+# ================================================================ whole-app options
+$chkOverlay = New-Object KbLight.Toggle
+$chkOverlay.Text     = 'Flash the battery level when the charger changes'
+$chkOverlay.Location = New-Object System.Drawing.Point(($M + 4), $y)
+$chkOverlay.Size     = New-Object System.Drawing.Size($CW, 26)
+$chkOverlay.Font     = $fontBd
+$body.Controls.Add($chkOverlay)
+$y += 26 + 4
+
+$chkAuto = New-Object KbLight.Toggle
+$chkAuto.Text     = 'Start when I log in'
+$chkAuto.Location = New-Object System.Drawing.Point(($M + 4), $y)
+$chkAuto.Size     = New-Object System.Drawing.Size($CW, 26)
+$chkAuto.Font     = $fontBd
+$body.Controls.Add($chkAuto)
+$y += 26 + 14
 
 # ================================================================ buttons
 $btnOff = New-Object KbLight.FlatBtn
@@ -698,23 +814,31 @@ $btnHide.Location = New-Object System.Drawing.Point(($M + 226), $y)
 $btnHide.Size     = New-Object System.Drawing.Size(212, 40)
 $btnHide.Font     = $fontBd
 $body.Controls.Add($btnHide)
-
-$y += 40 + 12
+$y += 40 + 10
 
 $lblHint = New-Object System.Windows.Forms.Label
-$lblHint.Text      = 'Changes apply to the keyboard as you make them.'
+$lblHint.Text      = 'Every change takes effect straight away.'
 $lblHint.Location  = New-Object System.Drawing.Point($M, $y)
-$lblHint.Size      = New-Object System.Drawing.Size($CW, 18)
+$lblHint.Size      = New-Object System.Drawing.Size($CW, 16)
 $lblHint.ForeColor = [System.Drawing.Color]::FromArgb(96,102,122)
 $lblHint.Font      = $fontSm
 $lblHint.TextAlign = 'TopCenter'
 $lblHint.BackColor = [System.Drawing.Color]::Transparent
 $body.Controls.Add($lblHint)
+$y += 16 + 12
 
-$y += 26
-$form.ClientSize = New-Object System.Drawing.Size(478, ($bar.Height + $y))
+# Size to the content, but never taller than the screen will hold. The
+# body scrolls if a small display cannot fit it.
+$wantH = $bar.Height + $y
+$maxH  = 900
+try {
+    $wa = [System.Windows.Forms.Screen]::PrimaryScreen.WorkingArea.Height
+    $maxH = [int]($wa * 0.92)
+} catch { }
+if ($wantH -gt $maxH) { $wantH = $maxH }
+$form.ClientSize = New-Object System.Drawing.Size(478, $wantH)
 
-# ---------------------------------------------------------------- preview maths
+# ---------------------------------------------------------------- colour maths
 function Lin([double]$v) {
     $c = $v / 255.0
     if ($c -le 0.04045) { return $c / 12.92 }
@@ -729,59 +853,76 @@ function Srgb([double]$l) {
 function Luma([double]$lr, [double]$lg, [double]$lb) {
     return 0.2126*$lr + 0.7152*$lg + 0.0722*$lb
 }
-function Update-PalGain($pal) {
+function Get-PalGain($pal, [bool]$equalise) {
     $n = $pal.Count
     $g = New-Object double[] $n
     for ($i=0; $i -lt $n; $i++) { $g[$i] = 1.0 }
-    if ($chkEq -and $chkEq.Checked -and $n -gt 0) {
-        $logSum = 0.0; $cnt = 0
-        for ($i=0; $i -lt $n; $i++) {
-            $L = Luma (Lin $pal[$i].R) (Lin $pal[$i].G) (Lin $pal[$i].B)
-            if ($L -gt 0.0005) { $logSum += [Math]::Log($L); $cnt++ }
-        }
-        if ($cnt -gt 0) {
-            $target = [Math]::Exp($logSum / $cnt)
-            for ($i=0; $i -lt $n; $i++) {
-                $lr = Lin $pal[$i].R; $lg = Lin $pal[$i].G; $lb = Lin $pal[$i].B
-                $L = Luma $lr $lg $lb
-                if ($L -le 0.0005) { continue }
-                $gain = [Math]::Pow(($target / $L), 0.5)
-                $peak = [Math]::Max($lr, [Math]::Max($lg, $lb))
-                if ($peak -gt 0 -and ($gain * $peak) -gt 1.0) { $gain = 1.0 / $peak }
-                if ($gain -lt 0.25) { $gain = 0.25 }
-                if ($gain -gt 4.00) { $gain = 4.00 }
-                $g[$i] = $gain
-            }
-        }
+    if (-not $equalise -or $n -eq 0) { return $g }
+    $logSum = 0.0; $cnt = 0
+    for ($i=0; $i -lt $n; $i++) {
+        $L = Luma (Lin $pal[$i].R) (Lin $pal[$i].G) (Lin $pal[$i].B)
+        if ($L -gt 0.0005) { $logSum += [Math]::Log($L); $cnt++ }
     }
-    $script:PalGain = $g
+    if ($cnt -eq 0) { return $g }
+    $target = [Math]::Exp($logSum / $cnt)
+    for ($i=0; $i -lt $n; $i++) {
+        $lr = Lin $pal[$i].R; $lg = Lin $pal[$i].G; $lb = Lin $pal[$i].B
+        $L = Luma $lr $lg $lb
+        if ($L -le 0.0005) { continue }
+        $gain = [Math]::Pow(($target / $L), 0.5)
+        $peak = [Math]::Max($lr, [Math]::Max($lg, $lb))
+        if ($peak -gt 0 -and ($gain * $peak) -gt 1.0) { $gain = 1.0 / $peak }
+        if ($gain -lt 0.25) { $gain = 0.25 }
+        if ($gain -gt 4.00) { $gain = 4.00 }
+        $g[$i] = $gain
+    }
+    return $g
 }
 
-# Work out the 16 preview colours and hand them to the control to draw.
-function Update-Preview {
+# Build the colours for one group across n cells.
+function Get-GroupStrip {
+    param($grp, [int]$n, [double]$phase)
+    $out = New-Object 'System.Drawing.Color[]' $n
+    if (-not $grp.On) {
+        for ($i = 0; $i -lt $n; $i++) { $out[$i] = [System.Drawing.Color]::FromArgb(10,10,12) }
+        return $out
+    }
+    $tok = Get-EffectToken $grp
     $pal = @()
-    foreach ($s in $script:Swatches) {
+    foreach ($s in $grp.Swatches) {
         try { $pal += ,([System.Drawing.ColorTranslator]::FromHtml($s)) }
         catch { $pal += ,([System.Drawing.Color]::Gray) }
     }
     if ($pal.Count -lt 2) { $pal += $pal[0] }
     $pc = $pal.Count
-    $bright = $trkBright.Value / 100.0
-    Update-PalGain $pal
+    $bright = ([double]$grp.Brightness / 100.0) * ([double]$script:Cfg.Brightness / 100.0)
+    $gain = Get-PalGain $pal ([bool]$grp.Equalise)
 
-    $n = 16
-    $out = New-Object 'System.Drawing.Color[]' $n
     for ($i = 0; $i -lt $n; $i++) {
         $u0 = $i / [double]($n - 1)
-        if ($chkLoop.Checked) { $u0 = $i / [double]$n }
-        $f = (($u0 + $script:phase) % 1.0) * $pc
+        if ($n -eq 1) { $u0 = 0.0 }
+        if ($grp.Loop) { $u0 = $i / [double]$n }
+
+        if ($tok -eq 'rainbow' -or $tok -eq 'cycle') {
+            $h = 0.0
+            if ($tok -eq 'cycle') { $h = ($phase * 360.0) % 360.0 }
+            else { $h = ($u0 * 360.0 + $phase * 360.0) % 360.0 }
+            $c = Hsv2Rgb $h 1.0 1.0
+            $out[$i] = [System.Drawing.Color]::FromArgb(
+                [int]([Math]::Min(255, $c[0] * $bright)),
+                [int]([Math]::Min(255, $c[1] * $bright)),
+                [int]([Math]::Min(255, $c[2] * $bright)))
+            continue
+        }
+
+        $f = (($u0 + $phase) % 1.0) * $pc
         if ($f -lt 0) { $f += $pc }
         $a = [int][Math]::Floor($f)
         $u = $f - $a
         $b2 = ($a + 1) % $pc
         $a  = $a % $pc
         $wgt = $u * $u * (3.0 - 2.0 * $u)
-        $ga = $script:PalGain[$a]; $gb = $script:PalGain[$b2]
+        $ga = $gain[$a]; $gb = $gain[$b2]
         $lr = (Lin $pal[$a].R) * $ga; $lr = $lr + (((Lin $pal[$b2].R) * $gb) - $lr) * $wgt
         $lg = (Lin $pal[$a].G) * $ga; $lg = $lg + (((Lin $pal[$b2].G) * $gb) - $lg) * $wgt
         $lb = (Lin $pal[$a].B) * $ga; $lb = $lb + (((Lin $pal[$b2].B) * $gb) - $lb) * $wgt
@@ -793,28 +934,60 @@ function Update-Preview {
         if ($bb -lt 0) { $bb = 0 }; if ($bb -gt 255) { $bb = 255 }
         $out[$i] = [System.Drawing.Color]::FromArgb($r, $gg, $bb)
     }
-    $pbPreview.Colors = $out
+    return $out
+}
+
+function Hsv2Rgb([double]$h, [double]$s, [double]$v) {
+    $h = $h % 360.0
+    if ($h -lt 0) { $h += 360.0 }
+    $c = $v * $s
+    $x = $c * (1.0 - [Math]::Abs((($h / 60.0) % 2.0) - 1.0))
+    $m = $v - $c
+    $r = 0.0; $g = 0.0; $b = 0.0
+    if     ($h -lt 60)  { $r = $c; $g = $x }
+    elseif ($h -lt 120) { $r = $x; $g = $c }
+    elseif ($h -lt 180) { $g = $c; $b = $x }
+    elseif ($h -lt 240) { $g = $x; $b = $c }
+    elseif ($h -lt 300) { $r = $x; $b = $c }
+    else                { $r = $c; $b = $x }
+    return @((($r + $m) * 255.0), (($g + $m) * 255.0), (($b + $m) * 255.0))
+}
+
+# The preview shows BOTH groups: 4 cells of keyboard, 12 of light bar,
+# matching the real hardware split.
+function Update-Preview {
+    $kb  = Get-GroupStrip $script:Cfg.Kbd 4  $script:phaseK
+    $brs = Get-GroupStrip $script:Cfg.Bar 12 $script:phaseB
+    $all = New-Object 'System.Drawing.Color[]' 16
+    for ($i = 0; $i -lt 4;  $i++) { $all[$i] = $kb[$i] }
+    for ($i = 0; $i -lt 12; $i++) { $all[$i + 4] = $brs[$i] }
+    $pbPreview.Colors = $all
     $pbPreview.Invalidate()
 }
 
 # ---------------------------------------------------------------- swatches
 function Redraw-Swatches {
+    $g = Cur
     $pnlCol.Controls.Clear()
     $x = 0
-    for ($i = 0; $i -lt $script:Swatches.Count; $i++) {
+    for ($i = 0; $i -lt $g.Swatches.Count; $i++) {
         $sw = New-Object KbLight.Swatch
         $sw.Location = New-Object System.Drawing.Point($x, 0)
         $sw.Size     = New-Object System.Drawing.Size(44, 44)
-        try { $sw.Value = [System.Drawing.ColorTranslator]::FromHtml($script:Swatches[$i]) }
+        try { $sw.Value = [System.Drawing.ColorTranslator]::FromHtml($g.Swatches[$i]) }
         catch { $sw.Value = [System.Drawing.Color]::Gray }
         $sw.Tag = $i
         $sw.Add_Click({
             $idx = $this.Tag
+            $gg  = Cur
             $dlg = New-Object System.Windows.Forms.ColorDialog
             $dlg.FullOpen = $true
-            try { $dlg.Color = [System.Drawing.ColorTranslator]::FromHtml($script:Swatches[$idx]) } catch { }
+            try { $dlg.Color = [System.Drawing.ColorTranslator]::FromHtml($gg.Swatches[$idx]) } catch { }
             if ($dlg.ShowDialog() -eq 'OK') {
-                $script:Swatches[$idx] = '#{0:X2}{1:X2}{2:X2}' -f $dlg.Color.R, $dlg.Color.G, $dlg.Color.B
+                $arr = @($gg.Swatches)
+                $arr[$idx] = '#{0:X2}{1:X2}{2:X2}' -f $dlg.Color.R, $dlg.Color.G, $dlg.Color.B
+                $gg.Swatches = [string[]]$arr
+                Sync-Link
                 Redraw-Swatches
                 Update-Preview
                 Request-Apply
@@ -823,13 +996,15 @@ function Redraw-Swatches {
         $pnlCol.Controls.Add($sw)
         $x += 50
     }
-    if ($script:Swatches.Count -lt 8) {
+    if ($g.Swatches.Count -lt 8) {
         $add = New-Object KbLight.MiniBtn
         $add.Glyph    = '+'
         $add.Location = New-Object System.Drawing.Point($x, 0)
         $add.Size     = New-Object System.Drawing.Size(30, 44)
         $add.Add_Click({
-            $script:Swatches += '#FFFFFF'
+            $gg = Cur
+            $gg.Swatches = [string[]]@(@($gg.Swatches) + '#FFFFFF')
+            Sync-Link
             Redraw-Swatches
             Update-Preview
             Request-Apply
@@ -837,14 +1012,17 @@ function Redraw-Swatches {
         $pnlCol.Controls.Add($add)
         $x += 36
     }
-    if ($script:Swatches.Count -gt 2) {
+    if ($g.Swatches.Count -gt 2) {
         $rem = New-Object KbLight.MiniBtn
         $rem.Glyph    = '-'
         $rem.Location = New-Object System.Drawing.Point($x, 0)
         $rem.Size     = New-Object System.Drawing.Size(30, 44)
         $rem.Add_Click({
-            if ($script:Swatches.Count -gt 2) {
-                $script:Swatches = @($script:Swatches[0..($script:Swatches.Count-2)])
+            $gg = Cur
+            if ($gg.Swatches.Count -gt 2) {
+                $arr = @($gg.Swatches)
+                $gg.Swatches = [string[]]@($arr[0..($arr.Count-2)])
+                Sync-Link
                 Redraw-Swatches
                 Update-Preview
                 Request-Apply
@@ -852,12 +1030,28 @@ function Redraw-Swatches {
         })
         $pnlCol.Controls.Add($rem)
     }
+    # colours do not apply to every pattern
+    $tok = Get-EffectToken $g
+    $usesPal = -not ($NoPalette -contains $tok)
+    foreach ($c in $pnlCol.Controls) { $c.Enabled = $usesPal }
+}
+
+# When "same settings for both" is on, copy the edited group onto the other.
+function Sync-Link {
+    if (-not $script:Cfg.Link) { return }
+    $src = Cur
+    $dst = $script:Cfg.Bar
+    if ($script:Tab -eq 'Bar') { $dst = $script:Cfg.Kbd }
+    foreach ($p in 'Effect','Speed','Brightness','Mirror','Reverse','Equalise','On') {
+        $dst.$p = $src.$p
+    }
+    $dst.Swatches = [string[]]@($src.Swatches)
 }
 
 # ---------------------------------------------------------------- live apply
 function Update-EffectInfo {
-    $tok = $Effects[[string]$cboEffect.SelectedItem]
-    if (-not $tok) { $tok = 'gradient' }
+    $g = Cur
+    $tok = Get-EffectToken $g
     $msg = ''
     if ($NeedAudio -contains $tok) {
         $msg = 'Listens to whatever is playing through your speakers.'
@@ -873,20 +1067,48 @@ function Update-EffectInfo {
         $msg = 'This pattern picks its own colours.'
     }
     $lblEffInfo.Text = $msg
-    # Dim the colour row when the effect ignores it.
     $usesPal = -not ($NoPalette -contains $tok)
-    $lblColHint.Text = $(if ($usesPal) { 'click to change' } else { 'not used by this pattern' })
-    foreach ($c in $pnlCol.Controls) { $c.Enabled = $usesPal }
+    if ($usesPal) { $lblColHint.Text = 'click to change' }
+    else          { $lblColHint.Text = 'not used by this pattern' }
 }
 
+# Push every control's value into the group the tab is showing.
 function Sync-CfgFromUi {
-    $script:Cfg.Effect     = [string]$cboEffect.SelectedItem
-    $script:Cfg.Speed      = [int]$trkSpeed.Value
-    $script:Cfg.Brightness = [int]$trkBright.Value
-    $script:Cfg.Mirror     = [bool]$chkMirror.Checked
-    $script:Cfg.Reverse    = [bool]$chkReverse.Checked
-    $script:Cfg.Equalise   = [bool]$chkEq.Checked
-    $script:Cfg.Loop       = [bool]$chkLoop.Checked
+    $g = Cur
+    $g.Effect     = [string]$cboEffect.SelectedItem
+    $g.Speed      = [int]$trkSpeed.Value
+    $g.Brightness = [int]$trkBright.Value
+    $g.Mirror     = [bool]$chkMirror.Checked
+    $g.Reverse    = [bool]$chkReverse.Checked
+    $g.Equalise   = [bool]$chkEq.Checked
+    $g.Loop       = [bool]$chkLoop.Checked
+    $g.On         = [bool]$chkOn.Checked
+    $script:Cfg.Brightness = [int]$trkMaster.Value
+    Sync-Link
+}
+
+# Load the visible group's values into the controls.
+function Load-UiFromCfg {
+    $script:Suppress = $true
+    $g = Cur
+    $keys = @($Effects.Keys)
+    $idx = 0
+    for ($i = 0; $i -lt $keys.Count; $i++) {
+        if ($keys[$i] -eq [string]$g.Effect) { $idx = $i }
+    }
+    $cboEffect.SetQuiet($idx)
+    $trkSpeed.Value  = [Math]::Min(50,  [Math]::Max(1,  [int]$g.Speed))
+    $trkBright.Value = [Math]::Min(100, [Math]::Max(5,  [int]$g.Brightness))
+    $chkMirror.SetQuiet([bool]$g.Mirror)
+    $chkReverse.SetQuiet([bool]$g.Reverse)
+    $chkEq.SetQuiet([bool]$g.Equalise)
+    $chkLoop.SetQuiet([bool]$g.Loop)
+    $chkOn.SetQuiet([bool]$g.On)
+    $valSpeed.Text  = ('{0:0.0}x' -f ($trkSpeed.Value / 10.0))
+    $valBright.Text = ('{0}%' -f $trkBright.Value)
+    Redraw-Swatches
+    Update-EffectInfo
+    $script:Suppress = $false
 }
 
 function Update-Status {
@@ -902,10 +1124,16 @@ function Update-Status {
     $btnOff.Text = 'Turn lighting off'
     $btnOff.Invalidate()
     if (Test-EngineAlive) {
-        $lblStatus.Text = ('Running - {0}' -f $script:Cfg.Effect)
+        $k = $script:Cfg.Kbd
+        $b = $script:Cfg.Bar
+        $parts = @()
+        if ($k.On) { $parts += ('Keys: {0}' -f $k.Effect) } else { $parts += 'Keys: off' }
+        if ($b.On) { $parts += ('Bar: {0}'  -f $b.Effect) } else { $parts += 'Bar: off' }
+        $txt = ($parts -join '   ')
+        $lblStatus.Text = $txt
         $dot.ForeColor  = $T::Good
-        $icon.Text      = ('Keyboard Lighting - {0}' -f $script:Cfg.Effect)
-        $miStatus.Text  = ('Running - {0}' -f $script:Cfg.Effect)
+        $icon.Text      = 'Keyboard Lighting'
+        $miStatus.Text  = $txt
     } else {
         $lblStatus.Text = 'Not running'
         $dot.ForeColor  = $T::Bad
@@ -922,6 +1150,8 @@ $script:ApplyTimer.Add_Tick({
     Save-Cfg
     if ($script:WantOff) { return }
     if (Test-EngineAlive) {
+        # Everything below is picked up live by the engine: effect,
+        # colours, speed, brightness, flags and on/off, per group.
         Write-Theme
         Write-LiveBrightness
     } else {
@@ -936,31 +1166,88 @@ function Request-Apply {
     $script:ApplyTimer.Start()
 }
 
+# ---- control events ----
+$trkMaster.Add_ValueChanged({
+    $valMB.Text = ('{0}%' -f $trkMaster.Value)
+    if ($script:Suppress) { return }
+    $script:Cfg.Brightness = [int]$trkMaster.Value
+    Write-LiveBrightness
+    Update-Preview
+    Request-Apply
+})
 $trkBright.Add_ValueChanged({
     $valBright.Text = ('{0}%' -f $trkBright.Value)
     if ($script:Suppress) { return }
-    $script:Cfg.Brightness = [int]$trkBright.Value
-    Write-LiveBrightness
+    (Cur).Brightness = [int]$trkBright.Value
+    Sync-Link
     Update-Preview
     Request-Apply
 })
 $trkSpeed.Add_ValueChanged({
     $valSpeed.Text = ('{0:0.0}x' -f ($trkSpeed.Value / 10.0))
+    if ($script:Suppress) { return }
+    (Cur).Speed = [int]$trkSpeed.Value
+    Sync-Link
     Request-Apply
 })
-$cboEffect.Add_SelectedChanged({ Update-EffectInfo; Request-Apply })
-$chkMirror.Add_CheckedChanged({ Request-Apply })
-$chkReverse.Add_CheckedChanged({ Request-Apply })
-$chkLoop.Add_CheckedChanged({ Request-Apply; Update-Preview })
-$chkEq.Add_CheckedChanged({ Request-Apply; Update-Preview })
-
+$cboEffect.Add_SelectedChanged({
+    if ($script:Suppress) { return }
+    (Cur).Effect = [string]$cboEffect.SelectedItem
+    Sync-Link
+    Update-EffectInfo
+    Redraw-Swatches
+    Update-Preview
+    Request-Apply
+})
+$chkMirror.Add_CheckedChanged({
+    if ($script:Suppress) { return }
+    (Cur).Mirror = [bool]$chkMirror.Checked
+    Sync-Link; Request-Apply
+})
+$chkReverse.Add_CheckedChanged({
+    if ($script:Suppress) { return }
+    (Cur).Reverse = [bool]$chkReverse.Checked
+    Sync-Link; Request-Apply
+})
+$chkLoop.Add_CheckedChanged({
+    if ($script:Suppress) { return }
+    (Cur).Loop = [bool]$chkLoop.Checked
+    Sync-Link; Update-Preview; Request-Apply
+})
+$chkEq.Add_CheckedChanged({
+    if ($script:Suppress) { return }
+    (Cur).Equalise = [bool]$chkEq.Checked
+    Sync-Link; Update-Preview; Request-Apply
+})
+$chkOn.Add_CheckedChanged({
+    if ($script:Suppress) { return }
+    (Cur).On = [bool]$chkOn.Checked
+    Sync-Link; Update-Preview; Request-Apply
+})
+$chkLink.Add_CheckedChanged({
+    if ($script:Suppress) { return }
+    $script:Cfg.Link = [bool]$chkLink.Checked
+    if ($script:Cfg.Link) {
+        Sync-Link
+        Update-Preview
+        Request-Apply
+    } else {
+        Save-Cfg
+    }
+})
 $chkOverlay.Add_CheckedChanged({
     if ($script:Suppress) { return }
     $script:Cfg.Overlay = [bool]$chkOverlay.Checked
     Save-Cfg
-    # This one is a start-up switch, so the engine has to come back up.
+    # A start-up switch, so the engine has to come back up for this one.
     if (-not $script:WantOff) { [void](Start-Engine) }
     Update-Status
+})
+
+$tabs.Add_SelectedChanged({
+    if ($tabs.SelectedIndex -eq 1) { $script:Tab = 'Bar' } else { $script:Tab = 'Kbd' }
+    Load-UiFromCfg
+    Update-Preview
 })
 
 $chkAuto.Add_CheckedChanged({
@@ -991,11 +1278,11 @@ $icon.Text    = 'Keyboard Lighting'
 $icon.Visible = $true
 
 $menu = New-Object System.Windows.Forms.ContextMenuStrip
-$menu.BackColor   = $T::Panel2
-$menu.ForeColor   = $Txt
-$menu.Font        = $fontBd
+$menu.BackColor       = $T::Panel2
+$menu.ForeColor       = $Txt
+$menu.Font            = $fontBd
 $menu.ShowImageMargin = $false
-$menu.Renderer    = New-Object System.Windows.Forms.ToolStripProfessionalRenderer
+$menu.Renderer        = New-Object System.Windows.Forms.ToolStripProfessionalRenderer
 
 function Add-Item($text, $action) {
     $mi = New-Object System.Windows.Forms.ToolStripMenuItem
@@ -1107,13 +1394,13 @@ function Restart-App {
 }
 
 # ---------------------------------------------------------------- window behaviour
-# Every $script: flag the timers and handlers rely on, declared in one
-# place before anything can read it.
 $script:HintShown   = $false
 $script:UpdJob      = $null
 $script:UpdPrompted = $false
 $script:Pending     = $false
 $script:WakeAt      = 0
+$script:phaseK      = 0.0
+$script:phaseB      = 0.0
 
 function Show-HideHint {
     if ($script:HintShown) { return }
@@ -1138,40 +1425,35 @@ $form.Add_KeyDown({
     param($s, $e)
     if ($e.KeyCode -eq [System.Windows.Forms.Keys]::Escape) { $form.Hide(); Show-HideHint }
 })
-# Safe here: the handle already exists and DPI scaling has been applied.
+# Safe here: the handle exists and DPI scaling has been applied.
 $form.Add_Shown({ try { [KbLight.Win]::RoundCorners($form.Handle) } catch { } })
 
 # ---------------------------------------------------------------- load UI
 $script:Suppress = $true
-$idx = 0
-$keys = @($Effects.Keys)
-for ($i = 0; $i -lt $keys.Count; $i++) {
-    if ($keys[$i] -eq [string]$script:Cfg.Effect) { $idx = $i }
-}
-$cboEffect.SetQuiet($idx)
-$trkSpeed.Value  = [Math]::Min(50, [Math]::Max(1, [int]$script:Cfg.Speed))
-$trkBright.Value = [Math]::Min(100, [Math]::Max(5, [int]$script:Cfg.Brightness))
-$chkMirror.SetQuiet([bool]$script:Cfg.Mirror)
-$chkReverse.SetQuiet([bool]$script:Cfg.Reverse)
-$chkEq.SetQuiet([bool]$script:Cfg.Equalise)
-$chkLoop.SetQuiet([bool]$script:Cfg.Loop)
-$chkAuto.SetQuiet((Test-Autostart))
+$trkMaster.Value = [Math]::Min(100, [Math]::Max(5, [int]$script:Cfg.Brightness))
+$valMB.Text      = ('{0}%' -f $trkMaster.Value)
+$chkLink.SetQuiet([bool]$script:Cfg.Link)
 $chkOverlay.SetQuiet([bool]$script:Cfg.Overlay)
+$chkAuto.SetQuiet((Test-Autostart))
 $miAuto.Checked = $chkAuto.Checked
-$valSpeed.Text  = ('{0:0.0}x' -f ($trkSpeed.Value / 10.0))
-$valBright.Text = ('{0}%' -f $trkBright.Value)
-Redraw-Swatches
-Update-EffectInfo
+$tabs.SetQuiet(0)
+$script:Tab = 'Kbd'
+$script:Suppress = $false
+Load-UiFromCfg
 Update-Preview
 
 $anim = New-Object System.Windows.Forms.Timer
 $anim.Interval = 40
 $anim.Add_Tick({
     if (-not $form.Visible) { return }
-    $dir = 1.0
-    if ($chkReverse.Checked) { $dir = -1.0 }
-    $script:phase = ($script:phase + (0.25 * ($trkSpeed.Value/10.0) * $dir) * 0.040) % 1.0
-    if ($script:phase -lt 0) { $script:phase += 1.0 }
+    $k = $script:Cfg.Kbd
+    $b = $script:Cfg.Bar
+    $dk = 1.0; if ($k.Reverse) { $dk = -1.0 }
+    $db = 1.0; if ($b.Reverse) { $db = -1.0 }
+    $script:phaseK = ($script:phaseK + (0.25 * ($k.Speed/10.0) * $dk) * 0.040) % 1.0
+    $script:phaseB = ($script:phaseB + (0.25 * ($b.Speed/10.0) * $db) * 0.040) % 1.0
+    if ($script:phaseK -lt 0) { $script:phaseK += 1.0 }
+    if ($script:phaseB -lt 0) { $script:phaseB += 1.0 }
     Update-Preview
 })
 $anim.Start()
@@ -1206,23 +1488,18 @@ if (-not $NoUpdate) {
 }
 
 [void](Start-Engine)
-$script:Suppress = $false
 Update-Status
 
 if (-not $Silent) { Show-Window }
 
-# The app must also notice a resume: if the engine died outright (rather
-# than just losing its handle) nothing else will bring the lighting back.
-# NOTE: no -Action scriptblock. That runs in its own scope, so a
-# $script: flag set inside it would never be visible here. Queue the
-# events instead and drain them from the timer, which is the same pattern
-# the engine uses for its hotkey watcher.
+# Register for sleep/lock so the app can repair the lighting on wake.
+# No -Action scriptblock: that runs in its own scope, so a flag set inside
+# it would never be visible here. Queue the events and drain them below.
 $script:PowerOk = $false
 try {
     Register-ObjectEvent -InputObject ([Microsoft.Win32.SystemEvents]) `
         -EventName PowerModeChanged -SourceIdentifier 'TrayPower' `
         -ErrorAction Stop | Out-Null
-    # Lid close frequently raises only this one on a modern laptop.
     Register-ObjectEvent -InputObject ([Microsoft.Win32.SystemEvents]) `
         -EventName SessionSwitch -SourceIdentifier 'TraySession' `
         -ErrorAction SilentlyContinue | Out-Null
@@ -1241,7 +1518,7 @@ $watch.Add_Tick({
         try { Remove-Item $ShowFile -Force -ErrorAction SilentlyContinue } catch { }
         Show-Window
     }
-    # --- came back from sleep ---
+
     $woke = $false
     if ($script:PowerOk) {
         $pe = Get-Event -SourceIdentifier 'TrayPower' -ErrorAction SilentlyContinue
@@ -1261,17 +1538,10 @@ $watch.Add_Tick({
     }
     if ($woke) {
         Log 'resume/session event'
-        # Do NOT sleep here - this runs on the UI thread and would freeze
-        # the window. Schedule the work a few ticks later instead, giving
-        # the USB stack time to re-enumerate the keyboard.
-        if ($script:WantOff) {
-            Log 'lighting was off before sleep - leaving it off'
-        } else {
-            $script:WakeAt = $script:tick + 4        # ~2 seconds
-        }
+        # Do NOT sleep here: this is the UI thread. Schedule the repair a
+        # few ticks later so the USB stack has time to settle.
+        if (-not $script:WantOff) { $script:WakeAt = $script:tick + 4 }
     }
-
-    # deferred post-resume repair
     if ($script:WakeAt -gt 0 -and $script:tick -ge $script:WakeAt) {
         $script:WakeAt = 0
         if (-not $script:WantOff) {

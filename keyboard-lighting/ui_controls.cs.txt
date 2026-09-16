@@ -526,28 +526,82 @@ public class TitleBar : Control {
 // ---------------------------------------------------------------- preview strip
 public class Preview : Control {
   public Color[] Colors = new Color[] { Color.Red, Color.Blue };
+  // Number of cells that belong to the keyboard deck. The rest are the
+  // light bar. A gap and two captions are drawn between them so it is
+  // obvious which half of the picture each tab is controlling.
+  public int Split = 0;
+  public string LeftLabel = "KEYBOARD";
+  public string RightLabel = "LIGHT BAR";
+
   public Preview() {
     SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint |
              ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
     BackColor = Color.Black;
     Height = 44;
   }
+
+  void Band(Graphics g, Color[] c, int from, int to, float x, float w, float y, float h) {
+    int n = to - from;
+    if (n <= 0 || w <= 0) return;
+    float cw = w / (float)n;
+    for (int i = 0; i < n; i++) {
+      using (SolidBrush b = new SolidBrush(c[from + i]))
+        g.FillRectangle(b, x + i * cw, y, cw + 1f, h);
+    }
+  }
+
   protected override void OnPaint(PaintEventArgs e) {
     Graphics g = e.Graphics;
     g.SmoothingMode = SmoothingMode.AntiAlias;
-    Rectangle r = new Rectangle(0, 0, Width - 1, Height - 1);
-    using (GraphicsPath clip = Theme.Round(r, 8)) {
-      g.SetClip(clip);
-      int n = Colors.Length;
-      if (n > 0) {
-        double cw = Width / (double)n;
-        for (int i = 0; i < n; i++) {
-          using (SolidBrush b = new SolidBrush(Colors[i]))
-            g.FillRectangle(b, (float)(i * cw), 0f, (float)(cw + 1), Height);
-        }
+    int n = Colors.Length;
+    if (n == 0) return;
+
+    int sp = Split;
+    if (sp <= 0 || sp >= n) {
+      Rectangle r0 = new Rectangle(0, 0, Width - 1, Height - 1);
+      using (GraphicsPath clip = Theme.Round(r0, 8)) {
+        g.SetClip(clip);
+        Band(g, Colors, 0, n, 0f, Width, 0f, Height);
+        g.ResetClip();
+        using (Pen pen = new Pen(Theme.Line)) g.DrawPath(pen, clip);
       }
+      return;
+    }
+
+    int capH = 13;
+    int barH = Height - capH;
+    if (barH < 10) { barH = Height; capH = 0; }
+    int gap = 10;
+    float avail = Width - 1 - gap;
+    float lw = avail * (sp / (float)n);
+    if (lw < 24f) lw = 24f;
+    if (lw > avail - 24f) lw = avail - 24f;
+    float rw = avail - lw;
+
+    Rectangle lr = new Rectangle(0, 0, (int)lw, barH - 1);
+    using (GraphicsPath clip = Theme.Round(lr, 7)) {
+      g.SetClip(clip);
+      Band(g, Colors, 0, sp, 0f, lw, 0f, barH);
       g.ResetClip();
       using (Pen pen = new Pen(Theme.Line)) g.DrawPath(pen, clip);
+    }
+    Rectangle rr2 = new Rectangle((int)(lw + gap), 0, (int)rw, barH - 1);
+    using (GraphicsPath clip = Theme.Round(rr2, 7)) {
+      g.SetClip(clip);
+      Band(g, Colors, sp, n, lw + gap, rw, 0f, barH);
+      g.ResetClip();
+      using (Pen pen = new Pen(Theme.Line)) g.DrawPath(pen, clip);
+    }
+
+    if (capH > 0) {
+      using (Font f = new Font("Segoe UI", 6.5f, FontStyle.Bold))
+      using (SolidBrush b = new SolidBrush(Theme.Muted)) {
+        StringFormat sf = new StringFormat();
+        sf.Alignment = StringAlignment.Center;
+        g.DrawString(LeftLabel, f, b, new RectangleF(0f, barH - 1, lw, capH), sf);
+        g.DrawString(RightLabel, f, b, new RectangleF(lw + gap, barH - 1, rw, capH), sf);
+        sf.Dispose();
+      }
     }
   }
 }
@@ -592,6 +646,82 @@ public static class Win {
       int dark = 1;               // dark title bar / system menus
       DwmSetWindowAttribute(hwnd, 20, ref dark, sizeof(int));
     } catch { }
+  }
+}
+
+
+// ---------------------------------------------------------------- tabs
+// A simple two-state segmented control. Clicking a segment raises
+// SelectedChanged; the owner swaps which panel is visible.
+public class Tabs : Control {
+  public System.Collections.Generic.List<string> Items = new System.Collections.Generic.List<string>();
+  int _sel = 0, _hot = -1;
+  public event EventHandler SelectedChanged;
+  public int SelectedIndex {
+    get { return _sel; }
+    set {
+      if (value < 0 || value >= Items.Count || value == _sel) return;
+      _sel = value; Invalidate();
+      if (SelectedChanged != null) SelectedChanged(this, EventArgs.Empty);
+    }
+  }
+  public void SetQuiet(int i) { if (i >= 0 && i < Items.Count) { _sel = i; Invalidate(); } }
+
+  public Tabs() {
+    SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint |
+             ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw |
+             ControlStyles.SupportsTransparentBackColor, true);
+    BackColor = Color.Transparent;
+    Height = 38;
+    Cursor = Cursors.Hand;
+  }
+  Rectangle Seg(int i) {
+    if (Items.Count == 0) return Rectangle.Empty;
+    int w = Width / Items.Count;
+    int x = i * w;
+    if (i == Items.Count - 1) w = Width - x;
+    return new Rectangle(x, 0, w, Height);
+  }
+  protected override void OnMouseMove(MouseEventArgs e) {
+    base.OnMouseMove(e);
+    int was = _hot; _hot = -1;
+    for (int i = 0; i < Items.Count; i++) if (Seg(i).Contains(e.Location)) _hot = i;
+    if (was != _hot) Invalidate();
+  }
+  protected override void OnMouseLeave(EventArgs e) { base.OnMouseLeave(e); _hot = -1; Invalidate(); }
+  protected override void OnMouseDown(MouseEventArgs e) {
+    base.OnMouseDown(e);
+    for (int i = 0; i < Items.Count; i++) if (Seg(i).Contains(e.Location)) { SelectedIndex = i; return; }
+  }
+  protected override void OnPaint(PaintEventArgs e) {
+    Graphics g = e.Graphics;
+    g.SmoothingMode = SmoothingMode.AntiAlias;
+    g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
+    Rectangle full = new Rectangle(0, 0, Width - 1, Height - 1);
+    using (GraphicsPath p = Theme.Round(full, 9))
+    using (SolidBrush b = new SolidBrush(Theme.Panel))
+    using (Pen pen = new Pen(Theme.Line))
+    { g.FillPath(b, p); g.DrawPath(pen, p); }
+
+    for (int i = 0; i < Items.Count; i++) {
+      Rectangle r = Seg(i);
+      bool on = (i == _sel);
+      if (on) {
+        Rectangle rr = new Rectangle(r.X + 3, r.Y + 3, r.Width - 6, r.Height - 7);
+        using (GraphicsPath p = Theme.Round(rr, 7))
+        using (LinearGradientBrush b = new LinearGradientBrush(
+                   new Rectangle(rr.X, rr.Y, Math.Max(rr.Width, 1), rr.Height),
+                   Theme.Accent2, Theme.Accent, LinearGradientMode.Horizontal))
+          g.FillPath(b, p);
+      } else if (i == _hot) {
+        Rectangle rr = new Rectangle(r.X + 3, r.Y + 3, r.Width - 6, r.Height - 7);
+        using (GraphicsPath p = Theme.Round(rr, 7))
+        using (SolidBrush b = new SolidBrush(Theme.Panel2))
+          g.FillPath(b, p);
+      }
+      TextRenderer.DrawText(g, Items[i], Font, r, on ? Color.White : Theme.Muted,
+        TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+    }
   }
 }
 

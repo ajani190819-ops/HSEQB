@@ -50,6 +50,24 @@ param(
     # Briefly show battery status when the charger is plugged in or pulled
     # out, and when the battery gets low, then return to the chosen effect.
     [switch]$OverlayOn,
+
+    # ---- light bar overrides -------------------------------------------
+    # Anything omitted follows the keyboard's setting.
+    [string]$BarEffect,
+    [string]$BarColors,
+    [double]$BarSpeed = -1,
+    [double]$BarBrightness = -1,
+    [switch]$BarMirror,
+    [switch]$BarReverse,
+    [ValidateSet('','on','off')]
+    [string]$BarEqualise = '',
+    [ValidateSet('','across','loop')]
+    [string]$BarLayout = '',
+    [switch]$BarOff,
+    [switch]$KbdOff,
+    # Master level, applied on top of each group's own brightness. The
+    # Fn keys and the panel's master slider both drive this.
+    [double]$Master = 1.0,
     [switch]$Restore,
     [switch]$Quiet,
 
@@ -109,6 +127,49 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Diagnostics;
 
+
+// One independently-controlled set of lamps. The deck keys and the light
+// bar each get one of these, so they can run different effects, palettes
+// and speeds at the same time.
+public class Zone {
+  public string Name = "";
+  public int[]  Idx  = new int[0];     // indices into the engine's lamp arrays
+  public double[] Pos = new double[0]; // 0..1 travel position within this group
+  public double[] PosAcross = null;
+  public double[] PosLoop   = null;
+  public int N { get { return Idx.Length; } }
+
+  public string Effect = "gradient";
+  public double Speed  = 1.0;
+  public double Brightness = 1.0;   // this group's own slider, 0..1
+  public double Master     = 1.0;   // master slider / Fn keys, 0..1
+  public bool   Mirror = false, Reverse = false, Equalise = true, Loop = false;
+  public bool   Enabled = true;
+  public double Dir { get { return Reverse ? -1.0 : 1.0; } }
+
+  public int[] PalR = new int[] { 255, 0, 0 };
+  public int[] PalG = new int[] { 0, 255, 0 };
+  public int[] PalB = new int[] { 0, 0, 255 };
+
+  public double[] plR, plG, plB, palGain;
+  public double[] Heat = new double[0];
+  public double Phase = 0.0;
+
+  // live-update inbox, same pattern as the engine's
+  public volatile int    LiveBrightness = -1;
+  public volatile int    LiveMaster     = -1;
+  public volatile int    LiveSpeedMilli = -1;
+  public volatile string LiveEffect     = null;
+  public volatile int[]  LivePalR = null, LivePalG = null, LivePalB = null;
+  public volatile int    LiveFlags = -1;
+  public volatile int    LiveEnabled = -1;
+  public volatile bool   LiveDirty = false;
+
+  public void Alloc() {
+    Heat = new double[Idx.Length];
+  }
+}
+
 public class LampEngine {
   [DllImport("kernel32.dll", CharSet=CharSet.Unicode, SetLastError=true)]
   static extern IntPtr CreateFileW(string p, uint a, uint s, IntPtr sa, uint d, uint f, IntPtr t);
@@ -167,6 +228,8 @@ public class LampEngine {
   public byte[] CtrlOff = null;
 
   // Optional data sources for the reactive / info effects.
+  public Zone[] Groups = new Zone[0];
+
   public AudioCap Audio  = null;
   public SysInfo  Sys    = null;
   public ScreenCap Screen = null;
@@ -210,6 +273,17 @@ public class LampEngine {
 
     // Gamma tables + palette gains must exist before any colour is produced.
     PrepPalette();
+    // Same for every group: Heat must be sized or fire/stars index past the
+    // end, and the palette must exist before the first RenderGroup call.
+    for (int z = 0; z < Groups.Length; z++) {
+      Zone gz = Groups[z];
+      gz.Alloc();
+      PrepPaletteG(gz);
+      if (gz.Pos == null || gz.Pos.Length != gz.N) {
+        gz.Pos = new double[gz.N];
+        for (int i = 0; i < gz.N; i++) gz.Pos[i] = (gz.N > 1) ? (i / (double)(gz.N - 1)) : 0.0;
+      }
+    }
     if (SlotPos == null || SlotPos.Length != LampCount) {
       SlotPos = new double[LampCount];
       for (int i = 0; i < LampCount; i++)
@@ -221,53 +295,158 @@ public class LampEngine {
 
   // Battery as a filling bar: green when full, red when nearly empty.
   // While charging a bright head runs along the bar.
-  void DrawBattery(int N) {
+  // Battery as a filling bar: green when full, red when nearly empty.
+  // While charging a bright head runs along the bar.
+  void DrawBattery(Zone gr) {
     int pct = (Sys != null) ? Sys.Battery : -1;
     bool chg = (Sys != null) && Sys.Charging;
     if (pct < 0) pct = 100;
     double f = pct / 100.0;
-    double hue = 120.0 * f;                       // 0 red .. 120 green
     double hr, hg, hb;
-    Hsv(hue, 1.0, 1.0, out hr, out hg, out hb);
+    Hsv(120.0 * f, 1.0, 1.0, out hr, out hg, out hb);
     double head = chg ? ((Now * 0.5) % 1.0) : -1.0;
     bool low = (!chg && f <= 0.15);
     double blink = low ? (0.35 + 0.65 * (0.5 + 0.5 * Math.Sin(Now * 5.0))) : 1.0;
-    for (int i = 0; i < N; i++) {
-      double u = SlotPos[i];
+    for (int i = 0; i < gr.N; i++) {
+      double u = gr.Pos[i];
       double on;
       if (u <= f) on = 1.0;
-      else {
-        double d = (u - f) / 0.05;
-        on = (d < 1.0) ? (1.0 - d) : 0.0;
-      }
+      else { double d = (u - f) / 0.05; on = (d < 1.0) ? (1.0 - d) : 0.0; }
       double r = hr * on, g = hg * on, b = hb * on;
-      if (on < 0.02) { r = 6; g = 6; b = 6; }     // faint track
+      if (on < 0.02) { r = 6; g = 6; b = 6; }
       if (chg && head >= 0) {
         double d2 = Math.Abs(u - head * f);
         double w = Math.Exp(-d2 * 20.0);
         r += 255 * w * 0.8; g += 255 * w * 0.8; b += 200 * w * 0.8;
       }
-      SetZone(i, r * blink, g * blink, b * blink);
+      SetZoneG(gr, i, r * blink, g * blink, b * blink);
     }
   }
 
   // CPU load meter: green at idle through to red under full load.
-  void DrawCpu(int N) {
+  void DrawCpu(Zone gr) {
     double c = (Sys != null) ? Sys.Cpu : 0.0;
-    double hue = 120.0 - 120.0 * c;
     double hr, hg, hb;
-    Hsv(hue, 1.0, 1.0, out hr, out hg, out hb);
-    for (int i = 0; i < N; i++) {
-      double u = SlotPos[i];
+    Hsv(120.0 - 120.0 * c, 1.0, 1.0, out hr, out hg, out hb);
+    for (int i = 0; i < gr.N; i++) {
+      double u = gr.Pos[i];
       double on;
       if (u <= c) on = 1.0;
-      else {
-        double d = (u - c) / 0.05;
-        on = (d < 1.0) ? (1.0 - d) : 0.0;
-      }
+      else { double d = (u - c) / 0.05; on = (d < 1.0) ? (1.0 - d) : 0.0; }
       double r = hr * on, g = hg * on, b = hb * on;
       if (on < 0.02) { r = 5; g = 5; b = 5; }
-      SetZone(i, r, g, b);
+      SetZoneG(gr, i, r, g, b);
+    }
+  }
+
+  void SetZoneG(Zone gr, int slot, double r, double g, double b) {
+    int n = gr.N;
+    if (slot < 0 || slot >= n) return;
+    int q = slot;
+    if (gr.Mirror) {
+      int half = (n + 1) / 2;
+      q = (slot < half) ? (half - 1 - slot) : (slot - half);
+      if (q >= n) q = n - 1;
+    }
+    int i = gr.Idx[q];
+    if (i < 0 || i >= LampCount) return;
+
+    double br = gr.Brightness * gr.Master;
+    if (br < 0.999) { r *= br; g *= br; b *= br; }
+    if (r < 0) r = 0; else if (r > 255) r = 255;
+    if (g < 0) g = 0; else if (g > 255) g = 255;
+    if (b < 0) b = 0; else if (b > 255) b = 255;
+    fr[i] = r; fg[i] = g; fb[i] = b;
+  }
+
+  void PrepPaletteG(Zone gr) {
+    BuildTables();
+    int pc = gr.PalR.Length;
+    if (pc == 0) { pc = 1; gr.PalR = new int[]{255}; gr.PalG = new int[]{255}; gr.PalB = new int[]{255}; }
+    gr.plR = new double[pc]; gr.plG = new double[pc]; gr.plB = new double[pc];
+    gr.palGain = new double[pc];
+    for (int i = 0; i < pc; i++) {
+      gr.plR[i] = ToLin(gr.PalR[i]);
+      gr.plG[i] = ToLin(gr.PalG[i]);
+      gr.plB[i] = ToLin(gr.PalB[i]);
+      gr.palGain[i] = 1.0;
+    }
+    if (!gr.Equalise) return;
+    double logSum = 0; int n = 0;
+    for (int i = 0; i < pc; i++) {
+      double L = Luma(gr.plR[i], gr.plG[i], gr.plB[i]);
+      if (L > 0.0005) { logSum += Math.Log(L); n++; }
+    }
+    if (n == 0) return;
+    double target = Math.Exp(logSum / n);
+    for (int i = 0; i < pc; i++) {
+      double L = Luma(gr.plR[i], gr.plG[i], gr.plB[i]);
+      if (L <= 0.0005) continue;
+      double gain = Math.Pow(target / L, 0.5);
+      double peak = Math.Max(gr.plR[i], Math.Max(gr.plG[i], gr.plB[i]));
+      if (peak > 0 && gain * peak > 1.0) gain = 1.0 / peak;
+      if (gain < 0.25) gain = 0.25;
+      if (gain > 4.00) gain = 4.00;
+      gr.palGain[i] = gain;
+    }
+  }
+
+  void PalG(Zone gr, double f, out double r, out double g, out double b) {
+    if (gr.plR == null || gr.plR.Length == 0) PrepPaletteG(gr);
+    int pc = gr.plR.Length;
+    f = f % 1.0; if (f < 0) f += 1.0;
+    double x = f * pc;
+    int a = (int)Math.Floor(x);
+    double u = x - a;
+    int n2 = (a + 1) % pc;
+    a = a % pc;
+    double w = u * u * (3.0 - 2.0 * u);
+    double ga = gr.palGain[a], gb = gr.palGain[n2];
+    double lr = (gr.plR[a] * ga) + ((gr.plR[n2] * gb) - (gr.plR[a] * ga)) * w;
+    double lg = (gr.plG[a] * ga) + ((gr.plG[n2] * gb) - (gr.plG[a] * ga)) * w;
+    double lb = (gr.plB[a] * ga) + ((gr.plB[n2] * gb) - (gr.plB[a] * ga)) * w;
+    r = ToSrgb(lr); g = ToSrgb(lg); b = ToSrgb(lb);
+  }
+
+  // Pull every group's live inbox into its active settings.
+  void ApplyLive() {
+    for (int z = 0; z < Groups.Length; z++) {
+      Zone gr = Groups[z];
+      if (!gr.LiveDirty) continue;
+      gr.LiveDirty = false;          // clear first so a concurrent write is kept
+      bool repal = false;
+
+      int lb = gr.LiveBrightness;
+      if (lb >= 0) gr.Brightness = lb / 1000.0;
+      int lm = gr.LiveMaster;
+      if (lm >= 0) gr.Master = lm / 1000.0;
+      int ls = gr.LiveSpeedMilli;
+      if (ls >= 0) gr.Speed = ls / 1000.0;
+      string le = gr.LiveEffect;
+      if (le != null && le.Length > 0) gr.Effect = le;
+      int en = gr.LiveEnabled;
+      if (en >= 0) gr.Enabled = (en != 0);
+
+      int[] pr2 = gr.LivePalR, pg2 = gr.LivePalG, pb2 = gr.LivePalB;
+      if (pr2 != null && pg2 != null && pb2 != null && pr2.Length > 0 &&
+          pr2.Length == pg2.Length && pr2.Length == pb2.Length) {
+        gr.PalR = pr2; gr.PalG = pg2; gr.PalB = pb2; repal = true;
+      }
+
+      int lf = gr.LiveFlags;
+      if (lf >= 0) {
+        gr.Mirror  = (lf & 1) != 0;
+        gr.Reverse = (lf & 2) != 0;
+        bool eq = (lf & 4) != 0;
+        if (eq != gr.Equalise) { gr.Equalise = eq; repal = true; }
+        bool lp = (lf & 8) != 0;
+        if (lp != gr.Loop) {
+          gr.Loop = lp;
+          double[] want = lp ? gr.PosLoop : gr.PosAcross;
+          if (want != null && want.Length == gr.N) gr.Pos = want;
+        }
+      }
+      if (repal) PrepPaletteG(gr);
     }
   }
 
@@ -569,336 +748,321 @@ public class LampEngine {
   void Frame(double t) { Frame(t, 1.0 / Fps); }
 
   void Frame(double t, double dt) {
-    if (LiveDirty) {
-      LiveDirty = false;        // clear first, so a write mid-apply is not lost
-      bool repal = false;
-
-      int lb = LiveBrightness;
-      if (lb >= 0) Brightness = lb / 1000.0;
-
-      int ls = LiveSpeedMilli;
-      if (ls >= 0) Speed = ls / 1000.0;
-
-      string le = LiveEffect;
-      if (le != null && le.Length > 0) Effect = le;
-
-      int[] pr = LivePalR, pg = LivePalG, pb = LivePalB;
-      if (pr != null && pg != null && pb != null && pr.Length > 0 &&
-          pr.Length == pg.Length && pr.Length == pb.Length) {
-        PalR = pr; PalG = pg; PalB = pb; repal = true;
-      }
-
-      int lf = LiveFlags;
-      if (lf >= 0) {
-        Mirror  = (lf & 1) != 0;
-        Reverse = (lf & 2) != 0;
-        bool eq = (lf & 4) != 0;
-        if (eq != Equalise) { Equalise = eq; repal = true; }
-        bool lp = (lf & 8) != 0;
-        double[] want = lp ? SlotPosLoop : SlotPosAcross;
-        if (want != null && want.Length == LampCount) SlotPos = want;
-      }
-
-      if (repal) PrepPalette();
-    }
-    int N = LampCount;
-    double dir = Reverse ? -1.0 : 1.0;
+    ApplyLive();
     Now = t;
 
-    // An overlay temporarily takes over the keyboard (battery unplugged,
-    // battery low, etc), then hands it straight back to the chosen effect.
+    // An overlay temporarily takes over every group, then hands control
+    // straight back to whatever each group was doing.
     int ov = OverlayMode;
     if (ov != 0) {
       if (t < OverlayUntil) {
-        if (ov == 1) DrawBattery(N);
-        else if (ov == 2) DrawCpu(N);
+        for (int z = 0; z < Groups.Length; z++) {
+          if (ov == 1) DrawBattery(Groups[z]);
+          else         DrawCpu(Groups[z]);
+        }
         return;
       }
       OverlayMode = 0;
     }
 
-    switch (Effect) {
-      case "gradient": {
-        double phase = t * 0.25 * dir;
-        for (int i = 0; i < N; i++) {
-          double r, g, b;
-          // Use real physical position so the gradient travels evenly across
-          // the keyboard. Slot index would bunch it at the edges.
-          Pal(SlotPos[i] + phase, out r, out g, out b);
-          SetZone(i, r, g, b);
-        }
-        break;
-      }
-      case "rainbow": {
-        for (int i = 0; i < N; i++) {
-          double r, g, b;
-          Hsv(SlotPos[i] * 360.0 + t * 90.0 * dir, 1.0, 1.0, out r, out g, out b);
-          SetZone(i, r, g, b);
-        }
-        break;
-      }
-      case "wave": {
-        double r0 = PalR[0], g0 = PalG[0], b0 = PalB[0];
-        int p1 = PalR.Length > 1 ? 1 : 0;
-        double r1 = PalR[p1], g1 = PalG[p1], b1 = PalB[p1];
-        for (int i = 0; i < N; i++) {
-          double ph = (t * 1.2 * dir) - SlotPos[i] * 2.0;
-          double w = (1.0 + Math.Sin(ph * Math.PI)) / 2.0; w = w * w;
-          SetZone(i, r0*w + r1*(1-w)*0.15, g0*w + g1*(1-w)*0.15, b0*w + b1*(1-w)*0.15);
-        }
-        break;
-      }
-      case "comet": {
-        // Head travels 0..1 across the real width, wrapping.
-        double head = (t * 0.45 * dir) % 1.0; if (head < 0) head += 1.0;
-        for (int i = 0; i < N; i++) {
-          double d = head - SlotPos[i];
-          if (d < 0) d += 1.0;
-          double w = Math.Exp(-d * 9.0);
-          double cr, cg, cb;
-          Fade(PalR[0], PalG[0], PalB[0], w, out cr, out cg, out cb);
-          SetZone(i, cr, cg, cb);
-        }
-        break;
-      }
-      case "scanner": {
-        double p = (t * 0.55) % 2.0; if (p < 0) p += 2.0;
-        if (p > 1.0) p = 2.0 - p;           // bounce 0..1..0
-        for (int i = 0; i < N; i++) {
-          double w = 1.0 - (Math.Abs(SlotPos[i] - p) / 0.18);
-          if (w < 0) w = 0; w = w * w;
-          double cr, cg, cb;
-          Fade(PalR[0], PalG[0], PalB[0], w, out cr, out cg, out cb);
-          SetZone(i, cr, cg, cb);
-        }
-        break;
-      }
-      case "breathe": {
-        double w = (1.0 + Math.Sin(t * 1.6 * Math.PI)) / 2.0;
-        w = 0.02 + 0.98 * w * w;
-        double cr, cg, cb;
-        Fade(PalR[0], PalG[0], PalB[0], w, out cr, out cg, out cb);
-        for (int i = 0; i < N; i++) SetZone(i, cr, cg, cb);
-        break;
-      }
-      case "pulse": {
-        double w = Math.Exp(-(t % 1.0) * 4.5);
-        double r, g, b;
-        Hsv(Math.Floor(t) * 47.0, 1.0, 1.0, out r, out g, out b);
-        double pr2, pg2, pb2;
-        Fade(r, g, b, w, out pr2, out pg2, out pb2);
-        for (int i = 0; i < N; i++) SetZone(i, pr2, pg2, pb2);
-        break;
-      }
-      // ---------------- audio reactive ----------------
-      case "spectrum": {
-        // Each zone is one frequency band, low on the left.
-        float[] bd = (Audio != null && Audio.Ok) ? Audio.Bands : null;
-        for (int i = 0; i < N; i++) {
-          double u = SlotPos[i];
-          double v = 0.0;
-          if (bd != null) {
-            int b = (int)(u * (AudioCap.BANDS - 1) + 0.5);
-            if (b < 0) b = 0; if (b >= AudioCap.BANDS) b = AudioCap.BANDS - 1;
-            v = bd[b];
-          }
-          double r, g, b2;
-          Pal(u, out r, out g, out b2);
-          SetZone(i, r * v, g * v, b2 * v);
-        }
-        break;
-      }
-      case "vumeter": {
-        // Palette bar that fills from the left with overall loudness.
-        double lv = (Audio != null && Audio.Ok) ? Audio.Level : 0.0;
-        for (int i = 0; i < N; i++) {
-          double u = SlotPos[i];
-          double on = (u <= lv) ? 1.0 : 0.0;
-          if (on < 1.0) {
-            double d = (u - lv) / 0.08;        // soft edge
-            on = (d < 1.0) ? (1.0 - d) : 0.0;
-            if (on < 0) on = 0;
-          }
-          double r, g, b;
-          Pal(u, out r, out g, out b);
-          SetZone(i, r * on, g * on, b * on);
-        }
-        break;
-      }
-      case "beat": {
-        // Whole keyboard flashes on the beat, colour cycles per hit.
-        double e = (Audio != null && Audio.Ok) ? Audio.Beat : 0.0;
-        double bass = (Audio != null && Audio.Ok) ? Audio.Bass : 0.0;
-        double w = e * 0.75 + bass * 0.45;
-        if (w > 1.0) w = 1.0;
-        w = 0.04 + 0.96 * w * w;
-        double r0, g0, b0;
-        Pal(t * 0.08, out r0, out g0, out b0);
-        for (int i = 0; i < N; i++) SetZone(i, r0 * w, g0 * w, b0 * w);
-        break;
-      }
-      case "pulsebass": {
-        // Bass drives a wave outward from the centre.
-        double bass = (Audio != null && Audio.Ok) ? Audio.Bass : 0.0;
-        for (int i = 0; i < N; i++) {
-          double d = Math.Abs(SlotPos[i] - 0.5) * 2.0;
-          double v = bass - d * 0.55;
-          if (v < 0) v = 0; if (v > 1) v = 1;
-          v = v * v;
-          double r, g, b;
-          Pal(SlotPos[i] + t * 0.05, out r, out g, out b);
-          SetZone(i, r * v, g * v, b * v);
-        }
-        break;
-      }
-
-      // ---------------- ambient (screen mirror) ----------------
-      case "ambient": {
-        int[] cols = (Screen != null && Screen.Ok) ? Screen.Cols : null;
-        for (int i = 0; i < N; i++) {
-          double u = SlotPos[i];
-          double r = 0, g = 0, b = 0;
-          if (cols != null && cols.Length > 0) {
-            double f = u * (cols.Length - 1);
-            int a = (int)f; if (a < 0) a = 0; if (a >= cols.Length) a = cols.Length - 1;
-            int c2 = a + 1; if (c2 >= cols.Length) c2 = cols.Length - 1;
-            double w = f - a;
-            int ca = cols[a], cb = cols[c2];
-            r = ((ca >> 16) & 0xFF) * (1 - w) + ((cb >> 16) & 0xFF) * w;
-            g = ((ca >>  8) & 0xFF) * (1 - w) + ((cb >>  8) & 0xFF) * w;
-            b = ( ca        & 0xFF) * (1 - w) + ( cb        & 0xFF) * w;
-            // Screens are mostly desaturated; push saturation so the
-            // keyboard shows a colour rather than a grey wash.
-            double mx = Math.Max(r, Math.Max(g, b));
-            double mn = Math.Min(r, Math.Min(g, b));
-            if (mx > 1.0) {
-              double mid = (mx + mn) * 0.5;
-              r = mid + (r - mid) * 1.55;
-              g = mid + (g - mid) * 1.55;
-              b = mid + (b - mid) * 1.55;
-              double k = 255.0 / Math.Max(255.0, Math.Max(r, Math.Max(g, b)));
-              r *= k; g *= k; b *= k;
-              if (r < 0) r = 0; if (g < 0) g = 0; if (b < 0) b = 0;
-            }
-          }
-          SetZone(i, r, g, b);
-        }
-        break;
-      }
-
-      // ---------------- classic presets ----------------
-      case "cycle": {
-        // Whole keyboard one colour, slowly walking the hue wheel.
-        double r, g, b;
-        Hsv((t * 18.0 * dir) % 360.0, 1.0, 1.0, out r, out g, out b);
-        for (int i = 0; i < N; i++) SetZone(i, r, g, b);
-        break;
-      }
-      case "strobe": {
-        double ph = t * 6.0;
-        double w = (ph - Math.Floor(ph)) < 0.5 ? 1.0 : 0.0;
-        double r, g, b;
-        Pal(Math.Floor(ph) * 0.13, out r, out g, out b);
-        for (int i = 0; i < N; i++) SetZone(i, r * w, g * w, b * w);
-        break;
-      }
-      case "stars": {
-        // Twinkling points of light on a dark keyboard.
-        double fade = Math.Pow(0.28, dt);
-        double born = 1.0 - Math.Pow(1.0 - 0.055, dt * 60.0);
-        for (int i = 0; i < N; i++) {
-          heat[i] *= fade;
-          if (rnd.NextDouble() < born) heat[i] = 0.75 + rnd.NextDouble() * 0.25;
-          double v = heat[i];
-          double r, g, b;
-          Pal((i * 0.137) % 1.0, out r, out g, out b);
-          SetZone(i, r * v, g * v, b * v);
-        }
-        break;
-      }
-      case "ripple": {
-        // Expanding rings from the centre.
-        double sp = 0.55 * dir;
-        double v0 = (t * sp) % 1.0;
-        for (int i = 0; i < N; i++) {
-          double d = Math.Abs(SlotPos[i] - 0.5) * 2.0;
-          double ph = d - v0;
-          ph = ph - Math.Floor(ph);
-          double w = Math.Exp(-ph * 5.0);
-          double r, g, b;
-          Pal(SlotPos[i] + t * 0.1, out r, out g, out b);
-          SetZone(i, r * w, g * w, b * w);
-        }
-        break;
-      }
-      case "aurora": {
-        // Three slow sine layers - the soft drifting look.
-        for (int i = 0; i < N; i++) {
-          double u = SlotPos[i];
-          double a = 0.5 + 0.5 * Math.Sin((u * 2.1 + t * 0.21 * dir) * Math.PI * 2.0);
-          double b2 = 0.5 + 0.5 * Math.Sin((u * 1.3 - t * 0.14 * dir + 0.33) * Math.PI * 2.0);
-          double c = 0.5 + 0.5 * Math.Sin((u * 3.7 + t * 0.09 * dir + 0.66) * Math.PI * 2.0);
-          double f = (a * 0.5 + b2 * 0.35 + c * 0.15);
-          double r, g, bb;
-          Pal(f, out r, out g, out bb);
-          double v = 0.35 + 0.65 * f;
-          SetZone(i, r * v, g * v, bb * v);
-        }
-        break;
-      }
-
-      // ---------------- information ----------------
-      case "battery": {
-        DrawBattery(N);
-        break;
-      }
-      case "cpu": {
-        DrawCpu(N);
-        break;
-      }
-      case "clock": {
-        // Hue follows time of day; a bright marker walks with the minutes.
-        DateTime nowT = DateTime.Now;
-        double dayF = (nowT.Hour * 3600.0 + nowT.Minute * 60.0 + nowT.Second) / 86400.0;
-        double mF   = (nowT.Minute * 60.0 + nowT.Second) / 3600.0;
-        for (int i = 0; i < N; i++) {
-          double r, g, b;
-          Hsv(210.0 + 150.0 * Math.Sin(dayF * Math.PI * 2.0 - Math.PI / 2.0), 0.85, 1.0, out r, out g, out b);
-          double d = Math.Abs(SlotPos[i] - mF);
-          if (d > 0.5) d = 1.0 - d;
-          double mark = Math.Exp(-d * 26.0);
-          double v = 0.16 + 0.84 * mark;
-          SetZone(i, r * v, g * v, b * v);
-        }
-        break;
-      }
-      case "fire": {
-        // Cool every zone, then randomly spark a few. The old model added
-        // heat every frame, which drove the steady state above 1.0 so every
-        // zone sat clamped at maximum - a flat, pale glow with no life.
-        double cool  = Math.Pow(0.02, dt);              // frame-rate independent
-        double spark = 1.0 - Math.Pow(1.0 - 0.10, dt * 60.0);
-        for (int i = 0; i < N; i++) {
-          heat[i] *= cool;
-          if (rnd.NextDouble() < spark) heat[i] += 0.30 + rnd.NextDouble() * 0.45;
-          if (heat[i] > 1.0) heat[i] = 1.0;
-          double v = heat[i];
-          // Blackbody-ish ramp in LINEAR light. Blue is held at zero until
-          // the zone is genuinely hot, so the fire stays saturated instead
-          // of washing out to pale orange.
-          double lr = v * 1.45; if (lr > 1.0) lr = 1.0;
-          double g2 = (v - 0.32) * 1.5; if (g2 < 0) g2 = 0; if (g2 > 1) g2 = 1;
-          double b2 = (v - 0.78) * 3.0; if (b2 < 0) b2 = 0; if (b2 > 1) b2 = 1;
-          SetZone(i, ToSrgb(lr), ToSrgb(g2 * g2), ToSrgb(b2 * b2 * b2));
-        }
-        break;
-      }
-      default: {
-        for (int i = 0; i < N; i++) SetZone(i, PalR[0], PalG[0], PalB[0]);
-        break;
-      }
+    for (int z = 0; z < Groups.Length; z++) {
+      Zone gr = Groups[z];
+      if (!gr.Enabled) { BlankGroup(gr); continue; }
+      // Each group keeps its own phase so changing one group's speed can
+      // never jump the other one.
+      gr.Phase += dt * gr.Speed;
+      RenderGroup(gr, gr.Phase, dt);
     }
   }
+
+  void BlankGroup(Zone gr) {
+    for (int i = 0; i < gr.N; i++) SetZoneG(gr, i, 0, 0, 0);
+  }
+
+  void RenderGroup(Zone gr, double t, double dt) {
+    switch (gr.Effect) {
+          case "gradient": {
+            double phase = t * 0.25 * gr.Dir;
+            for (int i = 0; i < gr.N; i++) {
+              double r, g, b;
+              // Use real physical position so the gradient travels evenly across
+              // the keyboard. Slot index would bunch it at the edges.
+              PalG(gr, gr.Pos[i] + phase, out r, out g, out b);
+              SetZoneG(gr, i, r, g, b);
+            }
+            break;
+          }
+          case "rainbow": {
+            for (int i = 0; i < gr.N; i++) {
+              double r, g, b;
+              Hsv(gr.Pos[i] * 360.0 + t * 90.0 * gr.Dir, 1.0, 1.0, out r, out g, out b);
+              SetZoneG(gr, i, r, g, b);
+            }
+            break;
+          }
+          case "wave": {
+            double r0 = gr.PalR[0], g0 = gr.PalG[0], b0 = gr.PalB[0];
+            int p1 = gr.PalR.Length > 1 ? 1 : 0;
+            double r1 = gr.PalR[p1], g1 = gr.PalG[p1], b1 = gr.PalB[p1];
+            for (int i = 0; i < gr.N; i++) {
+              double ph = (t * 1.2 * gr.Dir) - gr.Pos[i] * 2.0;
+              double w = (1.0 + Math.Sin(ph * Math.PI)) / 2.0; w = w * w;
+              SetZoneG(gr, i, r0*w + r1*(1-w)*0.15, g0*w + g1*(1-w)*0.15, b0*w + b1*(1-w)*0.15);
+            }
+            break;
+          }
+          case "comet": {
+            // Head travels 0..1 across the real width, wrapping.
+            double head = (t * 0.45 * gr.Dir) % 1.0; if (head < 0) head += 1.0;
+            for (int i = 0; i < gr.N; i++) {
+              double d = head - gr.Pos[i];
+              if (d < 0) d += 1.0;
+              double w = Math.Exp(-d * 9.0);
+              double cr, cg, cb;
+              Fade(gr.PalR[0], gr.PalG[0], gr.PalB[0], w, out cr, out cg, out cb);
+              SetZoneG(gr, i, cr, cg, cb);
+            }
+            break;
+          }
+          case "scanner": {
+            double p = (t * 0.55) % 2.0; if (p < 0) p += 2.0;
+            if (p > 1.0) p = 2.0 - p;           // bounce 0..1..0
+            for (int i = 0; i < gr.N; i++) {
+              double w = 1.0 - (Math.Abs(gr.Pos[i] - p) / 0.18);
+              if (w < 0) w = 0; w = w * w;
+              double cr, cg, cb;
+              Fade(gr.PalR[0], gr.PalG[0], gr.PalB[0], w, out cr, out cg, out cb);
+              SetZoneG(gr, i, cr, cg, cb);
+            }
+            break;
+          }
+          case "breathe": {
+            double w = (1.0 + Math.Sin(t * 1.6 * Math.PI)) / 2.0;
+            w = 0.02 + 0.98 * w * w;
+            double cr, cg, cb;
+            Fade(gr.PalR[0], gr.PalG[0], gr.PalB[0], w, out cr, out cg, out cb);
+            for (int i = 0; i < gr.N; i++) SetZoneG(gr, i, cr, cg, cb);
+            break;
+          }
+          case "pulse": {
+            double w = Math.Exp(-(t % 1.0) * 4.5);
+            double r, g, b;
+            Hsv(Math.Floor(t) * 47.0, 1.0, 1.0, out r, out g, out b);
+            double pr2, pg2, pb2;
+            Fade(r, g, b, w, out pr2, out pg2, out pb2);
+            for (int i = 0; i < gr.N; i++) SetZoneG(gr, i, pr2, pg2, pb2);
+            break;
+          }
+          // ---------------- audio reactive ----------------
+          case "spectrum": {
+            // Each zone is one frequency band, low on the left.
+            float[] bd = (Audio != null && Audio.Ok) ? Audio.Bands : null;
+            for (int i = 0; i < gr.N; i++) {
+              double u = gr.Pos[i];
+              double v = 0.0;
+              if (bd != null) {
+                int b = (int)(u * (AudioCap.BANDS - 1) + 0.5);
+                if (b < 0) b = 0; if (b >= AudioCap.BANDS) b = AudioCap.BANDS - 1;
+                v = bd[b];
+              }
+              double r, g, b2;
+              PalG(gr, u, out r, out g, out b2);
+              SetZoneG(gr, i, r * v, g * v, b2 * v);
+            }
+            break;
+          }
+          case "vumeter": {
+            // Palette bar that fills from the left with overall loudness.
+            double lv = (Audio != null && Audio.Ok) ? Audio.Level : 0.0;
+            for (int i = 0; i < gr.N; i++) {
+              double u = gr.Pos[i];
+              double on = (u <= lv) ? 1.0 : 0.0;
+              if (on < 1.0) {
+                double d = (u - lv) / 0.08;        // soft edge
+                on = (d < 1.0) ? (1.0 - d) : 0.0;
+                if (on < 0) on = 0;
+              }
+              double r, g, b;
+              PalG(gr, u, out r, out g, out b);
+              SetZoneG(gr, i, r * on, g * on, b * on);
+            }
+            break;
+          }
+          case "beat": {
+            // Whole keyboard flashes on the beat, colour cycles per hit.
+            double e = (Audio != null && Audio.Ok) ? Audio.Beat : 0.0;
+            double bass = (Audio != null && Audio.Ok) ? Audio.Bass : 0.0;
+            double w = e * 0.75 + bass * 0.45;
+            if (w > 1.0) w = 1.0;
+            w = 0.04 + 0.96 * w * w;
+            double r0, g0, b0;
+            PalG(gr, t * 0.08, out r0, out g0, out b0);
+            for (int i = 0; i < gr.N; i++) SetZoneG(gr, i, r0 * w, g0 * w, b0 * w);
+            break;
+          }
+          case "pulsebass": {
+            // Bass drives a wave outward from the centre.
+            double bass = (Audio != null && Audio.Ok) ? Audio.Bass : 0.0;
+            for (int i = 0; i < gr.N; i++) {
+              double d = Math.Abs(gr.Pos[i] - 0.5) * 2.0;
+              double v = bass - d * 0.55;
+              if (v < 0) v = 0; if (v > 1) v = 1;
+              v = v * v;
+              double r, g, b;
+              PalG(gr, gr.Pos[i] + t * 0.05, out r, out g, out b);
+              SetZoneG(gr, i, r * v, g * v, b * v);
+            }
+            break;
+          }
+
+          // ---------------- ambient (screen mirror) ----------------
+          case "ambient": {
+            int[] cols = (Screen != null && Screen.Ok) ? Screen.Cols : null;
+            for (int i = 0; i < gr.N; i++) {
+              double u = gr.Pos[i];
+              double r = 0, g = 0, b = 0;
+              if (cols != null && cols.Length > 0) {
+                double f = u * (cols.Length - 1);
+                int a = (int)f; if (a < 0) a = 0; if (a >= cols.Length) a = cols.Length - 1;
+                int c2 = a + 1; if (c2 >= cols.Length) c2 = cols.Length - 1;
+                double w = f - a;
+                int ca = cols[a], cb = cols[c2];
+                r = ((ca >> 16) & 0xFF) * (1 - w) + ((cb >> 16) & 0xFF) * w;
+                g = ((ca >>  8) & 0xFF) * (1 - w) + ((cb >>  8) & 0xFF) * w;
+                b = ( ca        & 0xFF) * (1 - w) + ( cb        & 0xFF) * w;
+                // Screens are mostly desaturated; push saturation so the
+                // keyboard shows a colour rather than a grey wash.
+                double mx = Math.Max(r, Math.Max(g, b));
+                double mn = Math.Min(r, Math.Min(g, b));
+                if (mx > 1.0) {
+                  double mid = (mx + mn) * 0.5;
+                  r = mid + (r - mid) * 1.55;
+                  g = mid + (g - mid) * 1.55;
+                  b = mid + (b - mid) * 1.55;
+                  double k = 255.0 / Math.Max(255.0, Math.Max(r, Math.Max(g, b)));
+                  r *= k; g *= k; b *= k;
+                  if (r < 0) r = 0; if (g < 0) g = 0; if (b < 0) b = 0;
+                }
+              }
+              SetZoneG(gr, i, r, g, b);
+            }
+            break;
+          }
+
+          // ---------------- classic presets ----------------
+          case "cycle": {
+            // Whole keyboard one colour, slowly walking the hue wheel.
+            double r, g, b;
+            Hsv((t * 18.0 * gr.Dir) % 360.0, 1.0, 1.0, out r, out g, out b);
+            for (int i = 0; i < gr.N; i++) SetZoneG(gr, i, r, g, b);
+            break;
+          }
+          case "strobe": {
+            double ph = t * 6.0;
+            double w = (ph - Math.Floor(ph)) < 0.5 ? 1.0 : 0.0;
+            double r, g, b;
+            PalG(gr, Math.Floor(ph) * 0.13, out r, out g, out b);
+            for (int i = 0; i < gr.N; i++) SetZoneG(gr, i, r * w, g * w, b * w);
+            break;
+          }
+          case "stars": {
+            // Twinkling points of light on a dark keyboard.
+            double fade = Math.Pow(0.28, dt);
+            double born = 1.0 - Math.Pow(1.0 - 0.055, dt * 60.0);
+            for (int i = 0; i < gr.N; i++) {
+              gr.Heat[i] *= fade;
+              if (rnd.NextDouble() < born) gr.Heat[i] = 0.75 + rnd.NextDouble() * 0.25;
+              double v = gr.Heat[i];
+              double r, g, b;
+              PalG(gr, (i * 0.137) % 1.0, out r, out g, out b);
+              SetZoneG(gr, i, r * v, g * v, b * v);
+            }
+            break;
+          }
+          case "ripple": {
+            // Expanding rings from the centre.
+            double sp = 0.55 * gr.Dir;
+            double v0 = (t * sp) % 1.0;
+            for (int i = 0; i < gr.N; i++) {
+              double d = Math.Abs(gr.Pos[i] - 0.5) * 2.0;
+              double ph = d - v0;
+              ph = ph - Math.Floor(ph);
+              double w = Math.Exp(-ph * 5.0);
+              double r, g, b;
+              PalG(gr, gr.Pos[i] + t * 0.1, out r, out g, out b);
+              SetZoneG(gr, i, r * w, g * w, b * w);
+            }
+            break;
+          }
+          case "aurora": {
+            // Three slow sine layers - the soft drifting look.
+            for (int i = 0; i < gr.N; i++) {
+              double u = gr.Pos[i];
+              double a = 0.5 + 0.5 * Math.Sin((u * 2.1 + t * 0.21 * gr.Dir) * Math.PI * 2.0);
+              double b2 = 0.5 + 0.5 * Math.Sin((u * 1.3 - t * 0.14 * gr.Dir + 0.33) * Math.PI * 2.0);
+              double c = 0.5 + 0.5 * Math.Sin((u * 3.7 + t * 0.09 * gr.Dir + 0.66) * Math.PI * 2.0);
+              double f = (a * 0.5 + b2 * 0.35 + c * 0.15);
+              double r, g, bb;
+              PalG(gr, f, out r, out g, out bb);
+              double v = 0.35 + 0.65 * f;
+              SetZoneG(gr, i, r * v, g * v, bb * v);
+            }
+            break;
+          }
+
+          // ---------------- information ----------------
+          case "battery": {
+            DrawBattery(gr);
+            break;
+          }
+          case "cpu": {
+            DrawCpu(gr);
+            break;
+          }
+          case "clock": {
+            // Hue follows time of day; a bright marker walks with the minutes.
+            DateTime nowT = DateTime.Now;
+            double dayF = (nowT.Hour * 3600.0 + nowT.Minute * 60.0 + nowT.Second) / 86400.0;
+            double mF   = (nowT.Minute * 60.0 + nowT.Second) / 3600.0;
+            for (int i = 0; i < gr.N; i++) {
+              double r, g, b;
+              Hsv(210.0 + 150.0 * Math.Sin(dayF * Math.PI * 2.0 - Math.PI / 2.0), 0.85, 1.0, out r, out g, out b);
+              double d = Math.Abs(gr.Pos[i] - mF);
+              if (d > 0.5) d = 1.0 - d;
+              double mark = Math.Exp(-d * 26.0);
+              double v = 0.16 + 0.84 * mark;
+              SetZoneG(gr, i, r * v, g * v, b * v);
+            }
+            break;
+          }
+          case "fire": {
+            // Cool every zone, then randomly spark a few. The old model added
+            // heat every frame, which drove the steady state above 1.0 so every
+            // zone sat clamped at maximum - a flat, pale glow with no life.
+            double cool  = Math.Pow(0.02, dt);              // frame-rate independent
+            double spark = 1.0 - Math.Pow(1.0 - 0.10, dt * 60.0);
+            for (int i = 0; i < gr.N; i++) {
+              gr.Heat[i] *= cool;
+              if (rnd.NextDouble() < spark) gr.Heat[i] += 0.30 + rnd.NextDouble() * 0.45;
+              if (gr.Heat[i] > 1.0) gr.Heat[i] = 1.0;
+              double v = gr.Heat[i];
+              // Blackbody-ish ramp in LINEAR light. Blue is held at zero until
+              // the zone is genuinely hot, so the fire stays saturated instead
+              // of washing out to pale orange.
+              double lr = v * 1.45; if (lr > 1.0) lr = 1.0;
+              double g2 = (v - 0.32) * 1.5; if (g2 < 0) g2 = 0; if (g2 > 1) g2 = 1;
+              double b2 = (v - 0.78) * 3.0; if (b2 < 0) b2 = 0; if (b2 > 1) b2 = 1;
+              SetZoneG(gr, i, ToSrgb(lr), ToSrgb(g2 * g2), ToSrgb(b2 * b2 * b2));
+            }
+            break;
+          }
+          default: {
+            for (int i = 0; i < gr.N; i++) SetZoneG(gr, i, gr.PalR[0], gr.PalG[0], gr.PalB[0]);
+            break;
+          }
+        }
+  }
+
 
   void Loop() {
     timeBeginPeriod(1);
@@ -1466,7 +1630,8 @@ $U_IDSTART=0x61; $U_IDEND=0x62; $U_AUTONOMOUS=0x71
 # DISCOVERY  (proven working; unchanged in shape)
 # ============================================================================
 Say ""
-Say ("AURA-BACKGROUND v15   effect={0}  fps={1}  speed={2}" -f $Effect,$Fps,$Speed) 'Cyan'
+$bannerBar = $Effect; if ($BarEffect) { $bannerBar = $BarEffect }
+Say ("AURA-BACKGROUND v16   keyboard={0}  bar={1}  fps={2}" -f $Effect,$bannerBar,$Fps) 'Cyan'
 Say ""
 
 # A laptop exposes MANY HID collections on the same VID/PID, and more than
@@ -1883,6 +2048,36 @@ $script:Screen = $null
 function Need-Audio  { param($e) return @('spectrum','vumeter','beat','pulsebass') -contains $e }
 function Need-Screen { param($e) return ($e -eq 'ambient') }
 
+# Either group can demand a source, so decide from both at once.
+function Sync-Sources2 {
+    param([bool]$wantAudio, [bool]$wantScreen)
+    if ($wantAudio) {
+        if (-not $script:Audio) {
+            $script:Audio = New-Object AudioCap
+            if ($script:Audio.Start()) {
+                $eng.Audio = $script:Audio
+                Say "  Audio capture: on" 'DarkGray'
+            } else {
+                Say ("  Audio capture failed: " + $script:Audio.Err) 'Yellow'
+                $script:Audio = $null
+            }
+        }
+    } elseif ($script:Audio) {
+        $script:Audio.Stop(); $eng.Audio = $null; $script:Audio = $null
+    }
+
+    if ($wantScreen) {
+        if (-not $script:Screen) {
+            $script:Screen = New-Object ScreenCap
+            $script:Screen.Start()
+            $eng.Screen = $script:Screen
+            Say "  Screen sampling: on" 'DarkGray'
+        }
+    } elseif ($script:Screen) {
+        $script:Screen.Stop(); $eng.Screen = $null; $script:Screen = $null
+    }
+}
+
 function Sync-Sources {
     param($tok)
     if (Need-Audio $tok) {
@@ -2017,12 +2212,134 @@ else {
 }
 $eng.SlotPos       = $sp
 $eng.SlotPosAcross = $spAcross
+
+# ---- split the lamps into deck and light bar -------------------------
+# A zone well inside the chassis rectangle is a keyboard-deck key; one
+# hugging an edge is part of the light bar. Same interior test the loop
+# layout already uses, so the two always agree.
+$deckIdx = New-Object System.Collections.ArrayList
+$barIdx  = New-Object System.Collections.ArrayList
+if ($spanX -gt 0 -and $spanY -gt 0) {
+    $innerSplit = 0.12 * [Math]::Min($spanX, $spanY)
+    for ($s = 0; $s -lt $lampCount; $s++) {
+        $x = $xs[$s] - $xmin
+        $y = $ys[$s] - $ymin
+        $mm = [Math]::Min([Math]::Min($y, ($spanY - $y)), [Math]::Min($x, ($spanX - $x)))
+        if ($mm -gt $innerSplit) { [void]$deckIdx.Add($s) } else { [void]$barIdx.Add($s) }
+    }
+}
+# If the geometry does not separate (some firmware reports everything on
+# one line), fall back to a single group so nothing breaks.
+if ($deckIdx.Count -eq 0 -or $barIdx.Count -eq 0) {
+    $deckIdx = New-Object System.Collections.ArrayList
+    for ($s = 0; $s -lt $lampCount; $s++) { [void]$deckIdx.Add($s) }
+    $barIdx = New-Object System.Collections.ArrayList
+}
+
+function New-Zone {
+    param([string]$Name, $Members)
+    $z = New-Object Zone
+    $z.Name = $Name
+    $z.Idx  = [int[]]@($Members)
+    $n = $z.Idx.Length
+    if ($n -eq 0) { return $z }
+
+    # Re-normalise both travel maps so each group spans a full 0..1 on its
+    # own. Without this the deck would only ever use the 0.05..0.23 slice
+    # of a gradient and look almost static.
+    $acr = New-Object double[] $n
+    $lop = New-Object double[] $n
+    $aVals = @(); $lVals = @()
+    foreach ($m in $z.Idx) { $aVals += $spAcross[$m]; if ($spLoop) { $lVals += $spLoop[$m] } else { $lVals += $spAcross[$m] } }
+    $aMin = ($aVals | Measure-Object -Minimum).Minimum
+    $aMax = ($aVals | Measure-Object -Maximum).Maximum
+    $lMin = ($lVals | Measure-Object -Minimum).Minimum
+    $lMax = ($lVals | Measure-Object -Maximum).Maximum
+    for ($k = 0; $k -lt $n; $k++) {
+        if ($aMax -gt $aMin) { $acr[$k] = ($aVals[$k] - $aMin) / ($aMax - $aMin) }
+        elseif ($n -gt 1)    { $acr[$k] = $k / [double]($n - 1) }
+        else                 { $acr[$k] = 0.0 }
+        if ($lMax -gt $lMin) { $lop[$k] = ($lVals[$k] - $lMin) / ($lMax - $lMin) }
+        elseif ($n -gt 1)    { $lop[$k] = $k / [double]($n - 1) }
+        else                 { $lop[$k] = 0.0 }
+    }
+    $z.PosAcross = $acr
+    $z.PosLoop   = $lop
+    $z.Pos       = $acr
+    $z.Alloc()
+    return $z
+}
+
+$zDeck = New-Zone 'deck' $deckIdx
+$zBar  = New-Zone 'bar'  $barIdx
+if ($barIdx.Count -gt 0) { $eng.Groups = [Zone[]]@($zDeck, $zBar) }
+else                     { $eng.Groups = [Zone[]]@($zDeck) }
+Say ("  Groups: keyboard {0} zones, light bar {1} zones." -f $deckIdx.Count, $barIdx.Count) 'DarkGray'
+
 if ($spLoop) { $eng.SlotPosLoop = $spLoop } else { $eng.SlotPosLoop = $spAcross }
 $eng.Mirror     = [bool]$Mirror
 $eng.Reverse    = [bool]$Reverse
 $eng.PalR       = [int[]]@($stops | ForEach-Object { $_[0] })
 $eng.PalG       = [int[]]@($stops | ForEach-Object { $_[1] })
 $eng.PalB       = [int[]]@($stops | ForEach-Object { $_[2] })
+
+# ---- seed each group ------------------------------------------------
+# Bar settings fall back to the keyboard's when not given, so a plain
+# command line behaves exactly like it did before groups existed.
+$palR = [int[]]@($stops | ForEach-Object { $_[0] })
+$palG = [int[]]@($stops | ForEach-Object { $_[1] })
+$palB = [int[]]@($stops | ForEach-Object { $_[2] })
+
+function Parse-Stops {
+    param([string]$csv)
+    if (-not $csv) { return $null }
+    $out = @()
+    foreach ($tok in ($csv -split ',')) {
+        $t = $tok.Trim()
+        if (-not $t) { continue }
+        try { $out += ,(ConvertFrom-Hex $t) } catch { }
+    }
+    if ($out.Count -eq 0) { return $null }
+    return $out
+}
+
+function Seed-Zone {
+    param($z, $eff, $spd, $brt, $mir, $rev, $equ, $lay, $stopsIn, $on)
+    if ($z.Idx.Length -eq 0) { return }
+    $z.Effect     = $eff
+    $z.Speed      = [double]$spd
+    $z.Brightness = [double]$brt
+    $z.Mirror     = [bool]$mir
+    $z.Reverse    = [bool]$rev
+    $z.Equalise   = ($equ -eq 'on')
+    $z.Enabled    = [bool]$on
+    $z.Loop       = ($lay -eq 'loop')
+    if ($z.Loop -and $z.PosLoop) { $z.Pos = $z.PosLoop } else { $z.Pos = $z.PosAcross }
+    if ($stopsIn) {
+        $z.PalR = [int[]]@($stopsIn | ForEach-Object { $_[0] })
+        $z.PalG = [int[]]@($stopsIn | ForEach-Object { $_[1] })
+        $z.PalB = [int[]]@($stopsIn | ForEach-Object { $_[2] })
+    } else {
+        $z.PalR = $palR; $z.PalG = $palG; $z.PalB = $palB
+    }
+}
+
+if ($Master -lt 0) { $Master = 0.0 }
+if ($Master -gt 1) { $Master = 1.0 }
+
+# keyboard deck
+Seed-Zone $zDeck $Effect $Speed $Brightness $Mirror $Reverse $Equalise $Layout $null (-not $KbdOff)
+
+# light bar: use its own switches where supplied
+$barEff = $Effect;     if ($BarEffect)              { $barEff = $BarEffect }
+$barSpd = $Speed;      if ($BarSpeed      -gt 0)    { $barSpd = $BarSpeed }
+$barBrt = $Brightness; if ($BarBrightness -ge 0)    { $barBrt = $BarBrightness }
+$barEqu = $Equalise;   if ($BarEqualise)            { $barEqu = $BarEqualise }
+$barLay = $Layout;     if ($BarLayout)              { $barLay = $BarLayout }
+$barStops = Parse-Stops $BarColors
+Seed-Zone $zBar $barEff $barSpd $barBrt ($BarMirror.IsPresent) ($BarReverse.IsPresent) $barEqu $barLay $barStops (-not $BarOff)
+
+foreach ($z in @($zDeck, $zBar)) { $z.Master = [double]$Master }
 
 if (-not $eng.Open()) {
     Write-Host ("  Engine could not open the device. {0}" -f $eng.LastError) -ForegroundColor Red
@@ -2053,7 +2370,8 @@ Say ""
 Say (" Running at {0} fps on a compiled thread. Ctrl+C to stop." -f $eng.Fps) 'Green'
 Say ""
 
-Sync-Sources $Effect
+$aud = @('spectrum','vumeter','beat','pulsebass')
+Sync-Sources2 (($aud -contains $Effect) -or ($aud -contains $barEff)) (($Effect -eq 'ambient') -or ($barEff -eq 'ambient'))
 $eng.Start()
 
 # ---------------------------------------------------------------------------
@@ -2076,7 +2394,7 @@ $themeFile = Join-Path $stateDir 'theme.json'
 $script:SysTick = 0
 $script:LastAc  = $null
 $script:LastPct = 100
-$script:LiveLevel = [int]([Math]::Round($Brightness * 1000))
+$script:LiveLevel = [int]([Math]::Round($Master * 1000))
 # Ignore whatever theme file is already on disk: the arguments we were
 # launched with already describe it. Only react to later writes.
 $script:ThemeStamp = 0
@@ -2088,8 +2406,12 @@ function Set-Live([int]$level) {
     if ($level -lt 0)    { $level = 0 }
     if ($level -gt 1000) { $level = 1000 }
     $script:LiveLevel = $level
-    $eng.LiveBrightness = $level
-    $eng.LiveDirty = $true
+    # Fn keys are a master control: they scale every group without
+    # touching each group's own brightness setting.
+    foreach ($z in $eng.Groups) {
+        $z.LiveMaster = $level
+        $z.LiveDirty = $true
+    }
     try { Set-Content -Path $liveFile -Value $level -Encoding ASCII -ErrorAction SilentlyContinue } catch { }
 }
 
@@ -2146,7 +2468,7 @@ try {
                     # still caught by failed writes in Push().
                     Start-Sleep -Milliseconds 800
                     $eng.ReAssert()
-                    $eng.LiveDirty = $true
+                    foreach ($z in $eng.Groups) { $z.LiveDirty = $true }
                 }
                 $pe = Get-Event -SourceIdentifier 'AuraPower' -ErrorAction SilentlyContinue
             }
@@ -2189,7 +2511,7 @@ try {
             while ($se) {
                 Remove-Event -EventIdentifier $se.EventIdentifier -ErrorAction SilentlyContinue
                 $eng.ReAssert()
-                $eng.LiveDirty = $true
+                foreach ($z in $eng.Groups) { $z.LiveDirty = $true }
                 $se = Get-Event -SourceIdentifier 'AuraSession' -ErrorAction SilentlyContinue
             }
         }
@@ -2221,8 +2543,10 @@ try {
                 if ([int]::TryParse($txt, [ref]$val)) {
                     if ($val -ne $script:LiveLevel) {
                         $script:LiveLevel = $val
-                        $eng.LiveBrightness = $val
-                        $eng.LiveDirty = $true
+                        foreach ($z in $eng.Groups) {
+                            $z.LiveMaster = $val
+                            $z.LiveDirty = $true
+                        }
                     }
                 }
             } catch { }
@@ -2238,51 +2562,101 @@ try {
                     $script:ThemeStamp = $stamp
                     $j = Get-Content $themeFile -Raw -ErrorAction Stop | ConvertFrom-Json
 
-                    if ($j.Effect) {
-                        $eng.LiveEffect = [string]$j.Effect
-                        Sync-Sources ([string]$j.Effect)
+                    # The panel writes one block per group. Anything the bar
+                    # block leaves out inherits the keyboard's value, so an
+                    # old single-group theme file still works unchanged.
+                    $needAud = $false
+                    $needScr = $false
+
+                    $grp = @()
+                    if ($eng.Groups.Length -gt 0) { $grp += ,@($eng.Groups[0], $j.Kbd, $j) }
+                    if ($eng.Groups.Length -gt 1) { $grp += ,@($eng.Groups[1], $j.Bar, $j) }
+
+                    foreach ($pair in $grp) {
+                        $z    = $pair[0]
+                        $blk  = $pair[1]
+                        $root = $pair[2]
+                        # fall back to the root object for old-format files
+                        if (-not $blk) { $blk = $root }
+
+                        $ef = $null
+                        if ($blk.Effect) { $ef = [string]$blk.Effect }
+                        elseif ($root.Effect) { $ef = [string]$root.Effect }
+                        if ($ef) {
+                            $z.LiveEffect = $ef
+                            if (@('spectrum','vumeter','beat','pulsebass') -contains $ef) { $needAud = $true }
+                            if ($ef -eq 'ambient') { $needScr = $true }
+                        }
+
+                        $sv = $null
+                        if ($null -ne $blk.Speed) { $sv = [double]$blk.Speed }
+                        elseif ($null -ne $root.Speed) { $sv = [double]$root.Speed }
+                        if ($null -ne $sv) { $z.LiveSpeedMilli = [int]([Math]::Round($sv * 1000)) }
+
+                        $cv = $null
+                        if ($blk.Colors) { $cv = [string]$blk.Colors }
+                        elseif ($root.Colors) { $cv = [string]$root.Colors }
+                        if ($cv) {
+                            $ns = @()
+                            foreach ($cstr in ($cv -split ',')) {
+                                if ($cstr.Trim()) { $ns += ,(ConvertFrom-Hex $cstr) }
+                            }
+                            if ($ns.Count -eq 1) { $ns = @($ns[0], $ns[0]) }
+                            if ($ns.Count -gt 2 -and
+                                $ns[0][0] -eq $ns[-1][0] -and
+                                $ns[0][1] -eq $ns[-1][1] -and
+                                $ns[0][2] -eq $ns[-1][2]) {
+                                $ns = @($ns[0..($ns.Count-2)])
+                            }
+                            if ($ns.Count -gt 0) {
+                                $z.LivePalR = [int[]]@($ns | ForEach-Object { $_[0] })
+                                $z.LivePalG = [int[]]@($ns | ForEach-Object { $_[1] })
+                                $z.LivePalB = [int[]]@($ns | ForEach-Object { $_[2] })
+                            }
+                        }
+
+                        $fl = 0
+                        $mv = $blk.Mirror;   if ($null -eq $mv) { $mv = $root.Mirror }
+                        $rv = $blk.Reverse;  if ($null -eq $rv) { $rv = $root.Reverse }
+                        $qv = $blk.Equalise; if ($null -eq $qv) { $qv = $root.Equalise }
+                        $lv = $blk.Loop;     if ($null -eq $lv) { $lv = $root.Loop }
+                        if ([bool]$mv) { $fl = $fl -bor 1 }
+                        if ([bool]$rv) { $fl = $fl -bor 2 }
+                        if ([bool]$qv) { $fl = $fl -bor 4 }
+                        if ([bool]$lv) { $fl = $fl -bor 8 }
+                        $z.LiveFlags = $fl
+
+                        $onv = $blk.On
+                        if ($null -eq $onv) { $onv = $true }
+                        if ([bool]$onv) { $z.LiveEnabled = 1 } else { $z.LiveEnabled = 0 }
+
+                        $bv2 = $null
+                        if ($null -ne $blk.Brightness) { $bv2 = [double]$blk.Brightness }
+                        elseif ($null -ne $root.Brightness) { $bv2 = [double]$root.Brightness }
+                        if ($null -ne $bv2) {
+                            $bi = [int]([Math]::Round($bv2 * 1000))
+                            if ($bi -lt 0) { $bi = 0 }
+                            if ($bi -gt 1000) { $bi = 1000 }
+                            $z.LiveBrightness = $bi
+                        }
+
+                        $z.LiveDirty = $true
                     }
 
-                    if ($null -ne $j.Speed) {
-                        $eng.LiveSpeedMilli = [int]([Math]::Round([double]$j.Speed * 1000))
-                    }
-
-                    if ($j.Colors) {
-                        $ns = @()
-                        foreach ($cs in ([string]$j.Colors -split ',')) {
-                            if ($cs.Trim()) { $ns += ,(ConvertFrom-Hex $cs) }
-                        }
-                        if ($ns.Count -eq 1) { $ns = @($ns[0], $ns[0]) }
-                        if ($ns.Count -gt 2 -and
-                            $ns[0][0] -eq $ns[-1][0] -and
-                            $ns[0][1] -eq $ns[-1][1] -and
-                            $ns[0][2] -eq $ns[-1][2]) {
-                            $ns = @($ns[0..($ns.Count-2)])
-                        }
-                        if ($ns.Count -gt 0) {
-                            $eng.LivePalR = [int[]]@($ns | ForEach-Object { $_[0] })
-                            $eng.LivePalG = [int[]]@($ns | ForEach-Object { $_[1] })
-                            $eng.LivePalB = [int[]]@($ns | ForEach-Object { $_[2] })
-                        }
-                    }
-
-                    $fl = 0
-                    if ([bool]$j.Mirror)   { $fl = $fl -bor 1 }
-                    if ([bool]$j.Reverse)  { $fl = $fl -bor 2 }
-                    if ([bool]$j.Equalise) { $fl = $fl -bor 4 }
-                    if ([bool]$j.Loop)     { $fl = $fl -bor 8 }
-                    $eng.LiveFlags = $fl
-
+                    # Master brightness still drives the Fn keys and the
+                    # shared live file.
                     if ($null -ne $j.Brightness) {
                         $bv = [int]([Math]::Round([double]$j.Brightness * 1000))
                         if ($bv -lt 0) { $bv = 0 }
                         if ($bv -gt 1000) { $bv = 1000 }
                         $script:LiveLevel = $bv
-                        $eng.LiveBrightness = $bv
-                        try { Set-Content -Path $liveFile -Value $bv -Encoding ASCII -ErrorAction SilentlyContinue } catch { }
+                        foreach ($z in $eng.Groups) {
+                            $z.LiveMaster = $bv
+                            $z.LiveDirty = $true
+                        }
                     }
 
-                    $eng.LiveDirty = $true
+                    Sync-Sources2 $needAud $needScr
                 }
             } catch { }
         }
