@@ -1,0 +1,598 @@
+using System;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Windows.Forms;
+
+namespace KbLight {
+
+public static class Theme {
+  public static Color Bg      = Color.FromArgb(18, 19, 26);
+  public static Color Panel   = Color.FromArgb(26, 28, 38);
+  public static Color Panel2  = Color.FromArgb(34, 37, 50);
+  public static Color Line    = Color.FromArgb(48, 52, 68);
+  public static Color Text    = Color.FromArgb(236, 238, 245);
+  public static Color Muted   = Color.FromArgb(132, 140, 162);
+  public static Color Accent  = Color.FromArgb(0, 162, 255);
+  public static Color Accent2 = Color.FromArgb(120, 92, 255);
+  public static Color Good    = Color.FromArgb(58, 206, 130);
+  public static Color Bad     = Color.FromArgb(240, 96, 96);
+
+  public static GraphicsPath Round(Rectangle r, int rad) {
+    GraphicsPath p = new GraphicsPath();
+    if (rad <= 0) { p.AddRectangle(r); return p; }
+    int d = rad * 2;
+    if (d > r.Width)  d = r.Width;
+    if (d > r.Height) d = r.Height;
+    p.AddArc(r.X, r.Y, d, d, 180, 90);
+    p.AddArc(r.Right - d, r.Y, d, d, 270, 90);
+    p.AddArc(r.Right - d, r.Bottom - d, d, d, 0, 90);
+    p.AddArc(r.X, r.Bottom - d, d, d, 90, 90);
+    p.CloseFigure();
+    return p;
+  }
+}
+
+// ---------------------------------------------------------------- card
+public class Card : Panel {
+  public int Radius = 10;
+  public Card() {
+    SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint |
+             ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
+    BackColor = Theme.Panel;
+  }
+  protected override void OnPaintBackground(PaintEventArgs e) { }
+  protected override void OnPaint(PaintEventArgs e) {
+    Graphics g = e.Graphics;
+    g.SmoothingMode = SmoothingMode.AntiAlias;
+    Rectangle r = new Rectangle(0, 0, Width - 1, Height - 1);
+    using (GraphicsPath p = Theme.Round(r, Radius))
+    using (SolidBrush b = new SolidBrush(Theme.Panel))
+    using (Pen pen = new Pen(Theme.Line))
+    { g.FillPath(b, p); g.DrawPath(pen, p); }
+    base.OnPaint(e);
+  }
+}
+
+// ---------------------------------------------------------------- slider
+public class Slider : Control {
+  int _min = 0, _max = 100, _val = 50;
+  bool _drag = false, _hover = false;
+  public event EventHandler ValueChanged;
+  public event EventHandler ValueCommitted;
+
+  public int Minimum { get { return _min; } set { _min = value; Invalidate(); } }
+  public int Maximum { get { return _max; } set { _max = value; Invalidate(); } }
+  public int Value {
+    get { return _val; }
+    set {
+      int v = value;
+      if (v < _min) v = _min;
+      if (v > _max) v = _max;
+      if (v != _val) {
+        _val = v;
+        Invalidate();
+        if (ValueChanged != null) ValueChanged(this, EventArgs.Empty);
+      }
+    }
+  }
+
+  public Slider() {
+    SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint |
+             ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw |
+             ControlStyles.SupportsTransparentBackColor, true);
+    BackColor = Color.Transparent;
+    Height = 28;
+    TabStop = true;
+  }
+
+  int KnobR { get { return 8; } }
+  Rectangle Track {
+    get {
+      int y = Height / 2 - 2;
+      return new Rectangle(KnobR, y, Width - KnobR * 2, 4);
+    }
+  }
+  int PosFromVal() {
+    if (_max <= _min) return Track.X;
+    double f = (_val - _min) / (double)(_max - _min);
+    return Track.X + (int)Math.Round(f * Track.Width);
+  }
+  void ValFromPos(int x) {
+    Rectangle t = Track;
+    if (t.Width <= 0) return;
+    double f = (x - t.X) / (double)t.Width;
+    if (f < 0) f = 0;
+    if (f > 1) f = 1;
+    Value = _min + (int)Math.Round(f * (_max - _min));
+  }
+
+  protected override void OnMouseDown(MouseEventArgs e) {
+    base.OnMouseDown(e);
+    if (e.Button == MouseButtons.Left) { _drag = true; Focus(); ValFromPos(e.X); }
+  }
+  protected override void OnMouseMove(MouseEventArgs e) {
+    base.OnMouseMove(e);
+    if (_drag) ValFromPos(e.X);
+  }
+  protected override void OnMouseUp(MouseEventArgs e) {
+    base.OnMouseUp(e);
+    if (_drag) {
+      _drag = false;
+      if (ValueCommitted != null) ValueCommitted(this, EventArgs.Empty);
+    }
+  }
+  protected override void OnMouseEnter(EventArgs e) { base.OnMouseEnter(e); _hover = true;  Invalidate(); }
+  protected override void OnMouseLeave(EventArgs e) { base.OnMouseLeave(e); _hover = false; Invalidate(); }
+  protected override void OnMouseWheel(MouseEventArgs e) {
+    base.OnMouseWheel(e);
+    Value = _val + (e.Delta > 0 ? 1 : -1);
+    if (ValueCommitted != null) ValueCommitted(this, EventArgs.Empty);
+  }
+  protected override bool IsInputKey(Keys k) {
+    if (k == Keys.Left || k == Keys.Right) return true;
+    return base.IsInputKey(k);
+  }
+  protected override void OnKeyDown(KeyEventArgs e) {
+    base.OnKeyDown(e);
+    if (e.KeyCode == Keys.Left)  { Value = _val - 1; if (ValueCommitted != null) ValueCommitted(this, EventArgs.Empty); }
+    if (e.KeyCode == Keys.Right) { Value = _val + 1; if (ValueCommitted != null) ValueCommitted(this, EventArgs.Empty); }
+  }
+
+  protected override void OnPaint(PaintEventArgs e) {
+    Graphics g = e.Graphics;
+    g.SmoothingMode = SmoothingMode.AntiAlias;
+    Rectangle t = Track;
+    int px = PosFromVal();
+
+    using (GraphicsPath p = Theme.Round(t, 2))
+    using (SolidBrush b = new SolidBrush(Theme.Panel2))
+      g.FillPath(b, p);
+
+    Rectangle fill = new Rectangle(t.X, t.Y, px - t.X, t.Height);
+    if (fill.Width > 0) {
+      using (GraphicsPath p = Theme.Round(fill, 2))
+      using (LinearGradientBrush b = new LinearGradientBrush(
+                 new Rectangle(t.X, t.Y, Math.Max(t.Width, 1), t.Height),
+                 Theme.Accent2, Theme.Accent, LinearGradientMode.Horizontal))
+        g.FillPath(b, p);
+    }
+
+    int r = KnobR + (_hover || _drag ? 1 : 0);
+    Rectangle kn = new Rectangle(px - r, Height / 2 - r, r * 2, r * 2);
+    using (SolidBrush sh = new SolidBrush(Color.FromArgb(70, 0, 0, 0)))
+      g.FillEllipse(sh, kn.X + 1, kn.Y + 2, kn.Width, kn.Height);
+    using (SolidBrush b = new SolidBrush(Color.White))
+      g.FillEllipse(b, kn);
+    using (SolidBrush b = new SolidBrush(Theme.Accent))
+      g.FillEllipse(b, kn.X + 4, kn.Y + 4, kn.Width - 8, kn.Height - 8);
+  }
+}
+
+// ---------------------------------------------------------------- toggle
+public class Toggle : Control {
+  bool _on = false, _hover = false;
+  public event EventHandler CheckedChanged;
+  public bool Checked {
+    get { return _on; }
+    set { if (_on != value) { _on = value; Invalidate();
+          if (CheckedChanged != null) CheckedChanged(this, EventArgs.Empty); } }
+  }
+  // Set without raising the event, for loading saved settings.
+  public void SetQuiet(bool v) { _on = v; Invalidate(); }
+
+  public Toggle() {
+    SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint |
+             ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw |
+             ControlStyles.SupportsTransparentBackColor, true);
+    BackColor = Color.Transparent;
+    Height = 26;
+    Cursor = Cursors.Hand;
+  }
+  protected override void OnClick(EventArgs e) { base.OnClick(e); Checked = !Checked; }
+  protected override void OnMouseEnter(EventArgs e) { base.OnMouseEnter(e); _hover = true;  Invalidate(); }
+  protected override void OnMouseLeave(EventArgs e) { base.OnMouseLeave(e); _hover = false; Invalidate(); }
+
+  protected override void OnPaint(PaintEventArgs e) {
+    Graphics g = e.Graphics;
+    g.SmoothingMode = SmoothingMode.AntiAlias;
+    g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
+
+    int h = 20, w = 38;
+    int ty = (Height - h) / 2;
+    Rectangle track = new Rectangle(0, ty, w, h);
+    using (GraphicsPath p = Theme.Round(track, h / 2)) {
+      if (_on) {
+        using (LinearGradientBrush b = new LinearGradientBrush(track, Theme.Accent2, Theme.Accent, LinearGradientMode.Horizontal))
+          g.FillPath(b, p);
+      } else {
+        using (SolidBrush b = new SolidBrush(_hover ? Theme.Line : Color.FromArgb(44, 47, 62)))
+          g.FillPath(b, p);
+        // Without a rim the off state nearly vanishes against the card.
+        using (Pen pen = new Pen(Color.FromArgb(72, 78, 98)))
+          g.DrawPath(pen, p);
+      }
+    }
+    int kd = h - 6;
+    int kx = _on ? (w - kd - 3) : 3;
+    using (SolidBrush sh = new SolidBrush(Color.FromArgb(60, 0, 0, 0)))
+      g.FillEllipse(sh, kx + 1, ty + 4, kd, kd);
+    using (SolidBrush b = new SolidBrush(_on ? Color.White : Color.FromArgb(188, 194, 212)))
+      g.FillEllipse(b, kx, ty + 3, kd, kd);
+
+    Rectangle tr = new Rectangle(w + 10, 0, Width - w - 10, Height);
+    TextRenderer.DrawText(g, Text, Font, tr, Theme.Text,
+      TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+  }
+}
+
+// ---------------------------------------------------------------- button
+public class FlatBtn : Control {
+  bool _hover = false, _down = false;
+  public bool Primary = false;
+  public FlatBtn() {
+    SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint |
+             ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw |
+             ControlStyles.SupportsTransparentBackColor, true);
+    BackColor = Color.Transparent;
+    Height = 38;
+    Cursor = Cursors.Hand;
+  }
+  protected override void OnMouseEnter(EventArgs e) { base.OnMouseEnter(e); _hover = true;  Invalidate(); }
+  protected override void OnMouseLeave(EventArgs e) { base.OnMouseLeave(e); _hover = false; _down = false; Invalidate(); }
+  protected override void OnMouseDown(MouseEventArgs e) { base.OnMouseDown(e); _down = true;  Invalidate(); }
+  protected override void OnMouseUp(MouseEventArgs e)   { base.OnMouseUp(e);   _down = false; Invalidate(); }
+
+  protected override void OnPaint(PaintEventArgs e) {
+    Graphics g = e.Graphics;
+    g.SmoothingMode = SmoothingMode.AntiAlias;
+    g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
+    Rectangle r = new Rectangle(0, 0, Width - 1, Height - 1);
+    using (GraphicsPath p = Theme.Round(r, 8)) {
+      if (Primary) {
+        Color a = Theme.Accent2, b2 = Theme.Accent;
+        if (_down)      { a = Color.FromArgb(96, 74, 214); b2 = Color.FromArgb(0, 132, 210); }
+        else if (_hover){ a = Color.FromArgb(136, 108, 255); b2 = Color.FromArgb(28, 178, 255); }
+        using (LinearGradientBrush b = new LinearGradientBrush(new Rectangle(0,0,Math.Max(Width,1),Height), a, b2, LinearGradientMode.Horizontal))
+          g.FillPath(b, p);
+      } else {
+        Color c = Theme.Panel2;
+        if (_down)       c = Color.FromArgb(28, 30, 40);
+        else if (_hover) c = Theme.Line;
+        using (SolidBrush b = new SolidBrush(c)) g.FillPath(b, p);
+        using (Pen pen = new Pen(Theme.Line)) g.DrawPath(pen, p);
+      }
+    }
+    TextRenderer.DrawText(g, Text, Font, new Rectangle(0,0,Width,Height),
+      Primary ? Color.White : Theme.Text,
+      TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+  }
+}
+
+// ---------------------------------------------------------------- dropdown
+public class Picker : Control {
+  bool _hover = false, _open = false;
+  int _idx = 0;
+  public System.Collections.Generic.List<string> Items = new System.Collections.Generic.List<string>();
+  public event EventHandler SelectedChanged;
+  ListBox _list; Form _pop;
+
+  public int SelectedIndex {
+    get { return _idx; }
+    set {
+      if (value < 0 || value >= Items.Count) return;
+      if (_idx != value) {
+        _idx = value; Invalidate();
+        if (SelectedChanged != null) SelectedChanged(this, EventArgs.Empty);
+      }
+    }
+  }
+  public void SetQuiet(int i) { if (i >= 0 && i < Items.Count) { _idx = i; Invalidate(); } }
+  public string SelectedItem {
+    get { return (_idx >= 0 && _idx < Items.Count) ? Items[_idx] : ""; }
+  }
+
+  public Picker() {
+    SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint |
+             ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw |
+             ControlStyles.SupportsTransparentBackColor, true);
+    BackColor = Color.Transparent;
+    Height = 40;
+    Cursor = Cursors.Hand;
+  }
+  protected override void OnMouseEnter(EventArgs e) { base.OnMouseEnter(e); _hover = true;  Invalidate(); }
+  protected override void OnMouseLeave(EventArgs e) { base.OnMouseLeave(e); _hover = false; Invalidate(); }
+  protected override void OnClick(EventArgs e) { base.OnClick(e); Open(); }
+
+  void Open() {
+    if (_open) return;
+    _open = true;
+    Invalidate();
+
+    _list = new ListBox();
+    _list.DrawMode = DrawMode.OwnerDrawFixed;
+    _list.ItemHeight = 30;
+    _list.BorderStyle = BorderStyle.None;
+    _list.BackColor = Theme.Panel2;
+    _list.ForeColor = Theme.Text;
+    _list.Font = Font;
+    foreach (string s in Items) _list.Items.Add(s);
+    _list.SelectedIndex = _idx;
+    _list.DrawItem += delegate(object o, DrawItemEventArgs a) {
+      if (a.Index < 0) return;
+      bool sel = (a.State & DrawItemState.Selected) == DrawItemState.Selected;
+      using (SolidBrush b = new SolidBrush(sel ? Theme.Accent : Theme.Panel2))
+        a.Graphics.FillRectangle(b, a.Bounds);
+      Rectangle tr = new Rectangle(a.Bounds.X + 12, a.Bounds.Y, a.Bounds.Width - 12, a.Bounds.Height);
+      TextRenderer.DrawText(a.Graphics, (string)_list.Items[a.Index], Font, tr,
+        sel ? Color.White : Theme.Text,
+        TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
+    };
+    _list.MouseUp += delegate(object o, MouseEventArgs a) {
+      int i = _list.IndexFromPoint(a.Location);
+      if (i >= 0) SelectedIndex = i;
+      Close();
+    };
+
+    int h = Math.Min(Items.Count, 9) * 30 + 8;
+    _pop = new Form();
+    _pop.FormBorderStyle = FormBorderStyle.None;
+    _pop.ShowInTaskbar = false;
+    _pop.StartPosition = FormStartPosition.Manual;
+    _pop.BackColor = Theme.Line;
+    _pop.Size = new Size(Width, h);
+    Point sc = PointToScreen(new Point(0, Height + 2));
+    Rectangle wa = Screen.FromControl(this).WorkingArea;
+    if (sc.Y + h > wa.Bottom) sc.Y = PointToScreen(new Point(0, 0)).Y - h - 2;
+    _pop.Location = sc;
+    _list.Location = new Point(1, 4);
+    _list.Size = new Size(Width - 2, h - 8);
+    _pop.Controls.Add(_list);
+    _pop.Deactivate += delegate { Close(); };
+    _pop.Show(FindForm());
+    _pop.Activate();
+    _list.Focus();
+  }
+  void Close() {
+    _open = false;
+    Invalidate();
+    if (_pop != null) { Form f = _pop; _pop = null; f.Close(); f.Dispose(); }
+  }
+
+  protected override void OnPaint(PaintEventArgs e) {
+    Graphics g = e.Graphics;
+    g.SmoothingMode = SmoothingMode.AntiAlias;
+    g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
+    Rectangle r = new Rectangle(0, 0, Width - 1, Height - 1);
+    using (GraphicsPath p = Theme.Round(r, 8))
+    using (SolidBrush b = new SolidBrush(_hover || _open ? Theme.Line : Theme.Panel2))
+    using (Pen pen = new Pen(_open ? Theme.Accent : Theme.Line))
+    { g.FillPath(b, p); g.DrawPath(pen, p); }
+
+    TextRenderer.DrawText(g, SelectedItem, Font,
+      new Rectangle(14, 0, Width - 44, Height), Theme.Text,
+      TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+
+    int cx = Width - 20, cy = Height / 2 - 1;
+    using (Pen pen = new Pen(Theme.Muted, 2)) {
+      pen.StartCap = LineCap.Round; pen.EndCap = LineCap.Round;
+      g.DrawLines(pen, new Point[] {
+        new Point(cx - 5, cy - 2), new Point(cx, cy + 3), new Point(cx + 5, cy - 2) });
+    }
+  }
+}
+
+// ---------------------------------------------------------------- swatch
+public class Swatch : Control {
+  bool _hover = false;
+  public Color Value = Color.Red;
+  public Swatch() {
+    SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint |
+             ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw |
+             ControlStyles.SupportsTransparentBackColor, true);
+    BackColor = Color.Transparent;
+    Size = new Size(44, 44);
+    Cursor = Cursors.Hand;
+  }
+  protected override void OnMouseEnter(EventArgs e) { base.OnMouseEnter(e); _hover = true;  Invalidate(); }
+  protected override void OnMouseLeave(EventArgs e) { base.OnMouseLeave(e); _hover = false; Invalidate(); }
+  protected override void OnPaint(PaintEventArgs e) {
+    Graphics g = e.Graphics;
+    g.SmoothingMode = SmoothingMode.AntiAlias;
+    Rectangle r = new Rectangle(1, 1, Width - 3, Height - 3);
+    using (GraphicsPath p = Theme.Round(r, 8))
+    using (SolidBrush b = new SolidBrush(Value))
+      g.FillPath(b, p);
+    using (GraphicsPath p = Theme.Round(r, 8))
+    using (Pen pen = new Pen(_hover ? Color.White : Color.FromArgb(90, 255, 255, 255), _hover ? 2f : 1f))
+      g.DrawPath(pen, p);
+  }
+}
+
+// ---------------------------------------------------------------- tiny round button
+public class MiniBtn : Control {
+  bool _hover = false;
+  public string Glyph = "+";
+  public MiniBtn() {
+    SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint |
+             ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw |
+             ControlStyles.SupportsTransparentBackColor, true);
+    BackColor = Color.Transparent;
+    Size = new Size(30, 44);
+    Cursor = Cursors.Hand;
+  }
+  protected override void OnMouseEnter(EventArgs e) { base.OnMouseEnter(e); _hover = true;  Invalidate(); }
+  protected override void OnMouseLeave(EventArgs e) { base.OnMouseLeave(e); _hover = false; Invalidate(); }
+  protected override void OnPaint(PaintEventArgs e) {
+    Graphics g = e.Graphics;
+    g.SmoothingMode = SmoothingMode.AntiAlias;
+    Rectangle r = new Rectangle(1, 1, Width - 3, Height - 3);
+    using (GraphicsPath p = Theme.Round(r, 8))
+    using (SolidBrush b = new SolidBrush(_hover ? Theme.Line : Theme.Panel2))
+    using (Pen pen = new Pen(Theme.Line))
+    { g.FillPath(b, p); g.DrawPath(pen, p); }
+    using (Pen pen = new Pen(Theme.Muted, 2)) {
+      pen.StartCap = LineCap.Round; pen.EndCap = LineCap.Round;
+      int cx = Width / 2, cy = Height / 2;
+      g.DrawLine(pen, cx - 6, cy, cx + 6, cy);
+      if (Glyph == "+") g.DrawLine(pen, cx, cy - 6, cx, cy + 6);
+    }
+  }
+}
+
+// ---------------------------------------------------------------- title bar
+public class TitleBar : Control {
+  public event EventHandler CloseClicked;
+  public event EventHandler MinClicked;
+  int _hot = -1;   // 0 = minimise, 1 = close
+  Form _host;
+  public Image Logo;
+
+  public TitleBar(Form host) {
+    _host = host;
+    SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint |
+             ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
+    Height = 44;
+    BackColor = Theme.Bg;
+    Dock = DockStyle.Top;
+  }
+
+  Rectangle BtnRect(int i) {
+    int w = 46, h = Height;
+    return new Rectangle(Width - w * (2 - i), 0, w, h);
+  }
+
+  protected override void OnMouseMove(MouseEventArgs e) {
+    base.OnMouseMove(e);
+    int was = _hot; _hot = -1;
+    for (int i = 0; i < 2; i++) if (BtnRect(i).Contains(e.Location)) _hot = i;
+    if (was != _hot) Invalidate();
+  }
+  protected override void OnMouseLeave(EventArgs e) {
+    base.OnMouseLeave(e);
+    if (_hot != -1) { _hot = -1; Invalidate(); }
+  }
+  protected override void OnMouseDown(MouseEventArgs e) {
+    base.OnMouseDown(e);
+    if (e.Button != MouseButtons.Left) return;
+    if (BtnRect(0).Contains(e.Location)) { if (MinClicked   != null) MinClicked(this, EventArgs.Empty);   return; }
+    if (BtnRect(1).Contains(e.Location)) { if (CloseClicked != null) CloseClicked(this, EventArgs.Empty); return; }
+    // drag the window by the bar
+    NativeDrag();
+  }
+
+  [System.Runtime.InteropServices.DllImport("user32.dll")]
+  static extern bool ReleaseCapture();
+  [System.Runtime.InteropServices.DllImport("user32.dll")]
+  static extern IntPtr SendMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
+  void NativeDrag() {
+    ReleaseCapture();
+    SendMessage(_host.Handle, 0xA1, 0x2, 0);
+  }
+
+  protected override void OnPaint(PaintEventArgs e) {
+    Graphics g = e.Graphics;
+    g.SmoothingMode = SmoothingMode.AntiAlias;
+    g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
+    using (SolidBrush b = new SolidBrush(Theme.Bg)) g.FillRectangle(b, ClientRectangle);
+
+    int x = 14;
+    if (Logo != null) {
+      g.DrawImage(Logo, new Rectangle(x, Height / 2 - 9, 18, 18));
+      x += 26;
+    }
+    TextRenderer.DrawText(g, Text, Font, new Rectangle(x, 0, Width - x - 100, Height),
+      Theme.Text, TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
+
+    for (int i = 0; i < 2; i++) {
+      Rectangle r = BtnRect(i);
+      if (_hot == i) {
+        using (SolidBrush b = new SolidBrush(i == 1 ? Color.FromArgb(232, 68, 68) : Theme.Panel2))
+          g.FillRectangle(b, r);
+      }
+      Color ic = (_hot == i && i == 1) ? Color.White : Theme.Muted;
+      using (Pen pen = new Pen(ic, 1.4f)) {
+        pen.StartCap = LineCap.Round; pen.EndCap = LineCap.Round;
+        int cx = r.X + r.Width / 2, cy = r.Height / 2;
+        if (i == 0) g.DrawLine(pen, cx - 5, cy + 3, cx + 5, cy + 3);
+        else { g.DrawLine(pen, cx - 5, cy - 5, cx + 5, cy + 5);
+               g.DrawLine(pen, cx + 5, cy - 5, cx - 5, cy + 5); }
+      }
+    }
+    using (Pen pen = new Pen(Theme.Line))
+      g.DrawLine(pen, 0, Height - 1, Width, Height - 1);
+  }
+}
+
+// ---------------------------------------------------------------- preview strip
+public class Preview : Control {
+  public Color[] Colors = new Color[] { Color.Red, Color.Blue };
+  public Preview() {
+    SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint |
+             ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
+    BackColor = Color.Black;
+    Height = 44;
+  }
+  protected override void OnPaint(PaintEventArgs e) {
+    Graphics g = e.Graphics;
+    g.SmoothingMode = SmoothingMode.AntiAlias;
+    Rectangle r = new Rectangle(0, 0, Width - 1, Height - 1);
+    using (GraphicsPath clip = Theme.Round(r, 8)) {
+      g.SetClip(clip);
+      int n = Colors.Length;
+      if (n > 0) {
+        double cw = Width / (double)n;
+        for (int i = 0; i < n; i++) {
+          using (SolidBrush b = new SolidBrush(Colors[i]))
+            g.FillRectangle(b, (float)(i * cw), 0f, (float)(cw + 1), Height);
+        }
+      }
+      g.ResetClip();
+      using (Pen pen = new Pen(Theme.Line)) g.DrawPath(pen, clip);
+    }
+  }
+}
+
+
+// ---------------------------------------------------------------- dpi + window
+public static class Dpi {
+  [System.Runtime.InteropServices.DllImport("user32.dll")]
+  static extern bool SetProcessDPIAware();
+  [System.Runtime.InteropServices.DllImport("shcore.dll")]
+  static extern int SetProcessDpiAwareness(int value);
+  [System.Runtime.InteropServices.DllImport("user32.dll")]
+  static extern bool SetProcessDpiAwarenessContext(IntPtr value);
+
+  // powershell.exe is not DPI aware, so without this Windows bitmap-
+  // stretches the whole window on a scaled display and every edge goes
+  // soft. Try the newest API first and fall back.
+  public static void Enable() {
+    try {
+      // -4 = PER_MONITOR_AWARE_V2
+      if (SetProcessDpiAwarenessContext(new IntPtr(-4))) return;
+    } catch { }
+    try {
+      // 2 = PROCESS_PER_MONITOR_DPI_AWARE
+      if (SetProcessDpiAwareness(2) == 0) return;
+    } catch { }
+    try { SetProcessDPIAware(); } catch { }
+  }
+}
+
+public static class Win {
+  [System.Runtime.InteropServices.DllImport("dwmapi.dll")]
+  static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int val, int size);
+
+  // Windows 11 rounded corners. Silently ignored on Windows 10.
+  public static void RoundCorners(IntPtr hwnd) {
+    try {
+      int pref = 2;               // DWMWCP_ROUND
+      DwmSetWindowAttribute(hwnd, 33, ref pref, sizeof(int));
+    } catch { }
+    try {
+      int dark = 1;               // dark title bar / system menus
+      DwmSetWindowAttribute(hwnd, 20, ref dark, sizeof(int));
+    } catch { }
+  }
+}
+
+}

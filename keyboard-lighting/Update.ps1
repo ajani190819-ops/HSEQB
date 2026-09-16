@@ -12,7 +12,7 @@ $Base = 'https://raw.githubusercontent.com/ajani190819-ops/HSEQB/arena/01a0a5d4-
 $Files = @(
     'Aura-Background.ps1',
     'Lighting-Panel.ps1',
-    'Lighting-Panel.bat','Tray.ps1','Install.ps1','Install.bat',
+    'Lighting-Panel.bat','Tray.ps1','Install.ps1','Install.bat','ui_controls.cs.txt','app.ico',
     'Update.bat',
     'Update.ps1',
     'Check.bat',

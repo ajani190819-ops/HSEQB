@@ -56,7 +56,7 @@ try { [Net.ServicePointManager]::SecurityProtocol = 'Tls12' } catch { }
 
 $files = @('Aura-Background.ps1','Lighting-Panel.ps1','Tray.ps1','Install.ps1',
            'Check.ps1','Check.bat','Update.ps1','Update.bat',
-           'Lighting-Panel.bat','MyEffect.ps1','Find-Lamps.ps1','README.md','app.ico')
+           'Lighting-Panel.bat','MyEffect.ps1','Find-Lamps.ps1','README.md','app.ico','ui_controls.cs.txt')
 $got = 0
 foreach ($f in $files) {
     try {
@@ -70,6 +70,13 @@ foreach ($f in $files) {
 if ($got -ge 3) { Ok ("$got files downloaded") } else { Bad 'download failed - check your internet connection' }
 
 # ---------------------------------------------------------------- build exe
+# The interface will not start without these two.
+foreach ($need in 'Tray.ps1','ui_controls.cs.txt') {
+    if (-not (Test-Path (Join-Path $Here $need))) {
+        Bad ("{0} did not download - check your internet and run this again" -f $need)
+    }
+}
+
 Step '2. Building KeyboardLighting.exe'
 
 # A running copy holds a lock on the exe, so csc would fail with

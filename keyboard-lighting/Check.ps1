@@ -33,10 +33,10 @@ $problems = New-Object System.Collections.ArrayList
 
 Write-Host ''
 Write-Host '  ===============================================================' -ForegroundColor Cyan
-Write-Host '   KEYBOARD LIGHTING - DIAGNOSTIC  (check v11)' -ForegroundColor Cyan
+Write-Host '   KEYBOARD LIGHTING - DIAGNOSTIC  (check v12)' -ForegroundColor Cyan
 Write-Host '  ===============================================================' -ForegroundColor Cyan
 Log '  ==============================================================='
-Log '   KEYBOARD LIGHTING - DIAGNOSTIC  (check v11)'
+Log '   KEYBOARD LIGHTING - DIAGNOSTIC  (check v12)'
 Log '  ==============================================================='
 Log ("   {0}" -f (Get-Date).ToString('yyyy-MM-dd HH:mm:ss'))
 try {
@@ -64,7 +64,7 @@ else {
 
 # ---------------------------------------------------------------- 2. files
 Head '2. Script files'
-$want = @('Aura-Background.ps1','Lighting-Panel.ps1','Lighting-Panel.bat','Tray.ps1','Install.ps1','Install.bat',
+$want = @('Aura-Background.ps1','Lighting-Panel.ps1','Lighting-Panel.bat','Tray.ps1','Install.ps1','Install.bat','ui_controls.cs.txt','app.ico',
           'Update.bat','Update.ps1','Check.bat','Check.ps1')
 foreach ($f in $want) {
     $p = Join-Path $here $f

@@ -86,7 +86,7 @@ Aura-Background.ps1 -Custom MyEffect.ps1
 ## If something goes wrong
 
 Run **Check.bat**. It re-downloads everything and prints a diagnostic;
-the banner should say **v11**. The log file is in the tray menu under
+the banner should say **v12**. The log file is in the tray menu under
 *Open log file*.
 
 ## How it works

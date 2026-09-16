@@ -339,7 +339,7 @@ function Set-Autostart([bool]$on) {
 function Invoke-SelfUpdate {
     $files = @('Aura-Background.ps1','Lighting-Panel.ps1','Tray.ps1','Install.ps1','Install.bat',
                'Check.ps1','Check.bat','Update.ps1','Update.bat',
-               'Lighting-Panel.bat','MyEffect.ps1','Find-Lamps.ps1','README.md','app.ico')
+               'Lighting-Panel.bat','MyEffect.ps1','Find-Lamps.ps1','README.md','app.ico','ui_controls.cs.txt')
     $changed = @()
     try { [Net.ServicePointManager]::SecurityProtocol = 'Tls12' } catch { }
     foreach ($f in $files) {
@@ -363,10 +363,40 @@ function Invoke-SelfUpdate {
     return $changed
 }
 
+# ---------------------------------------------------------------- custom controls
+# The stock WinForms TrackBar/CheckBox/ComboBox are what make a PowerShell
+# window look like a PowerShell window. These are drawn from scratch
+# instead: rounded cards, pill sliders, iOS-style toggles, a custom title
+# bar. Compiled on the fly by the same .NET that is already running.
+$uiFile = Join-Path $Here 'ui_controls.cs.txt'
+$script:CustomUi = $false
+if (Test-Path $uiFile) {
+    try {
+        Add-Type -TypeDefinition (Get-Content $uiFile -Raw) `
+                 -ReferencedAssemblies 'System.Windows.Forms','System.Drawing','System' `
+                 -ErrorAction Stop
+        $script:CustomUi = $true
+        Log 'custom UI loaded'
+    } catch {
+        Log ("custom UI failed to compile: {0}" -f $_.Exception.Message) 'ERROR'
+    }
+} else {
+    Log 'ui_controls.cs.txt missing' 'WARN'
+}
+if (-not $script:CustomUi) {
+    [System.Windows.Forms.MessageBox]::Show(
+        "The interface files are missing or damaged.`n`nRun Install.bat again to repair.",
+        'Keyboard Lighting','OK','Error') | Out-Null
+    return
+}
+
+# ---------------------------------------------------------------- DPI
+# Without this the whole window is bitmap-stretched on a high-DPI laptop
+# and every edge looks soft. Must be called before any window exists.
+try { [KbLight.Dpi]::Enable() } catch { }
+
 # ---------------------------------------------------------------- icon
 function New-AppIcon {
-    # Prefer the real icon file so the window, taskbar and tray all match
-    # the Start menu entry. Fall back to drawing one if it is missing.
     $ico = Join-Path $Here 'app.ico'
     if (Test-Path $ico) {
         try { return (New-Object System.Drawing.Icon $ico) } catch { }
@@ -392,170 +422,267 @@ function New-AppIcon {
     $dark = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(60,64,80))
     $g.FillRectangle($dark, 7, 19, 18, 3)
     $body.Dispose(); $dark.Dispose(); $g.Dispose()
-    $h = $bmp.GetHicon()
-    return [System.Drawing.Icon]::FromHandle($h)
+    return [System.Drawing.Icon]::FromHandle($bmp.GetHicon())
 }
 $AppIcon = New-AppIcon
 
 # ---------------------------------------------------------------- window
-$bg    = [System.Drawing.Color]::FromArgb(24,26,34)
-$card  = [System.Drawing.Color]::FromArgb(34,37,48)
-$fg    = [System.Drawing.Color]::FromArgb(232,234,240)
-$muted = [System.Drawing.Color]::FromArgb(140,147,167)
+$T   = [KbLight.Theme]
+$Bg  = $T::Bg
+$Mut = $T::Muted
+$Txt = $T::Text
+
+$fontH1 = New-Object System.Drawing.Font('Segoe UI Semibold', 15, [System.Drawing.FontStyle]::Regular, [System.Drawing.GraphicsUnit]::Point)
+$fontLb = New-Object System.Drawing.Font('Segoe UI', 8.25, [System.Drawing.FontStyle]::Bold, [System.Drawing.GraphicsUnit]::Point)
+$fontBd = New-Object System.Drawing.Font('Segoe UI', 9.75, [System.Drawing.FontStyle]::Regular, [System.Drawing.GraphicsUnit]::Point)
+$fontSm = New-Object System.Drawing.Font('Segoe UI', 8.75, [System.Drawing.FontStyle]::Regular, [System.Drawing.GraphicsUnit]::Point)
+$fontVal= New-Object System.Drawing.Font('Segoe UI Semibold', 9, [System.Drawing.FontStyle]::Regular, [System.Drawing.GraphicsUnit]::Point)
 
 $form = New-Object System.Windows.Forms.Form
 $form.Text            = 'Keyboard Lighting'
-$form.ClientSize      = New-Object System.Drawing.Size(470, 646)
+$form.FormBorderStyle = 'None'
 $form.StartPosition   = 'CenterScreen'
-$form.FormBorderStyle = 'FixedSingle'
-$form.MaximizeBox     = $false
-$form.BackColor       = $bg
-$form.ForeColor       = $fg
-$form.Font            = New-Object System.Drawing.Font('Segoe UI', 9.5)
+$form.BackColor       = $Bg
+$form.ForeColor       = $Txt
+$form.Font            = $fontBd
 $form.Icon            = $AppIcon
 $form.ShowInTaskbar   = $true
+$form.KeyPreview      = $true
+# Must be set before any control is added, and the handle must NOT be
+# touched before then: WinForms scales at handle-creation time, so forcing
+# the handle early would leave every later control unscaled.
+$form.AutoScaleDimensions = New-Object System.Drawing.SizeF(96, 96)
+$form.AutoScaleMode       = 'Dpi'
+$form.ClientSize          = New-Object System.Drawing.Size(478, 700)
 
-function New-Label($text, $x, $y, $w, $col, $size, $bold) {
+# ---- title bar ----
+$bar = New-Object KbLight.TitleBar $form
+$bar.Text = 'Keyboard Lighting'
+$bar.Font = $fontBd
+try { $bar.Logo = $AppIcon.ToBitmap() } catch { }
+$form.Controls.Add($bar)
+
+# ---- scrollable body ----
+$body = New-Object System.Windows.Forms.Panel
+$body.Dock      = 'Fill'
+$body.BackColor = $Bg
+$body.AutoScroll = $true
+$form.Controls.Add($body)
+$body.BringToFront()
+
+function New-Head($text, $x, $y, $w) {
     $l = New-Object System.Windows.Forms.Label
     $l.Text      = $text
     $l.Location  = New-Object System.Drawing.Point($x, $y)
-    $l.Size      = New-Object System.Drawing.Size($w, 22)
-    $l.ForeColor = $col
-    $style = [System.Drawing.FontStyle]::Regular
-    if ($bold) { $style = [System.Drawing.FontStyle]::Bold }
-    $l.Font      = New-Object System.Drawing.Font('Segoe UI', $size, $style)
-    $form.Controls.Add($l)
+    $l.Size      = New-Object System.Drawing.Size($w, 18)
+    $l.ForeColor = $Mut
+    $l.Font      = $fontLb
+    $l.BackColor = [System.Drawing.Color]::Transparent
+    $body.Controls.Add($l)
     return $l
 }
 
-$y = 18
-New-Label 'Keyboard Lighting' 24 $y 300 $fg 14 $true | Out-Null
-$y += 30
-$lblSub = New-Label 'ROG Strix G16  -  16 zones' 24 $y 340 $muted 8.5 $false
+$M  = 20          # outer margin
+$CW = 438         # card width
+$IW = 406         # inner width
 
-# ---- pattern ----
-$y += 34
-New-Label 'PATTERN' 24 $y 200 $muted 8 $true | Out-Null
-$y += 24
-$cboEffect = New-Object System.Windows.Forms.ComboBox
-$cboEffect.Location      = New-Object System.Drawing.Point(24, $y)
-$cboEffect.Size          = New-Object System.Drawing.Size(418, 28)
-$cboEffect.DropDownStyle = 'DropDownList'
-$cboEffect.BackColor     = $card
-$cboEffect.ForeColor     = $fg
-$cboEffect.FlatStyle     = 'Flat'
-$cboEffect.Font          = New-Object System.Drawing.Font('Segoe UI', 10)
+$y = 12
+
+# ================================================================ hero
+$cardTop = New-Object KbLight.Card
+$cardTop.Location = New-Object System.Drawing.Point($M, $y)
+$cardTop.Size     = New-Object System.Drawing.Size($CW, 66)
+$body.Controls.Add($cardTop)
+
+$lblTitle = New-Object System.Windows.Forms.Label
+$lblTitle.Text      = 'ROG Strix G16'
+$lblTitle.Location  = New-Object System.Drawing.Point(16, 12)
+$lblTitle.Size      = New-Object System.Drawing.Size(280, 26)
+$lblTitle.ForeColor = $Txt
+$lblTitle.Font      = $fontH1
+$lblTitle.BackColor = [System.Drawing.Color]::Transparent
+$cardTop.Controls.Add($lblTitle)
+
+$dot = New-Object System.Windows.Forms.Label
+$dot.Text      = [char]0x25CF
+$dot.Location  = New-Object System.Drawing.Point(16, 42)
+$dot.Size      = New-Object System.Drawing.Size(14, 18)
+$dot.Font      = $fontSm
+$dot.ForeColor = $T::Good
+$dot.BackColor = [System.Drawing.Color]::Transparent
+$cardTop.Controls.Add($dot)
+
+$lblStatus = New-Object System.Windows.Forms.Label
+$lblStatus.Text      = 'Starting'
+$lblStatus.Location  = New-Object System.Drawing.Point(32, 42)
+$lblStatus.Size      = New-Object System.Drawing.Size(390, 18)
+$lblStatus.ForeColor = $Mut
+$lblStatus.Font      = $fontSm
+$lblStatus.BackColor = [System.Drawing.Color]::Transparent
+$cardTop.Controls.Add($lblStatus)
+
+$y += 66 + 12
+
+# ================================================================ pattern
+New-Head 'PATTERN' $M $y 200 | Out-Null
+$y += 22
+$cboEffect = New-Object KbLight.Picker
+$cboEffect.Location = New-Object System.Drawing.Point($M, $y)
+$cboEffect.Size     = New-Object System.Drawing.Size($CW, 40)
+$cboEffect.Font     = $fontBd
 foreach ($k in $Effects.Keys) { [void]$cboEffect.Items.Add($k) }
-$cboEffect.SelectedIndex = 0
-$form.Controls.Add($cboEffect)
+$cboEffect.SetQuiet(0)
+$body.Controls.Add($cboEffect)
+$y += 40 + 14
 
-# ---- colours ----
-$y += 40
-New-Label 'COLOURS    (click a square to change it)' 24 $y 380 $muted 8 $true | Out-Null
-$y += 24
+# ================================================================ colours
+New-Head 'COLOURS' $M $y 200 | Out-Null
+$lblColHint = New-Object System.Windows.Forms.Label
+$lblColHint.Text      = 'click to change'
+$lblColHint.Location  = New-Object System.Drawing.Point(($M + 90), $y)
+$lblColHint.Size      = New-Object System.Drawing.Size(200, 18)
+$lblColHint.ForeColor = [System.Drawing.Color]::FromArgb(96,102,122)
+$lblColHint.Font      = $fontSm
+$lblColHint.BackColor = [System.Drawing.Color]::Transparent
+$body.Controls.Add($lblColHint)
+$y += 22
+
 $pnlCol = New-Object System.Windows.Forms.Panel
-$pnlCol.Location  = New-Object System.Drawing.Point(24, $y)
-$pnlCol.Size      = New-Object System.Drawing.Size(418, 46)
-$pnlCol.BackColor = $bg
-$form.Controls.Add($pnlCol)
+$pnlCol.Location  = New-Object System.Drawing.Point($M, $y)
+$pnlCol.Size      = New-Object System.Drawing.Size($CW, 46)
+$pnlCol.BackColor = [System.Drawing.Color]::Transparent
+$body.Controls.Add($pnlCol)
+$y += 46 + 14
 
-# ---- preview ----
-$y += 58
-New-Label 'PREVIEW' 24 $y 200 $muted 8 $true | Out-Null
+# ================================================================ preview
+New-Head 'PREVIEW' $M $y 200 | Out-Null
 $y += 22
-$pbPreview = New-Object System.Windows.Forms.PictureBox
-$pbPreview.Location  = New-Object System.Drawing.Point(24, $y)
-$pbPreview.Size      = New-Object System.Drawing.Size(418, 38)
-$pbPreview.BackColor = [System.Drawing.Color]::Black
-$form.Controls.Add($pbPreview)
+$pbPreview = New-Object KbLight.Preview
+$pbPreview.Location = New-Object System.Drawing.Point($M, $y)
+$pbPreview.Size     = New-Object System.Drawing.Size($CW, 44)
+$body.Controls.Add($pbPreview)
+$y += 44 + 16
 
-# ---- speed ----
-$y += 52
-$lblSpeed = New-Label 'SPEED' 24 $y 200 $muted 8 $true
-$y += 22
-$trkSpeed = New-Object System.Windows.Forms.TrackBar
-$trkSpeed.Location   = New-Object System.Drawing.Point(20, $y)
-$trkSpeed.Size       = New-Object System.Drawing.Size(426, 40)
-$trkSpeed.Minimum    = 1
-$trkSpeed.Maximum    = 50
-$trkSpeed.Value      = 10
-$trkSpeed.TickFrequency = 5
-$trkSpeed.BackColor  = $bg
-$form.Controls.Add($trkSpeed)
+# ================================================================ sliders
+$cardSl = New-Object KbLight.Card
+$cardSl.Location = New-Object System.Drawing.Point($M, $y)
+$cardSl.Size     = New-Object System.Drawing.Size($CW, 132)
+$body.Controls.Add($cardSl)
 
-# ---- brightness ----
-$y += 44
-$lblBright = New-Label 'BRIGHTNESS' 24 $y 250 $muted 8 $true
-$y += 22
-$trkBright = New-Object System.Windows.Forms.TrackBar
-$trkBright.Location   = New-Object System.Drawing.Point(20, $y)
-$trkBright.Size       = New-Object System.Drawing.Size(426, 40)
-$trkBright.Minimum    = 5
-$trkBright.Maximum    = 100
-$trkBright.Value      = 100
-$trkBright.TickFrequency = 10
-$trkBright.BackColor  = $bg
-$form.Controls.Add($trkBright)
+$lblSpeed = New-Object System.Windows.Forms.Label
+$lblSpeed.Text      = 'SPEED'
+$lblSpeed.Location  = New-Object System.Drawing.Point(16, 14)
+$lblSpeed.Size      = New-Object System.Drawing.Size(200, 18)
+$lblSpeed.ForeColor = $Mut
+$lblSpeed.Font      = $fontLb
+$lblSpeed.BackColor = [System.Drawing.Color]::Transparent
+$cardSl.Controls.Add($lblSpeed)
 
-# ---- options ----
-$y += 46
-New-Label 'OPTIONS' 24 $y 200 $muted 8 $true | Out-Null
-$y += 24
+$valSpeed = New-Object System.Windows.Forms.Label
+$valSpeed.Text      = '1.0x'
+$valSpeed.Location  = New-Object System.Drawing.Point(($CW - 86), 14)
+$valSpeed.Size      = New-Object System.Drawing.Size(70, 18)
+$valSpeed.ForeColor = $T::Accent
+$valSpeed.Font      = $fontVal
+$valSpeed.TextAlign = 'TopRight'
+$valSpeed.BackColor = [System.Drawing.Color]::Transparent
+$cardSl.Controls.Add($valSpeed)
 
-function New-Check($text, $x, $yy, $w) {
-    $c = New-Object System.Windows.Forms.CheckBox
-    $c.Text      = $text
-    $c.Location  = New-Object System.Drawing.Point($x, $yy)
-    $c.Size      = New-Object System.Drawing.Size($w, 24)
-    $c.ForeColor = $fg
-    $c.FlatStyle = 'Flat'
-    $form.Controls.Add($c)
-    return $c
+$trkSpeed = New-Object KbLight.Slider
+$trkSpeed.Location = New-Object System.Drawing.Point(16, 36)
+$trkSpeed.Size     = New-Object System.Drawing.Size($IW, 28)
+$trkSpeed.Minimum  = 1
+$trkSpeed.Maximum  = 50
+$trkSpeed.Value    = 10
+$cardSl.Controls.Add($trkSpeed)
+
+$lblBright = New-Object System.Windows.Forms.Label
+$lblBright.Text      = 'BRIGHTNESS'
+$lblBright.Location  = New-Object System.Drawing.Point(16, 74)
+$lblBright.Size      = New-Object System.Drawing.Size(200, 18)
+$lblBright.ForeColor = $Mut
+$lblBright.Font      = $fontLb
+$lblBright.BackColor = [System.Drawing.Color]::Transparent
+$cardSl.Controls.Add($lblBright)
+
+$valBright = New-Object System.Windows.Forms.Label
+$valBright.Text      = '100%'
+$valBright.Location  = New-Object System.Drawing.Point(($CW - 86), 74)
+$valBright.Size      = New-Object System.Drawing.Size(70, 18)
+$valBright.ForeColor = $T::Accent
+$valBright.Font      = $fontVal
+$valBright.TextAlign = 'TopRight'
+$valBright.BackColor = [System.Drawing.Color]::Transparent
+$cardSl.Controls.Add($valBright)
+
+$trkBright = New-Object KbLight.Slider
+$trkBright.Location = New-Object System.Drawing.Point(16, 96)
+$trkBright.Size     = New-Object System.Drawing.Size($IW, 28)
+$trkBright.Minimum  = 5
+$trkBright.Maximum  = 100
+$trkBright.Value    = 100
+$cardSl.Controls.Add($trkBright)
+
+$y += 132 + 16
+
+# ================================================================ options
+$cardOp = New-Object KbLight.Card
+$cardOp.Location = New-Object System.Drawing.Point($M, $y)
+$cardOp.Size     = New-Object System.Drawing.Size($CW, 120)
+$body.Controls.Add($cardOp)
+
+function New-Toggle($text, $xx, $yy, $ww) {
+    $t = New-Object KbLight.Toggle
+    $t.Text     = $text
+    $t.Location = New-Object System.Drawing.Point($xx, $yy)
+    $t.Size     = New-Object System.Drawing.Size($ww, 26)
+    $t.Font     = $fontBd
+    $cardOp.Controls.Add($t)
+    return $t
 }
+# Two columns: the short labels do not need the full card width, and this
+# keeps the window short enough for a laptop screen.
+$colL = 16
+$colR = 224
+$colW = 198
+$chkLoop    = New-Toggle 'Wrap light bar'      $colL  14 $colW
+$chkEq       = New-Toggle 'Even brightness'    $colR  14 $colW
+$chkMirror  = New-Toggle 'Mirror'              $colL  48 $colW
+$chkReverse = New-Toggle 'Reverse'             $colR  48 $colW
+$chkAuto    = New-Toggle 'Start when I log in' $colL  82 ($colW + 180)
 
-$chkMirror  = New-Check 'Mirror'              24  $y 200
-$chkReverse = New-Check 'Reverse direction'  244  $y 200
+$y += 120 + 16
+
+# ================================================================ buttons
+$btnOff = New-Object KbLight.FlatBtn
+$btnOff.Text     = 'Turn lighting off'
+$btnOff.Location = New-Object System.Drawing.Point($M, $y)
+$btnOff.Size     = New-Object System.Drawing.Size(212, 40)
+$btnOff.Font     = $fontBd
+$body.Controls.Add($btnOff)
+
+$btnHide = New-Object KbLight.FlatBtn
+$btnHide.Text     = 'Hide to tray'
+$btnHide.Primary  = $true
+$btnHide.Location = New-Object System.Drawing.Point(($M + 226), $y)
+$btnHide.Size     = New-Object System.Drawing.Size(212, 40)
+$btnHide.Font     = $fontBd
+$body.Controls.Add($btnHide)
+
+$y += 40 + 12
+
+$lblHint = New-Object System.Windows.Forms.Label
+$lblHint.Text      = 'Changes apply to the keyboard as you make them.'
+$lblHint.Location  = New-Object System.Drawing.Point($M, $y)
+$lblHint.Size      = New-Object System.Drawing.Size($CW, 18)
+$lblHint.ForeColor = [System.Drawing.Color]::FromArgb(96,102,122)
+$lblHint.Font      = $fontSm
+$lblHint.TextAlign = 'TopCenter'
+$lblHint.BackColor = [System.Drawing.Color]::Transparent
+$body.Controls.Add($lblHint)
+
 $y += 26
-$chkLoop    = New-Check 'Wrap around the light bar'  24 $y 220
-$chkEq      = New-Check 'Even colour brightness'    244 $y 210
-$y += 26
-$chkAuto    = New-Check 'Start when I log in'        24 $y 220
-$chkTray    = New-Check 'Close button hides to tray' 244 $y 230
-$chkTray.Checked = $true
-$chkTray.Enabled = $false
-
-# ---- status + buttons ----
-$y += 36
-$lblStatus = New-Label '  Starting...' 24 $y 418 $muted 9.5 $false
-$lblStatus.BackColor = $card
-$lblStatus.Size = New-Object System.Drawing.Size(418, 28)
-
-$y += 38
-function New-Button($text, $x, $yy, $w, $accent) {
-    $b = New-Object System.Windows.Forms.Button
-    $b.Text      = $text
-    $b.Location  = New-Object System.Drawing.Point($x, $yy)
-    $b.Size      = New-Object System.Drawing.Size($w, 36)
-    $b.FlatStyle = 'Flat'
-    $b.Cursor    = 'Hand'
-    $b.ForeColor = $fg
-    $b.BackColor = $card
-    $b.FlatAppearance.BorderColor = [System.Drawing.Color]::FromArgb(60,64,80)
-    if ($accent) {
-        $b.BackColor = [System.Drawing.Color]::FromArgb(0,120,190)
-        $b.Font      = New-Object System.Drawing.Font('Segoe UI', 9.5, [System.Drawing.FontStyle]::Bold)
-    }
-    $form.Controls.Add($b)
-    return $b
-}
-
-$btnOff  = New-Button 'Turn lighting off'  24 $y 200 $false
-$btnHide = New-Button 'Hide to tray'      244 $y 198 $true
-
-$y += 44
-$lblHint = New-Label 'Changes apply to the keyboard as you make them.' 24 $y 418 $muted 8.5 $false
-
-$FormBottom = $y + 22
+$form.ClientSize = New-Object System.Drawing.Size(478, ($bar.Height + $y))
 
 # ---------------------------------------------------------------- preview maths
 function Lin([double]$v) {
@@ -600,12 +727,8 @@ function Update-PalGain($pal) {
     $script:PalGain = $g
 }
 
-$pbPreview.Add_Paint({
-    $gr = $_.Graphics
-    $w  = $pbPreview.Width
-    $h  = $pbPreview.Height
-    $n  = 16
-    $cw = $w / [double]$n
+# Work out the 16 preview colours and hand them to the control to draw.
+function Update-Preview {
     $pal = @()
     foreach ($s in $script:Swatches) {
         try { $pal += ,([System.Drawing.ColorTranslator]::FromHtml($s)) }
@@ -615,9 +738,12 @@ $pbPreview.Add_Paint({
     $pc = $pal.Count
     $bright = $trkBright.Value / 100.0
     Update-PalGain $pal
+
+    $n = 16
+    $out = New-Object 'System.Drawing.Color[]' $n
     for ($i = 0; $i -lt $n; $i++) {
         $u0 = $i / [double]($n - 1)
-        if ($chkLoop -and $chkLoop.Checked) { $u0 = $i / [double]$n }
+        if ($chkLoop.Checked) { $u0 = $i / [double]$n }
         $f = (($u0 + $script:phase) % 1.0) * $pc
         if ($f -lt 0) { $f += $pc }
         $a = [int][Math]::Floor($f)
@@ -632,28 +758,27 @@ $pbPreview.Add_Paint({
         $r  = [int]((Srgb $lr) * $bright)
         $gg = [int]((Srgb $lg) * $bright)
         $bb = [int]((Srgb $lb) * $bright)
-        $br = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb($r,$gg,$bb))
-        $gr.FillRectangle($br, [float]($i*$cw), 0.0, [float]($cw+1), [float]$h)
-        $br.Dispose()
+        if ($r  -lt 0) { $r = 0 };  if ($r  -gt 255) { $r = 255 }
+        if ($gg -lt 0) { $gg = 0 }; if ($gg -gt 255) { $gg = 255 }
+        if ($bb -lt 0) { $bb = 0 }; if ($bb -gt 255) { $bb = 255 }
+        $out[$i] = [System.Drawing.Color]::FromArgb($r, $gg, $bb)
     }
-})
+    $pbPreview.Colors = $out
+    $pbPreview.Invalidate()
+}
 
 # ---------------------------------------------------------------- swatches
 function Redraw-Swatches {
     $pnlCol.Controls.Clear()
     $x = 0
     for ($i = 0; $i -lt $script:Swatches.Count; $i++) {
-        $b = New-Object System.Windows.Forms.Button
-        $b.Size      = New-Object System.Drawing.Size(42, 42)
-        $b.Location  = New-Object System.Drawing.Point($x, 0)
-        $b.FlatStyle = 'Flat'
-        $b.FlatAppearance.BorderSize  = 2
-        $b.FlatAppearance.BorderColor = [System.Drawing.Color]::FromArgb(60,64,80)
-        $b.Cursor    = 'Hand'
-        try { $b.BackColor = [System.Drawing.ColorTranslator]::FromHtml($script:Swatches[$i]) }
-        catch { $b.BackColor = [System.Drawing.Color]::Gray }
-        $b.Tag = $i
-        $b.Add_Click({
+        $sw = New-Object KbLight.Swatch
+        $sw.Location = New-Object System.Drawing.Point($x, 0)
+        $sw.Size     = New-Object System.Drawing.Size(44, 44)
+        try { $sw.Value = [System.Drawing.ColorTranslator]::FromHtml($script:Swatches[$i]) }
+        catch { $sw.Value = [System.Drawing.Color]::Gray }
+        $sw.Tag = $i
+        $sw.Add_Click({
             $idx = $this.Tag
             $dlg = New-Object System.Windows.Forms.ColorDialog
             $dlg.FullOpen = $true
@@ -661,46 +786,37 @@ function Redraw-Swatches {
             if ($dlg.ShowDialog() -eq 'OK') {
                 $script:Swatches[$idx] = '#{0:X2}{1:X2}{2:X2}' -f $dlg.Color.R, $dlg.Color.G, $dlg.Color.B
                 Redraw-Swatches
+                Update-Preview
                 Request-Apply
             }
         })
-        $pnlCol.Controls.Add($b)
-        $x += 48
+        $pnlCol.Controls.Add($sw)
+        $x += 50
     }
     if ($script:Swatches.Count -lt 8) {
-        $add = New-Object System.Windows.Forms.Button
-        $add.Text      = '+'
-        $add.Size      = New-Object System.Drawing.Size(34, 42)
-        $add.Location  = New-Object System.Drawing.Point($x, 0)
-        $add.FlatStyle = 'Flat'
-        $add.BackColor = $card
-        $add.ForeColor = $muted
-        $add.Font      = New-Object System.Drawing.Font('Segoe UI', 13, [System.Drawing.FontStyle]::Bold)
-        $add.FlatAppearance.BorderColor = [System.Drawing.Color]::FromArgb(60,64,80)
-        $add.Cursor    = 'Hand'
+        $add = New-Object KbLight.MiniBtn
+        $add.Glyph    = '+'
+        $add.Location = New-Object System.Drawing.Point($x, 0)
+        $add.Size     = New-Object System.Drawing.Size(30, 44)
         $add.Add_Click({
             $script:Swatches += '#FFFFFF'
             Redraw-Swatches
+            Update-Preview
             Request-Apply
         })
         $pnlCol.Controls.Add($add)
-        $x += 40
+        $x += 36
     }
     if ($script:Swatches.Count -gt 2) {
-        $rem = New-Object System.Windows.Forms.Button
-        $rem.Text      = '-'
-        $rem.Size      = New-Object System.Drawing.Size(34, 42)
-        $rem.Location  = New-Object System.Drawing.Point($x, 0)
-        $rem.FlatStyle = 'Flat'
-        $rem.BackColor = $card
-        $rem.ForeColor = $muted
-        $rem.Font      = New-Object System.Drawing.Font('Segoe UI', 13, [System.Drawing.FontStyle]::Bold)
-        $rem.FlatAppearance.BorderColor = [System.Drawing.Color]::FromArgb(60,64,80)
-        $rem.Cursor    = 'Hand'
+        $rem = New-Object KbLight.MiniBtn
+        $rem.Glyph    = '-'
+        $rem.Location = New-Object System.Drawing.Point($x, 0)
+        $rem.Size     = New-Object System.Drawing.Size(30, 44)
         $rem.Add_Click({
             if ($script:Swatches.Count -gt 2) {
                 $script:Swatches = @($script:Swatches[0..($script:Swatches.Count-2)])
                 Redraw-Swatches
+                Update-Preview
                 Request-Apply
             }
         })
@@ -721,29 +837,29 @@ function Sync-CfgFromUi {
 
 function Update-Status {
     if ($script:WantOff) {
-        $lblStatus.Text = '  Lighting is off'
-        $lblStatus.ForeColor = $muted
-        $icon.Text = 'Keyboard Lighting - off'
-        $miStatus.Text = 'Lighting is off'
-        $btnOff.Text = 'Turn lighting on'
+        $lblStatus.Text = 'Lighting is off'
+        $dot.ForeColor  = $Mut
+        $icon.Text      = 'Keyboard Lighting - off'
+        $miStatus.Text  = 'Lighting is off'
+        $btnOff.Text    = 'Turn lighting on'
+        $btnOff.Invalidate()
         return
     }
     $btnOff.Text = 'Turn lighting off'
+    $btnOff.Invalidate()
     if (Test-EngineAlive) {
-        $lblStatus.Text = ('  Running - {0}' -f $script:Cfg.Effect)
-        $lblStatus.ForeColor = [System.Drawing.Color]::FromArgb(70,200,120)
-        $icon.Text = ('Keyboard Lighting - {0}' -f $script:Cfg.Effect)
-        $miStatus.Text = ('Running - {0}' -f $script:Cfg.Effect)
+        $lblStatus.Text = ('Running - {0}' -f $script:Cfg.Effect)
+        $dot.ForeColor  = $T::Good
+        $icon.Text      = ('Keyboard Lighting - {0}' -f $script:Cfg.Effect)
+        $miStatus.Text  = ('Running - {0}' -f $script:Cfg.Effect)
     } else {
-        $lblStatus.Text = '  Not running'
-        $lblStatus.ForeColor = [System.Drawing.Color]::FromArgb(230,90,90)
-        $icon.Text = 'Keyboard Lighting - stopped'
-        $miStatus.Text = 'Not running'
+        $lblStatus.Text = 'Not running'
+        $dot.ForeColor  = $T::Bad
+        $icon.Text      = 'Keyboard Lighting - stopped'
+        $miStatus.Text  = 'Not running'
     }
 }
 
-# Everything the user touches funnels through here. The settings are saved
-# and handed to the running engine; nothing is restarted.
 $script:ApplyTimer = New-Object System.Windows.Forms.Timer
 $script:ApplyTimer.Interval = 220
 $script:ApplyTimer.Add_Tick({
@@ -766,25 +882,23 @@ function Request-Apply {
     $script:ApplyTimer.Start()
 }
 
-# Brightness is special: it goes straight out so the slider feels attached
-# to the keyboard, with no wait.
 $trkBright.Add_ValueChanged({
+    $valBright.Text = ('{0}%' -f $trkBright.Value)
     if ($script:Suppress) { return }
     $script:Cfg.Brightness = [int]$trkBright.Value
     Write-LiveBrightness
-    $lblBright.Text = ('BRIGHTNESS    {0}%' -f $trkBright.Value)
-    $pbPreview.Invalidate()
+    Update-Preview
     Request-Apply
 })
 $trkSpeed.Add_ValueChanged({
-    $lblSpeed.Text = ('SPEED    {0:0.0}x' -f ($trkSpeed.Value / 10.0))
+    $valSpeed.Text = ('{0:0.0}x' -f ($trkSpeed.Value / 10.0))
     Request-Apply
 })
-$cboEffect.Add_SelectedIndexChanged({ Request-Apply })
+$cboEffect.Add_SelectedChanged({ Request-Apply })
 $chkMirror.Add_CheckedChanged({ Request-Apply })
 $chkReverse.Add_CheckedChanged({ Request-Apply })
-$chkLoop.Add_CheckedChanged({ Request-Apply; $pbPreview.Invalidate() })
-$chkEq.Add_CheckedChanged({ Request-Apply; $pbPreview.Invalidate() })
+$chkLoop.Add_CheckedChanged({ Request-Apply; Update-Preview })
+$chkEq.Add_CheckedChanged({ Request-Apply; Update-Preview })
 
 $chkAuto.Add_CheckedChanged({
     if ($script:Suppress) { return }
@@ -793,7 +907,7 @@ $chkAuto.Add_CheckedChanged({
         $miAuto.Checked = $want
     } else {
         $script:Suppress = $true
-        $chkAuto.Checked = -not $want
+        $chkAuto.SetQuiet((-not $want))
         $script:Suppress = $false
         [System.Windows.Forms.MessageBox]::Show(
             "Could not change the startup setting. This needs Administrator.",
@@ -802,11 +916,7 @@ $chkAuto.Add_CheckedChanged({
 })
 
 $btnOff.Add_Click({
-    if ($script:WantOff) {
-        [void](Start-Engine)
-    } else {
-        Set-AllOff
-    }
+    if ($script:WantOff) { [void](Start-Engine) } else { Set-AllOff }
     Update-Status
 })
 $btnHide.Add_Click({ $form.Hide() })
@@ -818,9 +928,17 @@ $icon.Text    = 'Keyboard Lighting'
 $icon.Visible = $true
 
 $menu = New-Object System.Windows.Forms.ContextMenuStrip
+$menu.BackColor   = $T::Panel2
+$menu.ForeColor   = $Txt
+$menu.Font        = $fontBd
+$menu.ShowImageMargin = $false
+$menu.Renderer    = New-Object System.Windows.Forms.ToolStripProfessionalRenderer
+
 function Add-Item($text, $action) {
     $mi = New-Object System.Windows.Forms.ToolStripMenuItem
     $mi.Text = $text
+    $mi.BackColor = $T::Panel2
+    $mi.ForeColor = $Txt
     if ($action) { $mi.Add_Click($action) }
     [void]$menu.Items.Add($mi)
     return $mi
@@ -839,9 +957,13 @@ function Show-Window {
 }
 
 $miOpen = Add-Item 'Open Keyboard Lighting' { Show-Window }
-$miOpen.Font = New-Object System.Drawing.Font($menu.Font, [System.Drawing.FontStyle]::Bold)
+$miOpen.Font = New-Object System.Drawing.Font('Segoe UI', 9.75, [System.Drawing.FontStyle]::Bold)
 
 Add-Sep
+$miPending = Add-Item 'Restart to finish update' { Restart-App }
+$miPending.Visible = $false
+$miPending.Font = New-Object System.Drawing.Font('Segoe UI', 9.75, [System.Drawing.FontStyle]::Bold)
+
 $miRestart = Add-Item 'Restart lighting' {
     Log 'manual restart'
     [void](Start-Engine)
@@ -857,7 +979,7 @@ $miAuto = Add-Item 'Start when I log in' {
     if (Set-Autostart $want) {
         $miAuto.Checked = $want
         $script:Suppress = $true
-        $chkAuto.Checked = $want
+        $chkAuto.SetQuiet($want)
         $script:Suppress = $false
     } else {
         [System.Windows.Forms.MessageBox]::Show(
@@ -865,12 +987,6 @@ $miAuto = Add-Item 'Start when I log in' {
             'Keyboard Lighting','OK','Warning') | Out-Null
     }
 }
-$miPending = Add-Item 'Restart to finish update' {
-    Restart-App
-}
-$miPending.Visible = $false
-$miPending.Font = New-Object System.Drawing.Font($menu.Font, [System.Drawing.FontStyle]::Bold)
-
 $miUpdate = Add-Item 'Check for updates' {
     $icon.Text = 'Keyboard Lighting - checking...'
     $changed = Invoke-SelfUpdate
@@ -928,61 +1044,69 @@ function Restart-App {
 }
 
 # ---------------------------------------------------------------- window behaviour
-# The close button puts it in the tray, like every other tray app. Exit is
-# on the tray menu.
+function Show-HideHint {
+    if ($script:HintShown) { return }
+    $script:HintShown = $true
+    $icon.BalloonTipTitle = 'Still running'
+    $icon.BalloonTipText  = 'Keyboard Lighting is here. Double-click to open it again.'
+    $icon.ShowBalloonTip(3000)
+}
+
+$bar.Add_CloseClicked({ $form.Hide(); Show-HideHint })
+$bar.Add_MinClicked({ $form.Hide(); Show-HideHint })
+
 $form.Add_FormClosing({
     param($s, $e)
     if ($e.CloseReason -eq [System.Windows.Forms.CloseReason]::UserClosing -and -not $script:Quitting) {
         $e.Cancel = $true
         $form.Hide()
-        if (-not $script:HintShown) {
-            $script:HintShown = $true
-            $icon.BalloonTipTitle = 'Still running'
-            $icon.BalloonTipText  = 'Keyboard Lighting is here. Double-click to open it again.'
-            $icon.ShowBalloonTip(3000)
-        }
+        Show-HideHint
     }
 })
-$form.Add_Resize({
-    if ($form.WindowState -eq 'Minimized') { $form.Hide() }
+$form.Add_KeyDown({
+    param($s, $e)
+    if ($e.KeyCode -eq [System.Windows.Forms.Keys]::Escape) { $form.Hide(); Show-HideHint }
 })
-$script:HintShown   = $false
-$script:UpdJob      = $null
-$script:UpdPrompted = $false
-$script:Pending     = $false
+# Safe here: the handle already exists and DPI scaling has been applied.
+$form.Add_Shown({ try { [KbLight.Win]::RoundCorners($form.Handle) } catch { } })
 
 # ---------------------------------------------------------------- load UI
 $script:Suppress = $true
-if ($Effects.Contains([string]$script:Cfg.Effect)) { $cboEffect.SelectedItem = [string]$script:Cfg.Effect }
+$idx = 0
+$keys = @($Effects.Keys)
+for ($i = 0; $i -lt $keys.Count; $i++) {
+    if ($keys[$i] -eq [string]$script:Cfg.Effect) { $idx = $i }
+}
+$cboEffect.SetQuiet($idx)
 $trkSpeed.Value  = [Math]::Min(50, [Math]::Max(1, [int]$script:Cfg.Speed))
 $trkBright.Value = [Math]::Min(100, [Math]::Max(5, [int]$script:Cfg.Brightness))
-$chkMirror.Checked  = [bool]$script:Cfg.Mirror
-$chkReverse.Checked = [bool]$script:Cfg.Reverse
-$chkEq.Checked      = [bool]$script:Cfg.Equalise
-$chkLoop.Checked    = [bool]$script:Cfg.Loop
-$chkAuto.Checked    = Test-Autostart
-$miAuto.Checked     = $chkAuto.Checked
-$lblSpeed.Text  = ('SPEED    {0:0.0}x' -f ($trkSpeed.Value / 10.0))
-$lblBright.Text = ('BRIGHTNESS    {0}%' -f $trkBright.Value)
+$chkMirror.SetQuiet([bool]$script:Cfg.Mirror)
+$chkReverse.SetQuiet([bool]$script:Cfg.Reverse)
+$chkEq.SetQuiet([bool]$script:Cfg.Equalise)
+$chkLoop.SetQuiet([bool]$script:Cfg.Loop)
+$chkAuto.SetQuiet((Test-Autostart))
+$miAuto.Checked = $chkAuto.Checked
+$valSpeed.Text  = ('{0:0.0}x' -f ($trkSpeed.Value / 10.0))
+$valBright.Text = ('{0}%' -f $trkBright.Value)
 Redraw-Swatches
+Update-Preview
 
-# preview animation
 $anim = New-Object System.Windows.Forms.Timer
-$anim.Interval = 33
+$anim.Interval = 40
 $anim.Add_Tick({
     if (-not $form.Visible) { return }
     $dir = 1.0
     if ($chkReverse.Checked) { $dir = -1.0 }
-    $script:phase = ($script:phase + (0.25 * ($trkSpeed.Value/10.0) * $dir) * 0.033) % 1.0
+    $script:phase = ($script:phase + (0.25 * ($trkSpeed.Value/10.0) * $dir) * 0.040) % 1.0
     if ($script:phase -lt 0) { $script:phase += 1.0 }
-    $pbPreview.Invalidate()
+    Update-Preview
 })
 $anim.Start()
 
 # ---------------------------------------------------------------- start up
 if (-not $IsAdmin) {
-    $lblSub.Text = 'Not running as Administrator - the keyboard cannot be controlled'
-    $lblSub.ForeColor = [System.Drawing.Color]::FromArgb(230,160,60)
+    $lblStatus.Text = 'Not running as Administrator'
+    $dot.ForeColor  = $T::Bad
     Log 'running without Administrator' 'WARN'
 }
 
@@ -992,7 +1116,7 @@ if (-not $NoUpdate) {
         try { [Net.ServicePointManager]::SecurityProtocol = 'Tls12' } catch { }
         $hit = @()
         foreach ($f in 'Aura-Background.ps1','Lighting-Panel.ps1','Tray.ps1','Install.ps1','Install.bat',
-                       'Check.ps1','Check.bat','Update.ps1','Update.bat','README.md','app.ico') {
+                       'Check.ps1','Check.bat','Update.ps1','Update.bat','README.md','app.ico','ui_controls.cs.txt') {
             try {
                 $tmp = Join-Path $env:TEMP ('kblbg_' + $f)
                 Invoke-WebRequest "$b/$f" -OutFile $tmp -UseBasicParsing -TimeoutSec 20
@@ -1009,14 +1133,12 @@ if (-not $NoUpdate) {
     $script:UpdJob = $job
 }
 
-# Apply the saved theme immediately, before anything is shown.
 [void](Start-Engine)
 $script:Suppress = $false
 Update-Status
 
 if (-not $Silent) { Show-Window }
 
-# Watchdog + "show me" signal from a second launch.
 $watch = New-Object System.Windows.Forms.Timer
 $watch.Interval = 500
 $script:tick = 0
@@ -1029,8 +1151,6 @@ $watch.Add_Tick({
     $script:tick++
     if ($script:tick % 8 -eq 0) { Update-Status }
 
-    # The background updater replaces files on disk but never restarts
-    # anything underneath you. Once it finishes, say so plainly.
     if ($script:UpdJob -and -not $script:UpdPrompted) {
         try {
             if ($script:UpdJob.State -eq 'Completed') {
@@ -1043,7 +1163,7 @@ $watch.Add_Tick({
                     $script:Pending = $true
                     $miPending.Visible = $true
                     $icon.BalloonTipTitle = 'Update ready'
-                    $icon.BalloonTipText  = 'A new version was downloaded. Click here, or use the tray menu, to restart and apply it.'
+                    $icon.BalloonTipText  = 'A new version was downloaded. Click here to restart and apply it.'
                     $icon.ShowBalloonTip(6000)
                 }
             } elseif ($script:UpdJob.State -eq 'Failed') {
