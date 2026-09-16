@@ -64,7 +64,7 @@ else {
 
 # ---------------------------------------------------------------- 2. files
 Head '2. Script files'
-$want = @('Aura-Background.ps1','Lighting-Panel.ps1','Lighting-Panel.bat',
+$want = @('Aura-Background.ps1','Lighting-Panel.ps1','Lighting-Panel.bat','Tray.ps1','Install.ps1','Install.bat',
           'Update.bat','Update.ps1','Check.bat','Check.ps1')
 foreach ($f in $want) {
     $p = Join-Path $here $f

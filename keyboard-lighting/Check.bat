@@ -21,7 +21,7 @@ set "BASE=https://raw.githubusercontent.com/ajani190819-ops/HSEQB/arena/01a0a5d4
 
 echo.
 echo   Downloading the latest files...
-powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "[Net.ServicePointManager]::SecurityProtocol='Tls12'; $b='%BASE%'; $d='%~dp0'; $n=0; foreach($f in 'Check.ps1','Aura-Background.ps1','Lighting-Panel.ps1','Lighting-Panel.bat','Update.ps1','Update.bat'){ try{ Invoke-WebRequest \"$b/$f\" -OutFile (Join-Path $d $f) -UseBasicParsing -TimeoutSec 25; Unblock-File (Join-Path $d $f); $n++ } catch { Write-Host ('   could not download ' + $f) -ForegroundColor Yellow } }; Write-Host ('   got ' + $n + ' of 6 files') -ForegroundColor Gray"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "[Net.ServicePointManager]::SecurityProtocol='Tls12'; $b='%BASE%'; $d='%~dp0'; $n=0; foreach($f in 'Check.ps1','Aura-Background.ps1','Lighting-Panel.ps1','Lighting-Panel.bat','Update.ps1','Update.bat','Tray.ps1','Install.ps1','Install.bat'){ try{ Invoke-WebRequest \"$b/$f\" -OutFile (Join-Path $d $f) -UseBasicParsing -TimeoutSec 25; Unblock-File (Join-Path $d $f); $n++ } catch { Write-Host ('   could not download ' + $f) -ForegroundColor Yellow } }; Write-Host ('   got ' + $n + ' of 9 files') -ForegroundColor Gray"
 
 if not exist "%~dp0Check.ps1" (
   echo.
