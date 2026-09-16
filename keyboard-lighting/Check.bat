@@ -2,10 +2,10 @@
 REM ===================================================================
 REM  Keyboard Lighting - diagnostic
 REM
-REM  Double-click this. It checks every stage and tells you exactly
-REM  what is wrong. Click "Yes" on the permission prompt.
+REM  Double-click this. Click "Yes" on the permission prompt.
 REM
-REM  It re-downloads its own script first, so it is always current.
+REM  It re-downloads the diagnostic AND the lighting engine first,
+REM  so it always tests the current code.
 REM ===================================================================
 title Keyboard Lighting - Diagnostic
 cd /d "%~dp0"
@@ -20,8 +20,8 @@ exit /b 0
 set "BASE=https://raw.githubusercontent.com/ajani190819-ops/HSEQB/arena/01a0a5d4-hseqb/keyboard-lighting"
 
 echo.
-echo   Fetching the latest diagnostic...
-powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "[Net.ServicePointManager]::SecurityProtocol='Tls12'; try { Invoke-WebRequest '%BASE%/Check.ps1' -OutFile '%~dp0Check.ps1' -UseBasicParsing -TimeoutSec 25; Unblock-File '%~dp0Check.ps1' } catch { Write-Host '  (could not refresh - using local copy)' -ForegroundColor Yellow }"
+echo   Downloading the latest files...
+powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "[Net.ServicePointManager]::SecurityProtocol='Tls12'; $b='%BASE%'; $d='%~dp0'; $n=0; foreach($f in 'Check.ps1','Aura-Background.ps1','Lighting-Panel.ps1','Lighting-Panel.bat','Update.ps1','Update.bat'){ try{ Invoke-WebRequest \"$b/$f\" -OutFile (Join-Path $d $f) -UseBasicParsing -TimeoutSec 25; Unblock-File (Join-Path $d $f); $n++ } catch { Write-Host ('   could not download ' + $f) -ForegroundColor Yellow } }; Write-Host ('   got ' + $n + ' of 6 files') -ForegroundColor Gray"
 
 if not exist "%~dp0Check.ps1" (
   echo.
