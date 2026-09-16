@@ -19,7 +19,7 @@
 
 param(
     # Skip the menu and run one action directly.
-    [ValidateSet('', 'identify', 'map', 'correct', 'reset', 'chase', 'ring')]
+    [ValidateSet('', 'identify', 'map', 'correct', 'reset', 'chase', 'ring', 'shape')]
     [string]$Do = '',
     # Seconds each zone stays lit during Identify.
     [double]$Hold = 1.5
@@ -417,6 +417,95 @@ function Do-BuildRing {
     Info 'then come back and use option 5 to watch the path.'
 }
 
+function Get-RingShape {
+    # Common ways a two-sided light bar is wired. The firmware's own
+    # coordinates are often wrong, so offering the handful of real-world
+    # shapes is faster and more reliable than asking about every lamp.
+    param($zones)
+    $z = @($zones | Sort-Object)
+    if ($z.Count -lt 2) { return @{} }
+    $lo = $z[0]
+    $odd  = @($z | Where-Object { ($_ - $lo) % 2 -eq 1 })
+    $even = @($z | Where-Object { ($_ - $lo) % 2 -eq 0 })
+    $evenBack = @($even | Sort-Object -Descending | Where-Object { $_ -ne $lo })
+    $oddBack  = @($odd  | Sort-Object -Descending)
+    $half = [int][Math]::Floor($z.Count / 2)
+    return [ordered]@{
+        'Up one side, back the other (most common)' = @(@($lo) + $odd + $evenBack)
+        'The other way round'                       = @($even + $oddBack)
+        'Straight round in number order'            = @($z)
+        'First half out, second half back'          = @($z[0..($half-1)] + @($z[$half..($z.Count-1)] | Sort-Object -Descending))
+    }
+}
+
+function Do-QuickRing {
+    Head 'Pick the shape of your light bar'
+
+    $lay = Read-Layout
+    $pool = @($lay.Bar)
+    if ($pool.Count -eq 0) { Warn 'No light bar zones known yet. Start the lighting once first.'; return }
+
+    $shapes = Get-RingShape $pool
+    Info 'Most light bars are wired one of these ways. Pick the one that'
+    Info 'matches, save it, and watch the result - no need to answer for'
+    Info 'every single light.'
+    Write-Host ''
+    $i = 1
+    $keys = @()
+    foreach ($k in $shapes.Keys) {
+        Write-Host ("   {0}  {1}" -f $i, $k) -ForegroundColor Gray
+        Write-Host ("      {0}" -f (($shapes[$k]) -join ', ')) -ForegroundColor DarkGray
+        $keys += $k
+        $i++
+    }
+    Write-Host ("   {0}  Type the order myself" -f $i) -ForegroundColor Gray
+    Write-Host ("   {0}  Cancel" -f ($i+1)) -ForegroundColor Gray
+    Write-Host ''
+    $c = Read-Host ("  Choose 1-{0}" -f ($i+1))
+    $n = 0
+    if (-not [int]::TryParse($c, [ref]$n)) { Info 'Cancelled.'; return }
+
+    $ring = $null
+    if ($n -ge 1 -and $n -le $keys.Count) {
+        $ring = @($shapes[$keys[$n-1]])
+    } elseif ($n -eq $i) {
+        $t = Read-Host '  Zone numbers in travel order, separated by commas'
+        if (-not $t.Trim()) { Info 'Cancelled.'; return }
+        $ring = @($t -split ',' | Where-Object { $_.Trim() } | ForEach-Object { [int]$_.Trim() })
+    } else {
+        Info 'Cancelled.'; return
+    }
+
+    if ($ring.Count -gt 1 -and $ring[0] -eq $ring[-1]) {
+        $ring = @($ring[0..($ring.Count - 2)])
+    }
+    $dupe = @($ring | Group-Object | Where-Object { $_.Count -gt 1 })
+    if ($dupe.Count -gt 0) {
+        Bad ('Zone(s) listed twice: ' + (($dupe | ForEach-Object { $_.Name }) -join ', ') + '. Nothing saved.')
+        return
+    }
+    $missing = @($pool | Where-Object { $ring -notcontains $_ })
+    if ($missing.Count -gt 0) {
+        Warn ('Not listed, so they will stay dark: ' + ($missing -join ', '))
+        $ok = Read-Host '  Continue anyway? (y/N)'
+        if ($ok -ne 'y') { Info 'Nothing saved.'; return }
+    }
+
+    $obj = [ordered]@{
+        Kbd     = @($lay.Kbd)
+        Bar     = @($ring)
+        BarRing = $true
+        Note    = 'Written by Zones.ps1. Delete this file to go back to automatic detection.'
+    }
+    if (-not (Test-Path $StateDir)) { New-Item -ItemType Directory -Force -Path $StateDir | Out-Null }
+    $obj | ConvertTo-Json -Depth 5 | Set-Content -Path $MapFile -Encoding UTF8
+    Write-Host ''
+    Good ("Saved: " + ($ring -join ', '))
+    Write-Host ''
+    Info 'Restart the lighting (tray icon, Exit, then open it again).'
+    Info 'Then use option 5 to watch it and check it goes round smoothly.'
+}
+
 function Do-Reset {
     Head 'Reset to automatic detection'
     if (Test-Path $MapFile) {
@@ -444,6 +533,7 @@ if ($Do) {
         'reset'    { Do-Reset }
         'chase'    { Do-Chase }
         'ring'     { Do-BuildRing }
+        'shape'    { Do-QuickRing }
     }
     Write-Host ''
     return
@@ -456,10 +546,11 @@ while ($true) {
     Write-Host '   3  Correct the map by hand' -ForegroundColor Gray
     Write-Host '   4  Reset back to automatic' -ForegroundColor Gray
     Write-Host '   5  Watch the path - does it trace the circle?' -ForegroundColor Gray
-    Write-Host '   6  Build the circle by watching (recommended)' -ForegroundColor Gray
-    Write-Host '   7  Quit' -ForegroundColor Gray
+    Write-Host '   6  Build the circle by watching (slow but certain)' -ForegroundColor Gray
+    Write-Host '   7  Pick the shape of the bar (fast - start here)' -ForegroundColor Gray
+    Write-Host '   8  Quit' -ForegroundColor Gray
     Write-Host ''
-    $c = Read-Host '  Choose 1-7'
+    $c = Read-Host '  Choose 1-8'
     switch ($c) {
         '1' { $lay = Read-Layout; $ov = Read-Override; Show-Map $lay $ov }
         '2' { Do-Identify $lay $Hold }
@@ -467,7 +558,8 @@ while ($true) {
         '4' { Do-Reset }
         '5' { Do-Chase }
         '6' { Do-BuildRing; $lay = Read-Layout }
-        '7' { Write-Host ''; return }
-        default { Warn 'Type a number from 1 to 7.' }
+        '7' { Do-QuickRing; $lay = Read-Layout }
+        '8' { Write-Host ''; return }
+        default { Warn 'Type a number from 1 to 8.' }
     }
 }

@@ -2520,6 +2520,7 @@ function New-Zone {
 $zoneMapFile = Join-Path $env:LOCALAPPDATA 'KeyboardLighting\zonemap.json'
 $zoneRingOverride = $null
 $zoneOrderFromUser = $false
+$barListOrder = $false
 if (Test-Path $zoneMapFile) {
     try {
         $zm = Get-Content $zoneMapFile -Raw | ConvertFrom-Json
@@ -2545,8 +2546,32 @@ if (Test-Path $zoneMapFile) {
     }
 }
 
+# The firmware's reported coordinates for the light bar do not describe
+# the real strip: ordering by them puts lamps that are physically next to
+# each other at opposite ends, so a pattern jumps about instead of
+# travelling. Measured against the true order on this hardware, the
+# firmware's own path is 1.8x shorter than reality - it is not a
+# description of the bar at all.
+#
+# Real two-sided bars run up one side and back down the other, with the
+# two sides interleaved in the numbering. Use that unless the user has
+# saved their own order.
+if (-not $zoneOrderFromUser -and $barIdx.Count -gt 3) {
+    $sorted = @($barIdx | Sort-Object)
+    $loB = $sorted[0]
+    $sideA = @($sorted | Where-Object { ($_ - $loB) % 2 -eq 1 })
+    $sideB = @($sorted | Where-Object { ($_ - $loB) % 2 -eq 0 -and $_ -ne $loB } | Sort-Object -Descending)
+    $ringOrder = @(@($loB) + $sideA + $sideB)
+    if ($ringOrder.Count -eq $barIdx.Count) {
+        $barIdx = New-Object System.Collections.ArrayList
+        foreach ($v in $ringOrder) { [void]$barIdx.Add([int]$v) }
+        $barListOrder = $true
+        Say ("  Light bar path: " + ($ringOrder -join ' ')) 'DarkGray'
+    }
+}
+
 $zDeck = New-Zone 'deck' $deckIdx -UseListOrder:$zoneOrderFromUser
-$zBar  = New-Zone 'bar'  $barIdx  -UseListOrder:$zoneOrderFromUser
+$zBar  = New-Zone 'bar'  $barIdx  -UseListOrder:($zoneOrderFromUser -or $barListOrder)
 
 if ($barIdx.Count -gt 0) { $eng.Groups = [Zone[]]@($zDeck, $zBar) }
 else                     { $eng.Groups = [Zone[]]@($zDeck) }

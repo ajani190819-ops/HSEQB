@@ -137,11 +137,13 @@ light is which, and correcting the map if it is wrong.
   Reset           throw your correction away and go back to automatic.
   Watch the path  one light walks the bar in the order the app believes.
                   If it jumps about, the order is wrong.
+  Pick the shape  the fast way, and the one to try first. Light bars are
+                  wired in a handful of standard ways; pick the one that
+                  matches and it is saved in one keypress.
   Build the circle
-                  the reliable way. Each zone lights on its own and you
-                  answer y or n to "is this the next one round?". It
-                  writes the order from your answers, so nothing has to
-                  be typed or guessed.
+                  the slow but certain fallback. Each zone lights on its
+                  own and you answer y or n to "is this the next one
+                  round?". Only needed if no standard shape fits.
 
 Your correction is saved separately and is never overwritten by an
 update. The lighting has to be closed while Identify runs, because only
