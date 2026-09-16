@@ -23,7 +23,10 @@
 [CmdletBinding()]
 param(
     [ValidateSet('wave','rainbow','breathe','comet','pulse','scanner','fire',
-                 'gradient','static','off')]
+                 'gradient','static','off',
+                 'spectrum','vumeter','beat','pulsebass',
+                 'ambient','cycle','strobe','stars','ripple','aurora',
+                 'battery','cpu','clock')]
     [string]$Effect = 'gradient',
 
     [string]$Colors = '#FF0000,#FF7F00,#FFFF00,#00FF00,#0000FF,#8B00FF',
@@ -43,6 +46,10 @@ param(
 
     [switch]$Mirror,
     [switch]$Reverse,
+
+    # Briefly show battery status when the charger is plugged in or pulled
+    # out, and when the battery gets low, then return to the chosen effect.
+    [switch]$OverlayOn,
     [switch]$Restore,
     [switch]$Quiet,
 
@@ -159,6 +166,14 @@ public class LampEngine {
   // makes every update silently do nothing.
   public byte[] CtrlOff = null;
 
+  // Optional data sources for the reactive / info effects.
+  public AudioCap Audio  = null;
+  public SysInfo  Sys    = null;
+  public ScreenCap Screen = null;
+  public volatile int  OverlayMode = 0;    // 0 none, 1 battery, 2 cpu
+  public volatile double OverlayUntil = 0.0;
+  public double Now = 0.0;
+
   // Channel stride within one report. Planar layouts put each colour plane
   // Slots apart (stride 1 between lamps of the same channel); interleaved
   // layouts store R,G,B,I together so consecutive lamps are 4 apart.
@@ -201,6 +216,59 @@ public class LampEngine {
         SlotPos[i] = (LampCount > 1) ? (i / (double)(LampCount - 1)) : 0.0;
     }
     return true;
+  }
+
+
+  // Battery as a filling bar: green when full, red when nearly empty.
+  // While charging a bright head runs along the bar.
+  void DrawBattery(int N) {
+    int pct = (Sys != null) ? Sys.Battery : -1;
+    bool chg = (Sys != null) && Sys.Charging;
+    if (pct < 0) pct = 100;
+    double f = pct / 100.0;
+    double hue = 120.0 * f;                       // 0 red .. 120 green
+    double hr, hg, hb;
+    Hsv(hue, 1.0, 1.0, out hr, out hg, out hb);
+    double head = chg ? ((Now * 0.5) % 1.0) : -1.0;
+    bool low = (!chg && f <= 0.15);
+    double blink = low ? (0.35 + 0.65 * (0.5 + 0.5 * Math.Sin(Now * 5.0))) : 1.0;
+    for (int i = 0; i < N; i++) {
+      double u = SlotPos[i];
+      double on;
+      if (u <= f) on = 1.0;
+      else {
+        double d = (u - f) / 0.05;
+        on = (d < 1.0) ? (1.0 - d) : 0.0;
+      }
+      double r = hr * on, g = hg * on, b = hb * on;
+      if (on < 0.02) { r = 6; g = 6; b = 6; }     // faint track
+      if (chg && head >= 0) {
+        double d2 = Math.Abs(u - head * f);
+        double w = Math.Exp(-d2 * 20.0);
+        r += 255 * w * 0.8; g += 255 * w * 0.8; b += 200 * w * 0.8;
+      }
+      SetZone(i, r * blink, g * blink, b * blink);
+    }
+  }
+
+  // CPU load meter: green at idle through to red under full load.
+  void DrawCpu(int N) {
+    double c = (Sys != null) ? Sys.Cpu : 0.0;
+    double hue = 120.0 - 120.0 * c;
+    double hr, hg, hb;
+    Hsv(hue, 1.0, 1.0, out hr, out hg, out hb);
+    for (int i = 0; i < N; i++) {
+      double u = SlotPos[i];
+      double on;
+      if (u <= c) on = 1.0;
+      else {
+        double d = (u - c) / 0.05;
+        on = (d < 1.0) ? (1.0 - d) : 0.0;
+      }
+      double r = hr * on, g = hg * on, b = hb * on;
+      if (on < 0.02) { r = 5; g = 5; b = 5; }
+      SetZone(i, r, g, b);
+    }
   }
 
   void SetZone(int slot, double r, double g, double b) {
@@ -535,6 +603,19 @@ public class LampEngine {
     }
     int N = LampCount;
     double dir = Reverse ? -1.0 : 1.0;
+    Now = t;
+
+    // An overlay temporarily takes over the keyboard (battery unplugged,
+    // battery low, etc), then hands it straight back to the chosen effect.
+    int ov = OverlayMode;
+    if (ov != 0) {
+      if (t < OverlayUntil) {
+        if (ov == 1) DrawBattery(N);
+        else if (ov == 2) DrawCpu(N);
+        return;
+      }
+      OverlayMode = 0;
+    }
 
     switch (Effect) {
       case "gradient": {
@@ -607,6 +688,188 @@ public class LampEngine {
         double pr2, pg2, pb2;
         Fade(r, g, b, w, out pr2, out pg2, out pb2);
         for (int i = 0; i < N; i++) SetZone(i, pr2, pg2, pb2);
+        break;
+      }
+      // ---------------- audio reactive ----------------
+      case "spectrum": {
+        // Each zone is one frequency band, low on the left.
+        float[] bd = (Audio != null && Audio.Ok) ? Audio.Bands : null;
+        for (int i = 0; i < N; i++) {
+          double u = SlotPos[i];
+          double v = 0.0;
+          if (bd != null) {
+            int b = (int)(u * (AudioCap.BANDS - 1) + 0.5);
+            if (b < 0) b = 0; if (b >= AudioCap.BANDS) b = AudioCap.BANDS - 1;
+            v = bd[b];
+          }
+          double r, g, b2;
+          Pal(u, out r, out g, out b2);
+          SetZone(i, r * v, g * v, b2 * v);
+        }
+        break;
+      }
+      case "vumeter": {
+        // Palette bar that fills from the left with overall loudness.
+        double lv = (Audio != null && Audio.Ok) ? Audio.Level : 0.0;
+        for (int i = 0; i < N; i++) {
+          double u = SlotPos[i];
+          double on = (u <= lv) ? 1.0 : 0.0;
+          if (on < 1.0) {
+            double d = (u - lv) / 0.08;        // soft edge
+            on = (d < 1.0) ? (1.0 - d) : 0.0;
+            if (on < 0) on = 0;
+          }
+          double r, g, b;
+          Pal(u, out r, out g, out b);
+          SetZone(i, r * on, g * on, b * on);
+        }
+        break;
+      }
+      case "beat": {
+        // Whole keyboard flashes on the beat, colour cycles per hit.
+        double e = (Audio != null && Audio.Ok) ? Audio.Beat : 0.0;
+        double bass = (Audio != null && Audio.Ok) ? Audio.Bass : 0.0;
+        double w = e * 0.75 + bass * 0.45;
+        if (w > 1.0) w = 1.0;
+        w = 0.04 + 0.96 * w * w;
+        double r0, g0, b0;
+        Pal(t * 0.08, out r0, out g0, out b0);
+        for (int i = 0; i < N; i++) SetZone(i, r0 * w, g0 * w, b0 * w);
+        break;
+      }
+      case "pulsebass": {
+        // Bass drives a wave outward from the centre.
+        double bass = (Audio != null && Audio.Ok) ? Audio.Bass : 0.0;
+        for (int i = 0; i < N; i++) {
+          double d = Math.Abs(SlotPos[i] - 0.5) * 2.0;
+          double v = bass - d * 0.55;
+          if (v < 0) v = 0; if (v > 1) v = 1;
+          v = v * v;
+          double r, g, b;
+          Pal(SlotPos[i] + t * 0.05, out r, out g, out b);
+          SetZone(i, r * v, g * v, b * v);
+        }
+        break;
+      }
+
+      // ---------------- ambient (screen mirror) ----------------
+      case "ambient": {
+        int[] cols = (Screen != null && Screen.Ok) ? Screen.Cols : null;
+        for (int i = 0; i < N; i++) {
+          double u = SlotPos[i];
+          double r = 0, g = 0, b = 0;
+          if (cols != null && cols.Length > 0) {
+            double f = u * (cols.Length - 1);
+            int a = (int)f; if (a < 0) a = 0; if (a >= cols.Length) a = cols.Length - 1;
+            int c2 = a + 1; if (c2 >= cols.Length) c2 = cols.Length - 1;
+            double w = f - a;
+            int ca = cols[a], cb = cols[c2];
+            r = ((ca >> 16) & 0xFF) * (1 - w) + ((cb >> 16) & 0xFF) * w;
+            g = ((ca >>  8) & 0xFF) * (1 - w) + ((cb >>  8) & 0xFF) * w;
+            b = ( ca        & 0xFF) * (1 - w) + ( cb        & 0xFF) * w;
+            // Screens are mostly desaturated; push saturation so the
+            // keyboard shows a colour rather than a grey wash.
+            double mx = Math.Max(r, Math.Max(g, b));
+            double mn = Math.Min(r, Math.Min(g, b));
+            if (mx > 1.0) {
+              double mid = (mx + mn) * 0.5;
+              r = mid + (r - mid) * 1.55;
+              g = mid + (g - mid) * 1.55;
+              b = mid + (b - mid) * 1.55;
+              double k = 255.0 / Math.Max(255.0, Math.Max(r, Math.Max(g, b)));
+              r *= k; g *= k; b *= k;
+              if (r < 0) r = 0; if (g < 0) g = 0; if (b < 0) b = 0;
+            }
+          }
+          SetZone(i, r, g, b);
+        }
+        break;
+      }
+
+      // ---------------- classic presets ----------------
+      case "cycle": {
+        // Whole keyboard one colour, slowly walking the hue wheel.
+        double r, g, b;
+        Hsv((t * 18.0 * dir) % 360.0, 1.0, 1.0, out r, out g, out b);
+        for (int i = 0; i < N; i++) SetZone(i, r, g, b);
+        break;
+      }
+      case "strobe": {
+        double ph = t * 6.0;
+        double w = (ph - Math.Floor(ph)) < 0.5 ? 1.0 : 0.0;
+        double r, g, b;
+        Pal(Math.Floor(ph) * 0.13, out r, out g, out b);
+        for (int i = 0; i < N; i++) SetZone(i, r * w, g * w, b * w);
+        break;
+      }
+      case "stars": {
+        // Twinkling points of light on a dark keyboard.
+        double fade = Math.Pow(0.28, dt);
+        double born = 1.0 - Math.Pow(1.0 - 0.055, dt * 60.0);
+        for (int i = 0; i < N; i++) {
+          heat[i] *= fade;
+          if (rnd.NextDouble() < born) heat[i] = 0.75 + rnd.NextDouble() * 0.25;
+          double v = heat[i];
+          double r, g, b;
+          Pal((i * 0.137) % 1.0, out r, out g, out b);
+          SetZone(i, r * v, g * v, b * v);
+        }
+        break;
+      }
+      case "ripple": {
+        // Expanding rings from the centre.
+        double sp = 0.55 * dir;
+        double v0 = (t * sp) % 1.0;
+        for (int i = 0; i < N; i++) {
+          double d = Math.Abs(SlotPos[i] - 0.5) * 2.0;
+          double ph = d - v0;
+          ph = ph - Math.Floor(ph);
+          double w = Math.Exp(-ph * 5.0);
+          double r, g, b;
+          Pal(SlotPos[i] + t * 0.1, out r, out g, out b);
+          SetZone(i, r * w, g * w, b * w);
+        }
+        break;
+      }
+      case "aurora": {
+        // Three slow sine layers - the soft drifting look.
+        for (int i = 0; i < N; i++) {
+          double u = SlotPos[i];
+          double a = 0.5 + 0.5 * Math.Sin((u * 2.1 + t * 0.21 * dir) * Math.PI * 2.0);
+          double b2 = 0.5 + 0.5 * Math.Sin((u * 1.3 - t * 0.14 * dir + 0.33) * Math.PI * 2.0);
+          double c = 0.5 + 0.5 * Math.Sin((u * 3.7 + t * 0.09 * dir + 0.66) * Math.PI * 2.0);
+          double f = (a * 0.5 + b2 * 0.35 + c * 0.15);
+          double r, g, bb;
+          Pal(f, out r, out g, out bb);
+          double v = 0.35 + 0.65 * f;
+          SetZone(i, r * v, g * v, bb * v);
+        }
+        break;
+      }
+
+      // ---------------- information ----------------
+      case "battery": {
+        DrawBattery(N);
+        break;
+      }
+      case "cpu": {
+        DrawCpu(N);
+        break;
+      }
+      case "clock": {
+        // Hue follows time of day; a bright marker walks with the minutes.
+        DateTime nowT = DateTime.Now;
+        double dayF = (nowT.Hour * 3600.0 + nowT.Minute * 60.0 + nowT.Second) / 86400.0;
+        double mF   = (nowT.Minute * 60.0 + nowT.Second) / 3600.0;
+        for (int i = 0; i < N; i++) {
+          double r, g, b;
+          Hsv(210.0 + 150.0 * Math.Sin(dayF * Math.PI * 2.0 - Math.PI / 2.0), 0.85, 1.0, out r, out g, out b);
+          double d = Math.Abs(SlotPos[i] - mF);
+          if (d > 0.5) d = 1.0 - d;
+          double mark = Math.Exp(-d * 26.0);
+          double v = 0.16 + 0.84 * mark;
+          SetZone(i, r * v, g * v, b * v);
+        }
         break;
       }
       case "fire": {
@@ -742,6 +1005,450 @@ public class LampEngine {
     if (h != IntPtr.Zero) { CloseHandle(h); h = IntPtr.Zero; }
   }
 }
+// ====================================================================
+//  AUDIO LOOPBACK CAPTURE
+//  Pure WASAPI over COM interop - no NAudio, no drivers, no downloads.
+//  Captures whatever the speakers are playing and turns it into a
+//  16-band spectrum the lighting effects can read.
+// ====================================================================
+[ComImport, Guid("A95664D2-9614-4F35-A746-DE8DB63617E6"),
+ InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+interface IMMDeviceEnumerator {
+  int EnumAudioEndpoints(int dataFlow, int stateMask, out IntPtr devices);
+  int GetDefaultAudioEndpoint(int dataFlow, int role, out IMMDevice device);
+}
+
+[ComImport, Guid("D666063F-1587-4E43-81F1-B948E807363F"),
+ InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+interface IMMDevice {
+  int Activate(ref Guid iid, int clsCtx, IntPtr actParams,
+               [MarshalAs(UnmanagedType.IUnknown)] out object iface);
+}
+
+[ComImport, Guid("1CB9AD4C-DBFA-4c32-B178-C2F568A703B2"),
+ InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+interface IAudioClient {
+  int Initialize(int shareMode, int streamFlags, long bufDuration,
+                 long periodicity, IntPtr format, IntPtr sessionGuid);
+  int GetBufferSize(out uint frames);
+  int GetStreamLatency(out long latency);
+  int GetCurrentPadding(out uint padding);
+  int IsFormatSupported(int shareMode, IntPtr format, IntPtr closest);
+  int GetMixFormat(out IntPtr format);
+  int GetDevicePeriod(out long defPeriod, out long minPeriod);
+  int Start();
+  int Stop();
+  int Reset();
+  int SetEventHandle(IntPtr h);
+  int GetService(ref Guid riid, [MarshalAs(UnmanagedType.IUnknown)] out object ppv);
+}
+
+[ComImport, Guid("C8ADBD64-E71E-48a0-A4DE-185C395CD317"),
+ InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+interface IAudioCaptureClient {
+  int GetBuffer(out IntPtr data, out uint frames, out uint flags,
+                out long devPos, out long qpcPos);
+  int ReleaseBuffer(uint frames);
+  int GetNextPacketSize(out uint frames);
+}
+
+public class AudioCap {
+  const int N = 1024;                 // FFT size
+  public const int BANDS = 16;
+
+  public volatile bool  Ok      = false;
+  public volatile string Err    = "";
+  public volatile float[] Bands = new float[BANDS];
+  public volatile float Level   = 0f;   // overall loudness 0..1
+  public volatile float Bass    = 0f;   // low-end energy 0..1
+  public volatile float Beat    = 0f;   // decays after a bass hit
+
+  IAudioClient cli;
+  IAudioCaptureClient cap;
+  Thread th;
+  volatile bool run = false;
+
+  int rate = 48000, chans = 2, bits = 32;
+  bool isFloat = true;
+
+  readonly double[] ring = new double[N];
+  int ringPos = 0;
+  readonly double[] re = new double[N];
+  readonly double[] im = new double[N];
+  readonly double[] win = new double[N];
+  readonly float[] smooth = new float[BANDS];
+  readonly int[] bandLo = new int[BANDS];
+  readonly int[] bandHi = new int[BANDS];
+  double bassAvg = 0.0;
+
+  public AudioCap() {
+    for (int i = 0; i < N; i++)                     // Hann window
+      win[i] = 0.5 * (1.0 - Math.Cos(2.0 * Math.PI * i / (N - 1)));
+  }
+
+  public bool Start() {
+    try {
+      Type t = Type.GetTypeFromCLSID(new Guid("BCDE0395-E52F-467C-8E3D-C4579291692E"));
+      IMMDeviceEnumerator en = (IMMDeviceEnumerator)Activator.CreateInstance(t);
+      IMMDevice dev;
+      // 0 = eRender (speakers), 0 = eConsole
+      if (en.GetDefaultAudioEndpoint(0, 0, out dev) != 0 || dev == null) {
+        Err = "no playback device"; return false;
+      }
+      Guid iidAc = new Guid("1CB9AD4C-DBFA-4c32-B178-C2F568A703B2");
+      object o;
+      if (dev.Activate(ref iidAc, 23, IntPtr.Zero, out o) != 0) {
+        Err = "activate failed"; return false;
+      }
+      cli = (IAudioClient)o;
+
+      IntPtr fmt;
+      if (cli.GetMixFormat(out fmt) != 0 || fmt == IntPtr.Zero) {
+        Err = "no mix format"; return false;
+      }
+      int tag = Marshal.ReadInt16(fmt, 0) & 0xFFFF;
+      chans   = Marshal.ReadInt16(fmt, 2) & 0xFFFF;
+      rate    = Marshal.ReadInt32(fmt, 4);
+      bits    = Marshal.ReadInt16(fmt, 14) & 0xFFFF;
+      isFloat = (tag == 3);
+      if (tag == 0xFFFE && Marshal.ReadInt16(fmt, 16) >= 22) {
+        // WAVEFORMATEXTENSIBLE: the real type is in SubFormat at +24
+        int sub = Marshal.ReadInt32(fmt, 24);
+        isFloat = (sub == 3);
+      }
+      if (chans < 1) chans = 2;
+
+      // 0 = shared, 0x00020000 = loopback, 200ms buffer
+      int hr = cli.Initialize(0, 0x00020000, 2000000, 0, fmt, IntPtr.Zero);
+      Marshal.FreeCoTaskMem(fmt);
+      if (hr != 0) { Err = "init failed 0x" + hr.ToString("X"); return false; }
+
+      Guid iidCap = new Guid("C8ADBD64-E71E-48a0-A4DE-185C395CD317");
+      object oc;
+      if (cli.GetService(ref iidCap, out oc) != 0) { Err = "no capture service"; return false; }
+      cap = (IAudioCaptureClient)oc;
+
+      PrepBands();
+      if (cli.Start() != 0) { Err = "start failed"; return false; }
+
+      run = true;
+      th = new Thread(new ThreadStart(Pump));
+      th.IsBackground = true;
+      th.Priority = ThreadPriority.BelowNormal;
+      th.Start();
+      Ok = true;
+      return true;
+    } catch (Exception ex) {
+      Err = ex.Message;
+      return false;
+    }
+  }
+
+  // Log-spaced band edges:pitch perception is logarithmic, so linear bins
+  // would put almost everything in the first two bars.
+  void PrepBands() {
+    // Start at 80Hz, not 40: at 48kHz/1024 one bin is 47Hz, so bands below
+    // ~90Hz would all collapse onto bins 1-2 and the first three bars would
+    // move as one. Also force every band to start above the previous one.
+    double lo = 80.0, hi = Math.Min(15000.0, rate / 2.0 - 1.0);
+    double binHz = (double)rate / N;
+    int prev = 0;
+    for (int b = 0; b < BANDS; b++) {
+      double f0 = lo * Math.Pow(hi / lo, b / (double)BANDS);
+      double f1 = lo * Math.Pow(hi / lo, (b + 1) / (double)BANDS);
+      int i0 = (int)(f0 / binHz), i1 = (int)(f1 / binHz);
+      if (i0 <= prev) i0 = prev + 1;      // never reuse the previous band
+      if (i0 < 1) i0 = 1;
+      if (i1 < i0) i1 = i0;
+      if (i1 > N / 2 - 1) i1 = N / 2 - 1;
+      if (i0 > N / 2 - 1) i0 = N / 2 - 1;
+      bandLo[b] = i0; bandHi[b] = i1;
+      prev = i1;
+    }
+  }
+
+  public void Stop() {
+    run = false;
+    try { if (th != null) th.Join(400); } catch { }
+    try { if (cli != null) cli.Stop(); } catch { }
+    cap = null; cli = null; Ok = false;
+  }
+
+  void Pump() {
+    while (run) {
+      try {
+        uint avail;
+        if (cap.GetNextPacketSize(out avail) != 0) { Thread.Sleep(10); continue; }
+        if (avail == 0) { Thread.Sleep(8); Decay(); continue; }
+
+        while (avail > 0 && run) {
+          IntPtr p; uint frames, flags; long dp, qp;
+          if (cap.GetBuffer(out p, out frames, out flags, out dp, out qp) != 0) break;
+          bool silent = (flags & 0x2) != 0;
+          if (frames > 0) {
+            if (silent) {
+              for (int i = 0; i < frames; i++) { ring[ringPos] = 0.0; ringPos = (ringPos + 1) % N; }
+            } else {
+              Ingest(p, (int)frames);
+            }
+          }
+          cap.ReleaseBuffer(frames);
+          if (cap.GetNextPacketSize(out avail) != 0) break;
+        }
+        Analyse();
+      } catch {
+        Thread.Sleep(50);
+      }
+    }
+  }
+
+  // Mix all channels down to mono and push into the ring buffer.
+  void Ingest(IntPtr p, int frames) {
+    int stride = (bits / 8) * chans;
+    for (int f = 0; f < frames; f++) {
+      double s = 0.0;
+      IntPtr baseP = (IntPtr)(p.ToInt64() + (long)f * stride);
+      for (int c = 0; c < chans; c++) {
+        if (isFloat && bits == 32) {
+          // ReadInt32 + BitConverter avoids an unsafe float* cast
+          int raw = Marshal.ReadInt32(baseP, c * 4);
+          s += BitConverter.ToSingle(BitConverter.GetBytes(raw), 0);
+        } else if (bits == 16) {
+          s += Marshal.ReadInt16(baseP, c * 2) / 32768.0;
+        } else if (bits == 32) {
+          s += Marshal.ReadInt32(baseP, c * 4) / 2147483648.0;
+        }
+      }
+      ring[ringPos] = s / chans;
+      ringPos = (ringPos + 1) % N;
+    }
+  }
+
+  void Decay() {
+    float[] outB = new float[BANDS];
+    for (int b = 0; b < BANDS; b++) { smooth[b] *= 0.86f; outB[b] = smooth[b]; }
+    Bands = outB;
+    Level *= 0.86f;
+    Bass  *= 0.86f;
+    Beat  *= 0.80f;
+  }
+
+  void Analyse() {
+    for (int i = 0; i < N; i++) {
+      re[i] = ring[(ringPos + i) % N] * win[i];
+      im[i] = 0.0;
+    }
+    Fft();
+
+    float[] outB = new float[BANDS];
+    double rms = 0.0;
+    for (int i = 0; i < N; i++) rms += ring[i] * ring[i];
+    rms = Math.Sqrt(rms / N);
+
+    for (int b = 0; b < BANDS; b++) {
+      double sum = 0.0; int n = 0;
+      for (int i = bandLo[b]; i <= bandHi[b]; i++) {
+        double mag = Math.Sqrt(re[i] * re[i] + im[i] * im[i]) / (N / 2.0);
+        sum += mag; n++;
+      }
+      double v = (n > 0) ? sum / n : 0.0;
+      // dB scale: raw magnitudes are uselessly spiky
+      double db = 20.0 * Math.Log10(v + 1e-9);
+      double nv = (db + 62.0) / 52.0;          // -62dB..-10dB -> 0..1
+      if (nv < 0) nv = 0; if (nv > 1) nv = 1;
+      // Tilt: high frequencies carry far less energy, lift them so the
+      // top of the spectrum is not permanently dead.
+      nv *= 0.72 + 0.55 * (b / (double)(BANDS - 1));
+      if (nv > 1) nv = 1;
+      float f = (float)nv;
+      // fast attack, slow release
+      if (f > smooth[b]) smooth[b] = smooth[b] + (f - smooth[b]) * 0.55f;
+      else               smooth[b] = smooth[b] + (f - smooth[b]) * 0.16f;
+      outB[b] = smooth[b];
+    }
+    Bands = outB;
+
+    double lvl = (rms * 4.0); if (lvl > 1) lvl = 1;
+    Level = (float)(Level * 0.7 + lvl * 0.3);
+
+    double bs = (outB[0] + outB[1] + outB[2]) / 3.0;
+    Bass = (float)bs;
+    bassAvg = bassAvg * 0.95 + bs * 0.05;
+    if (bs > bassAvg * 1.35 && bs > 0.18) Beat = 1.0f;
+    else Beat *= 0.88f;
+  }
+
+  // In-place iterative radix-2 FFT.
+  void Fft() {
+    int n = N;
+    for (int i = 1, j = 0; i < n; i++) {
+      int bit = n >> 1;
+      for (; (j & bit) != 0; bit >>= 1) j ^= bit;
+      j ^= bit;
+      if (i < j) {
+        double tr = re[i]; re[i] = re[j]; re[j] = tr;
+        double ti = im[i]; im[i] = im[j]; im[j] = ti;
+      }
+    }
+    for (int len = 2; len <= n; len <<= 1) {
+      double ang = -2.0 * Math.PI / len;
+      double wr = Math.Cos(ang), wi = Math.Sin(ang);
+      for (int i = 0; i < n; i += len) {
+        double cr = 1.0, ci = 0.0;
+        for (int k = 0; k < len / 2; k++) {
+          int a = i + k, b = i + k + len / 2;
+          double xr = re[b] * cr - im[b] * ci;
+          double xi = re[b] * ci + im[b] * cr;
+          re[b] = re[a] - xr; im[b] = im[a] - xi;
+          re[a] = re[a] + xr; im[a] = im[a] + xi;
+          double ncr = cr * wr - ci * wi;
+          ci = cr * wi + ci * wr;
+          cr = ncr;
+        }
+      }
+    }
+  }
+}
+
+// ====================================================================
+//  SYSTEM INFO  -  battery and CPU load, cheap P/Invoke only
+// ====================================================================
+public class SysInfo {
+  [StructLayout(LayoutKind.Sequential)]
+  struct PWR {
+    public byte ACLineStatus;
+    public byte BatteryFlag;
+    public byte BatteryLifePercent;
+    public byte SystemStatusFlag;
+    public int  BatteryLifeTime;
+    public int  BatteryFullLifeTime;
+  }
+  [DllImport("kernel32.dll")] static extern bool GetSystemPowerStatus(out PWR s);
+  [DllImport("kernel32.dll")] static extern bool GetSystemTimes(out long idle, out long kern, out long usr);
+
+  public volatile int   Battery  = -1;      // 0..100, -1 unknown
+  public volatile bool  Charging = false;
+  public volatile bool  OnAc     = false;
+  public volatile float Cpu      = 0f;      // 0..1 smoothed
+
+  long pIdle = 0, pKern = 0, pUsr = 0;
+  double cpuSm = 0.0;
+
+  public void Poll() {
+    try {
+      PWR p;
+      if (GetSystemPowerStatus(out p)) {
+        Battery  = (p.BatteryLifePercent <= 100) ? p.BatteryLifePercent : -1;
+        OnAc     = (p.ACLineStatus == 1);
+        Charging = ((p.BatteryFlag & 8) != 0) || (OnAc && Battery >= 0 && Battery < 100);
+      }
+    } catch { }
+    try {
+      long i2, k2, u2;
+      if (GetSystemTimes(out i2, out k2, out u2)) {
+        long di = i2 - pIdle, dk = k2 - pKern, du = u2 - pUsr;
+        pIdle = i2; pKern = k2; pUsr = u2;
+        long tot = dk + du;                    // kernel already includes idle
+        if (tot > 0) {
+          double busy = (tot - di) / (double)tot;
+          if (busy < 0) busy = 0; if (busy > 1) busy = 1;
+          cpuSm = cpuSm * 0.7 + busy * 0.3;
+          Cpu = (float)cpuSm;
+        }
+      }
+    } catch { }
+  }
+}
+
+// ====================================================================
+//  SCREEN SAMPLER  -  average screen colour for the ambient mode.
+//  Raw GDI so it needs no System.Drawing reference.
+// ====================================================================
+public class ScreenCap {
+  [DllImport("user32.dll")] static extern IntPtr GetDC(IntPtr h);
+  [DllImport("user32.dll")] static extern int ReleaseDC(IntPtr h, IntPtr dc);
+  [DllImport("user32.dll")] static extern int GetSystemMetrics(int i);
+  [DllImport("gdi32.dll")]  static extern IntPtr CreateCompatibleDC(IntPtr dc);
+  [DllImport("gdi32.dll")]  static extern bool DeleteDC(IntPtr dc);
+  [DllImport("gdi32.dll")]  static extern IntPtr SelectObject(IntPtr dc, IntPtr o);
+  [DllImport("gdi32.dll")]  static extern bool DeleteObject(IntPtr o);
+  [DllImport("gdi32.dll")]  static extern bool StretchBlt(IntPtr d, int dx, int dy, int dw, int dh,
+                                                          IntPtr s, int sx, int sy, int sw, int sh, int rop);
+  [DllImport("gdi32.dll")]  static extern int SetStretchBltMode(IntPtr dc, int mode);
+  [DllImport("gdi32.dll")]  static extern IntPtr CreateDIBSection(IntPtr dc, ref BITMAPINFO bmi, uint usage,
+                                                                  out IntPtr bits, IntPtr sect, uint off);
+  [StructLayout(LayoutKind.Sequential)]
+  struct BITMAPINFOHEADER {
+    public uint biSize; public int biWidth; public int biHeight;
+    public ushort biPlanes; public ushort biBitCount; public uint biCompression;
+    public uint biSizeImage; public int biXPelsPerMeter; public int biYPelsPerMeter;
+    public uint biClrUsed; public uint biClrImportant;
+  }
+  [StructLayout(LayoutKind.Sequential)]
+  struct BITMAPINFO { public BITMAPINFOHEADER h; public uint c0; }
+
+  const int W = 16, H = 9;
+  public volatile int[] Cols = new int[W];    // one colour per column, 0xRRGGBB
+  public volatile int Avg = 0;
+  public volatile bool Ok = false;
+  Thread th; volatile bool run = false;
+
+  public void Start() {
+    run = true;
+    th = new Thread(new ThreadStart(Pump));
+    th.IsBackground = true;
+    th.Priority = ThreadPriority.Lowest;
+    th.Start();
+  }
+  public void Stop() {
+    run = false;
+    try { if (th != null) th.Join(400); } catch { }
+    Ok = false;
+  }
+
+  void Pump() {
+    while (run) {
+      try { Grab(); Ok = true; } catch { Ok = false; }
+      Thread.Sleep(55);                 // ~18 fps is plenty for ambient
+    }
+  }
+
+  void Grab() {
+    int sw = GetSystemMetrics(0), sh = GetSystemMetrics(1);
+    if (sw <= 0 || sh <= 0) return;
+    IntPtr screen = GetDC(IntPtr.Zero);
+    IntPtr mem = CreateCompatibleDC(screen);
+    BITMAPINFO bi = new BITMAPINFO();
+    bi.h.biSize = 40; bi.h.biWidth = W; bi.h.biHeight = -H;   // top-down
+    bi.h.biPlanes = 1; bi.h.biBitCount = 32; bi.h.biCompression = 0;
+    IntPtr bits;
+    IntPtr dib = CreateDIBSection(mem, ref bi, 0, out bits, IntPtr.Zero, 0);
+    IntPtr old = SelectObject(mem, dib);
+    SetStretchBltMode(mem, 4);                                 // HALFTONE
+    StretchBlt(mem, 0, 0, W, H, screen, 0, 0, sw, sh, 0x00CC0020);
+
+    int[] cols = new int[W];
+    long ar = 0, ag = 0, ab = 0;
+    for (int x = 0; x < W; x++) {
+      long r = 0, g = 0, b = 0;
+      for (int y = 0; y < H; y++) {
+        int px = Marshal.ReadInt32(bits, (y * W + x) * 4);
+        b += (px & 0xFF); g += ((px >> 8) & 0xFF); r += ((px >> 16) & 0xFF);
+      }
+      r /= H; g /= H; b /= H;
+      cols[x] = (int)((r << 16) | (g << 8) | b);
+      ar += r; ag += g; ab += b;
+    }
+    Cols = cols;
+    Avg = (int)(((ar / W) << 16) | ((ag / W) << 8) | (ab / W));
+
+    SelectObject(mem, old);
+    DeleteObject(dib);
+    DeleteDC(mem);
+    ReleaseDC(IntPtr.Zero, screen);
+  }
+}
+
 '@
 }
 
@@ -759,7 +1466,7 @@ $U_IDSTART=0x61; $U_IDEND=0x62; $U_AUTONOMOUS=0x71
 # DISCOVERY  (proven working; unchanged in shape)
 # ============================================================================
 Say ""
-Say ("AURA-BACKGROUND v14   effect={0}  fps={1}  speed={2}" -f $Effect,$Fps,$Speed) 'Cyan'
+Say ("AURA-BACKGROUND v15   effect={0}  fps={1}  speed={2}" -f $Effect,$Fps,$Speed) 'Cyan'
 Say ""
 
 # A laptop exposes MANY HID collections on the same VID/PID, and more than
@@ -1163,6 +1870,47 @@ $eng.ReportId   = $rMulti.Rid
 $eng.Slots      = $slots
 $eng.ReportLen  = (Rpt-Len $rMulti)
 $eng.CtrlOff    = $ctrlOffBuf
+
+# --- optional data sources -------------------------------------------
+# Only started when an effect actually needs them, so the idle cost of a
+# plain gradient stays exactly what it was.
+$script:Sys = New-Object SysInfo
+$script:Sys.Poll()
+$eng.Sys = $script:Sys
+$script:Audio  = $null
+$script:Screen = $null
+
+function Need-Audio  { param($e) return @('spectrum','vumeter','beat','pulsebass') -contains $e }
+function Need-Screen { param($e) return ($e -eq 'ambient') }
+
+function Sync-Sources {
+    param($tok)
+    if (Need-Audio $tok) {
+        if (-not $script:Audio) {
+            $script:Audio = New-Object AudioCap
+            if ($script:Audio.Start()) {
+                $eng.Audio = $script:Audio
+                Say ("  Audio capture: on") 'DarkGray'
+            } else {
+                Say ("  Audio capture failed: " + $script:Audio.Err) 'Yellow'
+                $script:Audio = $null
+            }
+        }
+    } elseif ($script:Audio) {
+        $script:Audio.Stop(); $eng.Audio = $null; $script:Audio = $null
+    }
+
+    if (Need-Screen $tok) {
+        if (-not $script:Screen) {
+            $script:Screen = New-Object ScreenCap
+            $script:Screen.Start()
+            $eng.Screen = $script:Screen
+            Say "  Screen sampling: on" 'DarkGray'
+        }
+    } elseif ($script:Screen) {
+        $script:Screen.Stop(); $eng.Screen = $null; $script:Screen = $null
+    }
+}
 $eng.Interleaved = $interleaved
 $eng.Equalise   = ($Equalise -eq 'on')
 $eng.OffCount   = $offCnt
@@ -1305,6 +2053,7 @@ Say ""
 Say (" Running at {0} fps on a compiled thread. Ctrl+C to stop." -f $eng.Fps) 'Green'
 Say ""
 
+Sync-Sources $Effect
 $eng.Start()
 
 # ---------------------------------------------------------------------------
@@ -1324,6 +2073,9 @@ $stateDir  = Join-Path $env:LOCALAPPDATA 'KeyboardLighting'
 if (-not (Test-Path $stateDir)) { New-Item -ItemType Directory -Force -Path $stateDir | Out-Null }
 $liveFile  = Join-Path $stateDir 'live.txt'
 $themeFile = Join-Path $stateDir 'theme.json'
+$script:SysTick = 0
+$script:LastAc  = $null
+$script:LastPct = 100
 $script:LiveLevel = [int]([Math]::Round($Brightness * 1000))
 # Ignore whatever theme file is already on disk: the arguments we were
 # launched with already describe it. Only react to later writes.
@@ -1400,6 +2152,37 @@ try {
             }
         }
 
+        # --- system info + automatic overlays ---
+        $script:SysTick++
+        if ($script:SysTick -ge 4) {          # ~ every 500ms
+            $script:SysTick = 0
+            $script:Sys.Poll()
+
+            if ($OverlayOn) {
+                $b   = $script:Sys.Battery
+                $ac  = $script:Sys.OnAc
+                $now = $eng.Now
+
+                # power cable plugged in or pulled out
+                if ($script:LastAc -ne $null -and $ac -ne $script:LastAc) {
+                    $eng.OverlayMode  = 1
+                    $eng.OverlayUntil = $now + 4.0
+                }
+                $script:LastAc = $ac
+
+                # crossed a low-battery threshold on battery power
+                if (-not $ac -and $b -ge 0) {
+                    foreach ($thr in 20, 10, 5) {
+                        if ($b -le $thr -and $script:LastPct -gt $thr) {
+                            $eng.OverlayMode  = 1
+                            $eng.OverlayUntil = $now + 6.0
+                        }
+                    }
+                }
+                if ($b -ge 0) { $script:LastPct = $b }
+            }
+        }
+
         # --- lock / unlock / lid ---
         if ($sessionOk) {
             $se = Get-Event -SourceIdentifier 'AuraSession' -ErrorAction SilentlyContinue
@@ -1455,7 +2238,10 @@ try {
                     $script:ThemeStamp = $stamp
                     $j = Get-Content $themeFile -Raw -ErrorAction Stop | ConvertFrom-Json
 
-                    if ($j.Effect) { $eng.LiveEffect = [string]$j.Effect }
+                    if ($j.Effect) {
+                        $eng.LiveEffect = [string]$j.Effect
+                        Sync-Sources ([string]$j.Effect)
+                    }
 
                     if ($null -ne $j.Speed) {
                         $eng.LiveSpeedMilli = [int]([Math]::Round([double]$j.Speed * 1000))

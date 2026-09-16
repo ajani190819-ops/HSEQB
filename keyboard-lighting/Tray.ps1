@@ -116,16 +116,35 @@ if (-not $IsAdmin -and -not $NoElevate) {
 
 # ---------------------------------------------------------------- config
 $Effects = [ordered]@{
-    'Scrolling gradient' = 'gradient'
-    'Rainbow'            = 'rainbow'
-    'Wave'               = 'wave'
-    'Comet'              = 'comet'
-    'Scanner'            = 'scanner'
-    'Breathing'          = 'breathe'
-    'Pulse'              = 'pulse'
-    'Fire'               = 'fire'
-    'Solid colour'       = 'static'
+    'Scrolling gradient'   = 'gradient'
+    'Rainbow'              = 'rainbow'
+    'Wave'                 = 'wave'
+    'Comet'                = 'comet'
+    'Scanner'              = 'scanner'
+    'Breathing'            = 'breathe'
+    'Pulse'                = 'pulse'
+    'Fire'                 = 'fire'
+    'Solid colour'         = 'static'
+    'Colour cycle'         = 'cycle'
+    'Strobe'               = 'strobe'
+    'Starry night'         = 'stars'
+    'Ripple'               = 'ripple'
+    'Aurora'               = 'aurora'
+    'Music - spectrum'     = 'spectrum'
+    'Music - level meter'  = 'vumeter'
+    'Music - beat flash'   = 'beat'
+    'Music - bass pulse'   = 'pulsebass'
+    'Screen mirror'        = 'ambient'
+    'Battery meter'        = 'battery'
+    'CPU meter'            = 'cpu'
+    'Clock'                = 'clock'
 }
+
+# Which effects ignore the colour swatches, so the UI can say so.
+$NoPalette = @('rainbow','cycle','ambient','battery','cpu','clock','fire')
+# Effects that need a data source, for the status line.
+$NeedAudio  = @('spectrum','vumeter','beat','pulsebass')
+$NeedScreen = @('ambient')
 
 $script:Swatches = @('#FF0000','#FF7F00','#FFFF00','#00FF00','#0000FF','#8B00FF')
 $script:Cfg = [pscustomobject]@{
@@ -136,6 +155,7 @@ $script:Cfg = [pscustomobject]@{
     Reverse    = $false
     Equalise   = $true
     Loop       = $true
+    Overlay    = $true
 }
 $script:Suppress  = $true    # no live updates until the window has loaded
 $script:Quitting  = $false
@@ -149,7 +169,7 @@ function Load-Cfg {
     try {
         $o = Get-Content $CfgFile -Raw | ConvertFrom-Json
         if ($o.Swatches) { $script:Swatches = @($o.Swatches) }
-        foreach ($p in 'Effect','Speed','Brightness','Mirror','Reverse','Equalise','Loop') {
+        foreach ($p in 'Effect','Speed','Brightness','Mirror','Reverse','Equalise','Loop','Overlay') {
             if ($null -ne $o.$p) { $script:Cfg.$p = $o.$p }
         }
         Log 'settings loaded'
@@ -254,6 +274,7 @@ function Start-Engine {
     if ($script:Cfg.Reverse) { [void]$sb.Append(' -Reverse') }
     [void]$sb.Append(' -Equalise '); [void]$sb.Append($eqv)
     [void]$sb.Append(' -Layout ');   [void]$sb.Append($lay)
+    if ($script:Cfg.Overlay) { [void]$sb.Append(' -OverlayOn') }
 
     # Keep the live files consistent with what we are about to launch, so a
     # stale value from the last session cannot override the saved theme.
@@ -531,7 +552,17 @@ $cboEffect.Font     = $fontBd
 foreach ($k in $Effects.Keys) { [void]$cboEffect.Items.Add($k) }
 $cboEffect.SetQuiet(0)
 $body.Controls.Add($cboEffect)
-$y += 40 + 14
+$y += 40 + 4
+
+$lblEffInfo = New-Object System.Windows.Forms.Label
+$lblEffInfo.Text      = ''
+$lblEffInfo.Location  = New-Object System.Drawing.Point(($M + 2), $y)
+$lblEffInfo.Size      = New-Object System.Drawing.Size($CW, 16)
+$lblEffInfo.ForeColor = [System.Drawing.Color]::FromArgb(96,102,122)
+$lblEffInfo.Font      = $fontSm
+$lblEffInfo.BackColor = [System.Drawing.Color]::Transparent
+$body.Controls.Add($lblEffInfo)
+$y += 16 + 8
 
 # ================================================================ colours
 New-Head 'COLOURS' $M $y 200 | Out-Null
@@ -626,7 +657,7 @@ $y += 132 + 16
 # ================================================================ options
 $cardOp = New-Object KbLight.Card
 $cardOp.Location = New-Object System.Drawing.Point($M, $y)
-$cardOp.Size     = New-Object System.Drawing.Size($CW, 120)
+$cardOp.Size     = New-Object System.Drawing.Size($CW, 154)
 $body.Controls.Add($cardOp)
 
 function New-Toggle($text, $xx, $yy, $ww) {
@@ -648,8 +679,9 @@ $chkEq       = New-Toggle 'Even brightness'    $colR  14 $colW
 $chkMirror  = New-Toggle 'Mirror'              $colL  48 $colW
 $chkReverse = New-Toggle 'Reverse'             $colR  48 $colW
 $chkAuto    = New-Toggle 'Start when I log in' $colL  82 ($colW + 180)
+$chkOverlay = New-Toggle 'Flash battery on plug / unplug' $colL 116 ($colW + 180)
 
-$y += 120 + 16
+$y += 154 + 16
 
 # ================================================================ buttons
 $btnOff = New-Object KbLight.FlatBtn
@@ -823,6 +855,30 @@ function Redraw-Swatches {
 }
 
 # ---------------------------------------------------------------- live apply
+function Update-EffectInfo {
+    $tok = $Effects[[string]$cboEffect.SelectedItem]
+    if (-not $tok) { $tok = 'gradient' }
+    $msg = ''
+    if ($NeedAudio -contains $tok) {
+        $msg = 'Listens to whatever is playing through your speakers.'
+    } elseif ($NeedScreen -contains $tok) {
+        $msg = 'Copies the colours on your screen.'
+    } elseif ($tok -eq 'battery') {
+        $msg = 'Fills up with your battery level. Green full, red empty.'
+    } elseif ($tok -eq 'cpu') {
+        $msg = 'Fills up with how hard the computer is working.'
+    } elseif ($tok -eq 'clock') {
+        $msg = 'Colour follows the time of day.'
+    } elseif ($NoPalette -contains $tok) {
+        $msg = 'This pattern picks its own colours.'
+    }
+    $lblEffInfo.Text = $msg
+    # Dim the colour row when the effect ignores it.
+    $usesPal = -not ($NoPalette -contains $tok)
+    $lblColHint.Text = $(if ($usesPal) { 'click to change' } else { 'not used by this pattern' })
+    foreach ($c in $pnlCol.Controls) { $c.Enabled = $usesPal }
+}
+
 function Sync-CfgFromUi {
     $script:Cfg.Effect     = [string]$cboEffect.SelectedItem
     $script:Cfg.Speed      = [int]$trkSpeed.Value
@@ -892,11 +948,20 @@ $trkSpeed.Add_ValueChanged({
     $valSpeed.Text = ('{0:0.0}x' -f ($trkSpeed.Value / 10.0))
     Request-Apply
 })
-$cboEffect.Add_SelectedChanged({ Request-Apply })
+$cboEffect.Add_SelectedChanged({ Update-EffectInfo; Request-Apply })
 $chkMirror.Add_CheckedChanged({ Request-Apply })
 $chkReverse.Add_CheckedChanged({ Request-Apply })
 $chkLoop.Add_CheckedChanged({ Request-Apply; Update-Preview })
 $chkEq.Add_CheckedChanged({ Request-Apply; Update-Preview })
+
+$chkOverlay.Add_CheckedChanged({
+    if ($script:Suppress) { return }
+    $script:Cfg.Overlay = [bool]$chkOverlay.Checked
+    Save-Cfg
+    # This one is a start-up switch, so the engine has to come back up.
+    if (-not $script:WantOff) { [void](Start-Engine) }
+    Update-Status
+})
 
 $chkAuto.Add_CheckedChanged({
     if ($script:Suppress) { return }
@@ -1091,10 +1156,12 @@ $chkReverse.SetQuiet([bool]$script:Cfg.Reverse)
 $chkEq.SetQuiet([bool]$script:Cfg.Equalise)
 $chkLoop.SetQuiet([bool]$script:Cfg.Loop)
 $chkAuto.SetQuiet((Test-Autostart))
+$chkOverlay.SetQuiet([bool]$script:Cfg.Overlay)
 $miAuto.Checked = $chkAuto.Checked
 $valSpeed.Text  = ('{0:0.0}x' -f ($trkSpeed.Value / 10.0))
 $valBright.Text = ('{0}%' -f $trkBright.Value)
 Redraw-Swatches
+Update-EffectInfo
 Update-Preview
 
 $anim = New-Object System.Windows.Forms.Timer

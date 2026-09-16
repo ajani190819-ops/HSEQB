@@ -83,6 +83,32 @@ Run it with:
 Aura-Background.ps1 -Custom MyEffect.ps1
 ```
 
+## Patterns
+
+Animated: Scrolling gradient, Rainbow, Wave, Comet, Scanner, Breathing,
+Pulse, Fire, Colour cycle, Strobe, Starry night, Ripple, Aurora, Solid.
+
+Music (listens to your speakers):
+  Music - spectrum      each zone is a frequency band
+  Music - level meter   a bar that fills with loudness
+  Music - beat flash    the whole keyboard flashes on the beat
+  Music - bass pulse    bass pushes a wave out from the centre
+
+Screen mirror: the keyboard copies the colours on your screen.
+
+Information:
+  Battery meter   fills with charge. Green full, red empty. A bright dot
+                  runs along it while charging, and it blinks under 15%.
+  CPU meter       fills with how hard the computer is working.
+  Clock           colour follows the time of day.
+
+Battery flash: leave "Flash battery on plug / unplug" on and the keyboard
+briefly shows your battery level whenever you plug in or unplug the
+charger, or drop past 20 / 10 / 5 percent, then goes back to your pattern.
+
+The music and screen modes only start capturing while they are selected,
+so the other patterns cost nothing extra.
+
 ## Sleep
 
 Closing the lid, locking, or sleeping makes the laptop's own controller
@@ -93,7 +119,7 @@ never have to restart anything.
 ## If something goes wrong
 
 Run **Check.bat**. It re-downloads everything and prints a diagnostic;
-the banner should say **v14**. The log file is in the tray menu under
+the banner should say **v15**. The log file is in the tray menu under
 *Open log file*.
 
 ## How it works
