@@ -1,71 +1,67 @@
-# Keyboard lighting for ROG Strix G16 (G615JPR)
+# Keyboard Lighting for ROG Strix G16 (G615JPR)
 
 Custom animated keyboard lighting without Armoury Crate.
 
 ## Install
 
-Download **Install.bat** and double-click it. Click **Yes** on the
-permission prompt. That is the whole install.
+Download **Install.bat**, double-click it, click **Yes**. That is the
+whole install.
 
-It will:
-
-* download everything it needs
-* build `KeyboardLighting.exe`
-* add it to your **Start menu** and your **Desktop**
-* set it to **start automatically when you log in**
-* start the lighting straight away
+It downloads everything, builds `KeyboardLighting.exe`, adds it to your
+Start menu and Desktop, sets it to start when you log in, and runs it.
 
 ## Using it
 
-The app lives in the **system tray** (the little icons next to the clock,
-click the `^` arrow if you do not see it).
+It is one normal program. A window with the controls, and an icon in the
+system tray next to the clock.
 
-* **Double-click the tray icon** - open the control panel
-* **Right-click the tray icon** - menu:
-  * Open control panel
-  * Restart lighting
-  * Turn lighting off
-  * Start when I log in (tick / untick)
-  * Check for updates
-  * Open log file
-  * Open folder
-  * Exit
+* **Closing the window** puts it in the tray. It keeps running.
+* **Double-click the tray icon** to bring the window back.
+* **Right-click the tray icon** for the menu (restart, turn off, updates,
+  log file, exit).
 
-To pin it: find **Keyboard Lighting** in the Start menu, right-click it,
-choose *Pin to Start* or *More > Pin to taskbar*.
+Everything you change applies to the keyboard immediately. There is no
+Apply button and nothing restarts while you adjust things.
+
+To pin it: Start menu, right-click **Keyboard Lighting**, then *Pin to
+Start* or *More > Pin to taskbar*.
+
+## Controls
+
+| Control | What it does |
+|---|---|
+| Pattern | The animation: gradient, rainbow, wave, comet, scanner, breathing, pulse, fire, solid |
+| Colours | Click a square to change it. `+` and `-` add and remove colours |
+| Speed | How fast the animation moves |
+| Brightness | Overall brightness. The Fn brightness keys also work while an effect runs |
+| Mirror | Mirrors the pattern around the middle |
+| Reverse direction | Runs the animation backwards |
+| Wrap around the light bar | Sends the gradient around the chassis instead of straight across |
+| Even colour brightness | Evens out how bright each colour looks, so blues are not lost next to yellows |
+| Start when I log in | Starts automatically with Windows |
 
 ## Updating
 
-It updates itself quietly in the background when it starts. You can also
-force it from the tray menu with **Check for updates**.
+It checks for updates in the background at startup. If it finds one, the
+tray menu shows **Restart to finish update**.
 
 ## Where things live
 
 | What | Where |
 |---|---|
-| Program files | the folder you ran `Install.bat` from |
+| Program | the folder you ran `Install.bat` from |
 | Settings | `%LOCALAPPDATA%\KeyboardLighting\panel.json` |
-| Log file | `%LOCALAPPDATA%\KeyboardLighting\log.txt` |
-| Startup entry | Task Scheduler, task name `KeyboardLighting` |
-
-## Effects
-
-Scrolling gradient, Rainbow, Wave, Comet, Scanner, Breathing, Pulse,
-Fire, Solid colour. Speed, brightness, mirror, reverse, colour
-equalisation and "wrap around the light bar" are all in the panel.
-
-The brightness keys on the keyboard (Fn + the brightness keys) change the
-lighting brightness live while an effect is running.
+| Log | `%LOCALAPPDATA%\KeyboardLighting\log.txt` |
+| Startup entry | Task Scheduler, task `KeyboardLighting` |
 
 ## Important
 
-Turn **Dynamic Lighting off** in
-*Settings > Personalization > Dynamic Lighting*, or Windows will fight
-this app for control of the keyboard.
+Turn **Dynamic Lighting off** in *Settings > Personalization > Dynamic
+Lighting*, or Windows fights this app for control of the keyboard.
 
 ## Writing your own effect
 
-Edit `MyEffect.ps1`. It must end with a block shaped like this:
+Edit `MyEffect.ps1`. It must end with a block like this:
 
 ```powershell
 {
@@ -77,11 +73,27 @@ Edit `MyEffect.ps1`. It must end with a block shaped like this:
 }
 ```
 
-`$t` is seconds since start, `$N` is the number of zones (16).
-`Set-Zone <index> <r> <g> <b>` takes 0-255. Helpers:
-`ConvertFrom-Hex "#FF8800"` and `Convert-Hsv <hue> <sat> <val>`.
+`$t` is seconds since start, `$N` is the zone count (16). `Set-Zone
+<index> <r> <g> <b>` takes 0-255. Helpers: `ConvertFrom-Hex "#FF8800"`
+and `Convert-Hsv <hue> <sat> <val>`.
 
-## Troubleshooting
+Run it with:
 
-Run **Check.bat** - it re-downloads everything and prints a diagnostic.
-The banner should say **v11**.
+```
+Aura-Background.ps1 -Custom MyEffect.ps1
+```
+
+## If something goes wrong
+
+Run **Check.bat**. It re-downloads everything and prints a diagnostic;
+the banner should say **v11**. The log file is in the tray menu under
+*Open log file*.
+
+## How it works
+
+`Tray.ps1` is the application: window, tray icon, settings, updater.
+`Aura-Background.ps1` is the lighting engine, a compiled C# render loop
+driving the keyboard's HID LampArray interface directly. The app talks to
+a running engine through `theme.json`, so changes apply without a
+restart. `KeyboardLighting.exe` is a small launcher stub, compiled on
+your machine by the C# compiler included with Windows.

@@ -857,6 +857,12 @@ $miAuto = Add-Item 'Start when I log in' {
             'Keyboard Lighting','OK','Warning') | Out-Null
     }
 }
+$miPending = Add-Item 'Restart to finish update' {
+    Restart-App
+}
+$miPending.Visible = $false
+$miPending.Font = New-Object System.Drawing.Font($menu.Font, [System.Drawing.FontStyle]::Bold)
+
 $miUpdate = Add-Item 'Check for updates' {
     $icon.Text = 'Keyboard Lighting - checking...'
     $changed = Invoke-SelfUpdate
@@ -889,6 +895,9 @@ $miExit = Add-Item 'Exit' {
 
 $icon.ContextMenuStrip = $menu
 $icon.Add_MouseDoubleClick({ Show-Window })
+$icon.Add_BalloonTipClicked({
+    if ($script:Pending) { Restart-App } else { Show-Window }
+})
 
 function Restart-App {
     Log 'restarting'
@@ -929,7 +938,10 @@ $form.Add_FormClosing({
 $form.Add_Resize({
     if ($form.WindowState -eq 'Minimized') { $form.Hide() }
 })
-$script:HintShown = $false
+$script:HintShown   = $false
+$script:UpdJob      = $null
+$script:UpdPrompted = $false
+$script:Pending     = $false
 
 # ---------------------------------------------------------------- load UI
 $script:Suppress = $true
@@ -967,9 +979,10 @@ if (-not $IsAdmin) {
 }
 
 if (-not $NoUpdate) {
-    $null = Start-Job -ScriptBlock {
+    $job = Start-Job -ScriptBlock {
         param($b, $h)
         try { [Net.ServicePointManager]::SecurityProtocol = 'Tls12' } catch { }
+        $hit = @()
         foreach ($f in 'Aura-Background.ps1','Lighting-Panel.ps1','Tray.ps1','Install.ps1','Install.bat',
                        'Check.ps1','Check.bat','Update.ps1','Update.bat','README.md','app.ico') {
             try {
@@ -979,11 +992,13 @@ if (-not $NoUpdate) {
                 $new = (Get-FileHash $tmp -Algorithm SHA256).Hash
                 $old = ''
                 if (Test-Path $dest) { $old = (Get-FileHash $dest -Algorithm SHA256).Hash }
-                if ($new -ne $old) { Copy-Item $tmp $dest -Force }
+                if ($new -ne $old) { Copy-Item $tmp $dest -Force; $hit += $f }
                 Remove-Item $tmp -Force -ErrorAction SilentlyContinue
             } catch { }
         }
+        return $hit
     } -ArgumentList $Base, $Here
+    $script:UpdJob = $job
 }
 
 # Apply the saved theme immediately, before anything is shown.
@@ -1003,6 +1018,31 @@ $watch.Add_Tick({
     } catch { }
     $script:tick++
     if ($script:tick % 8 -eq 0) { Update-Status }
+
+    # The background updater replaces files on disk but never restarts
+    # anything underneath you. Once it finishes, say so plainly.
+    if ($script:UpdJob -and -not $script:UpdPrompted) {
+        try {
+            if ($script:UpdJob.State -eq 'Completed') {
+                $script:UpdPrompted = $true
+                $got = @(Receive-Job $script:UpdJob -ErrorAction SilentlyContinue)
+                Remove-Job $script:UpdJob -Force -ErrorAction SilentlyContinue
+                $script:UpdJob = $null
+                if ($got.Count -gt 0) {
+                    Log ("background update fetched: {0}" -f ($got -join ', '))
+                    $script:Pending = $true
+                    $miPending.Visible = $true
+                    $icon.BalloonTipTitle = 'Update ready'
+                    $icon.BalloonTipText  = 'A new version was downloaded. Click here, or use the tray menu, to restart and apply it.'
+                    $icon.ShowBalloonTip(6000)
+                }
+            } elseif ($script:UpdJob.State -eq 'Failed') {
+                $script:UpdPrompted = $true
+                Remove-Job $script:UpdJob -Force -ErrorAction SilentlyContinue
+                $script:UpdJob = $null
+            }
+        } catch { $script:UpdPrompted = $true }
+    }
 })
 $watch.Start()
 

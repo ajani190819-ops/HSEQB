@@ -72,12 +72,23 @@ if ($got -ge 3) { Ok ("$got files downloaded") } else { Bad 'download failed - c
 # ---------------------------------------------------------------- build exe
 Step '2. Building KeyboardLighting.exe'
 
+# A running copy holds a lock on the exe, so csc would fail with
+# "cannot write to output file". Close it first.
+try {
+    Get-CimInstance Win32_Process -Filter "Name='KeyboardLighting.exe'" -ErrorAction SilentlyContinue |
+        ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+    Get-CimInstance Win32_Process -Filter "Name='powershell.exe'" -ErrorAction SilentlyContinue |
+        Where-Object { $_.CommandLine -like '*Tray.ps1*' -or $_.CommandLine -like '*Aura-Background*' } |
+        ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+    Start-Sleep -Milliseconds 600
+} catch { }
+
 $exePath = Join-Path $Here 'KeyboardLighting.exe'
 $csc = $null
-foreach ($p in @(
+foreach ($cand in @(
     "$env:WinDir\Microsoft.NET\Framework64\v4.0.30319\csc.exe",
     "$env:WinDir\Microsoft.NET\Framework\v4.0.30319\csc.exe")) {
-    if (Test-Path $p) { $csc = $p; break }
+    if (Test-Path $cand) { $csc = $cand; break }
 }
 
 if (-not $csc) {
@@ -135,11 +146,11 @@ class Launcher {
     if (Test-Path $icoPath) { $cscArgs += ('/win32icon:"{0}"' -f $icoPath) }
     $cscArgs += ('/out:"{0}"' -f $exePath)
     $cscArgs += ('"{0}"' -f $src)
-    $p = Start-Process -FilePath $csc -ArgumentList $cscArgs -NoNewWindow -Wait -PassThru `
+    $proc = Start-Process -FilePath $csc -ArgumentList $cscArgs -NoNewWindow -Wait -PassThru `
          -RedirectStandardOutput (Join-Path $env:TEMP 'kbl_csc_out.txt') `
          -RedirectStandardError  (Join-Path $env:TEMP 'kbl_csc_err.txt')
 
-    $built = (Test-Path $exePath) -and $p.ExitCode -eq 0
+    $built = (Test-Path $exePath) -and $proc.ExitCode -eq 0
     if ($built) {
         $sz = (Get-Item $exePath).Length
         if ($sz -lt 2048) { $built = $false }
