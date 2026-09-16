@@ -55,7 +55,7 @@ public static class HidNative {
 
 $HIDGUID  = '{4d1e55b2-f16f-11cf-88cb-001111000030}'
 $INVALID  = [IntPtr](-1)
-$OK       = 0x00110000          # HIDP_STATUS_SUCCESS
+$HIDOK       = 0x00110000          # HIDP_STATUS_SUCCESS
 $GENRW    = [uint32]3221225472  # GENERIC_READ | GENERIC_WRITE
 $GENW     = [uint32]1073741824  # GENERIC_WRITE
 $SHARERW  = [uint32]3
@@ -100,7 +100,7 @@ foreach ($d in $pnp) {
     $pp = [IntPtr]::Zero
     if ([HidNative]::HidD_GetPreparsedData($h, [ref]$pp)) {
         $caps = New-Object byte[] 64
-        if ([HidNative]::HidP_GetCaps($pp, $caps) -eq $OK) {
+        if ([HidNative]::HidP_GetCaps($pp, $caps) -eq $HIDOK) {
             $page = [BitConverter]::ToUInt16($caps, 2)
             if ($page -eq 0x59) {
                 [void]$hits.Add([pscustomobject]@{
@@ -171,7 +171,7 @@ function Read-ValueCaps([int]$type, [int]$count) {
     $n   = [uint16]$count
     $buf = New-Object byte[] (72 * $count)
     $st  = [HidNative]::HidP_GetValueCaps($type, $buf, [ref]$n, $script:pp)
-    if ($st -ne $script:OK) { return }
+    if ($st -ne $script:HIDOK) { return }
     for ($i = 0; $i -lt [int]$n; $i++) {
         $o   = $i * 72
         $pg  = [BitConverter]::ToUInt16($buf, $o)
@@ -238,7 +238,9 @@ function New-Rpt($r) {
 }
 function Set-Val($r, $buf, [int]$usage, [int]$value) {
     $st = [HidNative]::HidP_SetUsageValue($r.Type, 0x59, 0, [uint16]$usage, [uint32]$value, $script:pp, $buf, [uint32]$buf.Length)
-    if ($st -ne $script:OK) { Write-Host ("     ! set 0x{0:X2} failed 0x{1:X8}" -f $usage, $st) -ForegroundColor DarkYellow }
+    if ($st -ne $script:HIDOK) {
+        Write-Host ("     ! set 0x{0:X2} failed 0x{1:X8}" -f $usage, $st) -ForegroundColor DarkYellow
+    }
 }
 function Send-Rpt($r, $buf) {
     if ($r.Type -eq 2) { return [HidNative]::HidD_SetFeature($script:h, $buf, $buf.Length) }
@@ -248,7 +250,7 @@ function Send-Rpt($r, $buf) {
 function Get-Val($r, $buf, [int]$usage) {
     $v = [uint32]0
     $st = [HidNative]::HidP_GetUsageValue($r.Type, 0x59, 0, [uint16]$usage, [ref]$v, $script:pp, $buf, [uint32]$buf.Length)
-    if ($st -ne $script:OK) { return $null }
+    if ($st -ne $script:HIDOK) { return $null }
     return [int]$v
 }
 
@@ -312,8 +314,8 @@ Write-Host ""
 if ($rCtrl) {
     $b = New-Rpt $rCtrl
     Set-Val $rCtrl $b $U_AUTONOMOUS 0
-    $ok = Send-Rpt $rCtrl $b
-    Write-Host ("  autonomous mode off -> {0}" -f $ok) -ForegroundColor DarkGray
+    $sent = Send-Rpt $rCtrl $b
+    Write-Host ("  autonomous mode off -> {0}" -f $sent) -ForegroundColor DarkGray
 }
 
 function Set-Range([int]$from, [int]$to, [int]$rr, [int]$gg, [int]$bb, [int]$complete) {
@@ -337,8 +339,8 @@ $steps = @(
     @{ n = 'ALL OFF';    r = 0;   g = 0;   b = 0   }
 )
 foreach ($s in $steps) {
-    $ok = Set-Range 0 ($lampCount - 1) $s.r $s.g $s.b 1
-    Write-Host ("  {0,-10} sent={1}" -f $s.n, $ok)
+    $sent = Set-Range 0 ($lampCount - 1) $s.r $s.g $s.b 1
+    Write-Host ("  {0,-10} sent={1}" -f $s.n, $sent)
     Start-Sleep -Milliseconds 1800
 }
 

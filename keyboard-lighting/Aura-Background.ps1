@@ -88,7 +88,7 @@ public static class HidNative {
 
 $HIDGUID   = '{4d1e55b2-f16f-11cf-88cb-001111000030}'
 $INVALID   = [IntPtr](-1)
-$OK        = 0x00110000
+$HIDOK        = 0x00110000
 $GENRW     = [uint32]3221225472
 $GENW      = [uint32]1073741824
 $SHARERW   = [uint32]3
@@ -117,7 +117,7 @@ foreach ($d in (Get-CimInstance Win32_PnPEntity -Filter "PNPDeviceID LIKE 'HID%'
     $tpp = [IntPtr]::Zero
     if ([HidNative]::HidD_GetPreparsedData($t, [ref]$tpp)) {
         $c = New-Object byte[] 64
-        if ([HidNative]::HidP_GetCaps($tpp, $c) -eq $OK -and [BitConverter]::ToUInt16($c,2) -eq 0x59) {
+        if ([HidNative]::HidP_GetCaps($tpp, $c) -eq $HIDOK -and [BitConverter]::ToUInt16($c,2) -eq 0x59) {
             $devPath = $p
             Say ("  Found: {0}" -f $d.Name) 'Green'
         }
@@ -151,7 +151,7 @@ function Read-ValueCaps([int]$type, [int]$count) {
     if ($count -le 0) { return }
     $n = [uint16]$count
     $buf = New-Object byte[] (72 * $count)
-    if ([HidNative]::HidP_GetValueCaps($type, $buf, [ref]$n, $script:pp) -ne $script:OK) { return }
+    if ([HidNative]::HidP_GetValueCaps($type, $buf, [ref]$n, $script:pp) -ne $script:HIDOK) { return }
     for ($i = 0; $i -lt [int]$n; $i++) {
         $o = $i * 72
         if ([BitConverter]::ToUInt16($buf,$o) -ne 0x59) { continue }
@@ -203,7 +203,7 @@ function Send-Rpt($r, $buf) {
 }
 function Get-Val($r, $buf, [int]$usage) {
     $v = [uint32]0
-    if ([HidNative]::HidP_GetUsageValue($r.Type, 0x59, 0, [uint16]$usage, [ref]$v, $script:pp, $buf, [uint32]$buf.Length) -ne $script:OK) { return $null }
+    if ([HidNative]::HidP_GetUsageValue($r.Type, 0x59, 0, [uint16]$usage, [ref]$v, $script:pp, $buf, [uint32]$buf.Length) -ne $script:HIDOK) { return $null }
     return [int]$v
 }
 
@@ -229,6 +229,24 @@ if ($rReq -and $rResp) {
 }
 $RMAX = [Math]::Max(1,$RMAX); $GMAX = [Math]::Max(1,$GMAX)
 $BMAX = [Math]::Max(1,$BMAX); $IMAX = [Math]::Max(1,$IMAX)
+
+# Build a left-to-right ordering of the zones from their real X positions,
+# so a "wave" actually travels across the keyboard instead of jumping around.
+$order = @(0..($lampCount - 1))
+if ($rReq -and $rResp) {
+    $pos = @()
+    for ($i = 0; $i -lt $lampCount; $i++) {
+        $q = New-Rpt $rReq; Set-Val $rReq $q $U_LAMPID $i; [void](Send-Rpt $rReq $q)
+        $rb = New-Rpt $rResp
+        $x = $i * 1000
+        if ([HidNative]::HidD_GetFeature($h, $rb, $rb.Length)) {
+            $gx = Get-Val $rResp $rb $U_POSX
+            if ($null -ne $gx) { $x = $gx }
+        }
+        $pos += [pscustomobject]@{ Idx = $i; X = $x }
+    }
+    $order = @($pos | Sort-Object X | ForEach-Object { $_.Idx })
+}
 
 Say ("  {0} zones,  colour depth R{1} G{2} B{3}" -f $lampCount, $RMAX, $GMAX, $BMAX) 'DarkGray'
 
@@ -309,7 +327,8 @@ function Push-Frame {
         $script:pr[$i] = $script:fr[$i]; $script:pg[$i] = $script:fg[$i]; $script:pb[$i] = $script:fb[$i]
     }
 }
-function Set-Zone([int]$i, [double]$r, [double]$g, [double]$b) {
+function Set-Zone([int]$slot, [double]$r, [double]$g, [double]$b) {
+    $i = $script:order[$slot]
     $k = $script:Brightness
     $script:fr[$i] = [Math]::Max(0, [Math]::Min(255, [int]($r * $k)))
     $script:fg[$i] = [Math]::Max(0, [Math]::Min(255, [int]($g * $k)))
