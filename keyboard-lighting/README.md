@@ -106,6 +106,23 @@ tray menu shows **Restart to finish update**.
 Turn **Dynamic Lighting off** in *Settings > Personalization > Dynamic
 Lighting*, or Windows fights this app for control of the keyboard.
 
+## If the lighting goes to the wrong places
+
+Run **Zones.bat**. It is a small checker for working out which physical
+light is which, and correcting the map if it is wrong.
+
+  Show the map    a picture of where the app thinks each zone sits.
+  Identify        lights each zone on its own, one at a time, and tells
+                  you its number. Write down what is actually where.
+  Correct         type the numbers in the order they really appear,
+                  left to right, and it saves your version.
+  Reset           throw your correction away and go back to automatic.
+
+Your correction is saved separately and is never overwritten by an
+update. The lighting has to be closed while Identify runs, because only
+one program can drive the keyboard at a time - the checker will say so
+if it needs you to exit first.
+
 ## G-Helper
 
 You can keep using G-Helper. `Setup.bat` sets one option in it,

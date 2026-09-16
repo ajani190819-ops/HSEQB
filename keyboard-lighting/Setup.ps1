@@ -28,10 +28,7 @@ $ExePath  = Join-Path $Here 'KeyboardLighting.exe'
 $TrayPs   = Join-Path $Here 'Tray.ps1'
 $Engine   = Join-Path $Here 'Aura-Background.ps1'
 
-$Files = @(
-    'Aura-Background.ps1','Tray.ps1','ui_controls.cs.txt','app.ico',
-    'Setup.ps1','Setup.bat','MyEffect.ps1','README.md'
-)
+$Files = @('Aura-Background.ps1', 'Tray.ps1', 'ui_controls.cs.txt', 'app.ico', 'Setup.ps1', 'Setup.bat', 'Zones.ps1', 'Zones.bat', 'MyEffect.ps1', 'README.md')
 
 # --------------------------------------------------------------- output
 $script:Report   = New-Object System.Collections.ArrayList

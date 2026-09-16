@@ -419,7 +419,7 @@ function Set-Autostart([bool]$on) {
 
 # ---------------------------------------------------------------- update
 function Invoke-SelfUpdate {
-    $files = @('Aura-Background.ps1','Tray.ps1','ui_controls.cs.txt','app.ico','Setup.ps1','Setup.bat','MyEffect.ps1','README.md')
+    $files = @('Aura-Background.ps1', 'Tray.ps1', 'ui_controls.cs.txt', 'app.ico', 'Setup.ps1', 'Setup.bat', 'Zones.ps1', 'Zones.bat', 'MyEffect.ps1', 'README.md')
     $changed = @()
     try { [Net.ServicePointManager]::SecurityProtocol = 'Tls12' } catch { }
     foreach ($f in $files) {
@@ -1521,7 +1521,7 @@ if (-not $NoUpdate) {
         param($b, $h)
         try { [Net.ServicePointManager]::SecurityProtocol = 'Tls12' } catch { }
         $hit = @()
-        foreach ($f in 'Aura-Background.ps1','Tray.ps1','ui_controls.cs.txt','app.ico','Setup.ps1','Setup.bat','MyEffect.ps1','README.md') {
+        foreach ($f in 'Aura-Background.ps1','Tray.ps1','ui_controls.cs.txt','app.ico','Setup.ps1','Setup.bat','Zones.ps1','Zones.bat','MyEffect.ps1','README.md') {
             try {
                 $tmp = Join-Path $env:TEMP ('kblbg_' + $f)
                 Invoke-WebRequest "$b/$f" -OutFile $tmp -UseBasicParsing -TimeoutSec 20

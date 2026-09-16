@@ -80,7 +80,11 @@ param(
     # so the light bar genuinely circles instead of pulsing as one block.
     [switch]$NoLive,
     [ValidateSet('across','loop')]
-    [string]$Layout = 'loop'
+    [string]$Layout = 'loop',
+
+    # Used by Zones.ps1: light only these zone numbers, hold, then exit.
+    [string]$ZoneTest = '',
+    [double]$HoldSeconds = 1.5
 )
 
 $ErrorActionPreference = 'Stop'
@@ -316,7 +320,7 @@ public class LampEngine {
     bool low = (!chg && f <= 0.15);
     double blink = low ? (0.35 + 0.65 * (0.5 + 0.5 * Math.Sin(Now * 5.0))) : 1.0;
     for (int i = 0; i < gr.N; i++) {
-      double u = gr.Pos[i];
+      double u = PosOf(gr, i);
       double on;
       if (u <= f) on = 1.0;
       else { double d = (u - f) / 0.05; on = (d < 1.0) ? (1.0 - d) : 0.0; }
@@ -337,7 +341,7 @@ public class LampEngine {
     double hr, hg, hb;
     Hsv(120.0 - 120.0 * c, 1.0, 1.0, out hr, out hg, out hb);
     for (int i = 0; i < gr.N; i++) {
-      double u = gr.Pos[i];
+      double u = PosOf(gr, i);
       double on;
       if (u <= c) on = 1.0;
       else { double d = (u - c) / 0.05; on = (d < 1.0) ? (1.0 - d) : 0.0; }
@@ -350,13 +354,13 @@ public class LampEngine {
   void SetZoneG(Zone gr, int slot, double r, double g, double b) {
     int n = gr.N;
     if (slot < 0 || slot >= n) return;
-    int q = slot;
-    if (gr.Mirror) {
-      int half = (n + 1) / 2;
-      q = (slot < half) ? (half - 1 - slot) : (slot - half);
-      if (q >= n) q = n - 1;
-    }
-    int i = gr.Idx[q];
+    // Mirror is handled by folding the sampling POSITION (see PosOf), not
+    // by shuffling which lamp gets written. The old code remapped the
+    // index here as slot -> (half-1-slot)/(slot-half), which only ever
+    // produced 0..half-1: half the lamps were never written and kept
+    // whatever they last had, which read as reversed rather than
+    // mirrored.
+    int i = gr.Idx[slot];
     if (i < 0 || i >= LampCount) return;
 
     double br = gr.Brightness * gr.Master;
@@ -458,28 +462,6 @@ public class LampEngine {
     }
   }
 
-  void SetZone(int slot, double r, double g, double b) {
-    if (slot < 0 || slot >= LampCount) return;
-    int q = slot;
-    if (Mirror) {
-      int half = (LampCount + 1) / 2;
-      q = (slot < half) ? (half - 1 - slot) : (slot - half);
-      if (q >= LampCount) q = LampCount - 1;
-    }
-    int i = Order[q];
-
-    // Brightness is applied as a GAMMA-SPACE scale, which is what the
-    // Windows Dynamic Lighting slider does. Scaling linear light instead
-    // feels top-heavy: 50% would still look ~79% bright.
-    if (Brightness < 0.999) { r *= Brightness; g *= Brightness; b *= Brightness; }
-
-    // Keep full precision here; quantisation happens once, in Push(),
-    // where the dither error can be carried between frames.
-    if (r < 0) r = 0; else if (r > 255) r = 255;
-    if (g < 0) g = 0; else if (g > 255) g = 255;
-    if (b < 0) b = 0; else if (b > 255) b = 255;
-    fr[i] = r; fg[i] = g; fb[i] = b;
-  }
 
   int[] pr, pg, pb;        // last bytes actually sent
   double[] er, eg, eb;     // carried quantisation error, for temporal dither
@@ -880,6 +862,18 @@ public class LampEngine {
     for (int i = 0; i < gr.N; i++) SetZoneG(gr, i, 0, 0, 0);
   }
 
+  // Where slot i samples the effect from, 0..1 within the group.
+  // Mirror folds this into a triangle so the pattern runs out from the
+  // centre to both ends and is symmetric; without it this is just the
+  // lamp's real physical position.
+  static double PosOf(Zone gr, int i) {
+    double u = gr.Pos[i];
+    if (!gr.Mirror) return u;
+    double f = 1.0 - Math.Abs(2.0 * u - 1.0);
+    if (f < 0) f = 0; else if (f > 1) f = 1;
+    return f;
+  }
+
   void RenderGroup(Zone gr, double t, double dt) {
     switch (gr.Effect) {
           case "gradient": {
@@ -904,7 +898,7 @@ public class LampEngine {
               double r, g, b;
               // Real physical position, so the band travels at an even
               // speed across unevenly-spaced lamps.
-              GroupPal(gr, gr.Pos[i] * span + phase, out r, out g, out b);
+              GroupPal(gr, PosOf(gr, i) * span + phase, out r, out g, out b);
               SetZoneG(gr, i, r, g, b);
             }
             break;
@@ -912,7 +906,7 @@ public class LampEngine {
           case "rainbow": {
             for (int i = 0; i < gr.N; i++) {
               double r, g, b;
-              Hsv(gr.Pos[i] * 360.0 + t * 90.0 * gr.Dir, 1.0, 1.0, out r, out g, out b);
+              Hsv(PosOf(gr, i) * 360.0 + t * 90.0 * gr.Dir, 1.0, 1.0, out r, out g, out b);
               SetZoneG(gr, i, r, g, b);
             }
             break;
@@ -932,7 +926,7 @@ public class LampEngine {
               double r, g, b;
               GroupPal(gr, baseF, out r, out g, out b);
               // Two crests along the strip, travelling.
-              double ph = (t * 0.7 * gr.Dir) - gr.Pos[i] * 2.0;
+              double ph = (t * 0.7 * gr.Dir) - PosOf(gr, i) * 2.0;
               double w = (1.0 + Math.Sin(ph * Math.PI)) / 2.0;
               double lvl = 0.30 + 0.70 * (w * w);
               SetZoneG(gr, i, r * lvl, g * lvl, b * lvl);
@@ -947,7 +941,7 @@ public class LampEngine {
             // two-colour comet visibly changes colour lap to lap and the
             // trail shades through the palette behind the head.
             for (int i = 0; i < gr.N; i++) {
-              double d = head - gr.Pos[i];
+              double d = head - PosOf(gr, i);
               if (d < 0) d += 1.0;
               double w = Math.Exp(-d * 9.0);
               double pr2, pg2, pb2;
@@ -967,7 +961,7 @@ public class LampEngine {
             double sr, sg, sb;
             GroupPal(gr, t * 0.275 * gr.Dir, out sr, out sg, out sb);
             for (int i = 0; i < gr.N; i++) {
-              double w = 1.0 - (Math.Abs(gr.Pos[i] - p) / 0.18);
+              double w = 1.0 - (Math.Abs(PosOf(gr, i) - p) / 0.18);
               if (w < 0) w = 0; w = w * w;
               double cr, cg, cb;
               Fade(sr, sg, sb, w, out cr, out cg, out cb);
@@ -1002,7 +996,7 @@ public class LampEngine {
             // Each zone is one frequency band, low on the left.
             float[] bd = (Audio != null && Audio.Ok) ? Audio.Bands : null;
             for (int i = 0; i < gr.N; i++) {
-              double u = gr.Pos[i];
+              double u = PosOf(gr, i);
               double v = 0.0;
               if (bd != null) {
                 int b = (int)(u * (AudioCap.BANDS - 1) + 0.5);
@@ -1019,7 +1013,7 @@ public class LampEngine {
             // Palette bar that fills from the left with overall loudness.
             double lv = (Audio != null && Audio.Ok) ? Audio.Level : 0.0;
             for (int i = 0; i < gr.N; i++) {
-              double u = gr.Pos[i];
+              double u = PosOf(gr, i);
               double on = (u <= lv) ? 1.0 : 0.0;
               if (on < 1.0) {
                 double d = (u - lv) / 0.08;        // soft edge
@@ -1048,12 +1042,12 @@ public class LampEngine {
             // Bass drives a wave outward from the centre.
             double bass = (Audio != null && Audio.Ok) ? Audio.Bass : 0.0;
             for (int i = 0; i < gr.N; i++) {
-              double d = Math.Abs(gr.Pos[i] - 0.5) * 2.0;
+              double d = Math.Abs(PosOf(gr, i) - 0.5) * 2.0;
               double v = bass - d * 0.55;
               if (v < 0) v = 0; if (v > 1) v = 1;
               v = v * v;
               double r, g, b;
-              GroupPal(gr, gr.Pos[i] + t * 0.05, out r, out g, out b);
+              GroupPal(gr, PosOf(gr, i) + t * 0.05, out r, out g, out b);
               SetZoneG(gr, i, r * v, g * v, b * v);
             }
             break;
@@ -1063,7 +1057,7 @@ public class LampEngine {
           case "ambient": {
             int[] cols = (Screen != null && Screen.Ok) ? Screen.Cols : null;
             for (int i = 0; i < gr.N; i++) {
-              double u = gr.Pos[i];
+              double u = PosOf(gr, i);
               double r = 0, g = 0, b = 0;
               if (cols != null && cols.Length > 0) {
                 double f = u * (cols.Length - 1);
@@ -1128,12 +1122,12 @@ public class LampEngine {
             double sp = 0.55 * gr.Dir;
             double v0 = (t * sp) % 1.0;
             for (int i = 0; i < gr.N; i++) {
-              double d = Math.Abs(gr.Pos[i] - 0.5) * 2.0;
+              double d = Math.Abs(PosOf(gr, i) - 0.5) * 2.0;
               double ph = d - v0;
               ph = ph - Math.Floor(ph);
               double w = Math.Exp(-ph * 5.0);
               double r, g, b;
-              GroupPal(gr, gr.Pos[i] + t * 0.1, out r, out g, out b);
+              GroupPal(gr, PosOf(gr, i) + t * 0.1, out r, out g, out b);
               SetZoneG(gr, i, r * w, g * w, b * w);
             }
             break;
@@ -1141,7 +1135,7 @@ public class LampEngine {
           case "aurora": {
             // Three slow sine layers - the soft drifting look.
             for (int i = 0; i < gr.N; i++) {
-              double u = gr.Pos[i];
+              double u = PosOf(gr, i);
               double a = 0.5 + 0.5 * Math.Sin((u * 2.1 + t * 0.21 * gr.Dir) * Math.PI * 2.0);
               double b2 = 0.5 + 0.5 * Math.Sin((u * 1.3 - t * 0.14 * gr.Dir + 0.33) * Math.PI * 2.0);
               double c = 0.5 + 0.5 * Math.Sin((u * 3.7 + t * 0.09 * gr.Dir + 0.66) * Math.PI * 2.0);
@@ -1171,7 +1165,7 @@ public class LampEngine {
             for (int i = 0; i < gr.N; i++) {
               double r, g, b;
               Hsv(210.0 + 150.0 * Math.Sin(dayF * Math.PI * 2.0 - Math.PI / 2.0), 0.85, 1.0, out r, out g, out b);
-              double d = Math.Abs(gr.Pos[i] - mF);
+              double d = Math.Abs(PosOf(gr, i) - mF);
               if (d > 0.5) d = 1.0 - d;
               double mark = Math.Exp(-d * 26.0);
               double v = 0.16 + 0.84 * mark;
@@ -1290,6 +1284,21 @@ public class LampEngine {
   public void Stop() {
     running = false;
     if (th != null) { try { th.Join(600); } catch { } }
+  }
+
+  // Light one raw lamp by its device index, bypassing all grouping and
+  // effects. Used by the zone checker so the number shown on screen is
+  // unambiguously the number of the lamp that lit up.
+  public void SetOne(int idx, int r, int g, int b) {
+    if (idx < 0 || idx >= LampCount) return;
+    fr[idx] = r; fg[idx] = g; fb[idx] = b;
+    er[idx] = 0; eg[idx] = 0; eb[idx] = 0;
+  }
+
+  // Send whatever is staged, unconditionally.
+  public void Flush() {
+    Push(true);
+    nextFrameAt = -1.0; PublishFrame();
   }
 
   public void Blank() {
@@ -2444,8 +2453,37 @@ function New-Zone {
     return $z
 }
 
+# A correction saved by Zones.ps1 wins over automatic detection. This is
+# the escape hatch for a machine whose zones are grouped or ordered wrongly.
+$zoneMapFile = Join-Path $env:LOCALAPPDATA 'KeyboardLighting\zonemap.json'
+$zoneRingOverride = $null
+if (Test-Path $zoneMapFile) {
+    try {
+        $zm = Get-Content $zoneMapFile -Raw | ConvertFrom-Json
+        $okK = @(); $okB = @()
+        foreach ($v in @($zm.Kbd)) { $iv = [int]$v; if ($iv -ge 0 -and $iv -lt $lampCount) { $okK += $iv } }
+        foreach ($v in @($zm.Bar)) { $iv = [int]$v; if ($iv -ge 0 -and $iv -lt $lampCount) { $okB += $iv } }
+        # Ignore a map that would leave nothing to light, or double up a zone.
+        $both = @($okK) + @($okB)
+        $uniq = @($both | Select-Object -Unique)
+        if ($both.Count -gt 0 -and $both.Count -eq $uniq.Count) {
+            $deckIdx = New-Object System.Collections.ArrayList
+            foreach ($v in $okK) { [void]$deckIdx.Add($v) }
+            $barIdx = New-Object System.Collections.ArrayList
+            foreach ($v in $okB) { [void]$barIdx.Add($v) }
+            if ($null -ne $zm.BarRing) { $zoneRingOverride = [bool]$zm.BarRing }
+            Say "  Using your saved zone map (Zones.ps1). Delete zonemap.json to go back." 'Yellow'
+        } else {
+            Say "  Saved zone map looks wrong (empty or repeated zones); ignoring it." 'Yellow'
+        }
+    } catch {
+        Say "  Could not read zonemap.json; ignoring it." 'Yellow'
+    }
+}
+
 $zDeck = New-Zone 'deck' $deckIdx
 $zBar  = New-Zone 'bar'  $barIdx
+if ($null -ne $zoneRingOverride) { $zBar.Loop = $zoneRingOverride }
 if ($barIdx.Count -gt 0) { $eng.Groups = [Zone[]]@($zDeck, $zBar) }
 else                     { $eng.Groups = [Zone[]]@($zDeck) }
 Say ("  Groups: keyboard {0} zones, light bar {1} zones." -f $deckIdx.Count, $barIdx.Count) 'DarkGray'
@@ -2539,6 +2577,28 @@ Say ("  {0} zones, {1} per transfer, {2} transfers/frame, {3} colours (cyclic)" 
 if ($Effect -eq 'off') {
     $eng.Blank(); $eng.Close()
     Say "  OFF applied." 'Green'
+    return
+}
+
+# Zones.ps1 uses this: light only the zones asked for, hold, then hand the
+# keyboard straight back. Lets the user see which physical light is which.
+if ($ZoneTest) {
+    $want = @()
+    foreach ($tok in ($ZoneTest -split ',')) {
+        $tk = "$tok".Trim()
+        if ($tk -eq '') { continue }
+        $iv = 0
+        if ([int]::TryParse($tk, [ref]$iv) -and $iv -ge 0 -and $iv -lt $lampCount) { $want += $iv }
+    }
+    $rgb = ConvertFrom-Hex $Color
+    $eng.Blank()
+    foreach ($z in $want) { $eng.SetOne($z, $rgb[0], $rgb[1], $rgb[2]) }
+    $eng.Flush()
+    $ms = [int]($HoldSeconds * 1000); if ($ms -lt 50) { $ms = 50 }
+    Start-Sleep -Milliseconds $ms
+    $eng.Blank()
+    $eng.Close()
+    Say ("  Lit zones: " + ($want -join ', ')) 'Green'
     return
 }
 # NOTE: 'static' deliberately falls through to the normal run loop. It used
