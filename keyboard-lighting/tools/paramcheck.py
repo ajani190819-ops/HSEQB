@@ -49,6 +49,19 @@ def invocations(text):
         found.append((m.group(1), m.group(2)))
     return found
 
+def bare_switches(text):
+    """'-Name' entries with no value after them - switch arguments.
+
+    These bind by name only, so a typo or a switch that does not exist is
+    just as fatal as a bad value, and is not caught by invocations().
+    """
+    found = []
+    for m in re.finditer(r"'-(\w+)'\s*(,|\))", text):
+        nxt = text[m.end():m.end() + 40].lstrip()
+        if nxt.startswith("'-") or m.group(2) == ')':
+            found.append(m.group(1))
+    return found
+
 def main():
     engine = (HERE / 'Aura-Background.ps1').read_text(encoding='utf-8')
     decl = declared(param_block(engine))
@@ -59,6 +72,21 @@ def main():
         if not p.exists():
             continue
         text = p.read_text(encoding='utf-8')
+
+        # Only look at argument lists aimed at the engine. A script that
+        # re-launches itself (Tray.ps1 -NoElevate) is binding against its
+        # own param block, not Aura-Background.ps1's.
+        text = '\n'.join(
+            ln for ln in text.split('\n')
+            if '$PSCommandPath' not in ln and 'Setup.ps1' not in ln)
+
+        for name in bare_switches(text):
+            if name in ('NoProfile', 'ExecutionPolicy', 'File', 'Command',
+                        'WindowStyle', 'Verb', 'FilePath', 'ArgumentList'):
+                continue
+            if name not in decl:
+                problems.append(f'{caller}: -{name} is not a parameter of Aura-Background.ps1')
+
         for name, val in invocations(text):
             if name in ('NoProfile', 'ExecutionPolicy', 'File', 'Command',
                         'WindowStyle', 'Verb', 'FilePath', 'ArgumentList'):

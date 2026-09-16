@@ -135,6 +135,13 @@ light is which, and correcting the map if it is wrong.
                   closes by itself. Patterns then follow exactly that
                   path.
   Reset           throw your correction away and go back to automatic.
+  Watch the path  one light walks the bar in the order the app believes.
+                  If it jumps about, the order is wrong.
+  Build the circle
+                  the reliable way. Each zone lights on its own and you
+                  answer y or n to "is this the next one round?". It
+                  writes the order from your answers, so nothing has to
+                  be typed or guessed.
 
 Your correction is saved separately and is never overwritten by an
 update. The lighting has to be closed while Identify runs, because only

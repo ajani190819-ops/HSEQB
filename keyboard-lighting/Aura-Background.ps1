@@ -92,7 +92,12 @@ param(
     #   white    plain white, so the keys stay readable
     #   firmware hand control back and let the keyboard do its own thing
     [ValidateSet('off','white','firmware')]
-    [string]$OnExit = 'off'
+    [string]$OnExit = 'off',
+
+    # Used by Zones.ps1: walk the ring one lamp at a time to show the path.
+    [switch]$ChaseTest,
+    [ValidateSet('bar','kbd')]
+    [string]$ChaseWhich = 'bar'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -2542,7 +2547,7 @@ if (Test-Path $zoneMapFile) {
 
 $zDeck = New-Zone 'deck' $deckIdx -UseListOrder:$zoneOrderFromUser
 $zBar  = New-Zone 'bar'  $barIdx  -UseListOrder:$zoneOrderFromUser
-if ($null -ne $zoneRingOverride) { $zBar.Loop = $zoneRingOverride }
+
 if ($barIdx.Count -gt 0) { $eng.Groups = [Zone[]]@($zDeck, $zBar) }
 else                     { $eng.Groups = [Zone[]]@($zDeck) }
 Say ("  Groups: keyboard {0} zones, light bar {1} zones." -f $deckIdx.Count, $barIdx.Count) 'DarkGray'
@@ -2610,6 +2615,15 @@ $barLay = $Layout;     if ($BarLayout)              { $barLay = $BarLayout }
 $barStops = Parse-Stops $BarColors
 Seed-Zone $zBar $barEff $barSpd $barBrt ($BarMirror.IsPresent) ($BarReverse.IsPresent) $barEqu $barLay $barStops (-not $BarOff)
 
+# A saved zone map is the user telling us the real shape of their hardware,
+# so it wins over the panel's Wrap-around box. This has to run after
+# Seed-Zone, which sets Loop from -BarLayout and would otherwise wipe it.
+if ($null -ne $zoneRingOverride) {
+    $zBar.Loop = $zoneRingOverride
+    if ($zBar.Loop -and $zBar.PosLoop) { $zBar.Pos = $zBar.PosLoop } else { $zBar.Pos = $zBar.PosAcross }
+    Say ("  Light bar ring: {0} (from your saved zone map)." -f $(if ($zBar.Loop) { 'on' } else { 'off' })) 'Yellow'
+}
+
 foreach ($z in @($zDeck, $zBar)) { $z.Master = [double]$Master }
 
 # The panel draws its preview from this: the real bytes the engine sends,
@@ -2636,6 +2650,41 @@ Say ("  {0} zones, {1} per transfer, {2} transfers/frame, {3} colours (cyclic)" 
 if ($Effect -eq 'off') {
     $eng.Blank(); $eng.Close()
     Say "  OFF applied." 'Green'
+    return
+}
+
+# Zones.ps1 uses this: walk the light bar's ring order one lamp at a time
+# so the travel path can be watched directly. Prints each lamp as it lights
+# so what is on screen and what is on the keyboard can be compared.
+if ($ChaseTest) {
+    $grp = $zBar
+    if ($ChaseWhich -eq 'kbd') { $grp = $zDeck }
+    if ($grp.Idx.Length -eq 0) {
+        $eng.Close(); Say "  That group has no zones." 'Red'; exit 4
+    }
+    # Walk in travel order: sort the slots by the position actually in use.
+    $pairs = @()
+    for ($k = 0; $k -lt $grp.Idx.Length; $k++) {
+        $pairs += [pscustomobject]@{ Slot = $k; Lamp = $grp.Idx[$k]; P = $grp.Pos[$k] }
+    }
+    $walk = @($pairs | Sort-Object P)
+    Say ("  Travel order: " + (($walk | ForEach-Object { $_.Lamp }) -join ' -> ')) 'Cyan'
+    Say ("  Ring: " + $(if ($grp.Loop) { 'yes, it closes back to the start' } else { 'no, it is a straight run' })) 'Cyan'
+    Say "" 
+    $rgbC = ConvertFrom-Hex $Color
+    $laps = 2
+    for ($lap = 0; $lap -lt $laps; $lap++) {
+        foreach ($w in $walk) {
+            $eng.Blank()
+            $eng.SetOne($w.Lamp, $rgbC[0], $rgbC[1], $rgbC[2])
+            $eng.Flush()
+            Say ("  lit zone {0}" -f $w.Lamp) 'Gray'
+            Start-Sleep -Milliseconds ([int]($HoldSeconds * 1000))
+        }
+    }
+    $eng.Blank(); $eng.Close()
+    Say "" 
+    Say "  Done." 'Green'
     return
 }
 

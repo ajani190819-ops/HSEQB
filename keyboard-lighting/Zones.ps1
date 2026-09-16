@@ -19,7 +19,7 @@
 
 param(
     # Skip the menu and run one action directly.
-    [ValidateSet('', 'identify', 'map', 'correct', 'reset')]
+    [ValidateSet('', 'identify', 'map', 'correct', 'reset', 'chase', 'ring')]
     [string]$Do = '',
     # Seconds each zone stays lit during Identify.
     [double]$Hold = 1.5
@@ -296,6 +296,127 @@ function Do-Correct {
     Info '  right-click the tray icon, Exit, then open it again.'
 }
 
+function Invoke-Chase {
+    param([string]$which = 'bar', [double]$hold = 0.45)
+    $args = @(
+        '-NoProfile','-ExecutionPolicy','Bypass','-File', $Engine,
+        '-ChaseTest','-ChaseWhich', $which,
+        '-Color','#FFFFFF','-HoldSeconds', ("{0}" -f $hold)
+    )
+    $psi = New-Object System.Diagnostics.ProcessStartInfo
+    $psi.FileName = (Get-Process -Id $PID).Path
+    $psi.Arguments = ($args | ForEach-Object { if ($_ -match '\s') { '"' + $_ + '"' } else { $_ } }) -join ' '
+    $psi.UseShellExecute = $false
+    $psi.CreateNoWindow  = $true
+    $psi.RedirectStandardOutput = $true
+    $psi.RedirectStandardError  = $true
+    $p = [System.Diagnostics.Process]::Start($psi)
+    while (-not $p.HasExited) {
+        $ln = $p.StandardOutput.ReadLine()
+        if ($null -eq $ln) { break }
+        if ($ln.Trim()) { Write-Host $ln -ForegroundColor Gray }
+    }
+    $p.WaitForExit()
+    $rest = $p.StandardOutput.ReadToEnd()
+    foreach ($l in ($rest -split "`r?`n")) { if ($l.Trim()) { Write-Host $l -ForegroundColor Gray } }
+    $err = $p.StandardError.ReadToEnd()
+    if ($p.ExitCode -ne 0) {
+        Bad ("  Engine exited with $($p.ExitCode).")
+        foreach ($l in ($err -split "`r?`n")) { if ($l.Trim()) { Bad ("    " + $l.Trim()) } }
+    }
+    return ($p.ExitCode -eq 0)
+}
+
+function Do-Chase {
+    Head 'Watch the path - does it trace the circle?'
+    if (Stop-Running) {
+        Warn 'The lighting is running and is holding the keyboard.'
+        Warn 'Right-click the tray icon, choose Exit, then run this again.'
+        return
+    }
+    if (-not (Need-Admin)) { Bad 'This needs to run as administrator.'; return }
+    Info 'One light walks the light bar in the order the app believes.'
+    Info 'Watch it. If it jumps about instead of going round smoothly,'
+    Info 'the order is wrong - use option 6 to fix it by watching.'
+    Write-Host ''
+    [void](Invoke-Chase 'bar' 0.45)
+}
+
+function Do-BuildRing {
+    Head 'Build the circle by watching'
+    if (Stop-Running) {
+        Warn 'The lighting is running and is holding the keyboard.'
+        Warn 'Right-click the tray icon, choose Exit, then run this again.'
+        return
+    }
+    if (-not (Need-Admin)) { Bad 'This needs to run as administrator.'; return }
+
+    $lay = Read-Layout
+    $pool = @($lay.Bar)
+    if ($pool.Count -eq 0) { Warn 'No light bar zones known yet. Start the lighting once first.'; return }
+
+    Info 'Each zone will light on its own. After each one, say whether it'
+    Info 'is the NEXT light going round the circle from the last one.'
+    Info ''
+    Info 'Start anywhere. Go one direction and keep going the same way.'
+    Info 'Type y for yes, n for no, or q to give up. Enter on its own = n.'
+    Write-Host ''
+
+    $ring = @()
+    $left = @($pool)
+    while ($left.Count -gt 0) {
+        $progress = $false
+        foreach ($z in @($left)) {
+            if ($ring.Count -eq 0) {
+                Write-Host ("  Lighting zone {0} - is this a good place to START? " -f $z) -ForegroundColor Cyan -NoNewline
+            } else {
+                Write-Host ("  Lighting zone {0} - is it next after {1}? " -f $z, $ring[-1]) -ForegroundColor Cyan -NoNewline
+            }
+            $r = Invoke-Engine -ZoneList "$z" -Colour '#FFFFFF' -Seconds 1.2
+            if ($r.Code -ne 0) {
+                Write-Host ''
+                Bad "  Could not drive the keyboard (exit $($r.Code))."
+                foreach ($l in (($r.Err + "`n" + $r.Out) -split "`r?`n")) { if ($l.Trim()) { Bad ("    " + $l.Trim()) } }
+                return
+            }
+            $a = Read-Host
+            if ($a -eq 'q') { Info 'Stopped. Nothing saved.'; return }
+            if ($a -eq 'y') {
+                $ring += $z
+                $left = @($left | Where-Object { $_ -ne $z })
+                $progress = $true
+                Good ("    added {0}   ring so far: {1}" -f $z, ($ring -join ','))
+                break
+            }
+        }
+        if (-not $progress) {
+            Write-Host ''
+            Warn 'None of the remaining zones was accepted.'
+            Info ("Remaining: " + ($left -join ', '))
+            $f = Read-Host '  Add them in this order anyway? (y/N)'
+            if ($f -eq 'y') { $ring += $left; $left = @() } else { break }
+        }
+    }
+
+    if ($ring.Count -lt 2) { Warn 'Not enough zones chosen. Nothing saved.'; return }
+
+    Write-Host ''
+    Good ("Circle: " + ($ring -join ','))
+    Info 'Saving this as the travel path for the light bar.'
+    $obj = [ordered]@{
+        Kbd     = @($lay.Kbd)
+        Bar     = @($ring)
+        BarRing = $true
+        Note    = 'Written by Zones.ps1. Delete this file to go back to automatic detection.'
+    }
+    if (-not (Test-Path $StateDir)) { New-Item -ItemType Directory -Force -Path $StateDir | Out-Null }
+    $obj | ConvertTo-Json -Depth 5 | Set-Content -Path $MapFile -Encoding UTF8
+    Good "Saved to $MapFile"
+    Write-Host ''
+    Info 'Restart the lighting (tray icon, Exit, then open it again),'
+    Info 'then come back and use option 5 to watch the path.'
+}
+
 function Do-Reset {
     Head 'Reset to automatic detection'
     if (Test-Path $MapFile) {
@@ -321,6 +442,8 @@ if ($Do) {
         'map'      { Show-Map $lay $ov }
         'correct'  { Do-Correct $lay }
         'reset'    { Do-Reset }
+        'chase'    { Do-Chase }
+        'ring'     { Do-BuildRing }
     }
     Write-Host ''
     return
@@ -332,15 +455,19 @@ while ($true) {
     Write-Host '   2  Identify - light each zone one at a time' -ForegroundColor Gray
     Write-Host '   3  Correct the map by hand' -ForegroundColor Gray
     Write-Host '   4  Reset back to automatic' -ForegroundColor Gray
-    Write-Host '   5  Quit' -ForegroundColor Gray
+    Write-Host '   5  Watch the path - does it trace the circle?' -ForegroundColor Gray
+    Write-Host '   6  Build the circle by watching (recommended)' -ForegroundColor Gray
+    Write-Host '   7  Quit' -ForegroundColor Gray
     Write-Host ''
-    $c = Read-Host '  Choose 1-5'
+    $c = Read-Host '  Choose 1-7'
     switch ($c) {
         '1' { $lay = Read-Layout; $ov = Read-Override; Show-Map $lay $ov }
         '2' { Do-Identify $lay $Hold }
         '3' { Do-Correct $lay; $lay = Read-Layout }
         '4' { Do-Reset }
-        '5' { Write-Host ''; return }
-        default { Warn 'Type a number from 1 to 5.' }
+        '5' { Do-Chase }
+        '6' { Do-BuildRing; $lay = Read-Layout }
+        '7' { Write-Host ''; return }
+        default { Warn 'Type a number from 1 to 7.' }
     }
 }
