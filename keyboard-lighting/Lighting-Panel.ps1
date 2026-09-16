@@ -606,8 +606,20 @@ $btnStop.Add_Click({ Set-AllOff })
 $chkAuto.Add_Click({
     if ($chkAuto.Checked) {
         try {
-            $argLine = ((Get-EngineArgs) -join ' ')
-            $act  = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument $argLine
+            # Autostart must launch the TRAY app, not the bare engine, or the
+            # two fight over the keyboard. Prefer the exe when it exists.
+            $exe  = Join-Path $Here 'KeyboardLighting.exe'
+            $tray = Join-Path $Here 'Tray.ps1'
+            if (Test-Path $exe) {
+                $act = New-ScheduledTaskAction -Execute $exe -Argument '-Silent' -WorkingDirectory $Here
+            } elseif (Test-Path $tray) {
+                $act = New-ScheduledTaskAction -Execute 'powershell.exe' `
+                       -Argument ('-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "{0}" -Silent' -f $tray) `
+                       -WorkingDirectory $Here
+            } else {
+                $argLine = ((Get-EngineArgs) -join ' ')
+                $act = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument $argLine
+            }
             $trg  = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME
             $prin = New-ScheduledTaskPrincipal -UserId $env:USERNAME -LogonType Interactive -RunLevel Highest
             $set  = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries `
