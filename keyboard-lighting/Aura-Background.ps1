@@ -879,12 +879,28 @@ public class LampEngine {
   void RenderGroup(Zone gr, double t, double dt) {
     switch (gr.Effect) {
           case "gradient": {
+            // A band of colour that rolls through and wraps around, like
+            // looking at one face of a rotating roll of tape: each colour
+            // holds as a solid block, slides off one end and comes back on
+            // the other.
+            //
+            // The strip used to show exactly one full palette loop, which
+            // pinned the two ends to the same colour - nothing could move
+            // past the edge, so it cycled in place and looked like a pulse.
+            // Showing only PART of the loop at a time is what makes the
+            // colours hold and travel.
+            //
+            // Span shrinks as colours are added so each one keeps a
+            // readable block: 2 colours -> 0.5 of the loop on screen,
+            // 3 -> 0.42, 4 -> 0.38.
+            int pcg = gr.PalR.Length; if (pcg < 1) pcg = 1;
+            double span = (pcg <= 1) ? 1.0 : 1.0 / (1.0 + 0.5 * (double)pcg);
             double phase = t * 0.25 * gr.Dir;
             for (int i = 0; i < gr.N; i++) {
               double r, g, b;
-              // Use real physical position so the gradient travels evenly across
-              // the keyboard. Slot index would bunch it at the edges.
-              GroupPal(gr, gr.Pos[i] + phase, out r, out g, out b);
+              // Real physical position, so the band travels at an even
+              // speed across unevenly-spaced lamps.
+              GroupPal(gr, gr.Pos[i] * span + phase, out r, out g, out b);
               SetZoneG(gr, i, r, g, b);
             }
             break;
@@ -898,20 +914,23 @@ public class LampEngine {
             break;
           }
           case "wave": {
-            // A wave that travels along the group, sweeping through the
-            // whole palette. It used to blend only colours 1 and 2 and
-            // scale the second by 0.15, so colour 2 rendered at 15%
-            // brightness - it read as black, and colours 3+ never showed
-            // at all. Go through the palette like every other effect, and
-            // use the sine only to shape a gentle brightness swell.
+            // Deliberately NOT a second scrolling gradient. Gradient moves
+            // colour; wave holds the colour still and moves BRIGHTNESS - a
+            // crest of light travelling along a steady colour bed, like
+            // wind over a field.
+            //
+            // The colour changes slowly over time rather than with
+            // position, so at any instant the strip is essentially one
+            // colour with a bright crest running through it. That is what
+            // makes it read differently from gradient.
+            double baseF = t * 0.07 * gr.Dir;
             for (int i = 0; i < gr.N; i++) {
-              double ph = (t * 0.6 * gr.Dir) - gr.Pos[i];
               double r, g, b;
-              GroupPal(gr, ph, out r, out g, out b);
-              // Soft crest-to-trough shading, never all the way to black,
-              // so the colour itself stays readable at every point.
-              double w = (1.0 + Math.Sin(ph * 2.0 * Math.PI)) / 2.0;
-              double lvl = 0.45 + 0.55 * (w * w);
+              GroupPal(gr, baseF, out r, out g, out b);
+              // Two crests along the strip, travelling.
+              double ph = (t * 0.7 * gr.Dir) - gr.Pos[i] * 2.0;
+              double w = (1.0 + Math.Sin(ph * Math.PI)) / 2.0;
+              double lvl = 0.30 + 0.70 * (w * w);
               SetZoneG(gr, i, r * lvl, g * lvl, b * lvl);
             }
             break;

@@ -146,6 +146,15 @@ Aura-Background.ps1 -Custom MyEffect.ps1
 
 ## Patterns
 
+Scrolling gradient and Wave are deliberately different:
+
+  Scrolling gradient   your colours as solid bands that roll along and
+                       wrap around - a colour slides off one end and
+                       comes back on the other, like one face of a
+                       rotating roll of tape. Brightness stays constant.
+  Wave                 the opposite: the colour stays put and a crest of
+                       brightness travels along it, like wind over grass.
+
 Animated: Scrolling gradient, Rainbow, Wave, Comet, Scanner, Breathing,
 Pulse, Fire, Colour cycle, Strobe, Starry night, Ripple, Aurora, Solid.
 
