@@ -61,6 +61,7 @@ function Save-Config {
         Brightness = $trkBright.Value
         Mirror     = $chkMirror.Checked
         Reverse    = $chkReverse.Checked
+        Equalise   = $chkEq.Checked
     }
     try { $o | ConvertTo-Json -Depth 4 | Set-Content -Path $CfgFile -Encoding UTF8 } catch { }
 }
@@ -75,6 +76,7 @@ function Load-Config {
         if ($o.Brightness) { $trkBright.Value = [Math]::Min(100,[Math]::Max(5,[int]$o.Brightness)) }
         $chkMirror.Checked  = [bool]$o.Mirror
         $chkReverse.Checked = [bool]$o.Reverse
+        if ($null -ne $o.Equalise) { $chkEq.Checked = [bool]$o.Equalise }
     } catch { }
 }
 
@@ -113,6 +115,8 @@ function Get-EngineArgs {
     }
     if ($chkMirror.Checked)  { $a += '-Mirror' }
     if ($chkReverse.Checked) { $a += '-Reverse' }
+    $eqv = if ($chkEq.Checked) { 'on' } else { 'off' }
+    $a += '-Equalise'; $a += $eqv
     return $a
 }
 
@@ -182,7 +186,7 @@ $acc   = [System.Drawing.Color]::FromArgb(0,180,255)
 
 $form = New-Object System.Windows.Forms.Form
 $form.Text            = 'Keyboard Lighting'
-$form.ClientSize      = New-Object System.Drawing.Size(462, 625)
+$form.ClientSize      = New-Object System.Drawing.Size(462, 660)
 $form.StartPosition   = 'CenterScreen'
 $form.FormBorderStyle = 'FixedSingle'
 $form.MaximizeBox     = $false
@@ -320,6 +324,50 @@ $pbPreview.BackColor = [System.Drawing.Color]::Black
 $form.Controls.Add($pbPreview)
 
 $script:phase = 0.0
+
+# ---- colour maths, mirrored from the engine so the preview tells the truth ----
+function Lin([double]$v) {
+    $c = $v / 255.0
+    if ($c -le 0.04045) { return $c / 12.92 }
+    return [Math]::Pow((($c + 0.055) / 1.055), 2.4)
+}
+function Srgb([double]$l) {
+    if ($l -le 0) { return 0.0 }
+    if ($l -ge 1) { return 255.0 }
+    if ($l -le 0.0031308) { return 12.92 * $l * 255.0 }
+    return (1.055 * [Math]::Pow($l, (1.0/2.4)) - 0.055) * 255.0
+}
+function Luma([double]$lr, [double]$lg, [double]$lb) {
+    return 0.2126*$lr + 0.7152*$lg + 0.0722*$lb
+}
+$script:PalGain = @()
+function Update-PalGain($pal) {
+    $n = $pal.Count
+    $g = New-Object double[] $n
+    for ($i=0; $i -lt $n; $i++) { $g[$i] = 1.0 }
+    if ($chkEq -and $chkEq.Checked -and $n -gt 0) {
+        $logSum = 0.0; $cnt = 0
+        for ($i=0; $i -lt $n; $i++) {
+            $L = Luma (Lin $pal[$i].R) (Lin $pal[$i].G) (Lin $pal[$i].B)
+            if ($L -gt 0.0005) { $logSum += [Math]::Log($L); $cnt++ }
+        }
+        if ($cnt -gt 0) {
+            $target = [Math]::Exp($logSum / $cnt)
+            for ($i=0; $i -lt $n; $i++) {
+                $lr = Lin $pal[$i].R; $lg = Lin $pal[$i].G; $lb = Lin $pal[$i].B
+                $L = Luma $lr $lg $lb
+                if ($L -le 0.0005) { continue }
+                $gain = [Math]::Pow(($target / $L), 0.5)
+                $peak = [Math]::Max($lr, [Math]::Max($lg, $lb))
+                if ($peak -gt 0 -and ($gain * $peak) -gt 1.0) { $gain = 1.0 / $peak }
+                if ($gain -lt 0.25) { $gain = 0.25 }
+                if ($gain -gt 4.00) { $gain = 4.00 }
+                $g[$i] = $gain
+            }
+        }
+    }
+    $script:PalGain = $g
+}
 $pbPreview.Add_Paint({
     $g = $_.Graphics
     $w = $pbPreview.Width
@@ -333,6 +381,7 @@ $pbPreview.Add_Paint({
     if ($pal.Count -lt 2) { $pal += $pal[0] }
     $pc = $pal.Count
     $bright = $trkBright.Value / 100.0
+    Update-PalGain $pal
 
     # The preview is a smooth strip: it shows the gradient as it travels
     # across the physical width, which is what the keyboard now does.
@@ -343,9 +392,16 @@ $pbPreview.Add_Paint({
         $u = $f - $a
         $b2 = ($a + 1) % $pc
         $a  = $a % $pc
-        $r = [int](($pal[$a].R + ($pal[$b2].R - $pal[$a].R) * $u) * $bright)
-        $gg= [int](($pal[$a].G + ($pal[$b2].G - $pal[$a].G) * $u) * $bright)
-        $bb= [int](($pal[$a].B + ($pal[$b2].B - $pal[$a].B) * $u) * $bright)
+        # Blend in linear light with a smoothstep crossfade, exactly like
+        # the engine, so the preview is honest.
+        $w = $u * $u * (3.0 - 2.0 * $u)
+        $ga = $script:PalGain[$a]; $gb = $script:PalGain[$b2]
+        $lr = (Lin $pal[$a].R) * $ga; $lr = $lr + (((Lin $pal[$b2].R) * $gb) - $lr) * $w
+        $lg = (Lin $pal[$a].G) * $ga; $lg = $lg + (((Lin $pal[$b2].G) * $gb) - $lg) * $w
+        $lb = (Lin $pal[$a].B) * $ga; $lb = $lb + (((Lin $pal[$b2].B) * $gb) - $lb) * $w
+        $r = [int](Srgb ($lr * $bright))
+        $gg= [int](Srgb ($lg * $bright))
+        $bb= [int](Srgb ($lb * $bright))
         $br = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb($r,$gg,$bb))
         $g.FillRectangle($br, [float]($i*$cw), 0.0, [float]($cw+1), [float]$h)
         $br.Dispose()
@@ -412,6 +468,15 @@ $chkReverse.Location  = New-Object System.Drawing.Point(210, $y)
 $chkReverse.Size      = New-Object System.Drawing.Size(170, 24)
 $chkReverse.ForeColor = $fg
 $form.Controls.Add($chkReverse)
+
+$y += 30
+$chkEq = New-Object System.Windows.Forms.CheckBox
+$chkEq.Text      = 'Even out colour brightness'
+$chkEq.Location  = New-Object System.Drawing.Point(24, $y)
+$chkEq.Size      = New-Object System.Drawing.Size(280, 24)
+$chkEq.ForeColor = $fg
+$chkEq.Checked   = $true
+$form.Controls.Add($chkEq)
 
 $y += 30
 $chkAuto = New-Object System.Windows.Forms.CheckBox

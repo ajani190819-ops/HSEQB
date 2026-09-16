@@ -44,7 +44,12 @@ param(
     [switch]$Mirror,
     [switch]$Reverse,
     [switch]$Restore,
-    [switch]$Quiet
+    [switch]$Quiet,
+
+    # Even out the apparent brightness of the palette so no one colour
+    # (yellow especially) drowns out the rest. On by default.
+    [ValidateSet('on','off')]
+    [string]$Equalise = 'on'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -173,6 +178,9 @@ public class LampEngine {
     pr = new int[LampCount]; pg = new int[LampCount]; pb = new int[LampCount];
     for (int i = 0; i < LampCount; i++) { pr[i] = -1; pg[i] = -1; pb[i] = -1; }
     heat = new double[LampCount];
+
+    // Gamma tables + palette gains must exist before any colour is produced.
+    PrepPalette();
     if (SlotPos == null || SlotPos.Length != LampCount) {
       SlotPos = new double[LampCount];
       for (int i = 0; i < LampCount; i++)
@@ -190,9 +198,19 @@ public class LampEngine {
       if (q >= LampCount) q = LampCount - 1;
     }
     int i = Order[q];
-    int rr = (int)(r * Brightness); if (rr < 0) rr = 0; else if (rr > 255) rr = 255;
-    int gg = (int)(g * Brightness); if (gg < 0) gg = 0; else if (gg > 255) gg = 255;
-    int bb = (int)(b * Brightness); if (bb < 0) bb = 0; else if (bb > 255) bb = 255;
+
+    // Dim in LINEAR light. Scaling the gamma-encoded byte makes half
+    // brightness look like ~73% brightness, so fades and tails never
+    // actually reach darkness and washes out the effect.
+    if (Brightness < 0.999) {
+      r = ToSrgb(ToLin(r < 0 ? 0 : (r > 255 ? 255 : r)) * Brightness);
+      g = ToSrgb(ToLin(g < 0 ? 0 : (g > 255 ? 255 : g)) * Brightness);
+      b = ToSrgb(ToLin(b < 0 ? 0 : (b > 255 ? 255 : b)) * Brightness);
+    }
+
+    int rr = (int)(r + 0.5); if (rr < 0) rr = 0; else if (rr > 255) rr = 255;
+    int gg = (int)(g + 0.5); if (gg < 0) gg = 0; else if (gg > 255) gg = 255;
+    int bb = (int)(b + 0.5); if (bb < 0) bb = 0; else if (bb > 255) bb = 255;
     fr[i] = rr; fg[i] = gg; fb[i] = bb;
   }
 
@@ -247,18 +265,136 @@ public class LampEngine {
     r = 255*(rr+m); g = 255*(gg+m); b = 255*(bb+m);
   }
 
-  // Cyclic palette sample. f is 0..1 around the whole loop.
-  void Pal(double f, out double r, out double g, out double b) {
+  // ---- colour science -------------------------------------------------
+  //
+  // An LED's brightness is proportional to the byte we send (linear light),
+  // but sRGB colour values are gamma-encoded. Blending or dimming the raw
+  // bytes therefore produces mid-tones that are far too bright, which reads
+  // as washed-out, muddy colour. Everything below works in LINEAR light and
+  // converts back to gamma only at the very end.
+
+  static double[] _toLin;    // gamma byte -> linear 0..1
+  static double[] _toSrgb;   // linear (4096 steps) -> gamma byte
+
+  static void BuildTables() {
+    if (_toLin != null) return;
+    _toLin = new double[256];
+    for (int i = 0; i < 256; i++) {
+      double c = i / 255.0;
+      _toLin[i] = (c <= 0.04045) ? (c / 12.92) : Math.Pow((c + 0.055) / 1.055, 2.4);
+    }
+    _toSrgb = new double[4097];
+    for (int i = 0; i <= 4096; i++) {
+      double c = i / 4096.0;
+      double s = (c <= 0.0031308) ? (12.92 * c) : (1.055 * Math.Pow(c, 1.0 / 2.4) - 0.055);
+      _toSrgb[i] = s * 255.0;
+    }
+  }
+
+  static double ToLin(double v) {
+    if (v <= 0) return 0;
+    if (v >= 255) return 1;
+    int i = (int)v;
+    double f = v - i;
+    if (i >= 255) return 1;
+    return _toLin[i] + (_toLin[i + 1] - _toLin[i]) * f;
+  }
+
+  static double ToSrgb(double lv) {
+    if (lv <= 0) return 0;
+    if (lv >= 1) return 255;
+    double x = lv * 4096.0;
+    int i = (int)x;
+    double f = x - i;
+    if (i >= 4096) return 255;
+    return _toSrgb[i] + (_toSrgb[i + 1] - _toSrgb[i]) * f;
+  }
+
+  // Rec.709 luminance of a linear colour - how bright the eye judges it.
+  static double Luma(double lr, double lg, double lb) {
+    return 0.2126 * lr + 0.7152 * lg + 0.0722 * lb;
+  }
+
+  // Set to true to even out the palette so no single colour dominates.
+  public bool Equalise = true;
+
+  // Per-stop gain applied in linear light, computed once at startup.
+  double[] palGain;
+  double[] plR, plG, plB;    // palette in linear light
+
+  void PrepPalette() {
+    BuildTables();
     int pc = PalR.Length;
+    plR = new double[pc]; plG = new double[pc]; plB = new double[pc];
+    palGain = new double[pc];
+
+    for (int i = 0; i < pc; i++) {
+      plR[i] = ToLin(PalR[i]);
+      plG[i] = ToLin(PalG[i]);
+      plB[i] = ToLin(PalB[i]);
+      palGain[i] = 1.0;
+    }
+    if (!Equalise || pc == 0) return;
+
+    // Pull every stop towards a common apparent brightness. Full
+    // equalisation would crush saturated blues to nothing, so aim at the
+    // geometric mean and only go part of the way (exponent 0.5).
+    double logSum = 0; int n = 0;
+    for (int i = 0; i < pc; i++) {
+      double L = Luma(plR[i], plG[i], plB[i]);
+      if (L > 0.0005) { logSum += Math.Log(L); n++; }
+    }
+    if (n == 0) return;
+    double target = Math.Exp(logSum / n);
+
+    for (int i = 0; i < pc; i++) {
+      double L = Luma(plR[i], plG[i], plB[i]);
+      if (L <= 0.0005) continue;
+      double gain = Math.Pow(target / L, 0.5);
+      // Never amplify past the point where the brightest channel clips,
+      // and never dim a colour into the mud.
+      double peak = Math.Max(plR[i], Math.Max(plG[i], plB[i]));
+      if (peak > 0 && gain * peak > 1.0) gain = 1.0 / peak;
+      if (gain < 0.25) gain = 0.25;
+      if (gain > 4.00) gain = 4.00;
+      palGain[i] = gain;
+    }
+  }
+
+  // Cyclic palette sample. f is 0..1 around the whole loop.
+  // Interpolates in LINEAR light so blends keep their brightness and the
+  // colours stay distinct instead of passing through a dark muddy band.
+  void Pal(double f, out double r, out double g, out double b) {
+    int pc = plR.Length;
     f = f % 1.0; if (f < 0) f += 1.0;
     double x = f * pc;
     int a = (int)Math.Floor(x);
     double u = x - a;
     int n2 = (a + 1) % pc;
     a = a % pc;
-    r = PalR[a] + (PalR[n2] - PalR[a]) * u;
-    g = PalG[a] + (PalG[n2] - PalG[a]) * u;
-    b = PalB[a] + (PalB[n2] - PalB[a]) * u;
+
+    // Smoothstep the crossfade: less time in the ambiguous middle, so each
+    // stop reads as its own colour for longer.
+    double w = u * u * (3.0 - 2.0 * u);
+
+    double ga = palGain[a], gb = palGain[n2];
+    double lr = (plR[a] * ga) + ((plR[n2] * gb) - (plR[a] * ga)) * w;
+    double lg = (plG[a] * ga) + ((plG[n2] * gb) - (plG[a] * ga)) * w;
+    double lb = (plB[a] * ga) + ((plB[n2] * gb) - (plB[a] * ga)) * w;
+
+    r = ToSrgb(lr); g = ToSrgb(lg); b = ToSrgb(lb);
+  }
+
+  // Apply a 0..1 fade weight to a colour in LINEAR light, so tails and
+  // pulses ramp the way the eye expects instead of staying bright then
+  // falling off a cliff.
+  static void Fade(double r, double g, double b, double w,
+                   out double orr, out double og, out double ob) {
+    if (w <= 0) { orr = 0; og = 0; ob = 0; return; }
+    if (w >= 1) { orr = r; og = g; ob = b; return; }
+    orr = ToSrgb(ToLin(r) * w);
+    og  = ToSrgb(ToLin(g) * w);
+    ob  = ToSrgb(ToLin(b) * w);
   }
 
   void Frame(double t) {
@@ -303,7 +439,9 @@ public class LampEngine {
           double d = head - SlotPos[i];
           if (d < 0) d += 1.0;
           double w = Math.Exp(-d * 9.0);
-          SetZone(i, PalR[0]*w, PalG[0]*w, PalB[0]*w);
+          double cr, cg, cb;
+          Fade(PalR[0], PalG[0], PalB[0], w, out cr, out cg, out cb);
+          SetZone(i, cr, cg, cb);
         }
         break;
       }
@@ -313,21 +451,27 @@ public class LampEngine {
         for (int i = 0; i < N; i++) {
           double w = 1.0 - (Math.Abs(SlotPos[i] - p) / 0.18);
           if (w < 0) w = 0; w = w * w;
-          SetZone(i, PalR[0]*w, PalG[0]*w, PalB[0]*w);
+          double cr, cg, cb;
+          Fade(PalR[0], PalG[0], PalB[0], w, out cr, out cg, out cb);
+          SetZone(i, cr, cg, cb);
         }
         break;
       }
       case "breathe": {
         double w = (1.0 + Math.Sin(t * 1.6 * Math.PI)) / 2.0;
-        w = 0.04 + 0.96 * Math.Pow(w, 2.2);
-        for (int i = 0; i < N; i++) SetZone(i, PalR[0]*w, PalG[0]*w, PalB[0]*w);
+        w = 0.02 + 0.98 * w * w;
+        double cr, cg, cb;
+        Fade(PalR[0], PalG[0], PalB[0], w, out cr, out cg, out cb);
+        for (int i = 0; i < N; i++) SetZone(i, cr, cg, cb);
         break;
       }
       case "pulse": {
         double w = Math.Exp(-(t % 1.0) * 4.5);
         double r, g, b;
         Hsv(Math.Floor(t) * 47.0, 1.0, 1.0, out r, out g, out b);
-        for (int i = 0; i < N; i++) SetZone(i, r*w, g*w, b*w);
+        double pr2, pg2, pb2;
+        Fade(r, g, b, w, out pr2, out pg2, out pb2);
+        for (int i = 0; i < N; i++) SetZone(i, pr2, pg2, pb2);
         break;
       }
       case "fire": {
@@ -335,7 +479,8 @@ public class LampEngine {
           heat[i] = heat[i] * 0.86 + rnd.NextDouble() * 0.30;
           if (heat[i] > 1.0) heat[i] = 1.0;
           double v = heat[i];
-          SetZone(i, 255*v, 90*v*v, 10*v*v*v);
+          // heat is linear energy; convert each channel back to gamma space
+          SetZone(i, ToSrgb(v), ToSrgb(0.35*v*v), ToSrgb(0.04*v*v*v));
         }
         break;
       }
@@ -424,7 +569,7 @@ $U_IDSTART=0x61; $U_IDEND=0x62; $U_AUTONOMOUS=0x71
 # DISCOVERY  (proven working; unchanged in shape)
 # ============================================================================
 Say ""
-Say ("AURA-BACKGROUND v6   effect={0}  fps={1}  speed={2}" -f $Effect,$Fps,$Speed) 'Cyan'
+Say ("AURA-BACKGROUND v7   effect={0}  fps={1}  speed={2}" -f $Effect,$Fps,$Speed) 'Cyan'
 Say ""
 
 # A laptop exposes MANY HID collections on the same VID/PID, and more than
@@ -827,6 +972,7 @@ $eng.Slots      = $slots
 $eng.ReportLen  = (Rpt-Len $rMulti)
 $eng.CtrlOff    = $ctrlOffBuf
 $eng.Interleaved = $interleaved
+$eng.Equalise   = ($Equalise -eq 'on')
 $eng.OffCount   = $offCnt
 $eng.OffFlags   = $offFlg
 $eng.OffId      = $offId
