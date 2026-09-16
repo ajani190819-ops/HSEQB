@@ -46,7 +46,12 @@ selected. So you can run a slow blue breathing effect under the keys and
 a fast rainbow around the light bar at the same time.
 
 The strip at the top previews both at once: the short block on the left
-is the keyboard, the long block on the right is the light bar.
+is the keyboard, the long block on the right is the light bar. It is not
+a mock-up - the engine reports the exact colours it is sending to the
+keyboard, so the preview matches the hardware even for fire, the music
+modes and the meters. The light bar is shown in physical order around
+the chassis, not the order the lamps happen to be numbered in. If the
+engine is not running the strip dims and the labels say OFF.
 
 * **This part is on** turns off just the section you are looking at.
 * **Match both** copies whatever you do to the other section as well.

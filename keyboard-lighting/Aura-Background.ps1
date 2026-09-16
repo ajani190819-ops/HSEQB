@@ -126,6 +126,7 @@ if (-not ('LampEngine' -as [type])) {
 try {
 Add-Type -TypeDefinition @'
 using System;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Diagnostics;
@@ -482,6 +483,52 @@ public class LampEngine {
 
   int[] pr, pg, pb;        // last bytes actually sent
   double[] er, eg, eb;     // carried quantisation error, for temporal dither
+
+  // ---- live frame publishing -------------------------------------
+  // The control panel used to redraw the preview by re-implementing the
+  // effects in PowerShell, which only ever matched for the simplest ones.
+  // Instead we publish the real post-dither bytes - exactly what went out
+  // over USB - and let the panel just display them.
+  public string FramePath = null;      // null = don't publish
+  public int    FrameHz    = 20;       // cap: the panel cannot use more
+  double nextFrameAt = -1.0;
+  byte[] frameBuf = null;
+  char[] hexPairs = "0123456789abcdef".ToCharArray();
+
+  void PublishFrame() {
+    if (FramePath == null) return;
+    if (Now < nextFrameAt) return;
+    nextFrameAt = Now + (1.0 / (double)(FrameHz > 0 ? FrameHz : 20));
+
+    int n = LampCount;
+    // "<count>;" then 6 hex chars per lamp, in device lamp order.
+    int need = 12 + n * 6;
+    if (frameBuf == null || frameBuf.Length < need) frameBuf = new byte[need];
+    int w = 0;
+    string head = n.ToString() + ";";
+    for (int i = 0; i < head.Length; i++) frameBuf[w++] = (byte)head[i];
+    for (int i = 0; i < n; i++) {
+      int r = pr[i], g = pg[i], b2 = pb[i];
+      if (r < 0) r = 0; if (g < 0) g = 0; if (b2 < 0) b2 = 0;
+      // pr/pg/pb are device levels (0..MaxR); scale back to 0..255 so the
+      // panel does not need to know the device's logical maximum.
+      if (MaxR > 0 && MaxR != 255) r = (r * 255) / MaxR;
+      if (MaxG > 0 && MaxG != 255) g = (g * 255) / MaxG;
+      if (MaxB > 0 && MaxB != 255) b2 = (b2 * 255) / MaxB;
+      if (r > 255) r = 255; if (g > 255) g = 255; if (b2 > 255) b2 = 255;
+      frameBuf[w++] = (byte)hexPairs[(r >> 4) & 15]; frameBuf[w++] = (byte)hexPairs[r & 15];
+      frameBuf[w++] = (byte)hexPairs[(g >> 4) & 15]; frameBuf[w++] = (byte)hexPairs[g & 15];
+      frameBuf[w++] = (byte)hexPairs[(b2 >> 4) & 15]; frameBuf[w++] = (byte)hexPairs[b2 & 15];
+    }
+    try {
+      // Write the whole thing in one call and keep the handle for the
+      // shortest possible time; the reader tolerates a torn read anyway.
+      using (FileStream fs = new FileStream(FramePath, FileMode.Create,
+                                            FileAccess.Write, FileShare.ReadWrite)) {
+        fs.Write(frameBuf, 0, w);
+      }
+    } catch { }
+  }
 
   void Push() { Push(false); }
 
@@ -1120,6 +1167,10 @@ public class LampEngine {
         // Reopen()/ReAssert() invalidate the previous-colour cache, so the
         // next frame is a full repaint even for a static effect.
         Push();
+        // Publish AFTER Push, so pr/pg/pb hold this frame's real bytes.
+        // Outside the "changed" test on purpose: a static effect still has
+        // to show up in the panel's preview.
+        PublishFrame();
 
         long remain = next - sw.ElapsedTicks;
         if (remain > 0) {
@@ -1157,6 +1208,7 @@ public class LampEngine {
       er[i]=0; eg[i]=0; eb[i]=0;
     }
     Push(true);
+    nextFrameAt = -1.0; PublishFrame();
   }
 
   public void Solid(int r, int g, int b) {
@@ -1170,6 +1222,7 @@ public class LampEngine {
       er[i]=0;  eg[i]=0;  eb[i]=0;
     }
     Push(true);
+    nextFrameAt = -1.0; PublishFrame();
   }
 
   public void Close() {
@@ -2362,6 +2415,31 @@ Seed-Zone $zBar $barEff $barSpd $barBrt ($BarMirror.IsPresent) ($BarReverse.IsPr
 
 foreach ($z in @($zDeck, $zBar)) { $z.Master = [double]$Master }
 
+# The panel draws its preview from this: the real bytes the engine sends,
+# not a reproduction of the effect. Set before anything drives the device
+# so Blank()/Solid() and the very first frames are all published.
+$frameFile = Join-Path $env:LOCALAPPDATA 'KeyboardLighting\frame.txt'
+try {
+    $fd = Split-Path -Parent $frameFile
+    if (-not (Test-Path $fd)) { New-Item -ItemType Directory -Force -Path $fd | Out-Null }
+    $eng.FramePath = $frameFile
+    $eng.FrameHz   = 20
+} catch { }
+
+# Tell the panel how to lay the lamps out. Device index order is not the
+# visual order - the light bar runs around the chassis - so publish each
+# group's lamp indices already sorted by physical position. Written once;
+# the panel re-reads it whenever it changes.
+try {
+    $layFile = Join-Path $env:LOCALAPPDATA 'KeyboardLighting\layout.txt'
+    $pos = $spAcross
+    if ($spLoop) { $pos = $spLoop }
+    $kOrd = @($deckIdx | Sort-Object { $pos[$_] })
+    $bOrd = @($barIdx  | Sort-Object { $pos[$_] })
+    $layTxt = ('kbd=' + ($kOrd -join ',') + "`nbar=" + ($bOrd -join ','))
+    Set-Content -Path $layFile -Value $layTxt -Encoding ASCII -ErrorAction SilentlyContinue
+} catch { }
+
 if (-not $eng.Open()) {
     Write-Host ("  Engine could not open the device. {0}" -f $eng.LastError) -ForegroundColor Red
     Write-Host "  Run PowerShell as Administrator." -ForegroundColor Red
@@ -2694,6 +2772,13 @@ finally {
     $eng.Stop()
     $eng.Blank()
     $eng.Close()
+    # Blank() publishes an all-off frame, but once we exit nothing is
+    # driving the keyboard at all. Remove the file so the panel shows its
+    # idle state rather than a stale frame.
+    try {
+        $ff = Join-Path $env:LOCALAPPDATA 'KeyboardLighting\frame.txt'
+        if (Test-Path $ff) { Remove-Item $ff -Force -ErrorAction SilentlyContinue }
+    } catch { }
     $h2=[HidNative]::CreateFileW($devPath,$GENRW,$SHARERW,[IntPtr]::Zero,$OPENEXIST,[uint32]0,[IntPtr]::Zero)
     if ($h2 -ne $INVALID) {
         $pp2=[IntPtr]::Zero

@@ -849,130 +849,130 @@ try {
 if ($wantH -gt $maxH) { $wantH = $maxH }
 $form.ClientSize = New-Object System.Drawing.Size(478, $wantH)
 
-# ---------------------------------------------------------------- colour maths
-function Lin([double]$v) {
-    $c = $v / 255.0
-    if ($c -le 0.04045) { return $c / 12.92 }
-    return [Math]::Pow((($c + 0.055) / 1.055), 2.4)
-}
-function Srgb([double]$l) {
-    if ($l -le 0) { return 0.0 }
-    if ($l -ge 1) { return 255.0 }
-    if ($l -le 0.0031308) { return 12.92 * $l * 255.0 }
-    return (1.055 * [Math]::Pow($l, (1.0/2.4)) - 0.055) * 255.0
-}
-function Luma([double]$lr, [double]$lg, [double]$lb) {
-    return 0.2126*$lr + 0.7152*$lg + 0.0722*$lb
-}
-function Get-PalGain($pal, [bool]$equalise) {
-    $n = $pal.Count
-    $g = New-Object double[] $n
-    for ($i=0; $i -lt $n; $i++) { $g[$i] = 1.0 }
-    if (-not $equalise -or $n -eq 0) { return $g }
-    $logSum = 0.0; $cnt = 0
-    for ($i=0; $i -lt $n; $i++) {
-        $L = Luma (Lin $pal[$i].R) (Lin $pal[$i].G) (Lin $pal[$i].B)
-        if ($L -gt 0.0005) { $logSum += [Math]::Log($L); $cnt++ }
-    }
-    if ($cnt -eq 0) { return $g }
-    $target = [Math]::Exp($logSum / $cnt)
-    for ($i=0; $i -lt $n; $i++) {
-        $lr = Lin $pal[$i].R; $lg = Lin $pal[$i].G; $lb = Lin $pal[$i].B
-        $L = Luma $lr $lg $lb
-        if ($L -le 0.0005) { continue }
-        $gain = [Math]::Pow(($target / $L), 0.5)
-        $peak = [Math]::Max($lr, [Math]::Max($lg, $lb))
-        if ($peak -gt 0 -and ($gain * $peak) -gt 1.0) { $gain = 1.0 / $peak }
-        if ($gain -lt 0.25) { $gain = 0.25 }
-        if ($gain -gt 4.00) { $gain = 4.00 }
-        $g[$i] = $gain
-    }
-    return $g
+# ---------------------------------------------------------------- live preview
+# The preview used to re-implement each effect in PowerShell, which only
+# ever matched reality for the simple gradients - fire, comet, the audio
+# modes and the meters were all guesses. The engine now publishes the
+# actual bytes it sends to the keyboard, so the preview just reads those.
+$script:FrameFile  = Join-Path $CfgDir 'frame.txt'
+$script:LayoutFile = Join-Path $CfgDir 'layout.txt'
+$script:FrameStamp = -1
+$script:FrameCols  = $null
+$script:FrameAge   = 0
+# Lamp indices in PHYSICAL left-to-right order, published by the engine.
+# Device index order is not visual order: the light bar wraps around the
+# chassis, so drawing 4..15 in index order would scramble it.
+$script:MapKbd     = @(0,1,2,3)
+$script:MapBar     = @(4,5,6,7,8,9,10,11,12,13,14,15)
+$script:LayStamp   = -1
+
+function Read-Layout {
+    try {
+        $fi = Get-Item $script:LayoutFile -ErrorAction Stop
+        if ($fi.LastWriteTimeUtc.Ticks -eq $script:LayStamp) { return }
+        $script:LayStamp = $fi.LastWriteTimeUtc.Ticks
+        foreach ($ln in (Get-Content $script:LayoutFile -ErrorAction Stop)) {
+            $t = $ln.Trim()
+            if ($t -like 'kbd=*') {
+                $v = @($t.Substring(4) -split ',' | Where-Object { $_ -ne '' } | ForEach-Object { [int]$_ })
+                if ($v.Count -gt 0) { $script:MapKbd = $v }
+            } elseif ($t -like 'bar=*') {
+                $v = @($t.Substring(4) -split ',' | Where-Object { $_ -ne '' } | ForEach-Object { [int]$_ })
+                if ($v.Count -gt 0) { $script:MapBar = $v }
+            }
+        }
+    } catch { }
 }
 
-# Build the colours for one group across n cells.
-function Get-GroupStrip {
-    param($grp, [int]$n, [double]$phase)
-    $out = New-Object 'System.Drawing.Color[]' $n
-    if (-not $grp.On) {
-        for ($i = 0; $i -lt $n; $i++) { $out[$i] = [System.Drawing.Color]::FromArgb(10,10,12) }
-        return $out
-    }
-    $tok = Get-EffectToken $grp
-    $pal = @()
-    foreach ($s in $grp.Swatches) {
-        try { $pal += ,([System.Drawing.ColorTranslator]::FromHtml($s)) }
-        catch { $pal += ,([System.Drawing.Color]::Gray) }
-    }
-    if ($pal.Count -lt 2) { $pal += $pal[0] }
-    $pc = $pal.Count
-    $bright = ([double]$grp.Brightness / 100.0) * ([double]$script:Cfg.Brightness / 100.0)
-    $gain = Get-PalGain $pal ([bool]$grp.Equalise)
+function Read-Frame {
+    # Returns $true when a usable frame was read.
+    try {
+        $fi = Get-Item $script:FrameFile -ErrorAction Stop
+        $st = $fi.LastWriteTimeUtc.Ticks
+        if ($st -eq $script:FrameStamp) { return $false }
+        $script:FrameStamp = $st
 
-    for ($i = 0; $i -lt $n; $i++) {
-        $u0 = $i / [double]($n - 1)
-        if ($n -eq 1) { $u0 = 0.0 }
-        if ($grp.Loop) { $u0 = $i / [double]$n }
+        $txt = [System.IO.File]::ReadAllText($script:FrameFile)
+        if (-not $txt) { return $false }
+        $semi = $txt.IndexOf(';')
+        if ($semi -lt 1) { return $false }
+        $n = 0
+        if (-not [int]::TryParse($txt.Substring(0, $semi), [ref]$n)) { return $false }
+        if ($n -lt 1 -or $n -gt 512) { return $false }
+        $body = $txt.Substring($semi + 1)
+        # A torn read is possible: the engine rewrites this file 20x a
+        # second. Short body means we caught it mid-write - skip this one
+        # rather than draw nonsense.
+        if ($body.Length -lt ($n * 6)) { return $false }
 
-        if ($tok -eq 'rainbow' -or $tok -eq 'cycle') {
-            $h = 0.0
-            if ($tok -eq 'cycle') { $h = ($phase * 360.0) % 360.0 }
-            else { $h = ($u0 * 360.0 + $phase * 360.0) % 360.0 }
-            $c = Hsv2Rgb $h 1.0 1.0
-            $out[$i] = [System.Drawing.Color]::FromArgb(
-                [int]([Math]::Min(255, $c[0] * $bright)),
-                [int]([Math]::Min(255, $c[1] * $bright)),
-                [int]([Math]::Min(255, $c[2] * $bright)))
-            continue
+        $raw = New-Object 'System.Drawing.Color[]' $n
+        for ($k = 0; $k -lt $n; $k++) {
+            $o = $k * 6
+            $r = [Convert]::ToInt32($body.Substring($o,     2), 16)
+            $g = [Convert]::ToInt32($body.Substring($o + 2, 2), 16)
+            $b = [Convert]::ToInt32($body.Substring($o + 4, 2), 16)
+            $raw[$k] = [System.Drawing.Color]::FromArgb($r, $g, $b)
         }
 
-        $f = (($u0 + $phase) % 1.0) * $pc
-        if ($f -lt 0) { $f += $pc }
-        $a = [int][Math]::Floor($f)
-        $u = $f - $a
-        $b2 = ($a + 1) % $pc
-        $a  = $a % $pc
-        $wgt = $u * $u * (3.0 - 2.0 * $u)
-        $ga = $gain[$a]; $gb = $gain[$b2]
-        $lr = (Lin $pal[$a].R) * $ga; $lr = $lr + (((Lin $pal[$b2].R) * $gb) - $lr) * $wgt
-        $lg = (Lin $pal[$a].G) * $ga; $lg = $lg + (((Lin $pal[$b2].G) * $gb) - $lg) * $wgt
-        $lb = (Lin $pal[$a].B) * $ga; $lb = $lb + (((Lin $pal[$b2].B) * $gb) - $lb) * $wgt
-        $r  = [int]((Srgb $lr) * $bright)
-        $gg = [int]((Srgb $lg) * $bright)
-        $bb = [int]((Srgb $lb) * $bright)
-        if ($r  -lt 0) { $r = 0 };  if ($r  -gt 255) { $r = 255 }
-        if ($gg -lt 0) { $gg = 0 }; if ($gg -gt 255) { $gg = 255 }
-        if ($bb -lt 0) { $bb = 0 }; if ($bb -gt 255) { $bb = 255 }
-        $out[$i] = [System.Drawing.Color]::FromArgb($r, $gg, $bb)
+        # Re-order into physical order: keyboard first, then the bar.
+        Read-Layout
+        $seq = @($script:MapKbd) + @($script:MapBar)
+        $cols = New-Object 'System.Drawing.Color[]' $seq.Count
+        for ($k = 0; $k -lt $seq.Count; $k++) {
+            $ix = $seq[$k]
+            if ($ix -ge 0 -and $ix -lt $n) { $cols[$k] = $raw[$ix] }
+            else { $cols[$k] = [System.Drawing.Color]::Black }
+        }
+        $pbPreview.Split  = $script:MapKbd.Count
+        $script:FrameCols = $cols
+        $script:FrameAge  = 0
+        return $true
+    } catch {
+        return $false
     }
+}
+
+# Fallback for when the engine is not running: show the first colour of
+# each group, dimmed, so the preview is obviously inert rather than lying.
+function Get-IdleColours {
+    Read-Layout
+    $nk = $script:MapKbd.Count
+    $nb = $script:MapBar.Count
+    $out = New-Object 'System.Drawing.Color[]' ($nk + $nb)
+    for ($i = 0; $i -lt ($nk + $nb); $i++) {
+        $g = $script:Cfg.Kbd
+        if ($i -ge $nk) { $g = $script:Cfg.Bar }
+        $c = [System.Drawing.Color]::FromArgb(24, 25, 32)
+        if ($g.On -and $g.Swatches.Count -gt 0) {
+            try {
+                $h = [System.Drawing.ColorTranslator]::FromHtml($g.Swatches[0])
+                $c = [System.Drawing.Color]::FromArgb(
+                        [int]($h.R * 0.22), [int]($h.G * 0.22), [int]($h.B * 0.22))
+            } catch { }
+        }
+        $out[$i] = $c
+    }
+    $pbPreview.Split = $nk
     return $out
 }
 
-function Hsv2Rgb([double]$h, [double]$s, [double]$v) {
-    $h = $h % 360.0
-    if ($h -lt 0) { $h += 360.0 }
-    $c = $v * $s
-    $x = $c * (1.0 - [Math]::Abs((($h / 60.0) % 2.0) - 1.0))
-    $m = $v - $c
-    $r = 0.0; $g = 0.0; $b = 0.0
-    if     ($h -lt 60)  { $r = $c; $g = $x }
-    elseif ($h -lt 120) { $r = $x; $g = $c }
-    elseif ($h -lt 180) { $g = $c; $b = $x }
-    elseif ($h -lt 240) { $g = $x; $b = $c }
-    elseif ($h -lt 300) { $r = $x; $b = $c }
-    else                { $r = $c; $b = $x }
-    return @((($r + $m) * 255.0), (($g + $m) * 255.0), (($b + $m) * 255.0))
-}
-
-# The preview shows BOTH groups: 4 cells of keyboard, 12 of light bar,
-# matching the real hardware split.
 function Update-Preview {
-    $kb  = Get-GroupStrip $script:Cfg.Kbd 4  $script:phaseK
-    $brs = Get-GroupStrip $script:Cfg.Bar 12 $script:phaseB
-    $all = New-Object 'System.Drawing.Color[]' 16
-    for ($i = 0; $i -lt 4;  $i++) { $all[$i] = $kb[$i] }
-    for ($i = 0; $i -lt 12; $i++) { $all[$i + 4] = $brs[$i] }
-    $pbPreview.Colors = $all
+    if (Read-Frame) {
+        $pbPreview.Colors = $script:FrameCols
+        $pbPreview.Live   = $true
+        $pbPreview.Invalidate()
+        return
+    }
+    # No new frame. Keep showing the last one for a moment - a static
+    # effect legitimately produces no change - then fall back to idle.
+    $script:FrameAge++
+    if ($script:FrameCols -ne $null -and $script:FrameAge -lt 60) {
+        $pbPreview.Live = $true
+        return
+    }
+    $script:FrameCols = $null
+    $pbPreview.Colors = Get-IdleColours
+    $pbPreview.Live   = $false
     $pbPreview.Invalidate()
 }
 
@@ -1412,8 +1412,6 @@ $script:UpdJob      = $null
 $script:UpdPrompted = $false
 $script:Pending     = $false
 $script:WakeAt      = 0
-$script:phaseK      = 0.0
-$script:phaseB      = 0.0
 
 function Show-HideHint {
     if ($script:HintShown) { return }
@@ -1455,18 +1453,13 @@ $script:Suppress = $false
 Load-UiFromCfg
 Update-Preview
 
+# Poll the engine's published frame. The engine writes at 20 fps; polling
+# at 25 keeps the preview current without ever waiting on it. Nothing is
+# simulated here - this only reads and draws.
 $anim = New-Object System.Windows.Forms.Timer
 $anim.Interval = 40
 $anim.Add_Tick({
     if (-not $form.Visible) { return }
-    $k = $script:Cfg.Kbd
-    $b = $script:Cfg.Bar
-    $dk = 1.0; if ($k.Reverse) { $dk = -1.0 }
-    $db = 1.0; if ($b.Reverse) { $db = -1.0 }
-    $script:phaseK = ($script:phaseK + (0.25 * ($k.Speed/10.0) * $dk) * 0.040) % 1.0
-    $script:phaseB = ($script:phaseB + (0.25 * ($b.Speed/10.0) * $db) * 0.040) % 1.0
-    if ($script:phaseK -lt 0) { $script:phaseK += 1.0 }
-    if ($script:phaseB -lt 0) { $script:phaseB += 1.0 }
     Update-Preview
 })
 $anim.Start()

@@ -532,6 +532,9 @@ public class Preview : Control {
   public int Split = 0;
   public string LeftLabel = "KEYBOARD";
   public string RightLabel = "LIGHT BAR";
+  // False when the engine is not publishing frames. The preview then shows
+  // a dimmed idle state and says so, rather than implying it is live.
+  public bool Live = true;
 
   public Preview() {
     SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint |
@@ -598,8 +601,10 @@ public class Preview : Control {
       using (SolidBrush b = new SolidBrush(Theme.Muted)) {
         StringFormat sf = new StringFormat();
         sf.Alignment = StringAlignment.Center;
-        g.DrawString(LeftLabel, f, b, new RectangleF(0f, barH - 1, lw, capH), sf);
-        g.DrawString(RightLabel, f, b, new RectangleF(lw + gap, barH - 1, rw, capH), sf);
+        string l = LeftLabel, r2 = RightLabel;
+        if (!Live) { l = "KEYBOARD (OFF)"; r2 = "LIGHT BAR (OFF)"; }
+        g.DrawString(l, f, b, new RectangleF(0f, barH - 1, lw, capH), sf);
+        g.DrawString(r2, f, b, new RectangleF(lw + gap, barH - 1, rw, capH), sf);
         sf.Dispose();
       }
     }
