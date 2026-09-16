@@ -19,7 +19,7 @@
 
 param(
     # Skip the menu and run one action directly.
-    [ValidateSet('', 'identify', 'map', 'correct', 'reset', 'chase', 'ring', 'shape')]
+    [ValidateSet('', 'identify', 'map', 'correct', 'reset', 'chase', 'ring', 'shape', 'sides')]
     [string]$Do = '',
     # Seconds each zone stays lit during Identify.
     [double]$Hold = 1.5
@@ -506,6 +506,91 @@ function Do-QuickRing {
     Info 'Then use option 5 to watch it and check it goes round smoothly.'
 }
 
+function Do-Sides {
+    # Instead of asking about twelve lamps one at a time, light a whole
+    # candidate SIDE at once. Which lamps share a side is the only thing
+    # that actually has to be discovered; the order within a side is just
+    # ascending or descending, and the app can work that out.
+    Head 'Which lamps are on which side?'
+    if (Stop-Running) {
+        Warn 'The lighting is running and is holding the keyboard.'
+        Warn 'Right-click the tray icon, choose Exit, then run this again.'
+        return
+    }
+    if (-not (Need-Admin)) { Bad 'This needs to run as administrator.'; return }
+
+    $lay = Read-Layout
+    $pool = @($lay.Bar | Sort-Object)
+    if ($pool.Count -lt 4) { Warn 'Not enough light bar zones known yet.'; return }
+    $lo = $pool[0]
+
+    $odd  = @($pool | Where-Object { ($_ - $lo) % 2 -eq 1 })
+    $even = @($pool | Where-Object { ($_ - $lo) % 2 -eq 0 })
+    $firstH = @($pool[0..([int][Math]::Floor($pool.Count/2) - 1)])
+    $secondH = @($pool | Where-Object { $firstH -notcontains $_ })
+
+    $tests = @(
+        @{ Name = 'every other one';   A = $odd;    B = $even },
+        @{ Name = 'split down the middle'; A = $firstH; B = $secondH }
+    )
+
+    foreach ($t in $tests) {
+        Write-Host ''
+        Info ("Trying: " + $t.Name)
+        Info ("  Group A: " + ($t.A -join ', '))
+        Info ("  Group B: " + ($t.B -join ', '))
+        Write-Host ''
+        Info 'Lighting Group A only...'
+        $r = Invoke-Engine -ZoneList (($t.A) -join ',') -Colour '#FFFFFF' -Seconds 3.0
+        if ($r.Code -ne 0) {
+            Bad "  Could not drive the keyboard (exit $($r.Code))."
+            foreach ($l in (($r.Err + "`n" + $r.Out) -split "`r?`n")) { if ($l.Trim()) { Bad ("    " + $l.Trim()) } }
+            return
+        }
+        $a = Read-Host '  Did exactly ONE continuous side light up? (y/n/q)'
+        if ($a -eq 'q') { Info 'Stopped. Nothing saved.'; return }
+        if ($a -ne 'y') { continue }
+
+        Write-Host ''
+        Info 'Good. Now which end of that side should the pattern START from?'
+        Info ("  The side runs: " + ($t.A -join ', '))
+        Info 'Lighting the first lamp of that side...'
+        [void](Invoke-Engine -ZoneList "$($t.A[0])" -Colour '#FFFFFF' -Seconds 2.5)
+        $s = Read-Host ('  Is zone {0} at the START of where you want the pattern to begin? (y/n)' -f $t.A[0])
+
+        $sideA = @($t.A)
+        if ($s -ne 'y') { $sideA = @($t.A | Sort-Object -Descending) }
+        # The return side runs back the other way, ending next to the start.
+        $sideB = @($t.B | Sort-Object -Descending)
+        if ($s -ne 'y') { $sideB = @($t.B | Sort-Object) }
+
+        $ring = @($sideA + $sideB)
+        Write-Host ''
+        Good ("Path: " + ($ring -join ', '))
+        $ok = Read-Host '  Save this? (Y/n)'
+        if ($ok -eq 'n') { Info 'Nothing saved.'; return }
+
+        $obj = [ordered]@{
+            Kbd     = @($lay.Kbd)
+            Bar     = @($ring)
+            BarRing = $true
+            Note    = 'Written by Zones.ps1. Delete this file to go back to automatic detection.'
+        }
+        if (-not (Test-Path $StateDir)) { New-Item -ItemType Directory -Force -Path $StateDir | Out-Null }
+        $obj | ConvertTo-Json -Depth 5 | Set-Content -Path $MapFile -Encoding UTF8
+        Good "Saved to $MapFile"
+        Write-Host ''
+        Info 'Restart the lighting (tray icon, Exit, then open it again),'
+        Info 'then use option 5 to watch it.'
+        return
+    }
+
+    Write-Host ''
+    Warn 'Neither grouping matched, so the sides are not a simple split.'
+    Info 'Use option 6 to walk the lamps one at a time - it is slower but'
+    Info 'it will work whatever the wiring is.'
+}
+
 function Do-Reset {
     Head 'Reset to automatic detection'
     if (Test-Path $MapFile) {
@@ -534,6 +619,7 @@ if ($Do) {
         'chase'    { Do-Chase }
         'ring'     { Do-BuildRing }
         'shape'    { Do-QuickRing }
+        'sides'    { Do-Sides }
     }
     Write-Host ''
     return
@@ -548,9 +634,10 @@ while ($true) {
     Write-Host '   5  Watch the path - does it trace the circle?' -ForegroundColor Gray
     Write-Host '   6  Build the circle by watching (slow but certain)' -ForegroundColor Gray
     Write-Host '   7  Pick the shape of the bar (fast - start here)' -ForegroundColor Gray
-    Write-Host '   8  Quit' -ForegroundColor Gray
+    Write-Host '   8  Find the two sides (light a whole side at once)' -ForegroundColor Gray
+    Write-Host '   9  Quit' -ForegroundColor Gray
     Write-Host ''
-    $c = Read-Host '  Choose 1-8'
+    $c = Read-Host '  Choose 1-9'
     switch ($c) {
         '1' { $lay = Read-Layout; $ov = Read-Override; Show-Map $lay $ov }
         '2' { Do-Identify $lay $Hold }
@@ -559,7 +646,8 @@ while ($true) {
         '5' { Do-Chase }
         '6' { Do-BuildRing; $lay = Read-Layout }
         '7' { Do-QuickRing; $lay = Read-Layout }
-        '8' { Write-Host ''; return }
-        default { Warn 'Type a number from 1 to 8.' }
+        '8' { Do-Sides; $lay = Read-Layout }
+        '9' { Write-Host ''; return }
+        default { Warn 'Type a number from 1 to 9.' }
     }
 }
