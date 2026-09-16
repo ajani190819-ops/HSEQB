@@ -135,10 +135,18 @@ public class LampEngine {
   double[] heat;
   Random rnd = new Random();
 
+  // LampArrayControl report, prebuilt by PowerShell. Sending this on OUR
+  // OWN handle re-asserts host control: some firmware drops back to
+  // autonomous mode when the handle that disabled it is closed, which
+  // makes every update silently do nothing.
+  public byte[] CtrlOff = null;
+
   public bool Open() {
     h = CreateFileW(DevicePath, 0xC0000000, 3, IntPtr.Zero, 3, 0, IntPtr.Zero);
     if (h == (IntPtr)(-1)) h = CreateFileW(DevicePath, 0x40000000, 3, IntPtr.Zero, 3, 0, IntPtr.Zero);
     if (h == (IntPtr)(-1)) { LastError = "CreateFile failed: " + Marshal.GetLastWin32Error(); h = IntPtr.Zero; return false; }
+
+    if (CtrlOff != null) HidD_SetFeature(h, CtrlOff, CtrlOff.Length);
 
     nbatch = (LampCount + Slots - 1) / Slots;
     bufs = new byte[nbatch][];
@@ -684,6 +692,14 @@ if (-not $fast) {
     return
 }
 
+# Build the "autonomous mode off" report now, while the preparsed data is
+# still valid, so the engine can re-send it on its own handle.
+$ctrlOffBuf = $null
+if ($rCtrl) {
+    $ctrlOffBuf = New-Rpt $rCtrl
+    Set-Val $rCtrl $ctrlOffBuf $U_AUTONOMOUS 0
+}
+
 # PowerShell's handle is no longer needed; the engine opens its own.
 [void][HidNative]::HidD_FreePreparsedData($pp)
 [void][HidNative]::CloseHandle($h)
@@ -695,6 +711,7 @@ $eng.Order      = [int[]]$order
 $eng.ReportId   = $rMulti.Rid
 $eng.Slots      = $slots
 $eng.ReportLen  = (Rpt-Len $rMulti)
+$eng.CtrlOff    = $ctrlOffBuf
 $eng.OffCount   = $offCnt
 $eng.OffFlags   = $offFlg
 $eng.OffId      = $offId
