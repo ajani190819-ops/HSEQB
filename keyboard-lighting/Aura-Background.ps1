@@ -121,6 +121,9 @@ public static class HidNative {
 }
 
 if (-not ('LampEngine' -as [type])) {
+# If this fails to compile the process would otherwise die here with the
+# error going nowhere, and the keyboard would just stay dark. Record it.
+try {
 Add-Type -TypeDefinition @'
 using System;
 using System.Runtime.InteropServices;
@@ -234,7 +237,11 @@ public class LampEngine {
   public SysInfo  Sys    = null;
   public ScreenCap Screen = null;
   public volatile int  OverlayMode = 0;    // 0 none, 1 battery, 2 cpu
-  public volatile double OverlayUntil = 0.0;
+  // NOTE: C# forbids "volatile" on double (CS0677). This is only ever
+  // written by the poll loop and read by the render thread, and a torn
+  // read would at worst end an overlay one frame early, so a plain field
+  // is correct here.
+  public double OverlayUntil = 0.0;
   public double Now = 0.0;
 
   // Channel stride within one report. Planar layouts put each colour plane
@@ -1613,7 +1620,21 @@ public class ScreenCap {
   }
 }
 
-'@
+'@ -ErrorAction Stop
+} catch {
+    $msg = $_.Exception.Message
+    try {
+        $sd = Join-Path $env:LOCALAPPDATA 'KeyboardLighting'
+        if (-not (Test-Path $sd)) { New-Item -ItemType Directory -Force -Path $sd | Out-Null }
+        Add-Content -Path (Join-Path $sd 'log.txt') -Encoding UTF8 -ErrorAction SilentlyContinue `
+            -Value ('{0}  ERROR  engine failed to compile: {1}' -f (Get-Date).ToString('yyyy-MM-dd HH:mm:ss'), $msg)
+    } catch { }
+    Write-Host ''
+    Write-Host '  The lighting engine could not be compiled.' -ForegroundColor Red
+    Write-Host ("  {0}" -f $msg) -ForegroundColor Red
+    Write-Host '  This has been written to log.txt.' -ForegroundColor Red
+    exit 2
+}
 }
 
 $HIDGUID='{4d1e55b2-f16f-11cf-88cb-001111000030}'

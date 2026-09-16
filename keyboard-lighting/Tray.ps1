@@ -115,6 +115,9 @@ if (-not $IsAdmin -and -not $NoElevate) {
 }
 
 # ---------------------------------------------------------------- config
+# Set before anything can call Start-Engine.
+$script:EngineErr = ''
+
 $Effects = [ordered]@{
     'Scrolling gradient'   = 'gradient'
     'Rainbow'              = 'rainbow'
@@ -343,10 +346,18 @@ function Start-Engine {
         $script:WantOff = $false
         Start-Sleep -Milliseconds 900
         if ($script:EngineP.HasExited) {
-            Log ("engine exited immediately (kbd={0} bar={1})" -f $kEff,$bEff) 'ERROR'
+            $code = -1
+            try { $code = $script:EngineP.ExitCode } catch { }
+            Log ("engine exited immediately, code {0} (kbd={1} bar={2})" -f $code,$kEff,$bEff) 'ERROR'
             $script:EngineP = $null
+            # Exit code 2 is the engine telling us it could not compile.
+            # That is a broken download, not a transient failure, so say so
+            # rather than leaving a dark keyboard and a vague status line.
+            if ($code -eq 2) { $script:EngineErr = 'The lighting engine is damaged. Use Check for updates, or run Install.bat again.' }
+            else             { $script:EngineErr = '' }
             return $false
         }
+        $script:EngineErr = ''
         Log ("engine started: kbd={0}/{1} bar={2}/{3} master={4}%" -f $kEff,$kLay,$bEff,$bLay,$script:Cfg.Brightness)
         return $true
     } catch {
@@ -1135,10 +1146,12 @@ function Update-Status {
         $icon.Text      = 'Keyboard Lighting'
         $miStatus.Text  = $txt
     } else {
-        $lblStatus.Text = 'Not running'
+        $msg = 'Not running'
+        if ($script:EngineErr) { $msg = $script:EngineErr }
+        $lblStatus.Text = $msg
         $dot.ForeColor  = $T::Bad
         $icon.Text      = 'Keyboard Lighting - stopped'
-        $miStatus.Text  = 'Not running'
+        $miStatus.Text  = $msg
     }
 }
 
