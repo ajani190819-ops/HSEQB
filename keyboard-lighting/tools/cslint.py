@@ -76,6 +76,96 @@ def check(name, code):
         if any(c.type == 'equals_value_clause' for c in p.children):
             problems.append((line_of(src, p.start_byte), 'C#6', 'auto-property initialiser'))
 
+    # --- duplicate member names in the same class (CS0102) -------------
+    # A field and a method that share a name is legal in most languages
+    # and illegal in C#. This is what broke the v16 engine.
+    def cls_name(n):
+        nm = n.child_by_field_name('name')
+        return src[nm.start_byte:nm.end_byte].decode() if nm else '?'
+
+    for cls in collect(tree.root_node, {'class_declaration','struct_declaration'}):
+        seen = {}
+        body = cls.child_by_field_name('body')
+        if body is None: continue
+        for member in body.children:
+            names = []
+            if member.type == 'field_declaration':
+                vd = next((c for c in member.children if c.type == 'variable_declaration'), None)
+                if vd:
+                    for dcl in vd.children:
+                        if dcl.type == 'variable_declarator':
+                            names.append(('field', src[dcl.children[0].start_byte:dcl.children[0].end_byte].decode()))
+            elif member.type == 'method_declaration':
+                nm = member.child_by_field_name('name')
+                if nm: names.append(('method', src[nm.start_byte:nm.end_byte].decode()))
+            elif member.type == 'property_declaration':
+                nm = member.child_by_field_name('name')
+                if nm: names.append(('property', src[nm.start_byte:nm.end_byte].decode()))
+            for kind, nm in names:
+                seen.setdefault(nm, []).append((kind, line_of(src, member.start_byte)))
+        for nm, uses in seen.items():
+            kinds = set(k for k, _ in uses)
+            # overloaded methods are fine; a name used as two DIFFERENT
+            # kinds of member is not
+            if len(uses) > 1 and len(kinds) > 1:
+                where = ', '.join('%s@%d' % (k, l) for k, l in uses)
+                problems.append((uses[0][1], 'CS0102',
+                                 "class %s defines '%s' twice (%s)" % (cls_name(cls), nm, where)))
+
+    # --- calls to same-class methods with the wrong argument count ------
+    classes = {}
+    def txt(n): return src[n.start_byte:n.end_byte].decode()
+    def gather(n, cls=None):
+        if n.type == 'class_declaration':
+            cls = txt(n.child_by_field_name('name'))
+            classes.setdefault(cls, {'members': set(), 'methods': {}})
+        if cls:
+            if n.type == 'field_declaration':
+                vd = next((c for c in n.children if c.type == 'variable_declaration'), None)
+                if vd:
+                    for dcl in vd.children:
+                        if dcl.type == 'variable_declarator':
+                            classes[cls]['members'].add(txt(dcl.children[0]))
+            elif n.type == 'property_declaration':
+                classes[cls]['members'].add(txt(n.child_by_field_name('name')))
+            elif n.type == 'method_declaration':
+                nm = txt(n.child_by_field_name('name'))
+                pl = n.child_by_field_name('parameters')
+                ar = len([c for c in pl.children if c.type == 'parameter']) if pl else 0
+                classes[cls]['members'].add(nm)
+                classes[cls]['methods'].setdefault(nm, set()).add(ar)
+        for c in n.children: gather(c, cls)
+    gather(tree.root_node)
+
+    def arity(n, cls=None):
+        if n.type == 'class_declaration': cls = txt(n.child_by_field_name('name'))
+        if cls and n.type == 'invocation_expression':
+            fn = n.children[0]
+            if fn.type == 'identifier' and txt(fn) in classes.get(cls, {}).get('methods', {}):
+                al = n.child_by_field_name('arguments')
+                na = len([c for c in al.children if c.type == 'argument']) if al else 0
+                decl = classes[cls]['methods'][txt(fn)]
+                if na not in decl:
+                    problems.append((line_of(src, n.start_byte), 'CS1501',
+                                     "%s(...) called with %d args, declared %s"
+                                     % (txt(fn), na, sorted(decl))))
+        for c in n.children: arity(c, cls)
+    arity(tree.root_node)
+
+    # --- gr./gz. accesses that Zone does not declare --------------------
+    if 'Zone' in classes:
+        zm = classes['Zone']['members']
+        def zchk(n):
+            if n.type == 'member_access_expression':
+                o = n.child_by_field_name('expression')
+                fl = n.child_by_field_name('name')
+                if (o is not None and fl is not None and o.type == 'identifier'
+                        and txt(o) in ('gr', 'gz') and txt(fl) not in zm):
+                    problems.append((line_of(src, n.start_byte), 'CS1061',
+                                     "Zone has no member '%s'" % txt(fl)))
+            for c in n.children: zchk(c)
+        zchk(tree.root_node)
+
     # --- non-ASCII ------------------------------------------------------
     for i, ch in enumerate(code):
         if ord(ch) > 126:

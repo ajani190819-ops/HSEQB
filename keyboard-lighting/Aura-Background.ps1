@@ -398,7 +398,7 @@ public class LampEngine {
     }
   }
 
-  void PalG(Zone gr, double f, out double r, out double g, out double b) {
+  void GroupPal(Zone gr, double f, out double r, out double g, out double b) {
     if (gr.plR == null || gr.plR.Length == 0) PrepPaletteG(gr);
     int pc = gr.plR.Length;
     f = f % 1.0; if (f < 0) f += 1.0;
@@ -794,7 +794,7 @@ public class LampEngine {
               double r, g, b;
               // Use real physical position so the gradient travels evenly across
               // the keyboard. Slot index would bunch it at the edges.
-              PalG(gr, gr.Pos[i] + phase, out r, out g, out b);
+              GroupPal(gr, gr.Pos[i] + phase, out r, out g, out b);
               SetZoneG(gr, i, r, g, b);
             }
             break;
@@ -873,7 +873,7 @@ public class LampEngine {
                 v = bd[b];
               }
               double r, g, b2;
-              PalG(gr, u, out r, out g, out b2);
+              GroupPal(gr, u, out r, out g, out b2);
               SetZoneG(gr, i, r * v, g * v, b2 * v);
             }
             break;
@@ -890,7 +890,7 @@ public class LampEngine {
                 if (on < 0) on = 0;
               }
               double r, g, b;
-              PalG(gr, u, out r, out g, out b);
+              GroupPal(gr, u, out r, out g, out b);
               SetZoneG(gr, i, r * on, g * on, b * on);
             }
             break;
@@ -903,7 +903,7 @@ public class LampEngine {
             if (w > 1.0) w = 1.0;
             w = 0.04 + 0.96 * w * w;
             double r0, g0, b0;
-            PalG(gr, t * 0.08, out r0, out g0, out b0);
+            GroupPal(gr, t * 0.08, out r0, out g0, out b0);
             for (int i = 0; i < gr.N; i++) SetZoneG(gr, i, r0 * w, g0 * w, b0 * w);
             break;
           }
@@ -916,7 +916,7 @@ public class LampEngine {
               if (v < 0) v = 0; if (v > 1) v = 1;
               v = v * v;
               double r, g, b;
-              PalG(gr, gr.Pos[i] + t * 0.05, out r, out g, out b);
+              GroupPal(gr, gr.Pos[i] + t * 0.05, out r, out g, out b);
               SetZoneG(gr, i, r * v, g * v, b * v);
             }
             break;
@@ -968,7 +968,7 @@ public class LampEngine {
             double ph = t * 6.0;
             double w = (ph - Math.Floor(ph)) < 0.5 ? 1.0 : 0.0;
             double r, g, b;
-            PalG(gr, Math.Floor(ph) * 0.13, out r, out g, out b);
+            GroupPal(gr, Math.Floor(ph) * 0.13, out r, out g, out b);
             for (int i = 0; i < gr.N; i++) SetZoneG(gr, i, r * w, g * w, b * w);
             break;
           }
@@ -981,7 +981,7 @@ public class LampEngine {
               if (rnd.NextDouble() < born) gr.Heat[i] = 0.75 + rnd.NextDouble() * 0.25;
               double v = gr.Heat[i];
               double r, g, b;
-              PalG(gr, (i * 0.137) % 1.0, out r, out g, out b);
+              GroupPal(gr, (i * 0.137) % 1.0, out r, out g, out b);
               SetZoneG(gr, i, r * v, g * v, b * v);
             }
             break;
@@ -996,7 +996,7 @@ public class LampEngine {
               ph = ph - Math.Floor(ph);
               double w = Math.Exp(-ph * 5.0);
               double r, g, b;
-              PalG(gr, gr.Pos[i] + t * 0.1, out r, out g, out b);
+              GroupPal(gr, gr.Pos[i] + t * 0.1, out r, out g, out b);
               SetZoneG(gr, i, r * w, g * w, b * w);
             }
             break;
@@ -1010,7 +1010,7 @@ public class LampEngine {
               double c = 0.5 + 0.5 * Math.Sin((u * 3.7 + t * 0.09 * gr.Dir + 0.66) * Math.PI * 2.0);
               double f = (a * 0.5 + b2 * 0.35 + c * 0.15);
               double r, g, bb;
-              PalG(gr, f, out r, out g, out bb);
+              GroupPal(gr, f, out r, out g, out bb);
               double v = 0.35 + 0.65 * f;
               SetZoneG(gr, i, r * v, g * v, bb * v);
             }
