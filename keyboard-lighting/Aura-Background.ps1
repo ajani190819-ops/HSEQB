@@ -495,10 +495,53 @@ public class LampEngine {
   byte[] frameBuf = null;
   char[] hexPairs = "0123456789abcdef".ToCharArray();
 
+  // Physical layout, written whenever it changes. gr.Pos switches between
+  // the across and loop maps when the user toggles Loop, so this cannot be
+  // written once at startup - it has to follow the live zone state.
+  public string LayoutPath = null;
+  string lastLayout = null;
+
+  void PublishLayout() {
+    if (LayoutPath == null || Groups == null || Groups.Length == 0) return;
+    System.Text.StringBuilder sb = new System.Text.StringBuilder();
+    string[] names = new string[] { "kbd", "bar" };
+    for (int gi = 0; gi < Groups.Length && gi < 2; gi++) {
+      Zone gr = Groups[gi];
+      if (gr == null || gr.N == 0) continue;
+      // Order this group's lamps by where they physically are.
+      int[] ord = new int[gr.N];
+      for (int i = 0; i < gr.N; i++) ord[i] = i;
+      for (int a2 = 1; a2 < gr.N; a2++) {
+        int key = ord[a2]; int b2 = a2 - 1;
+        while (b2 >= 0 && gr.Pos[ord[b2]] > gr.Pos[key]) { ord[b2 + 1] = ord[b2]; b2--; }
+        ord[b2 + 1] = key;
+      }
+      sb.Append(names[gi]).Append('=');
+      for (int i = 0; i < gr.N; i++) {
+        if (i > 0) sb.Append(',');
+        sb.Append(gr.Idx[ord[i]].ToString());
+      }
+      sb.Append('\n').Append(names[gi]).Append("pos=");
+      double lo = gr.Pos[ord[0]], hi = gr.Pos[ord[gr.N - 1]], sp = hi - lo;
+      for (int i = 0; i < gr.N; i++) {
+        if (i > 0) sb.Append(',');
+        double v = (sp > 0) ? (gr.Pos[ord[i]] - lo) / sp
+                            : (gr.N > 1 ? i / (double)(gr.N - 1) : 0.0);
+        sb.Append(v.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture));
+      }
+      sb.Append('\n');
+    }
+    string txt = sb.ToString();
+    if (txt == lastLayout) return;      // only write on a real change
+    lastLayout = txt;
+    try { File.WriteAllText(LayoutPath, txt); } catch { }
+  }
+
   void PublishFrame() {
     if (FramePath == null) return;
     if (Now < nextFrameAt) return;
     nextFrameAt = Now + (1.0 / (double)(FrameHz > 0 ? FrameHz : 20));
+    PublishLayout();
 
     int n = LampCount;
     // "<count>;" then 6 hex chars per lamp, in device lamp order.
@@ -2422,22 +2465,9 @@ $frameFile = Join-Path $env:LOCALAPPDATA 'KeyboardLighting\frame.txt'
 try {
     $fd = Split-Path -Parent $frameFile
     if (-not (Test-Path $fd)) { New-Item -ItemType Directory -Force -Path $fd | Out-Null }
-    $eng.FramePath = $frameFile
-    $eng.FrameHz   = 20
-} catch { }
-
-# Tell the panel how to lay the lamps out. Device index order is not the
-# visual order - the light bar runs around the chassis - so publish each
-# group's lamp indices already sorted by physical position. Written once;
-# the panel re-reads it whenever it changes.
-try {
-    $layFile = Join-Path $env:LOCALAPPDATA 'KeyboardLighting\layout.txt'
-    $pos = $spAcross
-    if ($spLoop) { $pos = $spLoop }
-    $kOrd = @($deckIdx | Sort-Object { $pos[$_] })
-    $bOrd = @($barIdx  | Sort-Object { $pos[$_] })
-    $layTxt = ('kbd=' + ($kOrd -join ',') + "`nbar=" + ($bOrd -join ','))
-    Set-Content -Path $layFile -Value $layTxt -Encoding ASCII -ErrorAction SilentlyContinue
+    $eng.FramePath  = $frameFile
+    $eng.LayoutPath = Join-Path $fd 'layout.txt'
+    $eng.FrameHz    = 20
 } catch { }
 
 if (-not $eng.Open()) {

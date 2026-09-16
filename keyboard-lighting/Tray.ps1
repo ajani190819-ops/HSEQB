@@ -864,6 +864,10 @@ $script:FrameAge   = 0
 # chassis, so drawing 4..15 in index order would scramble it.
 $script:MapKbd     = @(0,1,2,3)
 $script:MapBar     = @(4,5,6,7,8,9,10,11,12,13,14,15)
+# Real 0..1 position of each lamp within its group. The light bar's lamps
+# are clustered with wide gaps, so even spacing would misplace them.
+$script:PosKbd     = $null
+$script:PosBar     = $null
 $script:LayStamp   = -1
 
 function Read-Layout {
@@ -873,7 +877,13 @@ function Read-Layout {
         $script:LayStamp = $fi.LastWriteTimeUtc.Ticks
         foreach ($ln in (Get-Content $script:LayoutFile -ErrorAction Stop)) {
             $t = $ln.Trim()
-            if ($t -like 'kbd=*') {
+            if ($t -like 'kbdpos=*') {
+                $v = @($t.Substring(7) -split ',' | Where-Object { $_ -ne '' } | ForEach-Object { [double]$_ })
+                if ($v.Count -gt 0) { $script:PosKbd = [double[]]$v } else { $script:PosKbd = $null }
+            } elseif ($t -like 'barpos=*') {
+                $v = @($t.Substring(7) -split ',' | Where-Object { $_ -ne '' } | ForEach-Object { [double]$_ })
+                if ($v.Count -gt 0) { $script:PosBar = [double[]]$v } else { $script:PosBar = $null }
+            } elseif ($t -like 'kbd=*') {
                 $v = @($t.Substring(4) -split ',' | Where-Object { $_ -ne '' } | ForEach-Object { [int]$_ })
                 if ($v.Count -gt 0) { $script:MapKbd = $v }
             } elseif ($t -like 'bar=*') {
@@ -923,7 +933,9 @@ function Read-Frame {
             if ($ix -ge 0 -and $ix -lt $n) { $cols[$k] = $raw[$ix] }
             else { $cols[$k] = [System.Drawing.Color]::Black }
         }
-        $pbPreview.Split  = $script:MapKbd.Count
+        $pbPreview.Split    = $script:MapKbd.Count
+        $pbPreview.PosLeft  = $script:PosKbd
+        $pbPreview.PosRight = $script:PosBar
         $script:FrameCols = $cols
         $script:FrameAge  = 0
         return $true
@@ -952,7 +964,9 @@ function Get-IdleColours {
         }
         $out[$i] = $c
     }
-    $pbPreview.Split = $nk
+    $pbPreview.Split    = $nk
+    $pbPreview.PosLeft  = $script:PosKbd
+    $pbPreview.PosRight = $script:PosBar
     return $out
 }
 

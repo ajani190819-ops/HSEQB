@@ -50,7 +50,11 @@ is the keyboard, the long block on the right is the light bar. It is not
 a mock-up - the engine reports the exact colours it is sending to the
 keyboard, so the preview matches the hardware even for fire, the music
 modes and the meters. The light bar is shown in physical order around
-the chassis, not the order the lamps happen to be numbered in. If the
+the chassis, not the order the lamps happen to be numbered in, and each
+lamp is drawn where it physically sits. The light bar's twelve lamps are
+not evenly spaced - they sit in clusters of three with wide gaps - so the
+preview blends between them the way the diffuser does, rather than
+chopping the bar into twelve equal blocks. If the
 engine is not running the strip dims and the labels say OFF.
 
 * **This part is on** turns off just the section you are looking at.

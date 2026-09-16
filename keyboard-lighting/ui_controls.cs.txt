@@ -535,6 +535,11 @@ public class Preview : Control {
   // False when the engine is not publishing frames. The preview then shows
   // a dimmed idle state and says so, rather than implying it is live.
   public bool Live = true;
+  // Where each lamp physically sits, 0..1 within its own group. The light
+  // bar's lamps are clustered, not evenly spaced, so equal-width cells put
+  // colour in the wrong place. Null falls back to even spacing.
+  public double[] PosLeft = null;
+  public double[] PosRight = null;
 
   public Preview() {
     SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint |
@@ -543,13 +548,44 @@ public class Preview : Control {
     Height = 44;
   }
 
-  void Band(Graphics g, Color[] c, int from, int to, float x, float w, float y, float h) {
+  // Draw the strip by sampling along it and interpolating between the two
+  // nearest lamps, so a lamp appears at its real position and the space
+  // between two lamps is a blend rather than a hard edge. This is what the
+  // eye actually sees on the hardware: the diffuser blurs adjacent lamps.
+  void Band(Graphics g, Color[] c, int from, int to, double[] pos,
+            float x, float w, float y, float h) {
     int n = to - from;
     if (n <= 0 || w <= 0) return;
-    float cw = w / (float)n;
-    for (int i = 0; i < n; i++) {
-      using (SolidBrush b = new SolidBrush(c[from + i]))
-        g.FillRectangle(b, x + i * cw, y, cw + 1f, h);
+
+    if (n == 1) {
+      using (SolidBrush b = new SolidBrush(c[from]))
+        g.FillRectangle(b, x, y, w + 1f, h);
+      return;
+    }
+
+    // Positions for this group, normalised 0..1 and ascending.
+    double[] p = pos;
+    if (p == null || p.Length != n) {
+      p = new double[n];
+      for (int i = 0; i < n; i++) p[i] = i / (double)(n - 1);
+    }
+
+    int steps = (int)Math.Ceiling(w);
+    if (steps < 1) steps = 1;
+    float sw = w / steps;
+    int seg = 0;
+    for (int s = 0; s < steps; s++) {
+      double u = (s + 0.5) / steps;
+      while (seg < n - 2 && u > p[seg + 1]) seg++;
+      double a = p[seg], b2 = p[seg + 1];
+      double f = (b2 > a) ? (u - a) / (b2 - a) : 0.0;
+      if (f < 0) f = 0; if (f > 1) f = 1;
+      Color c0 = c[from + seg], c1 = c[from + seg + 1];
+      int rr = (int)(c0.R + (c1.R - c0.R) * f);
+      int gg = (int)(c0.G + (c1.G - c0.G) * f);
+      int bb = (int)(c0.B + (c1.B - c0.B) * f);
+      using (SolidBrush br = new SolidBrush(Color.FromArgb(rr, gg, bb)))
+        g.FillRectangle(br, x + s * sw, y, sw + 1f, h);
     }
   }
 
@@ -564,7 +600,7 @@ public class Preview : Control {
       Rectangle r0 = new Rectangle(0, 0, Width - 1, Height - 1);
       using (GraphicsPath clip = Theme.Round(r0, 8)) {
         g.SetClip(clip);
-        Band(g, Colors, 0, n, 0f, Width, 0f, Height);
+        Band(g, Colors, 0, n, PosLeft, 0f, Width, 0f, Height);
         g.ResetClip();
         using (Pen pen = new Pen(Theme.Line)) g.DrawPath(pen, clip);
       }
@@ -584,14 +620,14 @@ public class Preview : Control {
     Rectangle lr = new Rectangle(0, 0, (int)lw, barH - 1);
     using (GraphicsPath clip = Theme.Round(lr, 7)) {
       g.SetClip(clip);
-      Band(g, Colors, 0, sp, 0f, lw, 0f, barH);
+      Band(g, Colors, 0, sp, PosLeft, 0f, lw, 0f, barH);
       g.ResetClip();
       using (Pen pen = new Pen(Theme.Line)) g.DrawPath(pen, clip);
     }
     Rectangle rr2 = new Rectangle((int)(lw + gap), 0, (int)rw, barH - 1);
     using (GraphicsPath clip = Theme.Round(rr2, 7)) {
       g.SetClip(clip);
-      Band(g, Colors, sp, n, lw + gap, rw, 0f, barH);
+      Band(g, Colors, sp, n, PosRight, lw + gap, rw, 0f, barH);
       g.ResetClip();
       using (Pen pen = new Pen(Theme.Line)) g.DrawPath(pen, clip);
     }
