@@ -141,6 +141,11 @@ public class LampEngine {
   // makes every update silently do nothing.
   public byte[] CtrlOff = null;
 
+  // Channel stride within one report. Planar layouts put each colour plane
+  // Slots apart (stride 1 between lamps of the same channel); interleaved
+  // layouts store R,G,B,I together so consecutive lamps are 4 apart.
+  public bool Interleaved = false;
+
   public bool Open() {
     h = CreateFileW(DevicePath, 0xC0000000, 3, IntPtr.Zero, 3, 0, IntPtr.Zero);
     if (h == (IntPtr)(-1)) h = CreateFileW(DevicePath, 0x40000000, 3, IntPtr.Zero, 3, 0, IntPtr.Zero);
@@ -160,7 +165,7 @@ public class LampEngine {
         int lid = first + s;
         b[OffId + s*2]     = (byte)(lid & 0xFF);
         b[OffId + s*2 + 1] = (byte)((lid >> 8) & 0xFF);
-        b[OffI + s]        = (byte)MaxI;
+        b[Interleaved ? (OffI + s*4) : (OffI + s)] = (byte)MaxI;
       }
       bufs[bi] = b;
     }
@@ -214,9 +219,10 @@ public class LampEngine {
       int n = Math.Min(Slots, LampCount - first);
       for (int s = 0; s < n; s++) {
         int i = first + s;
-        b[OffR + s] = (byte)(fr[i] * MaxR / 255);
-        b[OffG + s] = (byte)(fg[i] * MaxG / 255);
-        b[OffB + s] = (byte)(fb[i] * MaxB / 255);
+        int st = Interleaved ? s*4 : s;
+        b[OffR + st] = (byte)(fr[i] * MaxR / 255);
+        b[OffG + st] = (byte)(fg[i] * MaxG / 255);
+        b[OffB + st] = (byte)(fb[i] * MaxB / 255);
       }
       b[OffFlags] = (bi == last) ? (byte)1 : (byte)0;
       HidD_SetFeature(h, b, b.Length);
@@ -418,7 +424,7 @@ $U_IDSTART=0x61; $U_IDEND=0x62; $U_AUTONOMOUS=0x71
 # DISCOVERY  (proven working; unchanged in shape)
 # ============================================================================
 Say ""
-Say ("AURA-BACKGROUND v5   effect={0}  fps={1}  speed={2}" -f $Effect,$Fps,$Speed) 'Cyan'
+Say ("AURA-BACKGROUND v6   effect={0}  fps={1}  speed={2}" -f $Effect,$Fps,$Speed) 'Cyan'
 Say ""
 
 # A laptop exposes MANY HID collections on the same VID/PID, and more than
@@ -620,9 +626,22 @@ function Probe-Off($r,[int]$usage,[int]$val) {
     for ($i=1;$i -lt $len;$i++) { if ($b[$i] -ne 0) { return $i } }
     return -1
 }
+$interleaved=$false
 if ($rMulti) {
-    $slots=[int]$rMulti.Usages[$U_RED]; if ($slots -lt 1) { $slots=1 }
     $mlen=Rpt-Len $rMulti
+
+    # ReportCount from the descriptor is the count for ONE usage entry and
+    # on this firmware it reads back as 1 even though the report really
+    # carries 8 lamps. Derive the true slot count from the report length:
+    #   len = 1 id + 1 count + 1 flags + slots*2 (lamp ids) + slots*4 (rgbi)
+    $slots=[int]$rMulti.Usages[$U_RED]; if ($slots -lt 1) { $slots=1 }
+    $byLen=[int][Math]::Floor(($mlen - 3) / 6)
+    if ($byLen -gt $slots) {
+        Say ("  Descriptor says {0} slot(s); report length implies {1}. Using {1}." -f $slots,$byLen) 'DarkGray'
+        $slots=$byLen
+    }
+    if ($slots -lt 1) { $slots=1 }
+
     $offCnt=Probe-Off $rMulti $U_LAMPCOUNT 1
     $offFlg=Probe-Off $rMulti $U_FLAGS     1
     $offId =Probe-Off $rMulti $U_LAMPID    1
@@ -630,10 +649,30 @@ if ($rMulti) {
     $offG  =Probe-Off $rMulti $U_GREEN     1
     $offB  =Probe-Off $rMulti $U_BLUE      1
     $offI  =Probe-Off $rMulti $U_INTENSITY 1
-    if ($offId -ge 0 -and $offR -ge 0 -and $offG -ge 0 -and $offB -ge 0 -and $offI -ge 0 -and
+
+    # Probe-Off reports the LAST byte HidP_SetUsageValue touched, which for
+    # a multi-instance usage is the final instance. Two layouts are possible.
+    #
+    #   planar:      R R R R R R R R G G G G G G G G B B ... I I
+    #                planes are $slots apart
+    #   interleaved: R G B I  R G B I  R G B I ...
+    #                channels are 1 apart, lamps are 4 apart
+    #
+    # Consecutive r/g/b/i offsets can only mean interleaved.
+    if ($offR -ge 0 -and $offG -eq ($offR+1) -and $offB -eq ($offG+1) -and $offI -eq ($offB+1)) {
+        $interleaved=$true
+        # Wind back from the last instance to the first.
+        $offR=$offR-($slots-1)*4; $offG=$offR+1; $offB=$offR+2; $offI=$offR+3
+        if ($offCnt -ge 0 -and $offFlg -ge 0 -and $offId -ge 0 -and $offR -gt $offId) {
+            $fast=$true
+            Say ("  Interleaved layout, {0} lamps per report." -f $slots) 'DarkGray'
+        }
+    }
+    elseif ($offId -ge 0 -and $offR -ge 0 -and $offG -ge 0 -and $offB -ge 0 -and $offI -ge 0 -and
         $offCnt -ge 0 -and $offFlg -ge 0 -and ($offI+$slots) -le $mlen -and
         $offR -eq ($offId+$slots*2) -and $offG -eq ($offR+$slots) -and
         $offB -eq ($offG+$slots) -and $offI -eq ($offB+$slots)) { $fast=$true }
+
     if (-not $fast -and $mlen -eq (3 + $slots*2 + $slots*4)) {
         $offCnt=1; $offFlg=2; $offId=3
         $offR=$offId+$slots*2; $offG=$offR+$slots; $offB=$offG+$slots; $offI=$offB+$slots
@@ -710,7 +749,7 @@ if ($Custom) {
         $first=$bi*$slots; $n=[Math]::Min($slots,$lampCount-$first); $bb2[$offCnt]=[byte]$n
         for ($s=0;$s -lt $n;$s++) { $lid=$first+$s
             $bb2[$offId+$s*2]=[byte]($lid -band 0xFF); $bb2[$offId+$s*2+1]=[byte](($lid -shr 8) -band 0xFF)
-            $bb2[$offI+$s]=[byte]$IMAX }
+            if ($interleaved) { $bb2[$offI+$s*4]=[byte]$IMAX } else { $bb2[$offI+$s]=[byte]$IMAX } }
         $mbufs+=,$bb2 } }
     $sw=[Diagnostics.Stopwatch]::StartNew()
     $ms=[int](1000/$Fps)
@@ -724,9 +763,10 @@ if ($Custom) {
                     $bb2=$mbufs[$bi]; $first=$bi*$slots
                     $n=[Math]::Min($slots,$lampCount-$first)
                     for ($s=0;$s -lt $n;$s++) { $i=$first+$s
-                        $bb2[$offR+$s]=[byte](($fr[$i]*$RMAX)/255)
-                        $bb2[$offG+$s]=[byte](($fg[$i]*$GMAX)/255)
-                        $bb2[$offB+$s]=[byte](($fb[$i]*$BMAX)/255) }
+                        $st=if ($interleaved) { $s*4 } else { $s }
+                        $bb2[$offR+$st]=[byte](($fr[$i]*$RMAX)/255)
+                        $bb2[$offG+$st]=[byte](($fg[$i]*$GMAX)/255)
+                        $bb2[$offB+$st]=[byte](($fb[$i]*$BMAX)/255) }
                     if ($bi -eq $lastB) { $bb2[$offFlg]=[byte]1 } else { $bb2[$offFlg]=[byte]0 }
                     [void][HidNative]::HidD_SetFeature($h,$bb2,$bb2.Length)
                 }
@@ -786,6 +826,7 @@ $eng.ReportId   = $rMulti.Rid
 $eng.Slots      = $slots
 $eng.ReportLen  = (Rpt-Len $rMulti)
 $eng.CtrlOff    = $ctrlOffBuf
+$eng.Interleaved = $interleaved
 $eng.OffCount   = $offCnt
 $eng.OffFlags   = $offFlg
 $eng.OffId      = $offId
