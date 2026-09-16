@@ -212,7 +212,16 @@ function Do-Identify {
         $r = Invoke-Engine -ZoneList "$z" -Colour '#FFFFFF' -Seconds $hold
         if ($r.Code -ne 0) {
             Bad "  Could not drive the keyboard (exit $($r.Code))."
-            if ($r.Err) { Bad ("  " + ($r.Err -split "`n")[0]) }
+            # Show what the engine actually said - the first line of an
+            # error is rarely the useful one, so print the lot.
+            foreach ($stream in @($r.Err, $r.Out)) {
+                if (-not $stream) { continue }
+                foreach ($l in ($stream -split "`r?`n")) {
+                    if ($l.Trim()) { Bad ("    " + $l.Trim()) }
+                }
+            }
+            Write-Host ''
+            Info 'If it says the engine is out of date, run Setup.bat first.'
             return
         }
     }

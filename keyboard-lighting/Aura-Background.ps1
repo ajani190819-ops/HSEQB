@@ -26,7 +26,8 @@ param(
                  'gradient','static','off',
                  'spectrum','vumeter','beat','pulsebass',
                  'ambient','cycle','strobe','stars','ripple','aurora',
-                 'battery','cpu','clock')]
+                 'battery','cpu','clock',
+                 'zonetest')]
     [string]$Effect = 'gradient',
 
     [string]$Colors = '#FF0000,#FF7F00,#FFFF00,#00FF00,#0000FF,#8B00FF',
@@ -2589,6 +2590,11 @@ if ($ZoneTest) {
         if ($tk -eq '') { continue }
         $iv = 0
         if ([int]::TryParse($tk, [ref]$iv) -and $iv -ge 0 -and $iv -lt $lampCount) { $want += $iv }
+    }
+    if ($want.Count -eq 0) {
+        $eng.Close()
+        Say ("  No valid zone numbers in '$ZoneTest' (device has $lampCount zones, 0..$($lampCount-1)).") 'Red'
+        exit 3
     }
     $rgb = ConvertFrom-Hex $Color
     $eng.Blank()
