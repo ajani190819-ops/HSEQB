@@ -85,7 +85,14 @@ param(
 
     # Used by Zones.ps1: light only these zone numbers, hold, then exit.
     [string]$ZoneTest = '',
-    [double]$HoldSeconds = 1.5
+    [double]$HoldSeconds = 1.5,
+
+    # What to leave the keyboard doing when this stops.
+    #   off      all lamps dark
+    #   white    plain white, so the keys stay readable
+    #   firmware hand control back and let the keyboard do its own thing
+    [ValidateSet('off','white','firmware')]
+    [string]$OnExit = 'off'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -2704,8 +2711,18 @@ try {
 }
 
 $step = 125    # 8 steps across the full range, like the firmware
+# The app asks us to stop by creating this file. Being killed outright
+# skips the cleanup below, which is what used to leave the last frame
+# frozen on the keyboard.
+$stopFile = Join-Path $stateDir 'stop.flag'
+if (Test-Path $stopFile) { Remove-Item $stopFile -Force -ErrorAction SilentlyContinue }
 try {
     while ($true) {
+        if (Test-Path $stopFile) {
+            Remove-Item $stopFile -Force -ErrorAction SilentlyContinue
+            Say "  Stop requested." 'Yellow'
+            break
+        }
         # --- resume from sleep / display wake ---
         if ($resumeOk) {
             $pe = Get-Event -SourceIdentifier 'AuraPower' -ErrorAction SilentlyContinue
@@ -2921,9 +2938,15 @@ finally {
     Unregister-Event -SourceIdentifier 'AuraPower' -ErrorAction SilentlyContinue
     Unregister-Event -SourceIdentifier 'AuraSession' -ErrorAction SilentlyContinue
     Say ""
-    Say "  Stopping. Handing lighting back to the keyboard firmware." 'Yellow'
+    switch ($OnExit) {
+        'white'    { Say "  Stopping. Leaving the keyboard plain white." 'Yellow' }
+        'firmware' { Say "  Stopping. Handing lighting back to the keyboard firmware." 'Yellow' }
+        default    { Say "  Stopping. Turning the lighting off." 'Yellow' }
+    }
     $eng.Stop()
-    $eng.Blank()
+    # Leave the keyboard in the state the user asked for. 'white' keeps the
+    # keys readable in the dark once the app is gone.
+    if ($OnExit -eq 'white') { $eng.Solid(255,255,255) } else { $eng.Blank() }
     $eng.Close()
     # Blank() publishes an all-off frame, but once we exit nothing is
     # driving the keyboard at all. Remove the file so the panel shows its
@@ -2932,7 +2955,13 @@ finally {
         $ff = Join-Path $env:LOCALAPPDATA 'KeyboardLighting\frame.txt'
         if (Test-Path $ff) { Remove-Item $ff -Force -ErrorAction SilentlyContinue }
     } catch { }
-    $h2=[HidNative]::CreateFileW($devPath,$GENRW,$SHARERW,[IntPtr]::Zero,$OPENEXIST,[uint32]0,[IntPtr]::Zero)
+    # Only hand control back to the keyboard's own firmware when that is
+    # what was asked for. Re-enabling autonomous mode makes the firmware
+    # repaint immediately, which would wipe the off/white we just set.
+    $h2 = $INVALID
+    if ($OnExit -eq 'firmware') {
+        $h2=[HidNative]::CreateFileW($devPath,$GENRW,$SHARERW,[IntPtr]::Zero,$OPENEXIST,[uint32]0,[IntPtr]::Zero)
+    }
     if ($h2 -ne $INVALID) {
         $pp2=[IntPtr]::Zero
         if ([HidNative]::HidD_GetPreparsedData($h2,[ref]$pp2)) {

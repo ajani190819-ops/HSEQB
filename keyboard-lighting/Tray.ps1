@@ -168,6 +168,7 @@ $script:Cfg = [pscustomobject]@{
     Brightness = 100          # master; this is what the Fn keys drive
     Overlay    = $true
     Link       = $false       # copy keyboard changes onto the bar
+    OnExit     = 'off'        # what the keyboard does once this app closes
     Kbd = New-GroupCfg 'Scrolling gradient' @('#FF0000','#FF7F00','#FFFF00','#00FF00','#0000FF','#8B00FF') $false
     Bar = New-GroupCfg 'Rainbow'            @('#00B4FF','#FF0066')                                         $true
 }
@@ -179,7 +180,7 @@ function Load-Cfg {
     if (-not (Test-Path $CfgFile)) { return }
     try {
         $o = Get-Content $CfgFile -Raw | ConvertFrom-Json
-        foreach ($p in 'Brightness','Overlay','Link') {
+        foreach ($p in 'Brightness','Overlay','Link','OnExit') {
             if ($null -ne $o.$p) { $script:Cfg.$p = $o.$p }
         }
         # Files written before the split had one flat set of values; load
@@ -256,11 +257,51 @@ function Write-LiveBrightness {
 }
 
 function Stop-Engine {
+    # $Graceful is for quitting: wait for the engine to put the lighting
+    # where the user wants it. A restart does not need it - the new engine
+    # repaints immediately - and waiting there would make every settings
+    # change feel sluggish.
+    param([switch]$Graceful)
+
+    # Ask first, kill second.
+    #
+    # Stop-Process -Force skips the engine's cleanup entirely, which is why
+    # quitting used to leave the last frame frozen on the keyboard. Drop a
+    # stop file instead and give it a moment to put the lighting where the
+    # user wants it and release the device properly. Force is the fallback
+    # for an engine that is wedged.
+    $procs = @()
+    try {
+        $procs = @(Get-CimInstance Win32_Process -Filter "Name='powershell.exe'" -ErrorAction SilentlyContinue |
+                   Where-Object { $_.CommandLine -like '*Aura-Background*' })
+    } catch { }
+
+    if ($Graceful -and $procs.Count -gt 0) {
+        try {
+            if (-not (Test-Path $CfgDir)) { New-Item -ItemType Directory -Force -Path $CfgDir | Out-Null }
+            Set-Content -Path (Join-Path $CfgDir 'stop.flag') -Value '1' -Encoding ASCII -ErrorAction SilentlyContinue
+        } catch { }
+
+        # The engine checks the flag once per loop, so this is quick.
+        $deadline = (Get-Date).AddSeconds(3)
+        while ((Get-Date) -lt $deadline) {
+            Start-Sleep -Milliseconds 100
+            $alive = @()
+            try {
+                $alive = @(Get-CimInstance Win32_Process -Filter "Name='powershell.exe'" -ErrorAction SilentlyContinue |
+                           Where-Object { $_.CommandLine -like '*Aura-Background*' })
+            } catch { }
+            if ($alive.Count -eq 0) { break }
+        }
+    }
+
+    # Anything still running did not stop on its own.
     try {
         Get-CimInstance Win32_Process -Filter "Name='powershell.exe'" -ErrorAction SilentlyContinue |
             Where-Object { $_.CommandLine -like '*Aura-Background*' } |
             ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
     } catch { }
+    try { Remove-Item (Join-Path $CfgDir 'stop.flag') -Force -ErrorAction SilentlyContinue } catch { }
     $script:EngineP = $null
 }
 
@@ -302,6 +343,9 @@ function Start-Engine {
     [void]$sb.Append(' -Brightness ');  [void]$sb.Append($kBrt)
     [void]$sb.Append(' -Master ');      [void]$sb.Append($mStr)
     [void]$sb.Append(' -Fps 60 -Quiet')
+    $oe = "$($script:Cfg.OnExit)"
+    if ($oe -ne 'off' -and $oe -ne 'white' -and $oe -ne 'firmware') { $oe = 'off' }
+    [void]$sb.Append(' -OnExit '); [void]$sb.Append($oe)
     if ($k.Swatches.Count -gt 0) {
         [void]$sb.Append(' -Colors "'); [void]$sb.Append(($k.Swatches -join ',')); [void]$sb.Append('"')
         [void]$sb.Append(' -Color "');  [void]$sb.Append($k.Swatches[0]); [void]$sb.Append('"')
@@ -1410,6 +1454,42 @@ $miUpdate = Add-Item 'Check for updates' {
         if ($r -eq 'Yes') { Restart-App }
     }
 }
+# What the keyboard should do once this app is closed.
+$miWhenClosed = New-Object System.Windows.Forms.ToolStripMenuItem
+$miWhenClosed.Text = 'When closed'
+$miWhenClosed.BackColor = $T::Panel2
+$miWhenClosed.ForeColor = $Txt
+[void]$menu.Items.Add($miWhenClosed)
+
+$script:ExitChoices = @{}
+function Add-ExitChoice {
+    param([string]$key, [string]$text)
+    $it = New-Object System.Windows.Forms.ToolStripMenuItem
+    $it.Text = $text
+    $it.BackColor = $T::Panel2
+    $it.ForeColor = $Txt
+    $it.Add_Click({
+        $script:Cfg.OnExit = $key
+        foreach ($kv in $script:ExitChoices.GetEnumerator()) {
+            $kv.Value.Checked = ($kv.Key -eq $key)
+        }
+        Save-Cfg
+        Log "on-exit set to $key"
+    }.GetNewClosure())
+    [void]$miWhenClosed.DropDownItems.Add($it)
+    $script:ExitChoices[$key] = $it
+}
+Add-ExitChoice 'off'      'Turn the lighting off'
+Add-ExitChoice 'white'    'Leave it plain white'
+Add-ExitChoice 'firmware' 'Let the keyboard take over'
+
+# Tick whichever one is saved.
+$script:CurExit = "$($script:Cfg.OnExit)"
+if (-not $script:ExitChoices.ContainsKey($script:CurExit)) { $script:CurExit = 'off' }
+foreach ($kv in $script:ExitChoices.GetEnumerator()) {
+    $kv.Value.Checked = ($kv.Key -eq $script:CurExit)
+}
+
 Add-Sep
 $miLog = Add-Item 'Open log file' {
     if (-not (Test-Path $LogFile)) { Set-Content -Path $LogFile -Value 'no entries yet' -Encoding UTF8 }
@@ -1420,7 +1500,7 @@ Add-Sep
 $miExit = Add-Item 'Exit' {
     Log 'exit from menu'
     $script:Quitting = $true
-    Stop-Engine
+    Stop-Engine -Graceful
     $icon.Visible = $false
     [System.Windows.Forms.Application]::Exit()
 }
@@ -1639,7 +1719,7 @@ $watch.Start()
 Log 'ready'
 [System.Windows.Forms.Application]::Run()
 
-if (-not $script:Quitting) { Stop-Engine }
+if (-not $script:Quitting) { Stop-Engine -Graceful }
 Unregister-Event -SourceIdentifier 'TrayPower' -ErrorAction SilentlyContinue
 Unregister-Event -SourceIdentifier 'TraySession' -ErrorAction SilentlyContinue
 $icon.Visible = $false

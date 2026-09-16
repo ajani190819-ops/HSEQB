@@ -106,6 +106,19 @@ tray menu shows **Restart to finish update**.
 Turn **Dynamic Lighting off** in *Settings > Personalization > Dynamic
 Lighting*, or Windows fights this app for control of the keyboard.
 
+## When you close the app
+
+Right-click the tray icon and look under **When closed**:
+
+  Turn the lighting off      dark once the app quits. This is the default.
+  Leave it plain white       keys stay readable in the dark.
+  Let the keyboard take over  hands control back to the keyboard's own
+                             firmware, so it does whatever it did before
+                             this app was installed.
+
+Quitting used to leave the last pattern frozen on the keys, because the
+lighting was being killed outright rather than asked to stop.
+
 ## If the lighting goes to the wrong places
 
 Run **Zones.bat**. It is a small checker for working out which physical
