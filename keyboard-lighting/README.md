@@ -85,15 +85,15 @@ Aura-Background.ps1 -Custom MyEffect.ps1
 
 ## Sleep
 
-When the laptop sleeps, Windows powers down the USB port and the keyboard
-comes back with its own default lighting. The app notices the wake, takes
-the keyboard back and re-applies your effect automatically, so you should
-not have to touch anything.
+Closing the lid, locking, or sleeping makes the laptop's own controller
+take the keyboard back. The app re-claims it every few seconds, so your
+effect returns by itself within about three seconds of waking. You should
+never have to restart anything.
 
 ## If something goes wrong
 
 Run **Check.bat**. It re-downloads everything and prints a diagnostic;
-the banner should say **v13**. The log file is in the tray menu under
+the banner should say **v14**. The log file is in the tray menu under
 *Open log file*.
 
 ## How it works

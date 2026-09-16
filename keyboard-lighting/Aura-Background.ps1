@@ -285,6 +285,21 @@ public class LampEngine {
     }
   }
 
+  // Tell the firmware again that WE drive the lamps. This is idempotent
+  // and cheap, and it is the only thing that reliably recovers control
+  // after the EC has taken the keyboard back (lid close, Modern Standby,
+  // display off) WITHOUT the USB device ever disappearing - in which case
+  // no write ever fails and nothing else would notice.
+  public void ReAssert() {
+    if (h == IntPtr.Zero || h == (IntPtr)(-1)) return;
+    if (CtrlOff != null) HidD_SetFeature(h, CtrlOff, CtrlOff.Length);
+    // Whatever the panel is showing is now wrong: force the next Push to
+    // resend every zone even if the computed colours are identical.
+    if (pr != null) {
+      for (int i = 0; i < LampCount; i++) { pr[i] = -1; pg[i] = -1; pb[i] = -1; }
+    }
+  }
+
   // Rebuild the connection after the device has gone away and come back.
   // Safe to call from the render thread.
   public bool Reopen() {
@@ -630,10 +645,19 @@ public class LampEngine {
     long freq = Stopwatch.Frequency;
     long per  = freq / Fps;
     long next = sw.ElapsedTicks + per;
+    double nextAssert = 0.0;
+    bool woke = false;
     try {
       while (running) {
         double now = sw.ElapsedTicks / (double)freq;
-        double dt  = now - lastNow; lastNow = now;
+        double dt  = now - lastNow;
+
+        // A frame that took far longer than it should means the machine was
+        // suspended or the thread was frozen. That is direct evidence of a
+        // wake, and unlike PowerModeChanged it works for Modern Standby.
+        if (dt > 1.5) woke = true;
+
+        lastNow = now;
         if (dt <= 0 || dt > 0.25) dt = 1.0 / Fps;
         // Accumulate phase rather than using now*Speed: that would teleport
         // the animation every time the speed slider moved.
@@ -650,9 +674,17 @@ public class LampEngine {
           }
         }
 
+        // Re-assert ownership on a slow heartbeat, and immediately after a
+        // detected wake. Costs one 51-byte feature report every 3 seconds.
+        if (woke || now >= nextAssert) {
+          ReAssert();
+          nextAssert = now + 3.0;
+          woke = false;
+        }
+
         Frame(phase, dt);
-        // Reopen() invalidates the previous-colour cache, so the first
-        // frame after a reconnect is a full repaint on its own.
+        // Reopen()/ReAssert() invalidate the previous-colour cache, so the
+        // next frame is a full repaint even for a static effect.
         Push();
 
         long remain = next - sw.ElapsedTicks;
@@ -727,7 +759,7 @@ $U_IDSTART=0x61; $U_IDEND=0x62; $U_AUTONOMOUS=0x71
 # DISCOVERY  (proven working; unchanged in shape)
 # ============================================================================
 Say ""
-Say ("AURA-BACKGROUND v13   effect={0}  fps={1}  speed={2}" -f $Effect,$Fps,$Speed) 'Cyan'
+Say ("AURA-BACKGROUND v14   effect={0}  fps={1}  speed={2}" -f $Effect,$Fps,$Speed) 'Cyan'
 Say ""
 
 # A laptop exposes MANY HID collections on the same VID/PID, and more than
@@ -1315,7 +1347,8 @@ function Set-Live([int]$level) {
 # writes on its own, but this makes it immediate rather than ~8 frames
 # later, and covers the case where the device stops ACKing without
 # actually failing.
-$resumeOk = $false
+$resumeOk  = $false
+$sessionOk = $false
 try {
     Register-ObjectEvent -InputObject ([Microsoft.Win32.SystemEvents]) `
         -EventName PowerModeChanged -SourceIdentifier 'AuraPower' `
@@ -1324,6 +1357,14 @@ try {
 } catch {
     Say "  Sleep/resume watch: unavailable." 'DarkGray'
 }
+# Lid close / lock / unlock often raises this when PowerModeChanged stays
+# silent, which is exactly the Modern Standby case.
+try {
+    Register-ObjectEvent -InputObject ([Microsoft.Win32.SystemEvents]) `
+        -EventName SessionSwitch -SourceIdentifier 'AuraSession' `
+        -ErrorAction Stop | Out-Null
+    $sessionOk = $true
+} catch { }
 
 # --- hardware backlight keys via ASUS ATK WMI ---
 $wmiOk = $false
@@ -1347,13 +1388,26 @@ try {
                 try { $mode = [string]$pe.SourceEventArgs.Mode } catch { }
                 Remove-Event -EventIdentifier $pe.EventIdentifier -ErrorAction SilentlyContinue
                 if ($mode -eq 'Resume') {
-                    # Give the HID stack a moment to re-enumerate the device
-                    # before grabbing a new handle.
-                    Start-Sleep -Milliseconds 1200
-                    $eng.DeviceLost = $true
-                    $eng.LiveDirty  = $true
+                    # Do not force a Reopen here: after Modern Standby the
+                    # handle is usually still valid and only ownership was
+                    # lost. ReAssert covers that; genuine disconnects are
+                    # still caught by failed writes in Push().
+                    Start-Sleep -Milliseconds 800
+                    $eng.ReAssert()
+                    $eng.LiveDirty = $true
                 }
                 $pe = Get-Event -SourceIdentifier 'AuraPower' -ErrorAction SilentlyContinue
+            }
+        }
+
+        # --- lock / unlock / lid ---
+        if ($sessionOk) {
+            $se = Get-Event -SourceIdentifier 'AuraSession' -ErrorAction SilentlyContinue
+            while ($se) {
+                Remove-Event -EventIdentifier $se.EventIdentifier -ErrorAction SilentlyContinue
+                $eng.ReAssert()
+                $eng.LiveDirty = $true
+                $se = Get-Event -SourceIdentifier 'AuraSession' -ErrorAction SilentlyContinue
             }
         }
 
@@ -1453,6 +1507,7 @@ try {
 finally {
     Unregister-Event -SourceIdentifier 'AuraAtk' -ErrorAction SilentlyContinue
     Unregister-Event -SourceIdentifier 'AuraPower' -ErrorAction SilentlyContinue
+    Unregister-Event -SourceIdentifier 'AuraSession' -ErrorAction SilentlyContinue
     Say ""
     Say "  Stopping. Handing lighting back to the keyboard firmware." 'Yellow'
     $eng.Stop()

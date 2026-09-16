@@ -1155,6 +1155,10 @@ try {
     Register-ObjectEvent -InputObject ([Microsoft.Win32.SystemEvents]) `
         -EventName PowerModeChanged -SourceIdentifier 'TrayPower' `
         -ErrorAction Stop | Out-Null
+    # Lid close frequently raises only this one on a modern laptop.
+    Register-ObjectEvent -InputObject ([Microsoft.Win32.SystemEvents]) `
+        -EventName SessionSwitch -SourceIdentifier 'TraySession' `
+        -ErrorAction SilentlyContinue | Out-Null
     $script:PowerOk = $true
     Log 'sleep/resume watch active'
 } catch {
@@ -1181,9 +1185,15 @@ $watch.Add_Tick({
             if ($mode -eq 'Resume') { $woke = $true }
             $pe = Get-Event -SourceIdentifier 'TrayPower' -ErrorAction SilentlyContinue
         }
+        $se = Get-Event -SourceIdentifier 'TraySession' -ErrorAction SilentlyContinue
+        while ($se) {
+            Remove-Event -EventIdentifier $se.EventIdentifier -ErrorAction SilentlyContinue
+            $woke = $true
+            $se = Get-Event -SourceIdentifier 'TraySession' -ErrorAction SilentlyContinue
+        }
     }
     if ($woke) {
-        Log 'resumed from sleep'
+        Log 'resume/session event'
         # Do NOT sleep here - this runs on the UI thread and would freeze
         # the window. Schedule the work a few ticks later instead, giving
         # the USB stack time to re-enumerate the keyboard.
@@ -1243,6 +1253,7 @@ Log 'ready'
 
 if (-not $script:Quitting) { Stop-Engine }
 Unregister-Event -SourceIdentifier 'TrayPower' -ErrorAction SilentlyContinue
+Unregister-Event -SourceIdentifier 'TraySession' -ErrorAction SilentlyContinue
 $icon.Visible = $false
 try { Remove-Item $LockFile -Force -ErrorAction SilentlyContinue } catch { }
 Log 'exited'
