@@ -18,7 +18,9 @@ $Here    = Split-Path -Parent $MyInvocation.MyCommand.Path
 $SelfPath = $MyInvocation.MyCommand.Path
 $Engine  = Join-Path $Here 'Aura-Background.ps1'
 $script:SkipSave = $false
+$script:Suppress = $true   # no auto-apply until the form has finished loading
 $CfgDir  = Join-Path $env:LOCALAPPDATA 'KeyboardLighting'
+$LiveFile = Join-Path $CfgDir 'live.txt'
 $CfgFile = Join-Path $CfgDir 'panel.json'
 $TaskName = 'KeyboardLighting'
 
@@ -62,6 +64,7 @@ function Save-Config {
         Mirror     = $chkMirror.Checked
         Reverse    = $chkReverse.Checked
         Equalise   = $chkEq.Checked
+        Loop       = $chkLoop.Checked
     }
     try { $o | ConvertTo-Json -Depth 4 | Set-Content -Path $CfgFile -Encoding UTF8 } catch { }
 }
@@ -77,6 +80,7 @@ function Load-Config {
         $chkMirror.Checked  = [bool]$o.Mirror
         $chkReverse.Checked = [bool]$o.Reverse
         if ($null -ne $o.Equalise) { $chkEq.Checked = [bool]$o.Equalise }
+        if ($null -ne $o.Loop)     { $chkLoop.Checked = [bool]$o.Loop }
     } catch { }
 }
 
@@ -117,7 +121,19 @@ function Get-EngineArgs {
     if ($chkReverse.Checked) { $a += '-Reverse' }
     $eqv = if ($chkEq.Checked) { 'on' } else { 'off' }
     $a += '-Equalise'; $a += $eqv
+    $lay = if ($chkLoop.Checked) { 'loop' } else { 'across' }
+    $a += '-Layout'; $a += $lay
     return $a
+}
+
+# Write the live brightness file. A running engine polls this and applies
+# it within ~120ms, so the slider works without restarting anything.
+function Set-LiveBrightness([int]$pct) {
+    try {
+        if (-not (Test-Path $CfgDir)) { New-Item -ItemType Directory -Force -Path $CfgDir | Out-Null }
+        $lvl = [int]([Math]::Round($pct * 10))
+        Set-Content -Path $LiveFile -Value $lvl -Encoding ASCII -ErrorAction SilentlyContinue
+    } catch { }
 }
 
 function Test-IsAdmin {
@@ -186,7 +202,7 @@ $acc   = [System.Drawing.Color]::FromArgb(0,180,255)
 
 $form = New-Object System.Windows.Forms.Form
 $form.Text            = 'Keyboard Lighting'
-$form.ClientSize      = New-Object System.Drawing.Size(462, 660)
+$form.ClientSize      = New-Object System.Drawing.Size(462, 700)
 $form.StartPosition   = 'CenterScreen'
 $form.FormBorderStyle = 'FixedSingle'
 $form.MaximizeBox     = $false
@@ -386,7 +402,11 @@ $pbPreview.Add_Paint({
     # The preview is a smooth strip: it shows the gradient as it travels
     # across the physical width, which is what the keyboard now does.
     for ($i = 0; $i -lt $n; $i++) {
-        $f = ((($i / [double]($n - 1)) + $script:phase) % 1.0) * $pc
+        # 'Wrap around the light bar' means the gradient covers a full loop,
+        # so the strip shows one complete cycle end to end.
+        $u0 = $i / [double]($n - 1)
+        if ($chkLoop -and $chkLoop.Checked) { $u0 = $i / [double]$n }
+        $f = (($u0 + $script:phase) % 1.0) * $pc
         if ($f -lt 0) { $f += $pc }
         $a = [int][Math]::Floor($f)
         $u = $f - $a
@@ -451,6 +471,8 @@ $trkBright.BackColor = $bg
 $trkBright.Add_ValueChanged({
     $lblBrt.Text = 'BRIGHTNESS     {0}%' -f $trkBright.Value
     $pbPreview.Invalidate()
+    # Live: nudge the running engine instead of making the user re-Apply.
+    Set-LiveBrightness $trkBright.Value
 })
 $form.Controls.Add($trkBright)
 
@@ -469,6 +491,15 @@ $chkReverse.Location  = New-Object System.Drawing.Point(210, $y)
 $chkReverse.Size      = New-Object System.Drawing.Size(170, 24)
 $chkReverse.ForeColor = $fg
 $form.Controls.Add($chkReverse)
+
+$y += 30
+$chkLoop = New-Object System.Windows.Forms.CheckBox
+$chkLoop.Text      = 'Wrap around the light bar'
+$chkLoop.Location  = New-Object System.Drawing.Point(24, $y)
+$chkLoop.Size      = New-Object System.Drawing.Size(280, 24)
+$chkLoop.ForeColor = $fg
+$chkLoop.Checked   = $true
+$form.Controls.Add($chkLoop)
 
 $y += 30
 $chkEq = New-Object System.Windows.Forms.CheckBox
@@ -547,6 +578,28 @@ $cboEffect.Add_SelectedIndexChanged({
     Save-Config
 })
 
+# ---- auto-apply -----------------------------------------------------------
+# Effect, colours and the layout/equalise toggles need the engine restarted.
+# Do it automatically on a short debounce so rapid changes don't thrash it.
+$script:ReapplyTimer = New-Object System.Windows.Forms.Timer
+$script:ReapplyTimer.Interval = 450
+$script:ReapplyTimer.Add_Tick({
+    $script:ReapplyTimer.Stop()
+    if ($script:Running -and -not $script:Running.HasExited) { Apply-Lighting }
+})
+function Request-Reapply {
+    if ($script:Suppress) { return }
+    $script:ReapplyTimer.Stop()
+    $script:ReapplyTimer.Start()
+}
+
+$cboEffect.Add_SelectedIndexChanged({ Request-Reapply })
+$chkLoop.Add_CheckedChanged({   $pbPreview.Invalidate(); Request-Reapply })
+$chkEq.Add_CheckedChanged({     $pbPreview.Invalidate(); Request-Reapply })
+$chkMirror.Add_CheckedChanged({ Request-Reapply })
+$chkReverse.Add_CheckedChanged({ $pbPreview.Invalidate(); Request-Reapply })
+$trkSpeed.Add_ValueChanged({    Request-Reapply })
+
 $btnApply.Add_Click({ Apply-Lighting })
 $btnStop.Add_Click({ Set-AllOff })
 
@@ -590,6 +643,7 @@ $form.Add_Shown({
     $lblBrt.Text = 'BRIGHTNESS     {0}%' -f $trkBright.Value
     try { $chkAuto.Checked = [bool](Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue) } catch { }
     $timer.Start()
+    $script:Suppress = $false      # loading done; auto-apply is live now
 })
 
 $btnUpd.Add_LinkClicked({

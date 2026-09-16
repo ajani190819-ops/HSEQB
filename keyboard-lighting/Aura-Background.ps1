@@ -49,7 +49,12 @@ param(
     # Even out the apparent brightness of the palette so no one colour
     # (yellow especially) drowns out the rest. On by default.
     [ValidateSet('on','off')]
-    [string]$Equalise = 'on'
+    [string]$Equalise = 'on',
+
+    # across = left-to-right. loop = travels around the chassis perimeter,
+    # so the light bar genuinely circles instead of pulsing as one block.
+    [ValidateSet('across','loop')]
+    [string]$Layout = 'loop'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -332,6 +337,11 @@ public class LampEngine {
   // Set to true to even out the palette so no single colour dominates.
   public bool Equalise = true;
 
+  // Live control. The panel writes a small file; the engine picks it up
+  // without restarting, so changes apply instantly.
+  public volatile int  LiveBrightness = -1;   // 0..1000, -1 = untouched
+  public volatile bool LiveDirty = false;
+
   // Per-stop gain applied in linear light, computed once at startup.
   double[] palGain;
   double[] plR, plG, plB;    // palette in linear light
@@ -414,6 +424,11 @@ public class LampEngine {
   void Frame(double t) { Frame(t, 1.0 / Fps); }
 
   void Frame(double t, double dt) {
+    if (LiveDirty) {
+      int lb = LiveBrightness;
+      if (lb >= 0) Brightness = lb / 1000.0;
+      LiveDirty = false;
+    }
     int N = LampCount;
     double dir = Reverse ? -1.0 : 1.0;
 
@@ -596,7 +611,7 @@ $INVALID=[IntPtr](-1); $HIDOK=0x00110000
 $GENRW=[uint32]3221225472; $GENW=[uint32]1073741824
 $SHARERW=[uint32]3; $OPENEXIST=[uint32]3
 
-$U_LAMPCOUNT=0x03; $U_LAMPID=0x21; $U_POSX=0x23
+$U_LAMPCOUNT=0x03; $U_LAMPID=0x21; $U_POSX=0x23; $U_POSY=0x24
 $U_REDLVL=0x28; $U_GRNLVL=0x29; $U_BLULVL=0x2A; $U_INTLVL=0x2B
 $U_RED=0x51; $U_GREEN=0x52; $U_BLUE=0x53; $U_INTENSITY=0x54; $U_FLAGS=0x55
 $U_IDSTART=0x61; $U_IDEND=0x62; $U_AUTONOMOUS=0x71
@@ -605,7 +620,7 @@ $U_IDSTART=0x61; $U_IDEND=0x62; $U_AUTONOMOUS=0x71
 # DISCOVERY  (proven working; unchanged in shape)
 # ============================================================================
 Say ""
-Say ("AURA-BACKGROUND v8   effect={0}  fps={1}  speed={2}" -f $Effect,$Fps,$Speed) 'Cyan'
+Say ("AURA-BACKGROUND v9   effect={0}  fps={1}  speed={2}" -f $Effect,$Fps,$Speed) 'Cyan'
 Say ""
 
 # A laptop exposes MANY HID collections on the same VID/PID, and more than
@@ -767,14 +782,16 @@ if ($lampCount -le 0) { $lampCount=16 }
 
 $order=@(0..($lampCount-1))
 $posX=New-Object int[] $lampCount
-for ($i=0;$i -lt $lampCount;$i++) { $posX[$i]=$i*1000 }
+$posY=New-Object int[] $lampCount
+for ($i=0;$i -lt $lampCount;$i++) { $posX[$i]=$i*1000; $posY[$i]=0 }
 if ($rReq -and $rResp) {
     $pos=New-Object object[] $lampCount
     for ($i=0;$i -lt $lampCount;$i++) {
         $q=New-Rpt $rReq; Set-Val $rReq $q $U_LAMPID $i; [void](Send-Rpt $rReq $q)
-        $rb=New-Rpt $rResp; $x=$i*1000
+        $rb=New-Rpt $rResp; $x=$i*1000; $y=0
         if ([HidNative]::HidD_GetFeature($h,$rb,$rb.Length)) {
             $gx=Get-Val $rResp $rb $U_POSX; if ($null -ne $gx) { $x=$gx }
+            $gy=Get-Val $rResp $rb $U_POSY; if ($null -ne $gy) { $y=$gy }
             if ($i -eq 0) {
                 $v=Get-Val $rResp $rb $U_REDLVL; if ($v) { $RMAX=$v }
                 $v=Get-Val $rResp $rb $U_GRNLVL; if ($v) { $GMAX=$v }
@@ -782,7 +799,7 @@ if ($rReq -and $rResp) {
                 $v=Get-Val $rResp $rb $U_INTLVL; if ($v) { $IMAX=$v }
             }
         }
-        $posX[$i]=$x
+        $posX[$i]=$x; $posY[$i]=$y
         $pos[$i]=[pscustomobject]@{Idx=$i;X=$x}
     }
     $order=@($pos|Sort-Object X|ForEach-Object{$_.Idx})
@@ -1035,15 +1052,54 @@ if ($minUpdUs -gt 0) {
 }
 $eng.Fps        = $fpsCap
 
-# Normalised physical position per slot: 0.0 far left, 1.0 far right.
+# ---- where each zone sits, as a number the effects can travel along ----
+#
+# -Layout across : left-to-right only. Zones stacked at the same X (the
+#                  light-bar corners) therefore all share a colour.
+# -Layout loop   : distance walked around the CHASSIS PERIMETER. This is
+#                  what makes a gradient actually circle the light bar
+#                  instead of flashing the whole bar at once.
 $xs = @($order | ForEach-Object { $posX[$_] })
+$ys = @($order | ForEach-Object { $posY[$_] })
 $xmin = ($xs | Measure-Object -Minimum).Minimum
 $xmax = ($xs | Measure-Object -Maximum).Maximum
-$span = $xmax - $xmin
+$ymin = ($ys | Measure-Object -Minimum).Minimum
+$ymax = ($ys | Measure-Object -Maximum).Maximum
+$spanX = $xmax - $xmin
+$spanY = $ymax - $ymin
+
 $sp = New-Object double[] $lampCount
-for ($s=0; $s -lt $lampCount; $s++) {
-    if ($span -gt 0) { $sp[$s] = ($xs[$s] - $xmin) / [double]$span }
-    else { $sp[$s] = if ($lampCount -gt 1) { $s / [double]($lampCount-1) } else { 0.0 } }
+
+if ($Layout -eq 'loop' -and $spanX -gt 0 -and $spanY -gt 0) {
+    # Walk the rectangle clockwise from the top-left corner.
+    $perim = 2.0 * ($spanX + $spanY)
+    $d = New-Object double[] $lampCount
+    # Zones sitting well inside the rectangle are the keyboard deck, not the
+    # light bar. Nearest-edge would scatter that row around the loop, so
+    # project interior zones onto the top edge by X and keep the row intact.
+    $inner = 0.12 * [Math]::Min($spanX, $spanY)
+    for ($s=0; $s -lt $lampCount; $s++) {
+        $x = $xs[$s] - $xmin
+        $y = $ys[$s] - $ymin
+        $dTop = $y; $dBot = $spanY - $y; $dLeft = $x; $dRight = $spanX - $x
+        $m = [Math]::Min([Math]::Min($dTop,$dBot),[Math]::Min($dLeft,$dRight))
+        if     ($m -gt $inner)  { $d[$s] = $x }                                      # interior
+        elseif ($m -eq $dTop)   { $d[$s] = $x }
+        elseif ($m -eq $dRight) { $d[$s] = $spanX + $y }
+        elseif ($m -eq $dBot)   { $d[$s] = $spanX + $spanY + ($spanX - $x) }
+        else                    { $d[$s] = $spanX + $spanY + $spanX + ($spanY - $y) }
+    }
+    for ($s=0; $s -lt $lampCount; $s++) { $sp[$s] = $d[$s] / $perim }
+    Say "  Layout: loop (gradient travels around the chassis)." 'DarkGray'
+}
+else {
+    for ($s=0; $s -lt $lampCount; $s++) {
+        if ($spanX -gt 0) { $sp[$s] = ($xs[$s] - $xmin) / [double]$spanX }
+        else {
+            $sp[$s] = if ($lampCount -gt 1) { $s / [double]($lampCount-1) } else { 0.0 }
+        }
+    }
+    if ($Layout -eq 'loop') { Say "  Layout: loop requested but zones are in a line; using across." 'Yellow' }
 }
 $eng.SlotPos    = $sp
 $eng.Mirror     = [bool]$Mirror
@@ -1077,10 +1133,87 @@ Say (" Running at {0} fps on a compiled thread. Ctrl+C to stop." -f $eng.Fps) 'G
 Say ""
 
 $eng.Start()
+
+# ---------------------------------------------------------------------------
+# LIVE CONTROL
+#
+# Two ways to change brightness while the effect is running:
+#
+#  1. The keyboard's own backlight keys. ASUS fires WMI events 0xC4 (up),
+#     0xC5 (down) and 0xC7 (toggle) from the ATK driver. We watch for those
+#     and move our own brightness, so the hardware keys keep working even
+#     though the firmware is not driving the LEDs any more.
+#
+#  2. A tiny state file the control panel writes. Lets the panel change
+#     brightness without killing and relaunching the engine.
+# ---------------------------------------------------------------------------
+$stateDir  = Join-Path $env:LOCALAPPDATA 'KeyboardLighting'
+if (-not (Test-Path $stateDir)) { New-Item -ItemType Directory -Force -Path $stateDir | Out-Null }
+$liveFile  = Join-Path $stateDir 'live.txt'
+$script:LiveLevel = [int]([Math]::Round($Brightness * 1000))
+
+function Set-Live([int]$level) {
+    if ($level -lt 0)    { $level = 0 }
+    if ($level -gt 1000) { $level = 1000 }
+    $script:LiveLevel = $level
+    $eng.LiveBrightness = $level
+    $eng.LiveDirty = $true
+    try { Set-Content -Path $liveFile -Value $level -Encoding ASCII -ErrorAction SilentlyContinue } catch { }
+}
+
+# --- hardware backlight keys via ASUS ATK WMI ---
+$wmiOk = $false
 try {
-    while ($true) { Start-Sleep -Seconds 1 }
+    Register-WmiEvent -Class AsusAtkWmiEvent -Namespace 'root\wmi' `
+        -SourceIdentifier 'AuraAtk' -ErrorAction Stop | Out-Null
+    $wmiOk = $true
+    Say "  Keyboard backlight keys: active (Fn brightness keys adjust this effect)." 'Green'
+} catch {
+    Say "  Keyboard backlight keys: unavailable (ASUS ATK WMI not present)." 'DarkGray'
+}
+
+$step = 125    # 8 steps across the full range, like the firmware
+try {
+    while ($true) {
+        if ($wmiOk) {
+            $ev = Get-Event -SourceIdentifier 'AuraAtk' -ErrorAction SilentlyContinue
+            while ($ev) {
+                $code = 0
+                try { $code = [int]$ev.SourceEventArgs.NewEvent.EventID } catch { }
+                Remove-Event -EventIdentifier $ev.EventIdentifier -ErrorAction SilentlyContinue
+                switch ($code) {
+                    0xC4 { Set-Live ($script:LiveLevel + $step) }
+                    0xC5 { Set-Live ($script:LiveLevel - $step) }
+                    0xC7 {
+                        $nl = 0
+                        if ($script:LiveLevel -le 0) { $nl = 1000 }
+                        Set-Live $nl
+                    }
+                }
+                $ev = Get-Event -SourceIdentifier 'AuraAtk' -ErrorAction SilentlyContinue
+            }
+        }
+
+        # --- panel-written state file ---
+        if (Test-Path $liveFile) {
+            try {
+                $txt = (Get-Content $liveFile -Raw -ErrorAction Stop).Trim()
+                $val = 0
+                if ([int]::TryParse($txt, [ref]$val)) {
+                    if ($val -ne $script:LiveLevel) {
+                        $script:LiveLevel = $val
+                        $eng.LiveBrightness = $val
+                        $eng.LiveDirty = $true
+                    }
+                }
+            } catch { }
+        }
+
+        Start-Sleep -Milliseconds 120
+    }
 }
 finally {
+    Unregister-Event -SourceIdentifier 'AuraAtk' -ErrorAction SilentlyContinue
     Say ""
     Say "  Stopping. Handing lighting back to the keyboard firmware." 'Yellow'
     $eng.Stop()
