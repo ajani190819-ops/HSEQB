@@ -421,25 +421,83 @@ Say ""
 Say ("AURA-BACKGROUND v3   effect={0}  fps={1}  speed={2}" -f $Effect,$Fps,$Speed) 'Cyan'
 Say ""
 
-$devPath=$null
+# A laptop exposes MANY HID collections on the same VID/PID, and more than
+# one of them can declare the Lighting page (0x59). Taking the first match
+# picks the wrong collection, so score every candidate and keep the one
+# that really carries a LampArray: it must advertise a lamp count, a
+# multi-update report and an attributes report.
+function Test-LampCandidate([string]$path) {
+    $res=[pscustomobject]@{ Ok=$false; Score=0; FeatLen=0 }
+    $t=[HidNative]::CreateFileW($path,[uint32]0,$SHARERW,[IntPtr]::Zero,$OPENEXIST,[uint32]0,[IntPtr]::Zero)
+    if ($t -eq $INVALID) { return $res }
+    $tpp=[IntPtr]::Zero
+    if (-not [HidNative]::HidD_GetPreparsedData($t,[ref]$tpp)) {
+        [void][HidNative]::CloseHandle($t); return $res
+    }
+    try {
+        $c=New-Object byte[] 64
+        if ([HidNative]::HidP_GetCaps($tpp,$c) -ne $HIDOK) { return $res }
+        if ([BitConverter]::ToUInt16($c,2) -ne 0x59) { return $res }
+
+        $fl=[int][BitConverter]::ToUInt16($c,8)
+        $res.FeatLen=$fl
+
+        # Walk this collection's feature value caps looking for the
+        # usages that define a real LampArray.
+        # offset 60 = NumberFeatureValueCaps (same offset the main
+        # discovery path uses; do not change without checking HIDP_CAPS)
+        $nfc=[int][BitConverter]::ToUInt16($c,60)
+        if ($nfc -le 0) { return $res }
+        $n=[uint16]$nfc; $buf=New-Object byte[] (72*$nfc)
+        if ([HidNative]::HidP_GetValueCaps(2,$buf,[ref]$n,$tpp) -ne $HIDOK) { return $res }
+
+        $seen=@{}
+        for ($i=0;$i -lt [int]$n;$i++) {
+            $o=$i*72
+            if ([BitConverter]::ToUInt16($buf,$o) -ne 0x59) { continue }
+            $isR=$buf[$o+12]
+            $u1=[int][BitConverter]::ToUInt16($buf,$o+56)
+            $u2=if ($isR -ne 0) { [int][BitConverter]::ToUInt16($buf,$o+58) } else { $u1 }
+            for ($u=$u1; $u -le $u2; $u++) { $seen[$u]=$true }
+        }
+        $sc=0
+        if ($seen.ContainsKey($U_LAMPCOUNT)) { $sc+=4 }   # attributes report
+        if ($seen.ContainsKey($U_RED))       { $sc+=3 }   # an update report
+        if ($seen.ContainsKey($U_LAMPID))    { $sc+=2 }
+        if ($seen.ContainsKey($U_AUTONOMOUS)){ $sc+=2 }   # control report
+        if ($seen.ContainsKey($U_POSX))      { $sc+=1 }   # attributes response
+        $res.Score=$sc
+        # Require at least a lamp count and a colour channel to qualify.
+        $res.Ok = ($seen.ContainsKey($U_LAMPCOUNT) -and $seen.ContainsKey($U_RED))
+    }
+    finally {
+        [void][HidNative]::HidD_FreePreparsedData($tpp)
+        [void][HidNative]::CloseHandle($t)
+    }
+    return $res
+}
+
+$devPath=$null; $devName=$null; $bestScore=-1
+$cands=@()
 foreach ($d in (Get-CimInstance Win32_PnPEntity -Filter "PNPDeviceID LIKE 'HID%'" -ErrorAction SilentlyContinue)) {
     $id=$d.PNPDeviceID
     if ([string]::IsNullOrWhiteSpace($id)) { continue }
     $p='\\?\'+$id.Replace('\','#').ToLower()+'#'+$HIDGUID
-    $t=[HidNative]::CreateFileW($p,[uint32]0,$SHARERW,[IntPtr]::Zero,$OPENEXIST,[uint32]0,[IntPtr]::Zero)
-    if ($t -eq $INVALID) { continue }
-    $tpp=[IntPtr]::Zero
-    if ([HidNative]::HidD_GetPreparsedData($t,[ref]$tpp)) {
-        $c=New-Object byte[] 64
-        if ([HidNative]::HidP_GetCaps($tpp,$c) -eq $HIDOK -and [BitConverter]::ToUInt16($c,2) -eq 0x59) {
-            $devPath=$p; Say ("  Device: {0}" -f $d.Name) 'Green'
-        }
-        [void][HidNative]::HidD_FreePreparsedData($tpp)
-    }
-    [void][HidNative]::CloseHandle($t)
-    if ($devPath) { break }
+    $r=Test-LampCandidate $p
+    if ($r.Score -gt 0) { $cands+=[pscustomobject]@{Name=$d.Name;Path=$p;Score=$r.Score;Ok=$r.Ok;FeatLen=$r.FeatLen} }
+    if ($r.Ok -and $r.Score -gt $bestScore) { $bestScore=$r.Score; $devPath=$p; $devName=$d.Name }
 }
+
+if ($cands.Count -gt 1) {
+    Say ("  {0} lighting-page collections found; picking the best." -f $cands.Count) 'DarkGray'
+    foreach ($c in ($cands | Sort-Object -Property Score -Descending)) {
+        $mark=if ($c.Path -eq $devPath) { '->' } else { '  ' }
+        Say ("   {0} score {1}  featlen {2}  {3}" -f $mark,$c.Score,$c.FeatLen,$c.Name) 'DarkGray'
+    }
+}
+
 if (-not $devPath) { Write-Host "  No LampArray HID interface found." -ForegroundColor Red; return }
+Say ("  Device: {0}" -f $devName) 'Green'
 
 $h=[HidNative]::CreateFileW($devPath,$GENRW,$SHARERW,[IntPtr]::Zero,$OPENEXIST,[uint32]0,[IntPtr]::Zero)
 if ($h -eq $INVALID) { $h=[HidNative]::CreateFileW($devPath,$GENW,$SHARERW,[IntPtr]::Zero,$OPENEXIST,[uint32]0,[IntPtr]::Zero) }
@@ -687,7 +745,23 @@ if ($Custom) {
 # ============================================================================
 if (-not $fast) {
     Write-Host "  Could not resolve the multi-update report layout." -ForegroundColor Red
-    Write-Host "  Run Find-Lamps.ps1 and send me the report map." -ForegroundColor Red
+    Write-Host "" -ForegroundColor Red
+    Write-Host "  Diagnostic detail:" -ForegroundColor Yellow
+    Write-Host ("    feature report length : {0}" -f $featLen)
+    Write-Host ("    output report length  : {0}" -f $outLen)
+    Write-Host ("    lamp count            : {0}" -f $lampCount)
+    if ($rMulti) {
+        Write-Host ("    multi-update report   : id {0}, type {1}, len {2}" -f $rMulti.Rid,$rMulti.Type,(Rpt-Len $rMulti))
+        Write-Host ("    slots (red count)     : {0}" -f $slots)
+        Write-Host ("    expected len for spec : {0}" -f (3 + $slots*2 + $slots*4))
+        Write-Host ("    probed offsets        : cnt={0} flg={1} id={2} r={3} g={4} b={5} i={6}" -f `
+                    $offCnt,$offFlg,$offId,$offR,$offG,$offB,$offI)
+    } else {
+        Write-Host "    multi-update report   : NOT FOUND" -ForegroundColor Red
+    }
+    Write-Host ("    reports discovered    : {0}" -f (($reports.Keys | Sort-Object) -join ', '))
+    Write-Host ""
+    Write-Host "  Copy the lines above and send them to me." -ForegroundColor Yellow
     [void][HidNative]::HidD_FreePreparsedData($pp); [void][HidNative]::CloseHandle($h)
     return
 }
