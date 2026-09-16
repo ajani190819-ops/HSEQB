@@ -15,6 +15,8 @@ $Files = @(
     'Lighting-Panel.bat',
     'Update.bat',
     'Update.ps1',
+    'Check.bat',
+    'Check.ps1',
     'MyEffect.ps1',
     'Find-Lamps.ps1',
     'Install-Autostart.ps1',

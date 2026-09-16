@@ -530,7 +530,7 @@ $btnUpd.Add_LinkClicked({
     $btnUpd.Text = 'Checking...'
     $form.Refresh()
     $base  = 'https://raw.githubusercontent.com/ajani190819-ops/HSEQB/arena/01a0a5d4-hseqb/keyboard-lighting'
-    $files = @('Aura-Background.ps1','Lighting-Panel.ps1','Lighting-Panel.bat','Update.bat','Update.ps1','MyEffect.ps1','Find-Lamps.ps1')
+    $files = @('Aura-Background.ps1','Lighting-Panel.ps1','Lighting-Panel.bat','Update.bat','Update.ps1','Check.bat','Check.ps1','MyEffect.ps1','Find-Lamps.ps1')
     $changed = @(); $failed = @()
     try {
         [Net.ServicePointManager]::SecurityProtocol = 'Tls12'
