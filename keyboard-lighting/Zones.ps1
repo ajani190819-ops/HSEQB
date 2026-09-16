@@ -233,8 +233,16 @@ function Do-Correct {
     param($lay)
     Head 'Correct the map'
 
-    Info 'Type the zone numbers for each group, separated by commas,'
-    Info 'in the order they physically appear from LEFT to RIGHT.'
+    Info 'Type the zone numbers for each group, separated by commas.'
+    Info ''
+    Info 'Keyboard: left to right.'
+    Info 'Light bar: the order a light would travel if it went all the'
+    Info 'way round the bar and back to the start. Do not repeat the'
+    Info 'first number at the end - it joins up on its own.'
+    Info ''
+    Info 'Example for a bar that goes up one side and back the other:'
+    Info '  4,5,7,9,11,13,15,14,12,10,8,6'
+    Info ''
     Info 'Press Enter on its own to keep what is there now.'
     Write-Host ''
 
@@ -245,6 +253,13 @@ function Do-Correct {
 
     $kbd = if ($k.Trim()) { @($k -split ',' | Where-Object { $_.Trim() } | ForEach-Object { [int]$_.Trim() }) } else { @($lay.Kbd) }
     $bar = if ($b.Trim()) { @($b -split ',' | Where-Object { $_.Trim() } | ForEach-Object { [int]$_.Trim() }) } else { @($lay.Bar) }
+
+    # Listing the first zone again at the end is a natural way to show a
+    # loop, but it would double that lamp. Drop it and say so.
+    if ($bar.Count -gt 1 -and $bar[0] -eq $bar[-1]) {
+        Info ("Removed the repeated {0} at the end - the ring closes by itself." -f $bar[0])
+        $bar = @($bar[0..($bar.Count - 2)])
+    }
 
     # Sanity checks, so a typo cannot leave zones dark or doubled.
     $all = @($kbd) + @($bar)

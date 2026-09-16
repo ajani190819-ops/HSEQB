@@ -2445,12 +2445,34 @@ if ($deckIdx.Count -eq 0 -or $barIdx.Count -eq 0) {
 }
 
 function New-Zone {
-    param([string]$Name, $Members)
+    # $UseListOrder: take the travel order straight from the order the
+    # members were listed in, rather than from the geometry the driver
+    # worked out. This is what makes a hand-written ring order in
+    # zonemap.json actually do something - without it the members were
+    # reordered by their computed positions and the list was ignored.
+    param([string]$Name, $Members, [switch]$UseListOrder)
     $z = New-Object Zone
     $z.Name = $Name
     $z.Idx  = [int[]]@($Members)
     $n = $z.Idx.Length
     if ($n -eq 0) { return $z }
+
+    if ($UseListOrder) {
+        # Spread evenly along the sequence given. On a ring the last lamp
+        # must not land on 1.0 - it sits one step before the seam, so the
+        # pattern carries on round instead of snapping back.
+        $acrL = New-Object double[] $n
+        $lopL = New-Object double[] $n
+        for ($k = 0; $k -lt $n; $k++) {
+            if ($n -gt 1) { $acrL[$k] = $k / [double]($n - 1) } else { $acrL[$k] = 0.0 }
+            $lopL[$k] = $k / [double]$n
+        }
+        $z.PosAcross = $acrL
+        $z.PosLoop   = $lopL
+        $z.Pos       = $acrL
+        $z.Alloc()
+        return $z
+    }
 
     # Re-normalise both travel maps so each group spans a full 0..1 on its
     # own. Without this the deck would only ever use the 0.05..0.23 slice
@@ -2492,6 +2514,7 @@ function New-Zone {
 # the escape hatch for a machine whose zones are grouped or ordered wrongly.
 $zoneMapFile = Join-Path $env:LOCALAPPDATA 'KeyboardLighting\zonemap.json'
 $zoneRingOverride = $null
+$zoneOrderFromUser = $false
 if (Test-Path $zoneMapFile) {
     try {
         $zm = Get-Content $zoneMapFile -Raw | ConvertFrom-Json
@@ -2507,6 +2530,7 @@ if (Test-Path $zoneMapFile) {
             $barIdx = New-Object System.Collections.ArrayList
             foreach ($v in $okB) { [void]$barIdx.Add($v) }
             if ($null -ne $zm.BarRing) { $zoneRingOverride = [bool]$zm.BarRing }
+            $zoneOrderFromUser = $true
             Say "  Using your saved zone map (Zones.ps1). Delete zonemap.json to go back." 'Yellow'
         } else {
             Say "  Saved zone map looks wrong (empty or repeated zones); ignoring it." 'Yellow'
@@ -2516,8 +2540,8 @@ if (Test-Path $zoneMapFile) {
     }
 }
 
-$zDeck = New-Zone 'deck' $deckIdx
-$zBar  = New-Zone 'bar'  $barIdx
+$zDeck = New-Zone 'deck' $deckIdx -UseListOrder:$zoneOrderFromUser
+$zBar  = New-Zone 'bar'  $barIdx  -UseListOrder:$zoneOrderFromUser
 if ($null -ne $zoneRingOverride) { $zBar.Loop = $zoneRingOverride }
 if ($barIdx.Count -gt 0) { $eng.Groups = [Zone[]]@($zDeck, $zBar) }
 else                     { $eng.Groups = [Zone[]]@($zDeck) }

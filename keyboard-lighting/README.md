@@ -127,8 +127,13 @@ light is which, and correcting the map if it is wrong.
   Show the map    a picture of where the app thinks each zone sits.
   Identify        lights each zone on its own, one at a time, and tells
                   you its number. Write down what is actually where.
-  Correct         type the numbers in the order they really appear,
-                  left to right, and it saves your version.
+  Correct         type the numbers in the order they really appear.
+                  For the keyboard that is left to right. For the light
+                  bar it is the order a light would travel going all the
+                  way round, for example 4,5,7,9,11,13,15,14,12,10,8,6 -
+                  do not repeat the first number at the end, the ring
+                  closes by itself. Patterns then follow exactly that
+                  path.
   Reset           throw your correction away and go back to automatic.
 
 Your correction is saved separately and is never overwritten by an
