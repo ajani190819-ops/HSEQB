@@ -293,6 +293,8 @@ public class LampEngine {
     fr = new double[LampCount]; fg = new double[LampCount]; fb = new double[LampCount];
     er = new double[LampCount]; eg = new double[LampCount]; eb = new double[LampCount];
     pr = new int[LampCount]; pg = new int[LampCount]; pb = new int[LampCount];
+    nr = new int[LampCount]; ng = new int[LampCount]; nb = new int[LampCount];
+    lr = new double[LampCount]; lg = new double[LampCount]; lb = new double[LampCount];
     for (int i = 0; i < LampCount; i++) { pr[i] = -1; pg[i] = -1; pb[i] = -1; }
     heat = new double[LampCount];
 
@@ -478,6 +480,8 @@ public class LampEngine {
 
   int[] pr, pg, pb;        // last bytes actually sent
   double[] er, eg, eb;     // carried quantisation error, for temporal dither
+  int[] nr, ng, nb;        // staged this frame; promoted to pr/pg/pb only on success
+  double[] lr, lg, lb;     // last frame's target, to tell moving from held
 
   // ---- live frame publishing -------------------------------------
   // The control panel used to redraw the preview by re-implementing the
@@ -578,8 +582,21 @@ public class LampEngine {
   // added to the next one. At 60fps the eye integrates the result, so a
   // value creeping at 0.4 LSB/frame fades smoothly instead of holding for
   // two frames and then stepping - which is the flicker seen at low speeds.
-  static int Dither(double v, double scale, ref double err) {
-    double x = v * scale / 255.0 + err;
+  // moving: true when this lamp's target is actually changing. Error
+  // feedback is only worth anything on a value in motion - it trades a
+  // steady 1-LSB offset for an alternating one the eye averages out. On a
+  // HELD value there is nothing to average: a target like 128.4 toggles
+  // 128/129 forever, which is visible shimmer on a large zone. So a held
+  // value snaps to nearest and the error is dropped.
+  static int Dither(double v, double scale, ref double err, bool moving) {
+    double x = v * scale / 255.0;
+    if (!moving) {
+      err = 0.0;
+      int qs = (int)(x + 0.5);
+      if (qs < 0) qs = 0; else if (qs > 255) qs = 255;
+      return qs;
+    }
+    x += err;
     int q = (int)(x + 0.5);
     if (q < 0) q = 0; else if (q > 255) q = 255;
     err = x - q;
@@ -598,11 +615,28 @@ public class LampEngine {
       for (int s = 0; s < n; s++) {
         int i = first + s;
         int st = Interleaved ? s*4 : s;
-        int qr = Dither(fr[i], MaxR, ref er[i]);
-        int qg = Dither(fg[i], MaxG, ref eg[i]);
-        int qb = Dither(fb[i], MaxB, ref eb[i]);
+        // "Moving" means the TARGET changed since last frame - a velocity
+        // test, not a distance-from-device one. Distance would call a slow
+        // fade static for several frames and then step, reintroducing the
+        // banding dither exists to remove. Velocity keeps error feedback on
+        // for anything animating, however slowly, and off for a value that
+        // is genuinely being held.
+        bool mv = fr[i] != lr[i] || fg[i] != lg[i] || fb[i] != lb[i]
+               || pr[i] < 0;
+        lr[i] = fr[i]; lg[i] = fg[i]; lb[i] = fb[i];
+        int qr = Dither(fr[i], MaxR, ref er[i], mv);
+        int qg = Dither(fg[i], MaxG, ref eg[i], mv);
+        int qb = Dither(fb[i], MaxB, ref eb[i], mv);
         if (qr != pr[i] || qg != pg[i] || qb != pb[i]) changed = true;
-        pr[i] = qr; pg[i] = qg; pb[i] = qb;
+        // Do NOT record these as sent yet. The device buffers every batch
+        // until the one carrying LampUpdateComplete arrives, so nothing is
+        // actually on screen until the final write succeeds. Recording them
+        // here meant a failed final write left the new colours marked as
+        // sent: the next frame saw no change, skipped the transfer, and the
+        // keyboard sat on a stale frame until something else moved it.
+        // Lamps 0-3 are the keyboard and always land in the buffered first
+        // batch, which is why it stuttered while the light bar did not.
+        nr[i] = qr; ng[i] = qg; nb[i] = qb;
         b[OffR + st] = (byte)qr;
         b[OffG + st] = (byte)qg;
         b[OffB + st] = (byte)qb;
@@ -621,7 +655,11 @@ public class LampEngine {
 
     // One failed write is noise (a busy endpoint). A run of them means the
     // handle is dead - almost always a resume from sleep.
-    if (allOk) { failRun = 0; }
+    if (allOk) {
+      failRun = 0;
+      // The whole frame landed, so it is now genuinely on the device.
+      for (int i = 0; i < LampCount; i++) { pr[i] = nr[i]; pg[i] = ng[i]; pb[i] = nb[i]; }
+    }
     else {
       failRun++;
       if (failRun >= 8) { DeviceLost = true; failRun = 0; }
