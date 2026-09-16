@@ -29,6 +29,8 @@ if (-not (Test-Path $Engine)) {
 if (-not (Test-Path $CfgDir)) { New-Item -ItemType Directory -Path $CfgDir -Force | Out-Null }
 
 # ---------------------------------------------------------------- state
+# The palette is cyclic: the last colour blends back into the first, so do
+# NOT repeat the first colour at the end.
 $script:Swatches = @('#FF0000','#FF7F00','#FFFF00','#00FF00','#0000FF','#8B00FF')
 $script:Running  = $null
 
@@ -99,7 +101,7 @@ function Get-EngineArgs {
         '-Effect', $eff
         '-Speed', $spd
         '-Brightness', $brt
-        '-Fps','45'
+        '-Fps','60'
         '-Quiet'
     )
     if ($script:Swatches.Count -gt 0) {
@@ -316,11 +318,13 @@ $pbPreview.Add_Paint({
 })
 
 $timer = New-Object System.Windows.Forms.Timer
-$timer.Interval = 60
+$timer.Interval = 33          # ~30fps preview
 $timer.Add_Tick({
     $dir = 1.0
     if ($chkReverse.Checked) { $dir = -1.0 }
-    $script:phase = ($script:phase + 0.012 * ($trkSpeed.Value/10.0) * $dir) % 1.0
+    # Match the engine: gradient phase advances at Speed * 0.25 per second.
+    $script:phase = ($script:phase + (0.25 * ($trkSpeed.Value/10.0) * $dir) * 0.033) % 1.0
+    if ($script:phase -lt 0) { $script:phase += 1.0 }
     $pbPreview.Invalidate()
 })
 

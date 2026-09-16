@@ -1,22 +1,21 @@
 #requires -Version 5.1
 <#
-  AURA-BACKGROUND  v2
+  AURA-BACKGROUND  v3
   Smooth animated keyboard lighting, direct HID LampArray control.
-  Keeps running when the window is not focused. No Dynamic Lighting.
 
-  WHAT CHANGED IN v2
-    * Uses LampMultiUpdateReport (8 zones per USB transfer) instead of one
-      transfer per zone. 16 transfers per frame became 2. That was the stutter.
-    * Buffers are allocated once and reused, not rebuilt every frame.
-    * 1 ms timer resolution and an absolute frame schedule, so frames land
-      evenly instead of drifting.
-    * New "gradient" effect: your own list of colours, scrolling.
-    * -Custom lets you load your own effect from a file.
+  WHAT CHANGED IN v3
+    * The animation loop now runs in COMPILED C# on its own high-priority
+      thread. PowerShell only sets things up. This is the real fix for the
+      stutter: an interpreted loop cannot hold a 16 ms frame budget.
+    * Frame pacing is sleep-then-spin, so frames land on time instead of
+      drifting by whatever Start-Sleep felt like.
+    * The gradient is now CYCLIC. The last colour blends back into the
+      first, so a colour leaving the right edge returns on the left with
+      no seam.
 
   QUICK USE
-    .\Aura-Background.ps1 -Effect gradient -Colors "#FF0000,#FFA500,#FFFF00"
+    .\Aura-Background.ps1 -Effect gradient -Colors "#FF0000,#FF7F00,#FFFF00,#00FF00,#0000FF,#8B00FF"
     .\Aura-Background.ps1 -Effect rainbow -Fps 60
-    .\Aura-Background.ps1 -Custom .\MyEffect.ps1
     .\Aura-Background.ps1 -Effect off
     .\Aura-Background.ps1 -Restore
 #>
@@ -27,9 +26,7 @@ param(
                  'gradient','static','off')]
     [string]$Effect = 'gradient',
 
-    # Gradient colour stops, comma separated. Any number of them.
-    [string]$Colors = '#FF0000,#FF00FF,#0000FF,#00FFFF,#00FF00,#FFFF00,#FF0000',
-
+    [string]$Colors = '#FF0000,#FF7F00,#FFFF00,#00FF00,#0000FF,#8B00FF',
     [string]$Color  = '#00B4FF',
     [string]$Color2 = '#FF0066',
 
@@ -39,18 +36,13 @@ param(
     [ValidateRange(0.0, 1.0)]
     [double]$Brightness = 1.0,
 
-    [ValidateRange(5, 120)]
-    [int]$Fps = 45,
+    [ValidateRange(5, 144)]
+    [int]$Fps = 60,
 
-    # Path to a .ps1 file that returns a scriptblock. See MyEffect.ps1.
     [string]$Custom,
 
-    # Mirror the pattern from the centre outwards.
     [switch]$Mirror,
-
-    # Reverse the scroll direction.
     [switch]$Reverse,
-
     [switch]$Restore,
     [switch]$Quiet
 )
@@ -59,7 +51,7 @@ $ErrorActionPreference = 'Stop'
 function Say($msg, $col = 'Gray') { if (-not $Quiet) { Write-Host $msg -ForegroundColor $col } }
 
 # ============================================================================
-# NATIVE
+# NATIVE + COMPILED ENGINE
 # ============================================================================
 if (-not ('HidNative' -as [type])) {
 Add-Type -TypeDefinition @'
@@ -88,8 +80,285 @@ public static class HidNative {
   public static extern bool HidD_SetFeature(IntPtr h, byte[] buf, int len);
   [DllImport("hid.dll", SetLastError=true)]
   public static extern bool HidD_GetFeature(IntPtr h, byte[] buf, int len);
-  [DllImport("winmm.dll")] public static extern uint timeBeginPeriod(uint p);
-  [DllImport("winmm.dll")] public static extern uint timeEndPeriod(uint p);
+}
+'@
+}
+
+if (-not ('LampEngine' -as [type])) {
+Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+using System.Threading;
+using System.Diagnostics;
+
+public class LampEngine {
+  [DllImport("kernel32.dll", CharSet=CharSet.Unicode, SetLastError=true)]
+  static extern IntPtr CreateFileW(string p, uint a, uint s, IntPtr sa, uint d, uint f, IntPtr t);
+  [DllImport("kernel32.dll", SetLastError=true)]
+  static extern bool CloseHandle(IntPtr h);
+  [DllImport("hid.dll", SetLastError=true)]
+  static extern bool HidD_SetFeature(IntPtr h, byte[] b, int len);
+  [DllImport("winmm.dll")] static extern uint timeBeginPeriod(uint p);
+  [DllImport("winmm.dll")] static extern uint timeEndPeriod(uint p);
+
+  // ---- set these from PowerShell before Start() ----
+  public string DevicePath = "";
+  public int    LampCount  = 16;
+  public int[]  Order;                 // slot -> real lamp id
+  public int    ReportId   = 4;
+  public int    Slots      = 8;
+  public int    ReportLen  = 51;
+  public int    OffCount, OffFlags, OffId, OffR, OffG, OffB, OffI;
+  public int    MaxR = 255, MaxG = 255, MaxB = 255, MaxI = 255;
+
+  public string Effect     = "gradient";
+  public double Speed      = 1.0;
+  public double Brightness = 1.0;
+  public int    Fps        = 60;
+  public bool   Mirror     = false;
+  public bool   Reverse    = false;
+  public int[]  PalR, PalG, PalB;
+
+  public string LastError = "";
+
+  IntPtr h = IntPtr.Zero;
+  Thread th;
+  volatile bool running;
+  byte[][] bufs;
+  int nbatch;
+  int[] fr, fg, fb;
+  double[] heat;
+  Random rnd = new Random();
+
+  public bool Open() {
+    h = CreateFileW(DevicePath, 0xC0000000, 3, IntPtr.Zero, 3, 0, IntPtr.Zero);
+    if (h == (IntPtr)(-1)) h = CreateFileW(DevicePath, 0x40000000, 3, IntPtr.Zero, 3, 0, IntPtr.Zero);
+    if (h == (IntPtr)(-1)) { LastError = "CreateFile failed: " + Marshal.GetLastWin32Error(); h = IntPtr.Zero; return false; }
+
+    nbatch = (LampCount + Slots - 1) / Slots;
+    bufs = new byte[nbatch][];
+    for (int bi = 0; bi < nbatch; bi++) {
+      byte[] b = new byte[ReportLen];
+      b[0] = (byte)ReportId;
+      int first = bi * Slots;
+      int n = Math.Min(Slots, LampCount - first);
+      b[OffCount] = (byte)n;
+      for (int s = 0; s < n; s++) {
+        int lid = first + s;
+        b[OffId + s*2]     = (byte)(lid & 0xFF);
+        b[OffId + s*2 + 1] = (byte)((lid >> 8) & 0xFF);
+        b[OffI + s]        = (byte)MaxI;
+      }
+      bufs[bi] = b;
+    }
+    fr = new int[LampCount]; fg = new int[LampCount]; fb = new int[LampCount];
+    heat = new double[LampCount];
+    return true;
+  }
+
+  void SetZone(int slot, double r, double g, double b) {
+    if (slot < 0 || slot >= LampCount) return;
+    int q = slot;
+    if (Mirror) {
+      int half = (LampCount + 1) / 2;
+      q = (slot < half) ? (half - 1 - slot) : (slot - half);
+      if (q >= LampCount) q = LampCount - 1;
+    }
+    int i = Order[q];
+    int rr = (int)(r * Brightness); if (rr < 0) rr = 0; else if (rr > 255) rr = 255;
+    int gg = (int)(g * Brightness); if (gg < 0) gg = 0; else if (gg > 255) gg = 255;
+    int bb = (int)(b * Brightness); if (bb < 0) bb = 0; else if (bb > 255) bb = 255;
+    fr[i] = rr; fg[i] = gg; fb[i] = bb;
+  }
+
+  void Push() {
+    int last = nbatch - 1;
+    for (int bi = 0; bi < nbatch; bi++) {
+      byte[] b = bufs[bi];
+      int first = bi * Slots;
+      int n = Math.Min(Slots, LampCount - first);
+      for (int s = 0; s < n; s++) {
+        int i = first + s;
+        b[OffR + s] = (byte)(fr[i] * MaxR / 255);
+        b[OffG + s] = (byte)(fg[i] * MaxG / 255);
+        b[OffB + s] = (byte)(fb[i] * MaxB / 255);
+      }
+      b[OffFlags] = (bi == last) ? (byte)1 : (byte)0;
+      HidD_SetFeature(h, b, b.Length);
+    }
+  }
+
+  static void Hsv(double hDeg, double s, double v, out double r, out double g, out double b) {
+    hDeg = hDeg % 360.0; if (hDeg < 0) hDeg += 360.0;
+    double c = v * s;
+    double x = c * (1.0 - Math.Abs(((hDeg / 60.0) % 2.0) - 1.0));
+    double m = v - c;
+    double rr, gg, bb;
+    int seg = (int)Math.Floor(hDeg / 60.0);
+    if      (seg == 0) { rr=c; gg=x; bb=0; }
+    else if (seg == 1) { rr=x; gg=c; bb=0; }
+    else if (seg == 2) { rr=0; gg=c; bb=x; }
+    else if (seg == 3) { rr=0; gg=x; bb=c; }
+    else if (seg == 4) { rr=x; gg=0; bb=c; }
+    else               { rr=c; gg=0; bb=x; }
+    r = 255*(rr+m); g = 255*(gg+m); b = 255*(bb+m);
+  }
+
+  // Cyclic palette sample. f is 0..1 around the whole loop.
+  void Pal(double f, out double r, out double g, out double b) {
+    int pc = PalR.Length;
+    f = f % 1.0; if (f < 0) f += 1.0;
+    double x = f * pc;
+    int a = (int)Math.Floor(x);
+    double u = x - a;
+    int n2 = (a + 1) % pc;
+    a = a % pc;
+    r = PalR[a] + (PalR[n2] - PalR[a]) * u;
+    g = PalG[a] + (PalG[n2] - PalG[a]) * u;
+    b = PalB[a] + (PalB[n2] - PalB[a]) * u;
+  }
+
+  void Frame(double t) {
+    int N = LampCount;
+    double dir = Reverse ? -1.0 : 1.0;
+
+    switch (Effect) {
+      case "gradient": {
+        double phase = t * 0.25 * dir;
+        for (int i = 0; i < N; i++) {
+          double r, g, b;
+          Pal((i / (double)N) + phase, out r, out g, out b);
+          SetZone(i, r, g, b);
+        }
+        break;
+      }
+      case "rainbow": {
+        for (int i = 0; i < N; i++) {
+          double r, g, b;
+          Hsv((i / (double)N) * 360.0 + t * 90.0 * dir, 1.0, 1.0, out r, out g, out b);
+          SetZone(i, r, g, b);
+        }
+        break;
+      }
+      case "wave": {
+        double r0 = PalR[0], g0 = PalG[0], b0 = PalB[0];
+        int p1 = PalR.Length > 1 ? 1 : 0;
+        double r1 = PalR[p1], g1 = PalG[p1], b1 = PalB[p1];
+        for (int i = 0; i < N; i++) {
+          double ph = (t * 1.2 * dir) - (i / (double)N) * 2.0;
+          double w = (1.0 + Math.Sin(ph * Math.PI)) / 2.0; w = w * w;
+          SetZone(i, r0*w + r1*(1-w)*0.15, g0*w + g1*(1-w)*0.15, b0*w + b1*(1-w)*0.15);
+        }
+        break;
+      }
+      case "comet": {
+        double head = (t * 6.0) % N; if (head < 0) head += N;
+        for (int i = 0; i < N; i++) {
+          double d = head - i; if (d < 0) d += N;
+          double w = Math.Exp(-d * 0.9);
+          SetZone(i, PalR[0]*w, PalG[0]*w, PalB[0]*w);
+        }
+        break;
+      }
+      case "scanner": {
+        double span = (N - 1) * 2.0;
+        double p = (t * 7.0) % span; if (p < 0) p += span;
+        if (p > (N - 1)) p = span - p;
+        for (int i = 0; i < N; i++) {
+          double w = 1.0 - (Math.Abs(i - p) / 2.2); if (w < 0) w = 0; w = w * w;
+          SetZone(i, PalR[0]*w, PalG[0]*w, PalB[0]*w);
+        }
+        break;
+      }
+      case "breathe": {
+        double w = (1.0 + Math.Sin(t * 1.6 * Math.PI)) / 2.0;
+        w = 0.04 + 0.96 * Math.Pow(w, 2.2);
+        for (int i = 0; i < N; i++) SetZone(i, PalR[0]*w, PalG[0]*w, PalB[0]*w);
+        break;
+      }
+      case "pulse": {
+        double w = Math.Exp(-(t % 1.0) * 4.5);
+        double r, g, b;
+        Hsv(Math.Floor(t) * 47.0, 1.0, 1.0, out r, out g, out b);
+        for (int i = 0; i < N; i++) SetZone(i, r*w, g*w, b*w);
+        break;
+      }
+      case "fire": {
+        for (int i = 0; i < N; i++) {
+          heat[i] = heat[i] * 0.86 + rnd.NextDouble() * 0.30;
+          if (heat[i] > 1.0) heat[i] = 1.0;
+          double v = heat[i];
+          SetZone(i, 255*v, 90*v*v, 10*v*v*v);
+        }
+        break;
+      }
+      default: {
+        for (int i = 0; i < N; i++) SetZone(i, PalR[0], PalG[0], PalB[0]);
+        break;
+      }
+    }
+  }
+
+  void Loop() {
+    timeBeginPeriod(1);
+    Stopwatch sw = Stopwatch.StartNew();
+    long freq = Stopwatch.Frequency;
+    long per  = freq / Fps;
+    long next = sw.ElapsedTicks + per;
+    try {
+      while (running) {
+        double t = (sw.ElapsedTicks / (double)freq) * Speed;
+        Frame(t);
+        Push();
+
+        long remain = next - sw.ElapsedTicks;
+        if (remain > 0) {
+          int ms = (int)((remain * 1000) / freq);
+          if (ms > 1) Thread.Sleep(ms - 1);
+          while (sw.ElapsedTicks < next) Thread.SpinWait(40);
+        } else {
+          next = sw.ElapsedTicks;   // fell behind, resync rather than spiral
+        }
+        next += per;
+      }
+    } catch (Exception ex) {
+      LastError = ex.Message;
+    } finally {
+      timeEndPeriod(1);
+    }
+  }
+
+  public void Start() {
+    running = true;
+    th = new Thread(new ThreadStart(Loop));
+    th.IsBackground = true;
+    try { th.Priority = ThreadPriority.AboveNormal; } catch { }
+    th.Start();
+  }
+
+  public void Stop() {
+    running = false;
+    if (th != null) { try { th.Join(600); } catch { } }
+  }
+
+  public void Blank() {
+    for (int i = 0; i < LampCount; i++) { fr[i]=0; fg[i]=0; fb[i]=0; }
+    Push();
+  }
+
+  public void Solid(int r, int g, int b) {
+    for (int i = 0; i < LampCount; i++) {
+      int rr=(int)(r*Brightness), gg=(int)(g*Brightness), bb=(int)(b*Brightness);
+      if(rr>255)rr=255; if(gg>255)gg=255; if(bb>255)bb=255;
+      if(rr<0)rr=0; if(gg<0)gg=0; if(bb<0)bb=0;
+      fr[i]=rr; fg[i]=gg; fb[i]=bb;
+    }
+    Push();
+  }
+
+  public void Close() {
+    if (h != IntPtr.Zero) { CloseHandle(h); h = IntPtr.Zero; }
+  }
 }
 '@
 }
@@ -105,10 +374,10 @@ $U_RED=0x51; $U_GREEN=0x52; $U_BLUE=0x53; $U_INTENSITY=0x54; $U_FLAGS=0x55
 $U_IDSTART=0x61; $U_IDEND=0x62; $U_AUTONOMOUS=0x71
 
 # ============================================================================
-# FIND DEVICE
+# DISCOVERY  (proven working; unchanged in shape)
 # ============================================================================
 Say ""
-Say ("AURA-BACKGROUND v2   effect={0}  fps={1}  speed={2}" -f $Effect,$Fps,$Speed) 'Cyan'
+Say ("AURA-BACKGROUND v3   effect={0}  fps={1}  speed={2}" -f $Effect,$Fps,$Speed) 'Cyan'
 Say ""
 
 $devPath=$null
@@ -180,7 +449,6 @@ $rRange=Find-Report @($U_IDSTART,$U_IDEND,$U_RED) @()
 $rMulti=Find-Report @($U_RED,$U_LAMPID) @($U_IDSTART)
 $rReq  =Find-Report @($U_LAMPID) @($U_RED,$U_POSX)
 $rResp =Find-Report @($U_POSX) @()
-if (-not $rRange -and -not $rMulti) { Write-Host "  No usable update report." -ForegroundColor Red; return }
 
 function Rpt-Len($r) { if ($r.Type -eq 2) { return $script:featLen } else { return $script:outLen } }
 function New-Rpt($r) { $b=New-Object byte[] (Rpt-Len $r); $b[0]=[byte]$r.Rid; return ,$b }
@@ -198,7 +466,6 @@ function Get-Val($r,$buf,[int]$usage) {
     return [int]$v
 }
 
-# ---- lamp count + channel depth ----
 $lampCount=0; $RMAX=255;$GMAX=255;$BMAX=255;$IMAX=255
 if ($rAttr) {
     $b=New-Rpt $rAttr
@@ -206,7 +473,6 @@ if ($rAttr) {
 }
 if ($lampCount -le 0) { $lampCount=16 }
 
-# ---- zone order by physical X, and channel depth ----
 $order=@(0..($lampCount-1))
 if ($rReq -and $rResp) {
     $pos=New-Object object[] $lampCount
@@ -229,7 +495,6 @@ if ($rReq -and $rResp) {
 $RMAX=[Math]::Max(1,$RMAX); $GMAX=[Math]::Max(1,$GMAX)
 $BMAX=[Math]::Max(1,$BMAX); $IMAX=[Math]::Max(1,$IMAX)
 
-# ---- take control ----
 if ($rCtrl) { $b=New-Rpt $rCtrl; Set-Val $rCtrl $b $U_AUTONOMOUS 0; [void](Send-Rpt $rCtrl $b) }
 
 if ($Restore) {
@@ -238,27 +503,18 @@ if ($Restore) {
     [void][HidNative]::HidD_FreePreparsedData($pp); [void][HidNative]::CloseHandle($h); return
 }
 
-# ============================================================================
-# FAST PATH: discover the byte layout of LampMultiUpdateReport
-# ============================================================================
-# We probe by setting one usage at a time on a zeroed buffer and seeing which
-# byte moves. That respects the real descriptor instead of assuming a layout.
-$fast=$false; $slots=1
-$offId=-1;$offR=-1;$offG=-1;$offB=-1;$offI=-1;$offCnt=-1;$offFlg=-1
-
+# ---- resolve the multi-update byte layout ----
+$slots=1; $offId=-1;$offR=-1;$offG=-1;$offB=-1;$offI=-1;$offCnt=-1;$offFlg=-1; $fast=$false
 function Probe-Off($r,[int]$usage,[int]$val) {
     $len=Rpt-Len $r
     $b=New-Object byte[] $len; $b[0]=[byte]$r.Rid
-    $st=[HidNative]::HidP_SetUsageValue($r.Type,0x59,0,[uint16]$usage,[uint32]$val,$script:pp,$b,[uint32]$len)
-    if ($st -ne $script:HIDOK) { return -1 }
+    if ([HidNative]::HidP_SetUsageValue($r.Type,0x59,0,[uint16]$usage,[uint32]$val,$script:pp,$b,[uint32]$len) -ne $script:HIDOK) { return -1 }
     for ($i=1;$i -lt $len;$i++) { if ($b[$i] -ne 0) { return $i } }
     return -1
 }
-
 if ($rMulti) {
-    $slots=[int]$rMulti.Usages[$U_RED]
-    if ($slots -lt 1) { $slots=1 }
-    # Probe with value 1 so we never exceed any field's logical maximum.
+    $slots=[int]$rMulti.Usages[$U_RED]; if ($slots -lt 1) { $slots=1 }
+    $mlen=Rpt-Len $rMulti
     $offCnt=Probe-Off $rMulti $U_LAMPCOUNT 1
     $offFlg=Probe-Off $rMulti $U_FLAGS     1
     $offId =Probe-Off $rMulti $U_LAMPID    1
@@ -266,116 +522,16 @@ if ($rMulti) {
     $offG  =Probe-Off $rMulti $U_GREEN     1
     $offB  =Probe-Off $rMulti $U_BLUE      1
     $offI  =Probe-Off $rMulti $U_INTENSITY 1
-
-    $mlen = Rpt-Len $rMulti
-    if ($offId -ge 0 -and $offR -ge 0 -and $offG -ge 0 -and $offB -ge 0 -and
-        $offI -ge 0 -and $offCnt -ge 0 -and $offFlg -ge 0 -and
-        ($offI + $slots) -le $mlen -and
-        $offR -eq ($offId + $slots*2) -and
-        $offG -eq ($offR + $slots) -and
-        $offB -eq ($offG + $slots) -and
-        $offI -eq ($offB + $slots)) { $fast=$true }
-
-    # HidP_SetUsageValue refuses value arrays, so probing can legitimately
-    # fail on a perfectly good device. If the report length matches the HID
-    # spec layout exactly, trust the spec and use those offsets.
-    if (-not $fast) {
-        $specLen = 3 + $slots*2 + $slots*4
-        if ($mlen -eq $specLen) {
-            $offCnt = 1
-            $offFlg = 2
-            $offId  = 3
-            $offR   = $offId + $slots*2
-            $offG   = $offR + $slots
-            $offB   = $offG + $slots
-            $offI   = $offB + $slots
-            $fast   = $true
-            Say ("  Using HID spec layout for report {0} ({1} bytes, {2} slots)." -f $rMulti.Rid,$mlen,$slots) 'DarkGray'
-        }
+    if ($offId -ge 0 -and $offR -ge 0 -and $offG -ge 0 -and $offB -ge 0 -and $offI -ge 0 -and
+        $offCnt -ge 0 -and $offFlg -ge 0 -and ($offI+$slots) -le $mlen -and
+        $offR -eq ($offId+$slots*2) -and $offG -eq ($offR+$slots) -and
+        $offB -eq ($offG+$slots) -and $offI -eq ($offB+$slots)) { $fast=$true }
+    if (-not $fast -and $mlen -eq (3 + $slots*2 + $slots*4)) {
+        $offCnt=1; $offFlg=2; $offId=3
+        $offR=$offId+$slots*2; $offG=$offR+$slots; $offB=$offG+$slots; $offI=$offB+$slots
+        $fast=$true
+        Say "  Using HID spec layout." 'DarkGray'
     }
-}
-
-$batches=[Math]::Ceiling($lampCount/[double]$slots)
-if ($fast) {
-    Say ("  {0} zones, {1} slots/report, {2} transfers per frame" -f $lampCount,$slots,$batches) 'Green'
-} else {
-    Say ("  {0} zones, per-zone writes ({1} transfers per frame)" -f $lampCount,$lampCount) 'DarkYellow'
-}
-
-# Pre-build one reusable buffer per batch.
-$bufs=$null
-if ($fast) {
-    $mlen=Rpt-Len $rMulti
-    $bufs=New-Object object[] $batches
-    for ($bi=0;$bi -lt $batches;$bi++) {
-        $b=New-Object byte[] $mlen
-        $b[0]=[byte]$rMulti.Rid
-        $first=$bi*$slots
-        $n=[Math]::Min($slots,$lampCount-$first)
-        $b[$offCnt]=[byte]$n
-        for ($s=0;$s -lt $n;$s++) {
-            $lid=$first+$s
-            $b[$offId+$s*2]=[byte]($lid -band 0xFF)
-            $b[$offId+$s*2+1]=[byte](($lid -shr 8) -band 0xFF)
-            $b[$offI+$s]=[byte]$IMAX
-        }
-        $bufs[$bi]=$b
-    }
-}
-
-# frame buffers
-$fr=New-Object int[] $lampCount
-$fg=New-Object int[] $lampCount
-$fb=New-Object int[] $lampCount
-
-function Push-Frame {
-    if ($script:fast) {
-        $last=$script:batches-1
-        for ($bi=0;$bi -lt $script:batches;$bi++) {
-            $b=$script:bufs[$bi]
-            $first=$bi*$script:slots
-            $n=[Math]::Min($script:slots,$script:lampCount-$first)
-            for ($s=0;$s -lt $n;$s++) {
-                $i=$first+$s
-                $b[$script:offR+$s]=[byte](($script:fr[$i]*$script:RMAX)/255)
-                $b[$script:offG+$s]=[byte](($script:fg[$i]*$script:GMAX)/255)
-                $b[$script:offB+$s]=[byte](($script:fb[$i]*$script:BMAX)/255)
-            }
-            if ($bi -eq $last) { $b[$script:offFlg]=[byte]1 } else { $b[$script:offFlg]=[byte]0 }
-            [void][HidNative]::HidD_SetFeature($script:h,$b,$b.Length)
-        }
-    } else {
-        for ($i=0;$i -lt $script:lampCount;$i++) {
-            $b=New-Rpt $script:rRange
-            $flag=0; if ($i -eq ($script:lampCount-1)) { $flag=1 }
-            Set-Val $script:rRange $b $U_FLAGS $flag
-            Set-Val $script:rRange $b $U_IDSTART $i
-            Set-Val $script:rRange $b $U_IDEND   $i
-            Set-Val $script:rRange $b $U_RED     ([int](($script:fr[$i]*$script:RMAX)/255))
-            Set-Val $script:rRange $b $U_GREEN   ([int](($script:fg[$i]*$script:GMAX)/255))
-            Set-Val $script:rRange $b $U_BLUE    ([int](($script:fb[$i]*$script:BMAX)/255))
-            Set-Val $script:rRange $b $U_INTENSITY $script:IMAX
-            [void](Send-Rpt $script:rRange $b)
-        }
-    }
-}
-
-# Set-Zone takes a SLOT (0 = leftmost) and maps it to the real lamp id.
-function Set-Zone([int]$slot,[double]$r,[double]$g,[double]$b) {
-    if ($slot -lt 0 -or $slot -ge $script:lampCount) { return }
-    $q=$slot
-    if ($script:Mirror) {
-        $half=[int][Math]::Ceiling($script:lampCount/2.0)
-        $q=if ($slot -lt $half) { $half-1-$slot } else { $slot-$half }
-        if ($q -ge $script:lampCount) { $q=$script:lampCount-1 }
-    }
-    $i=$script:order[$q]
-    $k=$script:Brightness
-    $rr=[int]($r*$k); $gg=[int]($g*$k); $bb=[int]($b*$k)
-    if ($rr -lt 0){$rr=0}elseif($rr -gt 255){$rr=255}
-    if ($gg -lt 0){$gg=0}elseif($gg -gt 255){$gg=255}
-    if ($bb -lt 0){$bb=0}elseif($bb -gt 255){$bb=255}
-    $script:fr[$i]=$rr; $script:fg[$i]=$gg; $script:fb[$i]=$bb
 }
 
 # ============================================================================
@@ -384,169 +540,185 @@ function Set-Zone([int]$slot,[double]$r,[double]$g,[double]$b) {
 function ConvertFrom-Hex([string]$hex) {
     $s=$hex.Trim().TrimStart('#')
     if ($s.Length -eq 3) { $s="$($s[0])$($s[0])$($s[1])$($s[1])$($s[2])$($s[2])" }
-    if ($s.Length -ne 6) { throw "Bad colour '$hex'. Use #RRGGBB, e.g. #FF8800." }
+    if ($s.Length -ne 6) { throw "Bad colour '$hex'. Use #RRGGBB." }
     return ,@([Convert]::ToInt32($s.Substring(0,2),16),
               [Convert]::ToInt32($s.Substring(2,2),16),
               [Convert]::ToInt32($s.Substring(4,2),16))
 }
-function Convert-Hsv([double]$hDeg,[double]$s,[double]$v) {
-    $hDeg=$hDeg%360.0; if ($hDeg -lt 0) { $hDeg+=360.0 }
-    $c=$v*$s; $x=$c*(1.0-[Math]::Abs((($hDeg/60.0)%2.0)-1.0)); $m=$v-$c
-    switch ([int][Math]::Floor($hDeg/60.0)) {
-        0 {$r=$c;$g=$x;$b=0} 1 {$r=$x;$g=$c;$b=0} 2 {$r=0;$g=$c;$b=$x}
-        3 {$r=0;$g=$x;$b=$c} 4 {$r=$x;$g=0;$b=$c} default {$r=$c;$g=0;$b=$x}
-    }
-    return ,@([int](255*($r+$m)),[int](255*($g+$m)),[int](255*($b+$m)))
-}
 
-$C1=ConvertFrom-Hex $Color
-$C2=ConvertFrom-Hex $Color2
-
-# Build a 720-step lookup table from the gradient stops. Done once.
-$LUTN=720
-$lutR=New-Object int[] $LUTN
-$lutG=New-Object int[] $LUTN
-$lutB=New-Object int[] $LUTN
 $stops=@()
 foreach ($cs in ($Colors -split ',')) { if ($cs.Trim()) { $stops+=,(ConvertFrom-Hex $cs) } }
-if ($stops.Count -eq 0) { $stops=@($C1,$C2) }
-if ($stops.Count -eq 1) { $stops=@($stops[0],$stops[0]) }
-for ($k=0;$k -lt $LUTN;$k++) {
-    $f=($k/[double]$LUTN)*($stops.Count-1)
-    $a=[int][Math]::Floor($f); if ($a -ge $stops.Count-1) { $a=$stops.Count-2 }
-    $u=$f-$a
-    $lutR[$k]=[int]($stops[$a][0]+($stops[$a+1][0]-$stops[$a][0])*$u)
-    $lutG[$k]=[int]($stops[$a][1]+($stops[$a+1][1]-$stops[$a][1])*$u)
-    $lutB[$k]=[int]($stops[$a][2]+($stops[$a+1][2]-$stops[$a][2])*$u)
+if ($stops.Count -eq 0) { $stops=@((ConvertFrom-Hex $Color),(ConvertFrom-Hex $Color2)) }
+# The palette is cyclic now, so a repeated first/last colour would double up.
+if ($stops.Count -gt 2 -and
+    $stops[0][0] -eq $stops[-1][0] -and
+    $stops[0][1] -eq $stops[-1][1] -and
+    $stops[0][2] -eq $stops[-1][2]) {
+    $stops=@($stops[0..($stops.Count-2)])
 }
+if ($stops.Count -eq 1) { $stops=@($stops[0],$stops[0]) }
 
 # ============================================================================
-# CUSTOM EFFECT
+# CUSTOM EFFECT  (stays on the PowerShell path)
 # ============================================================================
-$CustomBlock=$null
 if ($Custom) {
     if (-not (Test-Path $Custom)) { Write-Host ("  Custom file not found: {0}" -f $Custom) -ForegroundColor Red; return }
     $CustomBlock = [scriptblock]::Create((Get-Content -Raw $Custom)).Invoke() | Select-Object -Last 1
-    if ($CustomBlock -is [System.Management.Automation.PSObject]) { $CustomBlock = $CustomBlock.BaseObject }
+    if ($CustomBlock -is [System.Management.Automation.PSObject]) { $CustomBlock=$CustomBlock.BaseObject }
     if ($CustomBlock -isnot [scriptblock]) {
-        Write-Host "  Custom file must END with a scriptblock, e.g.  { param($t,$N) ... }" -ForegroundColor Red
+        Write-Host "  Custom file must end with a scriptblock: { param(`$t,`$N) ... }" -ForegroundColor Red
         return
     }
-    Say ("  Custom effect loaded from {0}" -f (Split-Path -Leaf $Custom)) 'Green'
-}
+    Say ("  Custom effect: {0}  (PowerShell path, slower than built-ins)" -f (Split-Path -Leaf $Custom)) 'Yellow'
 
-# ============================================================================
-# ONE-SHOT
-# ============================================================================
-if (-not $CustomBlock -and ($Effect -eq 'off' -or $Effect -eq 'static')) {
-    for ($i=0;$i -lt $lampCount;$i++) {
-        if ($Effect -eq 'off') { Set-Zone $i 0 0 0 } else { Set-Zone $i $C1[0] $C1[1] $C1[2] }
+    $fr=New-Object int[] $lampCount; $fg=New-Object int[] $lampCount; $fb=New-Object int[] $lampCount
+    function Convert-Hsv([double]$hd,[double]$s,[double]$v) {
+        $hd=$hd%360.0; if ($hd -lt 0) { $hd+=360.0 }
+        $c=$v*$s; $x=$c*(1.0-[Math]::Abs((($hd/60.0)%2.0)-1.0)); $m=$v-$c
+        switch ([int][Math]::Floor($hd/60.0)) {
+            0 {$r=$c;$g=$x;$b=0} 1 {$r=$x;$g=$c;$b=0} 2 {$r=0;$g=$c;$b=$x}
+            3 {$r=0;$g=$x;$b=$c} 4 {$r=$x;$g=0;$b=$c} default {$r=$c;$g=0;$b=$x}
+        }
+        return ,@([int](255*($r+$m)),[int](255*($g+$m)),[int](255*($b+$m)))
     }
-    Push-Frame
-    Say ("  {0} applied." -f $Effect.ToUpper()) 'Green'
-    [void][HidNative]::HidD_FreePreparsedData($pp); [void][HidNative]::CloseHandle($h); return
+    function Set-Zone([int]$slot,[double]$r,[double]$g,[double]$b) {
+        if ($slot -lt 0 -or $slot -ge $script:lampCount) { return }
+        $q=$slot
+        if ($script:Mirror) {
+            $half=[int][Math]::Ceiling($script:lampCount/2.0)
+            $q=if ($slot -lt $half) { $half-1-$slot } else { $slot-$half }
+            if ($q -ge $script:lampCount) { $q=$script:lampCount-1 }
+        }
+        $i=$script:order[$q]; $k=$script:Brightness
+        $rr=[int]($r*$k); $gg=[int]($g*$k); $bb=[int]($b*$k)
+        if($rr -lt 0){$rr=0}elseif($rr -gt 255){$rr=255}
+        if($gg -lt 0){$gg=0}elseif($gg -gt 255){$gg=255}
+        if($bb -lt 0){$bb=0}elseif($bb -gt 255){$bb=255}
+        $script:fr[$i]=$rr; $script:fg[$i]=$gg; $script:fb[$i]=$bb
+    }
+    $mbuf=$null
+    if ($fast) { $mbufs=@(); for ($bi=0;$bi -lt [Math]::Ceiling($lampCount/[double]$slots);$bi++) {
+        $bb2=New-Object byte[] (Rpt-Len $rMulti); $bb2[0]=[byte]$rMulti.Rid
+        $first=$bi*$slots; $n=[Math]::Min($slots,$lampCount-$first); $bb2[$offCnt]=[byte]$n
+        for ($s=0;$s -lt $n;$s++) { $lid=$first+$s
+            $bb2[$offId+$s*2]=[byte]($lid -band 0xFF); $bb2[$offId+$s*2+1]=[byte](($lid -shr 8) -band 0xFF)
+            $bb2[$offI+$s]=[byte]$IMAX }
+        $mbufs+=,$bb2 } }
+    $sw=[Diagnostics.Stopwatch]::StartNew()
+    $ms=[int](1000/$Fps)
+    try {
+        while ($true) {
+            $t=$sw.Elapsed.TotalSeconds*$Speed
+            & $CustomBlock $t $lampCount
+            if ($fast) {
+                $lastB=$mbufs.Count-1
+                for ($bi=0;$bi -le $lastB;$bi++) {
+                    $bb2=$mbufs[$bi]; $first=$bi*$slots
+                    $n=[Math]::Min($slots,$lampCount-$first)
+                    for ($s=0;$s -lt $n;$s++) { $i=$first+$s
+                        $bb2[$offR+$s]=[byte](($fr[$i]*$RMAX)/255)
+                        $bb2[$offG+$s]=[byte](($fg[$i]*$GMAX)/255)
+                        $bb2[$offB+$s]=[byte](($fb[$i]*$BMAX)/255) }
+                    if ($bi -eq $lastB) { $bb2[$offFlg]=[byte]1 } else { $bb2[$offFlg]=[byte]0 }
+                    [void][HidNative]::HidD_SetFeature($h,$bb2,$bb2.Length)
+                }
+            }
+            Start-Sleep -Milliseconds $ms
+        }
+    } finally {
+        if ($rCtrl) { $b=New-Rpt $rCtrl; Set-Val $rCtrl $b $U_AUTONOMOUS 1; [void](Send-Rpt $rCtrl $b) }
+        [void][HidNative]::HidD_FreePreparsedData($pp); [void][HidNative]::CloseHandle($h)
+    }
+    return
 }
 
 # ============================================================================
-# LOOP
+# COMPILED ENGINE PATH
 # ============================================================================
+if (-not $fast) {
+    Write-Host "  Could not resolve the multi-update report layout." -ForegroundColor Red
+    Write-Host "  Run Find-Lamps.ps1 and send me the report map." -ForegroundColor Red
+    [void][HidNative]::HidD_FreePreparsedData($pp); [void][HidNative]::CloseHandle($h)
+    return
+}
+
+# PowerShell's handle is no longer needed; the engine opens its own.
+[void][HidNative]::HidD_FreePreparsedData($pp)
+[void][HidNative]::CloseHandle($h)
+
+$eng = New-Object LampEngine
+$eng.DevicePath = $devPath
+$eng.LampCount  = $lampCount
+$eng.Order      = [int[]]$order
+$eng.ReportId   = $rMulti.Rid
+$eng.Slots      = $slots
+$eng.ReportLen  = (Rpt-Len $rMulti)
+$eng.OffCount   = $offCnt
+$eng.OffFlags   = $offFlg
+$eng.OffId      = $offId
+$eng.OffR       = $offR
+$eng.OffG       = $offG
+$eng.OffB       = $offB
+$eng.OffI       = $offI
+$eng.MaxR       = $RMAX
+$eng.MaxG       = $GMAX
+$eng.MaxB       = $BMAX
+$eng.MaxI       = $IMAX
+$eng.Effect     = $Effect
+$eng.Speed      = $Speed
+$eng.Brightness = $Brightness
+$eng.Fps        = $Fps
+$eng.Mirror     = [bool]$Mirror
+$eng.Reverse    = [bool]$Reverse
+$eng.PalR       = [int[]]@($stops | ForEach-Object { $_[0] })
+$eng.PalG       = [int[]]@($stops | ForEach-Object { $_[1] })
+$eng.PalB       = [int[]]@($stops | ForEach-Object { $_[2] })
+
+if (-not $eng.Open()) {
+    Write-Host ("  Engine could not open the device. {0}" -f $eng.LastError) -ForegroundColor Red
+    Write-Host "  Run PowerShell as Administrator." -ForegroundColor Red
+    return
+}
+
+Say ("  {0} zones, {1} per transfer, {2} transfers/frame, {3} colours (cyclic)" -f `
+     $lampCount, $slots, [Math]::Ceiling($lampCount/[double]$slots), $stops.Count) 'Green'
+
+if ($Effect -eq 'off') {
+    $eng.Blank(); $eng.Close()
+    Say "  OFF applied." 'Green'
+    return
+}
+if ($Effect -eq 'static') {
+    $eng.Solid($stops[0][0],$stops[0][1],$stops[0][2]); $eng.Close()
+    Say "  Solid colour applied." 'Green'
+    return
+}
+
 Say ""
-Say "  Running. Works whether or not this window is focused. Ctrl+C to stop." 'Green'
+Say ("  Running at {0} fps on a compiled thread. Ctrl+C to stop." -f $Fps) 'Green'
 Say ""
 
-[void][HidNative]::timeBeginPeriod(1)
-$sw=[Diagnostics.Stopwatch]::StartNew()
-$tps=[Diagnostics.Stopwatch]::Frequency
-$frameTicks=[long]($tps/$Fps)
-$next=$sw.ElapsedTicks+$frameTicks
-$rand=New-Object System.Random
-$heat=New-Object double[] $lampCount
-$dir=if ($Reverse) { -1.0 } else { 1.0 }
-
+$eng.Start()
 try {
-    while ($true) {
-        $t=($sw.ElapsedTicks/[double]$tps)*$Speed
-        $N=$lampCount
-
-        if ($CustomBlock) {
-            & $CustomBlock $t $N
-        }
-        else {
-        switch ($Effect) {
-            'gradient' {
-                $scroll=$t*120.0*$dir
-                for ($i=0;$i -lt $N;$i++) {
-                    $k=[int](((($i/[double]$N)*$LUTN)+$scroll)%$LUTN)
-                    if ($k -lt 0) { $k+=$LUTN }
-                    Set-Zone $i $lutR[$k] $lutG[$k] $lutB[$k]
-                }
-            }
-            'wave' {
-                for ($i=0;$i -lt $N;$i++) {
-                    $ph=($t*1.2*$dir)-($i/[double]$N)*2.0
-                    $w=[Math]::Pow((1.0+[Math]::Sin($ph*[Math]::PI))/2.0,2.0)
-                    Set-Zone $i ($C1[0]*$w+$C2[0]*(1-$w)*0.15) ($C1[1]*$w+$C2[1]*(1-$w)*0.15) ($C1[2]*$w+$C2[2]*(1-$w)*0.15)
-                }
-            }
-            'rainbow' {
-                for ($i=0;$i -lt $N;$i++) {
-                    $c=Convert-Hsv ((($i/[double]$N)*360.0)+($t*90.0*$dir)) 1.0 1.0
-                    Set-Zone $i $c[0] $c[1] $c[2]
-                }
-            }
-            'breathe' {
-                $w=0.04+0.96*[Math]::Pow((1.0+[Math]::Sin($t*1.6*[Math]::PI))/2.0,2.2)
-                for ($i=0;$i -lt $N;$i++) { Set-Zone $i ($C1[0]*$w) ($C1[1]*$w) ($C1[2]*$w) }
-            }
-            'comet' {
-                $head=($t*6.0)%$N
-                for ($i=0;$i -lt $N;$i++) {
-                    $d=$head-$i; if ($d -lt 0) { $d+=$N }
-                    $w=[Math]::Exp(-$d*0.9)
-                    Set-Zone $i ($C1[0]*$w) ($C1[1]*$w) ($C1[2]*$w)
-                }
-            }
-            'pulse' {
-                $w=[Math]::Exp(-($t%1.0)*4.5)
-                $c=Convert-Hsv ([Math]::Floor($t)*47.0) 1.0 1.0
-                for ($i=0;$i -lt $N;$i++) { Set-Zone $i ($c[0]*$w) ($c[1]*$w) ($c[2]*$w) }
-            }
-            'scanner' {
-                $span=($N-1)*2.0; $p=($t*7.0)%$span
-                if ($p -gt ($N-1)) { $p=$span-$p }
-                for ($i=0;$i -lt $N;$i++) {
-                    $w=[Math]::Max(0.0,1.0-([Math]::Abs($i-$p)/2.2)); $w=$w*$w
-                    Set-Zone $i ($C1[0]*$w) ($C1[1]*$w) ($C1[2]*$w)
-                }
-            }
-            'fire' {
-                for ($i=0;$i -lt $N;$i++) {
-                    $heat[$i]=$heat[$i]*0.86+$rand.NextDouble()*0.30
-                    if ($heat[$i] -gt 1.0) { $heat[$i]=1.0 }
-                    $v=$heat[$i]
-                    Set-Zone $i (255*$v) (90*$v*$v) (10*$v*$v*$v)
-                }
-            }
-        }
-        }
-
-        Push-Frame
-
-        $remain=$next-$sw.ElapsedTicks
-        if ($remain -gt 0) {
-            $ms=[int]($remain*1000/$tps)
-            if ($ms -gt 0) { Start-Sleep -Milliseconds $ms }
-        } else {
-            $next=$sw.ElapsedTicks   # we fell behind; resync instead of spiralling
-        }
-        $next+=$frameTicks
-    }
+    while ($true) { Start-Sleep -Seconds 1 }
 }
 finally {
-    [void][HidNative]::timeEndPeriod(1)
     Say ""
     Say "  Stopping. Handing lighting back to the keyboard firmware." 'Yellow'
-    if ($rCtrl) { $b=New-Rpt $rCtrl; Set-Val $rCtrl $b $U_AUTONOMOUS 1; [void](Send-Rpt $rCtrl $b) }
-    [void][HidNative]::HidD_FreePreparsedData($pp)
-    [void][HidNative]::CloseHandle($h)
+    $eng.Stop()
+    $eng.Blank()
+    $eng.Close()
+    $h2=[HidNative]::CreateFileW($devPath,$GENRW,$SHARERW,[IntPtr]::Zero,$OPENEXIST,[uint32]0,[IntPtr]::Zero)
+    if ($h2 -ne $INVALID) {
+        $pp2=[IntPtr]::Zero
+        if ([HidNative]::HidD_GetPreparsedData($h2,[ref]$pp2)) {
+            if ($rCtrl) {
+                $cb=New-Object byte[] $featLen; $cb[0]=[byte]$rCtrl.Rid
+                [void][HidNative]::HidP_SetUsageValue(2,0x59,0,[uint16]$U_AUTONOMOUS,[uint32]1,$pp2,$cb,[uint32]$cb.Length)
+                [void][HidNative]::HidD_SetFeature($h2,$cb,$cb.Length)
+            }
+            [void][HidNative]::HidD_FreePreparsedData($pp2)
+        }
+        [void][HidNative]::CloseHandle($h2)
+    }
 }
