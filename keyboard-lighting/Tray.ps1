@@ -56,26 +56,34 @@ function Log($msg, $level = 'INFO') {
 Log '---------------- starting ----------------'
 
 # ---------------------------------------------------------------- single instance
-# Clicking the pinned icon while it is already running must bring the
-# existing window forward, not start a second copy that fights over the
-# keyboard.
-$script:Mutex = New-Object System.Threading.Mutex($false, 'Global\KeyboardLightingApp')
-$gotMutex = $false
-try { $gotMutex = $script:Mutex.WaitOne(0, $false) } catch { $gotMutex = $true }
+# Autostart runs this elevated; clicking the Start-menu icon starts a
+# normal-privilege copy. Windows blocks the lower one from signalling a
+# kernel object owned by the higher one, so the handshake goes through
+# files in the user's own AppData instead - readable and writable from
+# both, and checked BEFORE any elevation prompt.
+$LockFile = Join-Path $CfgDir 'running.lock'
+$ShowFile = Join-Path $CfgDir 'show.flag'
 
-$script:ShowSignal = $null
-try {
-    $created = $false
-    $script:ShowSignal = New-Object System.Threading.EventWaitHandle(
-        $false, [System.Threading.EventResetMode]::AutoReset,
-        'Global\KeyboardLightingShow', [ref]$created)
-} catch { }
+function Test-AlreadyRunning {
+    if (-not (Test-Path $LockFile)) { return $false }
+    try {
+        $age = (Get-Date) - (Get-Item $LockFile).LastWriteTime
+        # The live instance refreshes this every 2s. Anything older than
+        # 15s is a leftover from a crash or a hard power-off.
+        return ($age.TotalSeconds -lt 15)
+    } catch { return $false }
+}
 
-if (-not $gotMutex) {
-    Log 'already running - signalling the existing window'
-    try { if ($script:ShowSignal) { [void]$script:ShowSignal.Set() } } catch { }
+if (Test-AlreadyRunning) {
+    Log 'already running - asking that copy to show its window'
+    try { Set-Content -Path $ShowFile -Value ([DateTime]::UtcNow.Ticks) -Encoding ASCII -ErrorAction SilentlyContinue } catch { }
     return
 }
+
+function Update-Heartbeat {
+    try { Set-Content -Path $LockFile -Value $PID -Encoding ASCII -ErrorAction SilentlyContinue } catch { }
+}
+Update-Heartbeat
 
 # ---------------------------------------------------------------- admin
 function Test-IsAdmin {
@@ -97,12 +105,12 @@ if (-not $IsAdmin -and -not $NoElevate) {
                      '-File', ('"{0}"' -f $PSCommandPath), '-NoElevate')
         if ($Silent)   { $relArgs += '-Silent' }
         if ($NoUpdate) { $relArgs += '-NoUpdate' }
-        try { $script:Mutex.ReleaseMutex() } catch { }
+        try { Remove-Item $LockFile -Force -ErrorAction SilentlyContinue } catch { }
         Start-Process -FilePath 'powershell.exe' -ArgumentList $relArgs -Verb RunAs | Out-Null
         return
     } catch {
         Log 'elevation refused - continuing without it' 'WARN'
-        try { [void]$script:Mutex.WaitOne(0, $false) } catch { }
+        Update-Heartbeat
     }
 }
 
@@ -1013,9 +1021,11 @@ $watch = New-Object System.Windows.Forms.Timer
 $watch.Interval = 500
 $script:tick = 0
 $watch.Add_Tick({
-    try {
-        if ($script:ShowSignal -and $script:ShowSignal.WaitOne(0)) { Show-Window }
-    } catch { }
+    Update-Heartbeat
+    if (Test-Path $ShowFile) {
+        try { Remove-Item $ShowFile -Force -ErrorAction SilentlyContinue } catch { }
+        Show-Window
+    }
     $script:tick++
     if ($script:tick % 8 -eq 0) { Update-Status }
 
@@ -1051,5 +1061,5 @@ Log 'ready'
 
 if (-not $script:Quitting) { Stop-Engine }
 $icon.Visible = $false
-try { $script:Mutex.ReleaseMutex(); $script:Mutex.Dispose() } catch { }
+try { Remove-Item $LockFile -Force -ErrorAction SilentlyContinue } catch { }
 Log 'exited'
