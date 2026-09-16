@@ -399,9 +399,10 @@ $pbPreview.Add_Paint({
         $lr = (Lin $pal[$a].R) * $ga; $lr = $lr + (((Lin $pal[$b2].R) * $gb) - $lr) * $w
         $lg = (Lin $pal[$a].G) * $ga; $lg = $lg + (((Lin $pal[$b2].G) * $gb) - $lg) * $w
         $lb = (Lin $pal[$a].B) * $ga; $lb = $lb + (((Lin $pal[$b2].B) * $gb) - $lb) * $w
-        $r = [int](Srgb ($lr * $bright))
-        $gg= [int](Srgb ($lg * $bright))
-        $bb= [int](Srgb ($lb * $bright))
+        # Engine scales brightness in GAMMA space, so do the same here.
+        $r = [int]((Srgb $lr) * $bright)
+        $gg= [int]((Srgb $lg) * $bright)
+        $bb= [int]((Srgb $lb) * $bright)
         $br = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb($r,$gg,$bb))
         $g.FillRectangle($br, [float]($i*$cw), 0.0, [float]($cw+1), [float]$h)
         $br.Dispose()

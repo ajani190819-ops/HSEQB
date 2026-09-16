@@ -136,7 +136,7 @@ public class LampEngine {
   volatile bool running;
   byte[][] bufs;
   int nbatch;
-  int[] fr, fg, fb;
+  double[] fr, fg, fb;
   double[] heat;
   Random rnd = new Random();
 
@@ -174,7 +174,8 @@ public class LampEngine {
       }
       bufs[bi] = b;
     }
-    fr = new int[LampCount]; fg = new int[LampCount]; fb = new int[LampCount];
+    fr = new double[LampCount]; fg = new double[LampCount]; fb = new double[LampCount];
+    er = new double[LampCount]; eg = new double[LampCount]; eb = new double[LampCount];
     pr = new int[LampCount]; pg = new int[LampCount]; pb = new int[LampCount];
     for (int i = 0; i < LampCount; i++) { pr[i] = -1; pg[i] = -1; pb[i] = -1; }
     heat = new double[LampCount];
@@ -199,38 +200,41 @@ public class LampEngine {
     }
     int i = Order[q];
 
-    // Dim in LINEAR light. Scaling the gamma-encoded byte makes half
-    // brightness look like ~73% brightness, so fades and tails never
-    // actually reach darkness and washes out the effect.
-    if (Brightness < 0.999) {
-      r = ToSrgb(ToLin(r < 0 ? 0 : (r > 255 ? 255 : r)) * Brightness);
-      g = ToSrgb(ToLin(g < 0 ? 0 : (g > 255 ? 255 : g)) * Brightness);
-      b = ToSrgb(ToLin(b < 0 ? 0 : (b > 255 ? 255 : b)) * Brightness);
-    }
+    // Brightness is applied as a GAMMA-SPACE scale, which is what the
+    // Windows Dynamic Lighting slider does. Scaling linear light instead
+    // feels top-heavy: 50% would still look ~79% bright.
+    if (Brightness < 0.999) { r *= Brightness; g *= Brightness; b *= Brightness; }
 
-    int rr = (int)(r + 0.5); if (rr < 0) rr = 0; else if (rr > 255) rr = 255;
-    int gg = (int)(g + 0.5); if (gg < 0) gg = 0; else if (gg > 255) gg = 255;
-    int bb = (int)(b + 0.5); if (bb < 0) bb = 0; else if (bb > 255) bb = 255;
-    fr[i] = rr; fg[i] = gg; fb[i] = bb;
+    // Keep full precision here; quantisation happens once, in Push(),
+    // where the dither error can be carried between frames.
+    if (r < 0) r = 0; else if (r > 255) r = 255;
+    if (g < 0) g = 0; else if (g > 255) g = 255;
+    if (b < 0) b = 0; else if (b > 255) b = 255;
+    fr[i] = r; fg[i] = g; fb[i] = b;
   }
 
-  int[] pr, pg, pb;   // last values actually sent
+  int[] pr, pg, pb;        // last bytes actually sent
+  double[] er, eg, eb;     // carried quantisation error, for temporal dither
 
   void Push() { Push(false); }
 
-  void Push(bool force) {
-    // Skip the whole frame if not a single channel byte changed. Sending
-    // identical frames gains nothing and adds bus traffic that shows up
-    // as flicker.
-    if (!force) {
-      bool same = true;
-      for (int i = 0; i < LampCount; i++) {
-        if (fr[i] != pr[i] || fg[i] != pg[i] || fb[i] != pb[i]) { same = false; break; }
-      }
-      if (same) return;
-    }
+  // Quantise with error feedback: the fraction we throw away this frame is
+  // added to the next one. At 60fps the eye integrates the result, so a
+  // value creeping at 0.4 LSB/frame fades smoothly instead of holding for
+  // two frames and then stepping - which is the flicker seen at low speeds.
+  static int Dither(double v, double scale, ref double err) {
+    double x = v * scale / 255.0 + err;
+    int q = (int)(x + 0.5);
+    if (q < 0) q = 0; else if (q > 255) q = 255;
+    err = x - q;
+    if (err > 1.0) err = 1.0; else if (err < -1.0) err = -1.0;
+    return q;
+  }
 
+  void Push(bool force) {
     int last = nbatch - 1;
+    bool changed = force;
+
     for (int bi = 0; bi < nbatch; bi++) {
       byte[] b = bufs[bi];
       int first = bi * Slots;
@@ -238,15 +242,25 @@ public class LampEngine {
       for (int s = 0; s < n; s++) {
         int i = first + s;
         int st = Interleaved ? s*4 : s;
-        b[OffR + st] = (byte)(fr[i] * MaxR / 255);
-        b[OffG + st] = (byte)(fg[i] * MaxG / 255);
-        b[OffB + st] = (byte)(fb[i] * MaxB / 255);
+        int qr = Dither(fr[i], MaxR, ref er[i]);
+        int qg = Dither(fg[i], MaxG, ref eg[i]);
+        int qb = Dither(fb[i], MaxB, ref eb[i]);
+        if (qr != pr[i] || qg != pg[i] || qb != pb[i]) changed = true;
+        pr[i] = qr; pg[i] = qg; pb[i] = qb;
+        b[OffR + st] = (byte)qr;
+        b[OffG + st] = (byte)qg;
+        b[OffB + st] = (byte)qb;
       }
       b[OffFlags] = (bi == last) ? (byte)1 : (byte)0;
-      HidD_SetFeature(h, b, b.Length);
     }
 
-    for (int i = 0; i < LampCount; i++) { pr[i] = fr[i]; pg[i] = fg[i]; pb[i] = fb[i]; }
+    // Nothing moved, not even by one dithered step: skip the transfer.
+    if (!changed) return;
+
+    for (int bi = 0; bi < nbatch; bi++) {
+      byte[] b = bufs[bi];
+      HidD_SetFeature(h, b, b.Length);
+    }
   }
 
   static void Hsv(double hDeg, double s, double v, out double r, out double g, out double b) {
@@ -397,7 +411,9 @@ public class LampEngine {
     ob  = ToSrgb(ToLin(b) * w);
   }
 
-  void Frame(double t) {
+  void Frame(double t) { Frame(t, 1.0 / Fps); }
+
+  void Frame(double t, double dt) {
     int N = LampCount;
     double dir = Reverse ? -1.0 : 1.0;
 
@@ -475,12 +491,23 @@ public class LampEngine {
         break;
       }
       case "fire": {
+        // Cool every zone, then randomly spark a few. The old model added
+        // heat every frame, which drove the steady state above 1.0 so every
+        // zone sat clamped at maximum - a flat, pale glow with no life.
+        double cool  = Math.Pow(0.02, dt);              // frame-rate independent
+        double spark = 1.0 - Math.Pow(1.0 - 0.10, dt * 60.0);
         for (int i = 0; i < N; i++) {
-          heat[i] = heat[i] * 0.86 + rnd.NextDouble() * 0.30;
+          heat[i] *= cool;
+          if (rnd.NextDouble() < spark) heat[i] += 0.30 + rnd.NextDouble() * 0.45;
           if (heat[i] > 1.0) heat[i] = 1.0;
           double v = heat[i];
-          // heat is linear energy; convert each channel back to gamma space
-          SetZone(i, ToSrgb(v), ToSrgb(0.35*v*v), ToSrgb(0.04*v*v*v));
+          // Blackbody-ish ramp in LINEAR light. Blue is held at zero until
+          // the zone is genuinely hot, so the fire stays saturated instead
+          // of washing out to pale orange.
+          double lr = v * 1.45; if (lr > 1.0) lr = 1.0;
+          double g2 = (v - 0.32) * 1.5; if (g2 < 0) g2 = 0; if (g2 > 1) g2 = 1;
+          double b2 = (v - 0.78) * 3.0; if (b2 < 0) b2 = 0; if (b2 > 1) b2 = 1;
+          SetZone(i, ToSrgb(lr), ToSrgb(g2 * g2), ToSrgb(b2 * b2 * b2));
         }
         break;
       }
@@ -494,13 +521,16 @@ public class LampEngine {
   void Loop() {
     timeBeginPeriod(1);
     Stopwatch sw = Stopwatch.StartNew();
+    double lastNow = 0.0;
     long freq = Stopwatch.Frequency;
     long per  = freq / Fps;
     long next = sw.ElapsedTicks + per;
     try {
       while (running) {
-        double t = (sw.ElapsedTicks / (double)freq) * Speed;
-        Frame(t);
+        double now = sw.ElapsedTicks / (double)freq;
+        double dt  = now - lastNow; lastNow = now;
+        if (dt <= 0 || dt > 0.25) dt = 1.0 / Fps;
+        Frame(now * Speed, dt);
         Push();
 
         long remain = next - sw.ElapsedTicks;
@@ -534,16 +564,22 @@ public class LampEngine {
   }
 
   public void Blank() {
-    for (int i = 0; i < LampCount; i++) { fr[i]=0; fg[i]=0; fb[i]=0; }
+    for (int i = 0; i < LampCount; i++) {
+      fr[i]=0; fg[i]=0; fb[i]=0;
+      er[i]=0; eg[i]=0; eb[i]=0;
+    }
     Push(true);
   }
 
   public void Solid(int r, int g, int b) {
+    // Static colour: zero the dither error so the output is perfectly
+    // steady rather than shimmering between two adjacent bytes.
+    double rr = r * Brightness, gg = g * Brightness, bb = b * Brightness;
+    if (rr > 255) rr = 255; if (gg > 255) gg = 255; if (bb > 255) bb = 255;
+    if (rr < 0) rr = 0;     if (gg < 0) gg = 0;     if (bb < 0) bb = 0;
     for (int i = 0; i < LampCount; i++) {
-      int rr=(int)(r*Brightness), gg=(int)(g*Brightness), bb=(int)(b*Brightness);
-      if(rr>255)rr=255; if(gg>255)gg=255; if(bb>255)bb=255;
-      if(rr<0)rr=0; if(gg<0)gg=0; if(bb<0)bb=0;
       fr[i]=rr; fg[i]=gg; fb[i]=bb;
+      er[i]=0;  eg[i]=0;  eb[i]=0;
     }
     Push(true);
   }
@@ -569,7 +605,7 @@ $U_IDSTART=0x61; $U_IDEND=0x62; $U_AUTONOMOUS=0x71
 # DISCOVERY  (proven working; unchanged in shape)
 # ============================================================================
 Say ""
-Say ("AURA-BACKGROUND v7   effect={0}  fps={1}  speed={2}" -f $Effect,$Fps,$Speed) 'Cyan'
+Say ("AURA-BACKGROUND v8   effect={0}  fps={1}  speed={2}" -f $Effect,$Fps,$Speed) 'Cyan'
 Say ""
 
 # A laptop exposes MANY HID collections on the same VID/PID, and more than
