@@ -898,25 +898,39 @@ public class LampEngine {
             break;
           }
           case "wave": {
-            double r0 = gr.PalR[0], g0 = gr.PalG[0], b0 = gr.PalB[0];
-            int p1 = gr.PalR.Length > 1 ? 1 : 0;
-            double r1 = gr.PalR[p1], g1 = gr.PalG[p1], b1 = gr.PalB[p1];
+            // A wave that travels along the group, sweeping through the
+            // whole palette. It used to blend only colours 1 and 2 and
+            // scale the second by 0.15, so colour 2 rendered at 15%
+            // brightness - it read as black, and colours 3+ never showed
+            // at all. Go through the palette like every other effect, and
+            // use the sine only to shape a gentle brightness swell.
             for (int i = 0; i < gr.N; i++) {
-              double ph = (t * 1.2 * gr.Dir) - gr.Pos[i] * 2.0;
-              double w = (1.0 + Math.Sin(ph * Math.PI)) / 2.0; w = w * w;
-              SetZoneG(gr, i, r0*w + r1*(1-w)*0.15, g0*w + g1*(1-w)*0.15, b0*w + b1*(1-w)*0.15);
+              double ph = (t * 0.6 * gr.Dir) - gr.Pos[i];
+              double r, g, b;
+              GroupPal(gr, ph, out r, out g, out b);
+              // Soft crest-to-trough shading, never all the way to black,
+              // so the colour itself stays readable at every point.
+              double w = (1.0 + Math.Sin(ph * 2.0 * Math.PI)) / 2.0;
+              double lvl = 0.45 + 0.55 * (w * w);
+              SetZoneG(gr, i, r * lvl, g * lvl, b * lvl);
             }
             break;
           }
           case "comet": {
             // Head travels 0..1 across the real width, wrapping.
             double head = (t * 0.45 * gr.Dir) % 1.0; if (head < 0) head += 1.0;
+            // The head used to be locked to colour 1 and every other colour
+            // was ignored. Walk the palette as the comet travels, so a
+            // two-colour comet visibly changes colour lap to lap and the
+            // trail shades through the palette behind the head.
             for (int i = 0; i < gr.N; i++) {
               double d = head - gr.Pos[i];
               if (d < 0) d += 1.0;
               double w = Math.Exp(-d * 9.0);
+              double pr2, pg2, pb2;
+              GroupPal(gr, (t * 0.45 * gr.Dir) - d, out pr2, out pg2, out pb2);
               double cr, cg, cb;
-              Fade(gr.PalR[0], gr.PalG[0], gr.PalB[0], w, out cr, out cg, out cb);
+              Fade(pr2, pg2, pb2, w, out cr, out cg, out cb);
               SetZoneG(gr, i, cr, cg, cb);
             }
             break;
@@ -924,11 +938,16 @@ public class LampEngine {
           case "scanner": {
             double p = (t * 0.55) % 2.0; if (p < 0) p += 2.0;
             if (p > 1.0) p = 2.0 - p;           // bounce 0..1..0
+            // Take the colour from the palette at the sweep's position, so
+            // a multi-colour scanner changes colour as it crosses instead
+            // of always being colour 1.
+            double sr, sg, sb;
+            GroupPal(gr, t * 0.275 * gr.Dir, out sr, out sg, out sb);
             for (int i = 0; i < gr.N; i++) {
               double w = 1.0 - (Math.Abs(gr.Pos[i] - p) / 0.18);
               if (w < 0) w = 0; w = w * w;
               double cr, cg, cb;
-              Fade(gr.PalR[0], gr.PalG[0], gr.PalB[0], w, out cr, out cg, out cb);
+              Fade(sr, sg, sb, w, out cr, out cg, out cb);
               SetZoneG(gr, i, cr, cg, cb);
             }
             break;
@@ -936,8 +955,13 @@ public class LampEngine {
           case "breathe": {
             double w = (1.0 + Math.Sin(t * 1.6 * Math.PI)) / 2.0;
             w = 0.02 + 0.98 * w * w;
+            // Advance through the palette as it breathes, so every colour
+            // you picked gets its turn rather than only the first.
+            double br2, bg2, bb2;
+            GroupPal(gr, t * 0.8 * gr.Dir / (double)Math.Max(1, gr.PalR.Length),
+                     out br2, out bg2, out bb2);
             double cr, cg, cb;
-            Fade(gr.PalR[0], gr.PalG[0], gr.PalB[0], w, out cr, out cg, out cb);
+            Fade(br2, bg2, bb2, w, out cr, out cg, out cb);
             for (int i = 0; i < gr.N; i++) SetZoneG(gr, i, cr, cg, cb);
             break;
           }
