@@ -4,11 +4,16 @@ Custom animated keyboard lighting without Armoury Crate.
 
 ## Install
 
-Download **Install.bat**, double-click it, click **Yes**. That is the
+Download **Setup.bat**, double-click it, click **Yes**. That is the
 whole install.
 
+**`Setup.bat` is the only file you ever run.** Run it again any time to
+update, repair, or test - it works out what is needed. If something is
+wrong it tells you what, and copies a report to your clipboard.
+
 It downloads everything, builds `KeyboardLighting.exe`, adds it to your
-Start menu and Desktop, sets it to start when you log in, and runs it.
+Start menu and Desktop, sets it to start when you log in, tells G-Helper
+to leave the keyboard colours alone, checks it all works, and runs it.
 
 ## Using it
 
@@ -82,7 +87,7 @@ tray menu shows **Restart to finish update**.
 
 | What | Where |
 |---|---|
-| Program | the folder you ran `Install.bat` from |
+| Program | the folder you ran `Setup.bat` from |
 | Settings | `%LOCALAPPDATA%\KeyboardLighting\panel.json` |
 | Log | `%LOCALAPPDATA%\KeyboardLighting\log.txt` |
 | Startup entry | Task Scheduler, task `KeyboardLighting` |
@@ -91,6 +96,20 @@ tray menu shows **Restart to finish update**.
 
 Turn **Dynamic Lighting off** in *Settings > Personalization > Dynamic
 Lighting*, or Windows fights this app for control of the keyboard.
+
+## G-Helper
+
+You can keep using G-Helper. `Setup.bat` sets one option in it,
+`skip_aura`, which stops it pushing its own keyboard colours when it
+starts. Everything else in G-Helper is untouched: fan curves,
+performance modes, the Fn brightness keys, battery limits, all of it.
+
+Without that setting the two apps fight over the keyboard every time
+G-Helper launches. With it, your colours and patterns always win.
+
+If you ever want G-Helper's own lighting modes back, open
+`%AppData%\GHelper\config.json` and change `"skip_aura": 1` to `0`, or
+just uninstall this app.
 
 ## Writing your own effect
 
@@ -151,7 +170,7 @@ never have to restart anything.
 
 ## If something goes wrong
 
-Run **Check.bat**. It re-downloads everything and prints a diagnostic;
+Run **Setup.bat**. It re-downloads everything and prints a diagnostic;
 the banner should say **v16**. The log file is in the tray menu under
 *Open log file*.
 

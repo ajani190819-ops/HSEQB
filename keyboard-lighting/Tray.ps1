@@ -353,7 +353,7 @@ function Start-Engine {
             # Exit code 2 is the engine telling us it could not compile.
             # That is a broken download, not a transient failure, so say so
             # rather than leaving a dark keyboard and a vague status line.
-            if ($code -eq 2) { $script:EngineErr = 'The lighting engine is damaged. Use Check for updates, or run Install.bat again.' }
+            if ($code -eq 2) { $script:EngineErr = 'The lighting engine is damaged. Run Setup.bat to repair it.' }
             else             { $script:EngineErr = '' }
             return $false
         }
@@ -419,7 +419,7 @@ function Set-Autostart([bool]$on) {
 
 # ---------------------------------------------------------------- update
 function Invoke-SelfUpdate {
-    $files = @('Aura-Background.ps1','Tray.ps1','ui_controls.cs.txt','app.ico','Install.ps1','Install.bat','Check.ps1','Check.bat','Update.ps1','Update.bat','MyEffect.ps1','README.md')
+    $files = @('Aura-Background.ps1','Tray.ps1','ui_controls.cs.txt','app.ico','Setup.ps1','Setup.bat','MyEffect.ps1','README.md')
     $changed = @()
     try { [Net.ServicePointManager]::SecurityProtocol = 'Tls12' } catch { }
     foreach ($f in $files) {
@@ -465,7 +465,7 @@ if (Test-Path $uiFile) {
 }
 if (-not $script:CustomUi) {
     [System.Windows.Forms.MessageBox]::Show(
-        "The interface files are missing or damaged.`n`nRun Install.bat again to repair.",
+        "The interface files are missing or damaged.`n`nRun Setup.bat to repair.",
         'Keyboard Lighting','OK','Error') | Out-Null
     return
 }
@@ -1483,7 +1483,7 @@ if (-not $NoUpdate) {
         param($b, $h)
         try { [Net.ServicePointManager]::SecurityProtocol = 'Tls12' } catch { }
         $hit = @()
-        foreach ($f in 'Aura-Background.ps1','Tray.ps1','ui_controls.cs.txt','app.ico','Install.ps1','Install.bat','Check.ps1','Check.bat','Update.ps1','Update.bat','MyEffect.ps1','README.md') {
+        foreach ($f in 'Aura-Background.ps1','Tray.ps1','ui_controls.cs.txt','app.ico','Setup.ps1','Setup.bat','MyEffect.ps1','README.md') {
             try {
                 $tmp = Join-Path $env:TEMP ('kblbg_' + $f)
                 Invoke-WebRequest "$b/$f" -OutFile $tmp -UseBasicParsing -TimeoutSec 20
