@@ -41,11 +41,14 @@ param(
     [double]$Brightness = 1.0,
 
     [ValidateRange(5, 144)]
-    # Raised from 60. The device's own MinUpdateInterval still caps this,
-    # so asking for more than the hardware allows is harmless - it just
-    # clamps. More frames means each colour step is smaller, which is what
-    # makes a slow fade look continuous instead of stepped.
-    [int]$Fps = 120,
+    # Back to 60 after measuring what a frame actually costs. Each frame
+    # sends two synchronous feature reports, and on this EC-backed keyboard
+    # those take milliseconds; at 120 the pair can eat most of the 8.3 ms
+    # budget, so frames land whenever the previous write returns rather
+    # than on a steady beat - which looks like flicker, not smoothness.
+    # 60 leaves generous headroom. The engine measures its own write cost
+    # and backs the rate off further if even this is too fast.
+    [int]$Fps = 60,
 
     [string]$Custom,
 
@@ -480,19 +483,36 @@ public class LampEngine {
     // colour - and the middle 40% does the whole transition, eased at both
     // ends so it does not start or stop abruptly.
     //
-    // 40% is deliberate. An earlier attempt used 30% and the crossing had
-    // to move so fast that the largest per-frame change doubled, which is
-    // what made everything lurch. At 40% the worst change is 37 of 255
-    // against 30 for a plain ease - noticeably more colour separation for
-    // a small cost in smoothness. Purple to orange: red and pink drop from
-    // 12% of the cycle to 6%, orange rises from 25% to 36%.
-    const double Trans = 0.40;
-    const double Edge = (1.0 - Trans) / 2.0;
+    // How wide that middle window is depends on how many lamps the zone
+    // has, and it has to.
+    //
+    // On the twelve light-bar lamps a narrow window is exactly right: at
+    // any moment different lamps sit at different points, so the strip
+    // shows solid blocks of colour with a short blend between them, which
+    // is the look that was asked for.
+    //
+    // The keyboard has four lamps. With a narrow window all four sit
+    // inside the flat holds nearly all the time, so instead of a gradient
+    // travelling across the keys they sit on one colour, all flip
+    // together, and sit on the next - blocks snapping rather than motion.
+    // Widening the span does not help; it just lands more lamps in the
+    // holds. The only fix is to give a sparse zone more of its cycle to
+    // move in.
+    //
+    // So: twelve or more lamps keep the 40% window, four or fewer get 75%,
+    // and anything between is interpolated. Both zones keep the same
+    // palette and the same hue path, so the colours are unchanged.
+    double nlamp = (double)gr.N;
+    double trans;
+    if (nlamp >= 12.0) trans = 0.40;
+    else if (nlamp <= 4.0) trans = 0.75;
+    else trans = 0.75 + (0.40 - 0.75) * ((nlamp - 4.0) / 8.0);
+    double edge = (1.0 - trans) / 2.0;
     double w;
-    if (u <= Edge) w = 0.0;
-    else if (u >= 1.0 - Edge) w = 1.0;
+    if (u <= edge) w = 0.0;
+    else if (u >= 1.0 - edge) w = 1.0;
     else {
-      double tt = (u - Edge) / Trans;
+      double tt = (u - edge) / trans;
       w = tt * tt * (3.0 - 2.0 * tt);
     }
 
@@ -602,7 +622,18 @@ public class LampEngine {
   }
 
 
-  int[] pr, pg, pb;        // last bytes actually sent
+  int[] pr, pg, pb;
+  int[] nr, ng, nb2;       // this frame's bytes, promoted only once sent
+
+  // Measured cost of talking to the device. Every frame on an animating
+  // effect issues two synchronous feature reports, and on an EC-backed
+  // keyboard each can take milliseconds. If the pair costs more than the
+  // frame budget the render loop cannot hold its cadence and the lighting
+  // lands unevenly - which looks like flicker. These are read by the
+  // status line so it can be measured rather than guessed at.
+  public volatile int  WriteUs   = 0;   // last frame's two writes, microsec
+  public volatile int  WriteUsMax = 0;  // worst seen
+  public volatile int  LateFrames = 0;  // frames that missed their deadline        // last bytes actually sent
   double[] er, eg, eb;     // carried quantisation error, for temporal dither
 
   // ---- live frame publishing -------------------------------------
@@ -726,6 +757,11 @@ public class LampEngine {
     bool changed = force;
     bool dith = UseDither;
 
+    // Staging buffers for what this frame WANTS to send. pr/pg/pb must keep
+    // describing what the device actually has until the writes come back
+    // clean - see the promotion step at the bottom.
+    if (nr == null) { nr = new int[LampCount]; ng = new int[LampCount]; nb2 = new int[LampCount]; }
+
     for (int bi = 0; bi < nbatch; bi++) {
       byte[] b = bufs[bi];
       int first = bi * Slots;
@@ -737,7 +773,7 @@ public class LampEngine {
         int qg = Dither(fg[i], MaxG, ref eg[i], dith);
         int qb = Dither(fb[i], MaxB, ref eb[i], dith);
         if (qr != pr[i] || qg != pg[i] || qb != pb[i]) changed = true;
-        pr[i] = qr; pg[i] = qg; pb[i] = qb;
+        nr[i] = qr; ng[i] = qg; nb2[i] = qb;
         b[OffR + st] = (byte)qr;
         b[OffG + st] = (byte)qg;
         b[OffB + st] = (byte)qb;
@@ -748,10 +784,26 @@ public class LampEngine {
     // Nothing moved, not even by one dithered step: skip the transfer.
     if (!changed) return;
 
+    long t0 = Stopwatch.GetTimestamp();
     bool allOk = true;
     for (int bi = 0; bi < nbatch; bi++) {
       byte[] b = bufs[bi];
       if (!HidD_SetFeature(h, b, b.Length)) allOk = false;
+    }
+    int us = (int)((Stopwatch.GetTimestamp() - t0) * 1000000L / Stopwatch.Frequency);
+    WriteUs = us;
+    if (us > WriteUsMax) WriteUsMax = us;
+
+    // Only now is it true that the device holds these colours. Recording
+    // them earlier was the flicker: a failed write left the keyboard on a
+    // stale frame while pr/pg/pb claimed otherwise, so the next frame sent
+    // only the small delta from a frame that never landed and the lamps
+    // sat frozen until a later write happened to catch up. It bites the
+    // keyboard hardest because lamps 0-3 are the buffered batch - the
+    // device withholds them until the batch carrying the apply flag
+    // arrives, so losing that second write strands exactly those lamps.
+    if (allOk) {
+      for (int i = 0; i < LampCount; i++) { pr[i] = nr[i]; pg[i] = ng[i]; pb[i] = nb2[i]; }
     }
 
     // One failed write is noise (a busy endpoint). A run of them means the
@@ -1454,6 +1506,18 @@ public class LampEngine {
           if (ms > 1) Thread.Sleep(ms - 1);
           while (sw.ElapsedTicks < next) Thread.SpinWait(40);
         } else {
+          // Missed the deadline. Writing to this device is synchronous and
+          // can take milliseconds, so asking for a frame rate the hardware
+          // cannot service does not produce smoother light - it produces
+          // frames that land whenever the previous write finally returns,
+          // which is uneven and reads as flicker. Count it, and if it keeps
+          // happening drop the target rate until the loop can hold cadence.
+          LateFrames++;
+          if (LateFrames >= 30 && per < freq / 15) {
+            per = per + per / 4;          // 20% slower, floor at ~15 fps
+            LateFrames = 0;
+            Fps = (int)(freq / per);
+          }
           next = sw.ElapsedTicks;   // fell behind, resync rather than spiral
         }
         next += per;
@@ -2916,6 +2980,7 @@ if ($Effect -eq 'static' -and $NoLive) {
 
 Say ""
 Say (" Running at {0} fps on a compiled thread. Ctrl+C to stop." -f $eng.Fps) 'Green'
+
 Say ""
 
 $aud = @('spectrum','vumeter','beat','pulsebass')
@@ -2999,6 +3064,14 @@ try {
     Say "  Keyboard backlight keys: unavailable (ASUS ATK WMI not present)." 'DarkGray'
 }
 
+# Report the real cost of talking to the device, once, after the loop has
+# settled. This is the number that decides whether a frame rate is
+# achievable: two synchronous feature reports per frame, and if that pair
+# costs more than the frame budget the light cannot land evenly no matter
+# what rate is requested.
+$script:TimingAt = [DateTime]::UtcNow.AddSeconds(5)
+$script:TimingDone = $false
+
 $step = 125    # 8 steps across the full range, like the firmware
 # The app asks us to stop by creating this file. Being killed outright
 # skips the cleanup below, which is what used to leave the last frame
@@ -3011,6 +3084,19 @@ try {
             Remove-Item $stopFile -Force -ErrorAction SilentlyContinue
             Say "  Stop requested." 'Yellow'
             break
+        }
+
+        if (-not $script:TimingDone -and [DateTime]::UtcNow -gt $script:TimingAt) {
+            $script:TimingDone = $true
+            $budget = [int](1000000 / [Math]::Max(1, $eng.Fps))
+            $msg = ('device write {0} us/frame (worst {1}), budget {2} us at {3} fps, late frames {4}' -f `
+                    $eng.WriteUs, $eng.WriteUsMax, $budget, $eng.Fps, $eng.LateFrames)
+            Say ("  Timing: {0}" -f $msg) 'DarkGray'
+            try {
+                Add-Content -Path (Join-Path $stateDir 'log.txt') -Encoding UTF8 `
+                    -ErrorAction SilentlyContinue `
+                    -Value ('{0}  INFO   {1}' -f (Get-Date).ToString('yyyy-MM-dd HH:mm:ss'), $msg)
+            } catch { }
         }
         # --- resume from sleep / display wake ---
         if ($resumeOk) {
