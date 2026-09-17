@@ -34,19 +34,33 @@ $CfgDir    = Join-Path $env:LOCALAPPDATA 'KeyboardLighting'
 $CfgFile   = Join-Path $CfgDir 'panel.json'
 $LiveFile  = Join-Path $CfgDir 'live.txt'
 $ThemeFile = Join-Path $CfgDir 'theme.json'
-# Logs live in their own folder so they can be opened, read and cleared
-# without picking them out from among the settings and state files. The
-# panel and the engine write separate files - they are separate processes
-# and interleaving them made both harder to follow.
-$LogDir    = Join-Path $CfgDir 'logs'
-try { if (-not (Test-Path $LogDir)) { New-Item -ItemType Directory -Force -Path $LogDir | Out-Null } } catch { }
-$LogFile   = Join-Path $LogDir 'panel.log'
-# Anyone upgrading has a log.txt sitting in the settings folder. Move it in
-# rather than leaving an orphan behind that looks current but never updates.
+# Logs sit in a "logs" folder next to the program itself, so they are
+# where everything else is instead of buried under AppData. The panel and
+# the engine write separate files - they are separate processes, and one
+# interleaved file made both harder to follow.
+#
+# The program folder is wherever Setup.bat was run from, which is normally
+# Downloads or the Desktop and writable. If it is not - someone put it in
+# Program Files, or on a read-only share - fall back to AppData rather
+# than silently losing the log.
+$LogDir = Join-Path $Here 'logs'
 try {
-    $oldLog = Join-Path $CfgDir 'log.txt'
-    if ((Test-Path $oldLog) -and -not (Test-Path $LogFile)) {
-        Move-Item -Path $oldLog -Destination $LogFile -Force -ErrorAction SilentlyContinue
+    if (-not (Test-Path $LogDir)) { New-Item -ItemType Directory -Force -Path $LogDir -ErrorAction Stop | Out-Null }
+    $probe = Join-Path $LogDir '.writetest'
+    Set-Content -Path $probe -Value 'x' -ErrorAction Stop
+    Remove-Item $probe -Force -ErrorAction SilentlyContinue
+} catch {
+    $LogDir = Join-Path $CfgDir 'logs'
+    try { if (-not (Test-Path $LogDir)) { New-Item -ItemType Directory -Force -Path $LogDir | Out-Null } } catch { }
+}
+$LogFile   = Join-Path $LogDir 'panel.log'
+# Earlier versions logged to AppData. Bring an existing log across rather
+# than leaving an orphan that looks current but never updates again.
+try {
+    foreach ($oldLog in @((Join-Path $CfgDir 'log.txt'), (Join-Path (Join-Path $CfgDir 'logs') 'panel.log'))) {
+        if ((Test-Path $oldLog) -and -not (Test-Path $LogFile)) {
+            Move-Item -Path $oldLog -Destination $LogFile -Force -ErrorAction SilentlyContinue
+        }
     }
 } catch { }
 $TaskName  = 'KeyboardLighting'

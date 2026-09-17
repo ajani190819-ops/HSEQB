@@ -5,3 +5,4 @@ node_modules/
 # Machine-specific and regenerated on demand - never committed.
 keyboard-lighting/Engine.dll
 keyboard-lighting/Ui.dll
+keyboard-lighting/logs/

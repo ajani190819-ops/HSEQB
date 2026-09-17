@@ -2032,8 +2032,16 @@ public class ScreenCap {
 } catch {
     $msg = $_.Exception.Message
     try {
-        $sd = Join-Path (Join-Path $env:LOCALAPPDATA 'KeyboardLighting') 'logs'
-        if (-not (Test-Path $sd)) { New-Item -ItemType Directory -Force -Path $sd | Out-Null }
+        # This runs before the main log path is worked out, so repeat the
+        # choice here: program folder first, AppData if that fails. Uses
+        # $Here, set at the top of the script - $MyInvocation inside a
+        # catch block does not reliably refer to the script itself.
+        $sd = Join-Path $Here 'logs'
+        try { New-Item -ItemType Directory -Force -Path $sd -ErrorAction Stop | Out-Null }
+        catch {
+            $sd = Join-Path (Join-Path $env:LOCALAPPDATA 'KeyboardLighting') 'logs'
+            New-Item -ItemType Directory -Force -Path $sd | Out-Null
+        }
         Add-Content -Path (Join-Path $sd 'engine.log') -Encoding UTF8 -ErrorAction SilentlyContinue `
             -Value ('{0}  ERROR  engine failed to compile: {1}' -f (Get-Date).ToString('yyyy-MM-dd HH:mm:ss'), $msg)
     } catch { }
@@ -3002,8 +3010,20 @@ $eng.Start()
 # ---------------------------------------------------------------------------
 $stateDir  = Join-Path $env:LOCALAPPDATA 'KeyboardLighting'
 if (-not (Test-Path $stateDir)) { New-Item -ItemType Directory -Force -Path $stateDir | Out-Null }
-$logDir    = Join-Path $stateDir 'logs'
-if (-not (Test-Path $logDir)) { New-Item -ItemType Directory -Force -Path $logDir | Out-Null }
+# Next to the program, matching the panel. $Here is set at the top of this
+# script, where the cached Engine.dll is looked for. Same writability
+# fallback as the panel: if the program folder cannot be written to, use
+# AppData rather than lose the log.
+$logDir = Join-Path $Here 'logs'
+try {
+    if (-not (Test-Path $logDir)) { New-Item -ItemType Directory -Force -Path $logDir -ErrorAction Stop | Out-Null }
+    $probe = Join-Path $logDir '.writetest'
+    Set-Content -Path $probe -Value 'x' -ErrorAction Stop
+    Remove-Item $probe -Force -ErrorAction SilentlyContinue
+} catch {
+    $logDir = Join-Path $stateDir 'logs'
+    try { if (-not (Test-Path $logDir)) { New-Item -ItemType Directory -Force -Path $logDir | Out-Null } } catch { }
+}
 $engLog    = Join-Path $logDir 'engine.log'
 $liveFile  = Join-Path $stateDir 'live.txt'
 $themeFile = Join-Path $stateDir 'theme.json'

@@ -98,11 +98,12 @@ tray menu shows **Restart to finish update**.
 |---|---|
 | Program | the folder you ran `Setup.bat` from |
 | Settings | `%LOCALAPPDATA%\KeyboardLighting\panel.json` |
-| Logs | `%LOCALAPPDATA%\KeyboardLighting\logs\` |
+| Logs | a `logs` folder next to `Setup.bat` |
 | Startup entry | Task Scheduler, task `KeyboardLighting` |
 
-The quickest way to the logs is the tray icon: right-click it and choose
-**Open logs folder**. There are two files:
+The logs sit in a `logs` folder right beside the program, in the same
+place as `Setup.bat`. Right-click the tray icon and choose **Open logs
+folder** to jump straight there. There are two files:
 
 | File | What is in it |
 |---|---|
