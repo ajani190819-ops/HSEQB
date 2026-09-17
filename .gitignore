@@ -1,2 +1,7 @@
 node_modules/
 .DS_Store
+
+# Built locally by Setup.ps1 from the checked-in C# sources.
+# Machine-specific and regenerated on demand - never committed.
+keyboard-lighting/Engine.dll
+keyboard-lighting/Ui.dll

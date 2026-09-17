@@ -492,19 +492,36 @@ function Invoke-SelfUpdate {
 # window look like a PowerShell window. These are drawn from scratch
 # instead: rounded cards, pill sliders, iOS-style toggles, a custom title
 # bar. Compiled on the fly by the same .NET that is already running.
+# Setup pre-builds this into Ui.dll so the window can open without waiting
+# for a compiler. Falling back to compiling the .txt keeps a missing or
+# stale DLL from being fatal.
 $uiFile = Join-Path $Here 'ui_controls.cs.txt'
+$uiDll   = Join-Path $Here 'Ui.dll'
 $script:CustomUi = $false
-if (Test-Path $uiFile) {
+if (Test-Path $uiDll) {
+    try {
+        $srcF = Get-Item $uiFile -ErrorAction SilentlyContinue
+        $dllF = Get-Item $uiDll
+        if (-not $srcF -or $dllF.LastWriteTime -ge $srcF.LastWriteTime) {
+            Add-Type -Path $uiDll -ErrorAction Stop
+            $script:CustomUi = $true
+            Log 'custom UI loaded from Ui.dll'
+        }
+    } catch {
+        Log ("Ui.dll would not load, compiling instead: {0}" -f $_.Exception.Message) 'WARN'
+    }
+}
+if (-not $script:CustomUi -and (Test-Path $uiFile)) {
     try {
         Add-Type -TypeDefinition (Get-Content $uiFile -Raw) `
                  -ReferencedAssemblies 'System.Windows.Forms','System.Drawing','System' `
                  -ErrorAction Stop
         $script:CustomUi = $true
-        Log 'custom UI loaded'
+        Log 'custom UI compiled from source'
     } catch {
         Log ("custom UI failed to compile: {0}" -f $_.Exception.Message) 'ERROR'
     }
-} else {
+} elseif (-not $script:CustomUi) {
     Log 'ui_controls.cs.txt missing' 'WARN'
 }
 if (-not $script:CustomUi) {

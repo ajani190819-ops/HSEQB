@@ -237,9 +237,81 @@ class Launcher {
     }
 }
 
+# --------------------------------------------------------------- precompile
+# The engine carries ~66 KB of C# and the panel another ~31 KB. Compiling
+# those at every launch is most of the wait before the lights come on, and it
+# happens twice because the engine and the panel are separate processes.
+# Building them once here turns each start into an assembly load. Both scripts
+# fall back to compiling from source if these are missing, so a failure at
+# this step costs speed and nothing else - which is why it never aborts Setup.
+if (-not $TestOnly -and $csc) {
+    Step '5. Making it start quickly'
+
+    function Build-Dll($name, $code, $refs) {
+        $out = Join-Path $Here $name
+        $tmp = Join-Path $env:TEMP ("kbl_" + [IO.Path]::GetFileNameWithoutExtension($name) + ".cs")
+        try {
+            Set-Content -Path $tmp -Value $code -Encoding UTF8
+            $a = @('/nologo','/target:library','/optimize+')
+            foreach ($r in $refs) { $a += ('/reference:' + $r) }
+            $a += ('/out:"{0}"' -f $out)
+            $a += ('"{0}"' -f $tmp)
+            $p = Start-Process -FilePath $csc -ArgumentList $a -NoNewWindow -Wait -PassThru `
+                 -RedirectStandardOutput (Join-Path $env:TEMP 'kbl_dll_out.txt') `
+                 -RedirectStandardError  (Join-Path $env:TEMP 'kbl_dll_err.txt')
+            if ($p.ExitCode -eq 0 -and (Test-Path $out) -and (Get-Item $out).Length -gt 2048) {
+                # Stamp it newer than its source so the runtime staleness
+                # check accepts it.
+                (Get-Item $out).LastWriteTime = (Get-Date).AddSeconds(5)
+                return $true
+            }
+        } catch { }
+        Remove-Item $out -Force -ErrorAction SilentlyContinue
+        return $false
+    }
+
+    # Pull the C# back out of the two here-strings in the engine script.
+    # They cannot simply be concatenated: each block opens with its own
+    # using directives, and C# requires every using to precede the first
+    # type. So collect the usings, de-duplicate them, and put them all at
+    # the top of the combined file.
+    $engSrc = Get-Content (Join-Path $Here 'Aura-Background.ps1') -Raw
+    $blocks = [regex]::Matches($engSrc, "(?s)@'\r?\n(.*?)\r?\n'@")
+    if ($blocks.Count -ge 2) {
+        $usings = New-Object System.Collections.Generic.List[string]
+        $body   = New-Object System.Collections.Generic.List[string]
+        foreach ($blk in $blocks) {
+            foreach ($line in ($blk.Groups[1].Value -split "`r?`n")) {
+                $t = $line.Trim()
+                if ($t -like 'using *' -and $t.EndsWith(';') -and $t -notmatch '[({=]') {
+                    if (-not $usings.Contains($t)) { $usings.Add($t) }
+                } else {
+                    $body.Add($line)
+                }
+            }
+        }
+        $engCode = (($usings -join "`r`n") + "`r`n" + ($body -join "`r`n"))
+        if (Build-Dll 'Engine.dll' $engCode @('System.dll')) {
+            Ok 'engine prepared'
+        } else {
+            Warn 'engine will compile at startup instead (slower, still works)'
+        }
+    }
+
+    $uiTxt = Join-Path $Here 'ui_controls.cs.txt'
+    if (Test-Path $uiTxt) {
+        if (Build-Dll 'Ui.dll' (Get-Content $uiTxt -Raw) `
+                @('System.dll','System.Windows.Forms.dll','System.Drawing.dll')) {
+            Ok 'panel prepared'
+        } else {
+            Warn 'panel will compile at startup instead (slower, still works)'
+        }
+    }
+}
+
 # --------------------------------------------------------------- shortcuts + autostart
 if (-not $TestOnly) {
-    Step '5. Shortcuts and starting at log in'
+    Step '6. Shortcuts and starting at log in'
     $usePs = -not (Test-Path $ExePath)
 
     function New-Shortcut($path) {
@@ -296,7 +368,7 @@ if (-not $TestOnly) {
 # at the keyboard. "skip_aura" tells it not to apply a lighting mode on
 # startup, which is the one thing that fights us. Fan curves, performance
 # modes, the Fn brightness keys and everything else keep working.
-Step '6. G-Helper'
+Step '7. G-Helper'
 $ghCfg     = Join-Path $env:APPDATA 'GHelper\config.json'
 $ghRunning = [bool](Get-Process -Name 'GHelper' -ErrorAction SilentlyContinue)
 $ghPath    = $null
@@ -365,7 +437,7 @@ if (-not (Test-Path $ghCfg) -and -not $ghRunning) {
 }
 
 # --------------------------------------------------------------- checks
-Step '7. Windows Dynamic Lighting'
+Step '8. Windows Dynamic Lighting'
 $dlOn = $null
 try {
     $k = 'HKCU:\Software\Microsoft\Lighting'
@@ -385,7 +457,7 @@ if ($dlOn -eq $true) {
     Info 'Check manually: Settings > Personalization > Dynamic Lighting = Off'
 }
 
-Step '8. Other lighting software'
+Step '9. Other lighting software'
 $bad = @('ArmouryCrate','ArmouryCrate.UserSessionHelper','ArmouryQtService',
          'LightingService','AsusSystemAnalysis','AsusOptimization',
          'OpenRGB','SignalRgb','iCUE','msi-center')
@@ -401,7 +473,7 @@ if ($found.Count -eq 0) {
     Need ('Close these: ' + ($found -join ', '))
 }
 
-Step '9. The keyboard'
+Step '10. The keyboard'
 $dev = Get-CimInstance Win32_PnPEntity -ErrorAction SilentlyContinue |
        Where-Object { $_.DeviceID -like '*VID_0B05&PID_19B6*' }
 if ($dev) {
@@ -413,7 +485,7 @@ if ($dev) {
 # full list goes in the report file, not on screen
 foreach ($d in $dev) { Log ('          ' + $d.DeviceID) }
 
-Step '10. Testing the lighting engine'
+Step '11. Testing the lighting engine'
 if (-not (Test-Path $Engine)) {
     Bad 'Aura-Background.ps1 is missing.'
     Need 'Run Setup.bat again to download it.'
@@ -478,7 +550,7 @@ if (-not (Test-Path $Engine)) {
 
 # --------------------------------------------------------------- launch
 if (-not $TestOnly -and $script:Problems.Count -eq 0) {
-    Step '11. Starting it'
+    Step '12. Starting it'
     try {
         if (Test-Path $ExePath) { Start-Process -FilePath $ExePath -WorkingDirectory $Here }
         else {

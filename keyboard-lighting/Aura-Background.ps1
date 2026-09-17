@@ -106,6 +106,28 @@ function Say($msg, $col = 'Gray') { if (-not $Quiet) { Write-Host $msg -Foregrou
 # ============================================================================
 # NATIVE + COMPILED ENGINE
 # ============================================================================
+# The C# below is ~66 KB and used to be handed to Add-Type on every single
+# start, which meant waiting for a compiler before a single key lit up.
+# Setup now pre-builds it into Engine.dll, so the normal path is just loading
+# an assembly. The source is still here and still compiles on demand: that is
+# what happens if the DLL is missing, stale, or built by a different runtime,
+# so a failed or half-finished Setup degrades to "slow" instead of "broken".
+$Here = Split-Path -Parent $MyInvocation.MyCommand.Path
+$EngineDll = Join-Path $Here 'Engine.dll'
+if (-not ('LampEngine' -as [type])) {
+    if (Test-Path $EngineDll) {
+        try {
+            $src = Get-Item (Join-Path $Here 'Aura-Background.ps1') -ErrorAction SilentlyContinue
+            $dll = Get-Item $EngineDll
+            # A DLL older than the script it came from is from a previous
+            # version. Ignore it rather than run yesterday's engine.
+            if (-not $src -or $dll.LastWriteTime -ge $src.LastWriteTime) {
+                Add-Type -Path $EngineDll -ErrorAction Stop
+            }
+        } catch { }
+    }
+}
+
 if (-not ('HidNative' -as [type])) {
 Add-Type -TypeDefinition @'
 using System;
