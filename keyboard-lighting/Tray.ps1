@@ -34,7 +34,21 @@ $CfgDir    = Join-Path $env:LOCALAPPDATA 'KeyboardLighting'
 $CfgFile   = Join-Path $CfgDir 'panel.json'
 $LiveFile  = Join-Path $CfgDir 'live.txt'
 $ThemeFile = Join-Path $CfgDir 'theme.json'
-$LogFile   = Join-Path $CfgDir 'log.txt'
+# Logs live in their own folder so they can be opened, read and cleared
+# without picking them out from among the settings and state files. The
+# panel and the engine write separate files - they are separate processes
+# and interleaving them made both harder to follow.
+$LogDir    = Join-Path $CfgDir 'logs'
+try { if (-not (Test-Path $LogDir)) { New-Item -ItemType Directory -Force -Path $LogDir | Out-Null } } catch { }
+$LogFile   = Join-Path $LogDir 'panel.log'
+# Anyone upgrading has a log.txt sitting in the settings folder. Move it in
+# rather than leaving an orphan behind that looks current but never updates.
+try {
+    $oldLog = Join-Path $CfgDir 'log.txt'
+    if ((Test-Path $oldLog) -and -not (Test-Path $LogFile)) {
+        Move-Item -Path $oldLog -Destination $LogFile -Force -ErrorAction SilentlyContinue
+    }
+} catch { }
 $TaskName  = 'KeyboardLighting'
 $Base      = 'https://raw.githubusercontent.com/ajani190819-ops/HSEQB/arena/01a0a5d4-hseqb/keyboard-lighting'
 
@@ -1530,9 +1544,14 @@ foreach ($kv in $script:ExitChoices.GetEnumerator()) {
 }
 
 Add-Sep
-$miLog = Add-Item 'Open log file' {
-    if (-not (Test-Path $LogFile)) { Set-Content -Path $LogFile -Value 'no entries yet' -Encoding UTF8 }
-    Start-Process notepad.exe $LogFile
+# Opens the folder rather than one file: the panel and the engine log
+# separately, and the engine's is the one with the lighting timings in it.
+$miLog = Add-Item 'Open logs folder' {
+    try {
+        if (-not (Test-Path $LogDir)) { New-Item -ItemType Directory -Force -Path $LogDir | Out-Null }
+        if (-not (Test-Path $LogFile)) { Set-Content -Path $LogFile -Value 'no entries yet' -Encoding UTF8 }
+        Start-Process explorer.exe $LogDir
+    } catch { }
 }
 $miFolder = Add-Item 'Open program folder' { Start-Process explorer.exe $Here }
 Add-Sep

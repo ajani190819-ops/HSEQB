@@ -2032,15 +2032,15 @@ public class ScreenCap {
 } catch {
     $msg = $_.Exception.Message
     try {
-        $sd = Join-Path $env:LOCALAPPDATA 'KeyboardLighting'
+        $sd = Join-Path (Join-Path $env:LOCALAPPDATA 'KeyboardLighting') 'logs'
         if (-not (Test-Path $sd)) { New-Item -ItemType Directory -Force -Path $sd | Out-Null }
-        Add-Content -Path (Join-Path $sd 'log.txt') -Encoding UTF8 -ErrorAction SilentlyContinue `
+        Add-Content -Path (Join-Path $sd 'engine.log') -Encoding UTF8 -ErrorAction SilentlyContinue `
             -Value ('{0}  ERROR  engine failed to compile: {1}' -f (Get-Date).ToString('yyyy-MM-dd HH:mm:ss'), $msg)
     } catch { }
     Write-Host ''
     Write-Host '  The lighting engine could not be compiled.' -ForegroundColor Red
     Write-Host ("  {0}" -f $msg) -ForegroundColor Red
-    Write-Host '  This has been written to log.txt.' -ForegroundColor Red
+    Write-Host '  This has been written to logs\engine.log.' -ForegroundColor Red
     exit 2
 }
 }
@@ -3002,8 +3002,26 @@ $eng.Start()
 # ---------------------------------------------------------------------------
 $stateDir  = Join-Path $env:LOCALAPPDATA 'KeyboardLighting'
 if (-not (Test-Path $stateDir)) { New-Item -ItemType Directory -Force -Path $stateDir | Out-Null }
+$logDir    = Join-Path $stateDir 'logs'
+if (-not (Test-Path $logDir)) { New-Item -ItemType Directory -Force -Path $logDir | Out-Null }
+$engLog    = Join-Path $logDir 'engine.log'
 $liveFile  = Join-Path $stateDir 'live.txt'
 $themeFile = Join-Path $stateDir 'theme.json'
+
+# Same shape as the panel's logger, including the trim: this file is
+# appended to for as long as the engine runs, and without a cap it would
+# grow without bound on a machine left on for weeks.
+function Write-Log($msg, $level = 'INFO') {
+    $line = '{0}  {1,-5}  {2}' -f (Get-Date).ToString('yyyy-MM-dd HH:mm:ss'), $level, $msg
+    try {
+        Add-Content -Path $engLog -Value $line -Encoding UTF8 -ErrorAction SilentlyContinue
+        $fi = Get-Item $engLog -ErrorAction SilentlyContinue
+        if ($fi -and $fi.Length -gt 262144) {
+            $keep = Get-Content $engLog -Tail 400 -ErrorAction SilentlyContinue
+            Set-Content -Path $engLog -Value $keep -Encoding UTF8 -ErrorAction SilentlyContinue
+        }
+    } catch { }
+}
 $script:SysTick = 0
 $script:LastAc  = $null
 $script:LastPct = 100
@@ -3092,11 +3110,7 @@ try {
             $msg = ('device write {0} us/frame (worst {1}), budget {2} us at {3} fps, late frames {4}' -f `
                     $eng.WriteUs, $eng.WriteUsMax, $budget, $eng.Fps, $eng.LateFrames)
             Say ("  Timing: {0}" -f $msg) 'DarkGray'
-            try {
-                Add-Content -Path (Join-Path $stateDir 'log.txt') -Encoding UTF8 `
-                    -ErrorAction SilentlyContinue `
-                    -Value ('{0}  INFO   {1}' -f (Get-Date).ToString('yyyy-MM-dd HH:mm:ss'), $msg)
-            } catch { }
+            Write-Log $msg
         }
         # --- resume from sleep / display wake ---
         if ($resumeOk) {

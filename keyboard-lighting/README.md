@@ -98,8 +98,29 @@ tray menu shows **Restart to finish update**.
 |---|---|
 | Program | the folder you ran `Setup.bat` from |
 | Settings | `%LOCALAPPDATA%\KeyboardLighting\panel.json` |
-| Log | `%LOCALAPPDATA%\KeyboardLighting\log.txt` |
+| Logs | `%LOCALAPPDATA%\KeyboardLighting\logs\` |
 | Startup entry | Task Scheduler, task `KeyboardLighting` |
+
+The quickest way to the logs is the tray icon: right-click it and choose
+**Open logs folder**. There are two files:
+
+| File | What is in it |
+|---|---|
+| `panel.log` | the control panel - settings changes, engine starts and stops |
+| `engine.log` | the lighting engine, including the timing line below |
+
+The engine writes a timing line a few seconds after it starts, which is
+what to look at if the lighting is not smooth:
+
+```
+device write 1840 us/frame (worst 3200), budget 16666 us at 60 fps, late frames 0
+```
+
+`device write` is how long the keyboard actually takes to accept a frame
+and `budget` is how long there is to spare. If the write is a large
+fraction of the budget, or `late frames` keeps climbing, the hardware
+cannot keep up with the requested rate and the engine will lower it
+automatically. Both files are capped at 256 KB.
 
 ## Important
 
