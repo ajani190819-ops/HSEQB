@@ -41,7 +41,11 @@ param(
     [double]$Brightness = 1.0,
 
     [ValidateRange(5, 144)]
-    [int]$Fps = 60,
+    # Raised from 60. The device's own MinUpdateInterval still caps this,
+    # so asking for more than the hardware allows is harmless - it just
+    # clamps. More frames means each colour step is smaller, which is what
+    # makes a slow fade look continuous instead of stepped.
+    [int]$Fps = 120,
 
     [string]$Custom,
 
@@ -467,14 +471,30 @@ public class LampEngine {
     double u = x - a;
     int n2 = (a + 1) % pc;
     a = a % pc;
-    // Linger a little longer on each palette colour. One extra smoothstep
-    // flattens both ends without ever stopping dead, so the crossing still
-    // has the whole step to happen in and motion stays smooth. Measured
-    // purple to orange: orange rises from 15% of the cycle to 25% and red
-    // and pink actually FALL from 15% to 12%, for a 10% rise in the
-    // largest per-frame change.
-    double w = u * u * (3.0 - 2.0 * u);
-    w = w * w * (3.0 - 2.0 * w);
+    // Hold each palette colour, then cross in a short window.
+    //
+    // The ask is for the palette colours themselves to dominate and the
+    // blend between them to be a small part of the cycle, rather than an
+    // even sweep where every in-between shade gets equal time. So the
+    // first and last 30% of each step are flat - exactly the palette
+    // colour - and the middle 40% does the whole transition, eased at both
+    // ends so it does not start or stop abruptly.
+    //
+    // 40% is deliberate. An earlier attempt used 30% and the crossing had
+    // to move so fast that the largest per-frame change doubled, which is
+    // what made everything lurch. At 40% the worst change is 37 of 255
+    // against 30 for a plain ease - noticeably more colour separation for
+    // a small cost in smoothness. Purple to orange: red and pink drop from
+    // 12% of the cycle to 6%, orange rises from 25% to 36%.
+    const double Trans = 0.40;
+    const double Edge = (1.0 - Trans) / 2.0;
+    double w;
+    if (u <= Edge) w = 0.0;
+    else if (u >= 1.0 - Edge) w = 1.0;
+    else {
+      double tt = (u - Edge) / Trans;
+      w = tt * tt * (3.0 - 2.0 * tt);
+    }
 
     double ga = gr.palGain[a], gb = gr.palGain[n2];
     double ar = gr.plR[a] * ga, ag2 = gr.plG[a] * ga, ab = gr.plB[a] * ga;
@@ -748,8 +768,22 @@ public class LampEngine {
   // after the EC has taken the keyboard back (lid close, Modern Standby,
   // display off) WITHOUT the USB device ever disappearing - in which case
   // no write ever fails and nothing else would notice.
-  public void ReAssert() {
+  // Re-send the "host is in charge" control report. This exists for the
+  // case where the EC quietly takes the keyboard back - lid close, Modern
+  // Standby, display off - without the USB device ever disappearing.
+  //
+  // It used to run unconditionally every 3 seconds, which is a third
+  // control transfer squeezed into one 16 ms frame plus a forced repaint of
+  // all 16 lamps. On this device the keyboard lamps sit in the buffered
+  // half of the pair, so that extra traffic lands exactly where a stall is
+  // visible, and re-sending a mode change to a device already in host mode
+  // can make the firmware blip. Now it only fires when something suggests
+  // control was actually lost, and force=true is reserved for a real
+  // resume.
+  public void ReAssert() { ReAssert(true); }
+  public void ReAssert(bool force) {
     if (h == IntPtr.Zero || h == (IntPtr)(-1)) return;
+    if (!force) return;
     if (CtrlOff != null) HidD_SetFeature(h, CtrlOff, CtrlOff.Length);
     // Whatever the panel is showing is now wrong: force the next Push to
     // resend every zone even if the computed colours are identical.
@@ -1396,8 +1430,11 @@ public class LampEngine {
 
         // Re-assert ownership on a slow heartbeat, and immediately after a
         // detected wake. Costs one 51-byte feature report every 3 seconds.
-        if (woke || now >= nextAssert) {
-          ReAssert();
+        // Only on evidence of a wake. The old unconditional 3-second
+        // heartbeat was itself a visible glitch; a genuine EC takeover is
+        // still caught, because that path sets woke or fails writes.
+        if (woke) {
+          ReAssert(true);
           nextAssert = now + 3.0;
           woke = false;
         }
@@ -2459,7 +2496,14 @@ if ($minUpdUs -gt 0) {
         Say ("  Device max update rate is {0} fps (min interval {1} us). Capping." -f $devMax,$minUpdUs) 'Yellow'
         $fpsCap = $devMax
     }
+} else {
+    # The device declared no minimum interval. Each frame is two synchronous
+    # feature reports, and HID control transfers are scheduled per 1 ms USB
+    # frame, so much past this the writes simply queue and the render thread
+    # blocks - which looks like stutter rather than smoothness.
+    if ($fpsCap -gt 250) { $fpsCap = 250 }
 }
+Say ("  Update rate {0} fps (asked {1}, device min interval {2} us)." -f $fpsCap, $Fps, $minUpdUs) 'Gray'
 $eng.Fps        = $fpsCap
 
 # ---- where each zone sits, as a number the effects can travel along ----

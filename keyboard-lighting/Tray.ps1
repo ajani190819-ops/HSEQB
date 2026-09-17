@@ -344,7 +344,10 @@ function Start-Engine {
     [void]$sb.Append(' -Speed ');       [void]$sb.Append($kSpd)
     [void]$sb.Append(' -Brightness ');  [void]$sb.Append($kBrt)
     [void]$sb.Append(' -Master ');      [void]$sb.Append($mStr)
-    [void]$sb.Append(' -Fps 60 -Quiet')
+    # 120 rather than 60: smaller steps per frame, so slow fades read as
+    # continuous instead of stepped. The engine clamps this to whatever the
+    # device says it can accept, so it is safe to ask for more.
+    [void]$sb.Append(' -Fps 120 -Quiet')
     $oe = "$($script:Cfg.OnExit)"
     if ($oe -ne 'off' -and $oe -ne 'white' -and $oe -ne 'firmware') { $oe = 'off' }
     [void]$sb.Append(' -OnExit '); [void]$sb.Append($oe)
