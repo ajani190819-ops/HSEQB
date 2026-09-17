@@ -293,8 +293,6 @@ public class LampEngine {
     fr = new double[LampCount]; fg = new double[LampCount]; fb = new double[LampCount];
     er = new double[LampCount]; eg = new double[LampCount]; eb = new double[LampCount];
     pr = new int[LampCount]; pg = new int[LampCount]; pb = new int[LampCount];
-    nr = new int[LampCount]; ng = new int[LampCount]; nb = new int[LampCount];
-    lr = new double[LampCount]; lg = new double[LampCount]; lb = new double[LampCount];
     for (int i = 0; i < LampCount; i++) { pr[i] = -1; pg[i] = -1; pb[i] = -1; }
     heat = new double[LampCount];
 
@@ -427,86 +425,12 @@ public class LampEngine {
     double u = x - a;
     int n2 = (a + 1) % pc;
     a = a % pc;
-    // Linger on each colour, then cross through the blend.
-    //
-    // Two earlier attempts at this: a power curve, which never really
-    // stopped at the ends, and a flat hold, which did but had to cram the
-    // whole crossing into 30% of the step. The flat hold more than doubled
-    // the biggest per-frame colour change (27 to 59 of 255) and that reads
-    // as stutter - the colour sits, lurches, sits.
-    //
-    // Nesting smoothstep gives most of the dwell for a fraction of the
-    // jump: it flattens at both ends without ever stopping dead, so the
-    // crossing still has the whole step to happen in. Measured on
-    // purple/orange, red and pink go from 15% of the cycle to 8.5% and
-    // orange from 15% to 32%, with the worst per-frame change only rising
-    // from 27 to 35.
     double w = u * u * (3.0 - 2.0 * u);
-    w = w * w * (3.0 - 2.0 * w);
-    w = w * w * (3.0 - 2.0 * w);
-
     double ga = gr.palGain[a], gb = gr.palGain[n2];
-
-    // Blend along the hue circle, not straight through linear RGB. Mixing
-    // purple and orange as RGB drags the blue channel down slowly, so the
-    // colour stays purple until blue finally dies and orange appears only
-    // at the very end - orange got 11% of the sweep. Walking the shorter
-    // way round the hue circle keeps the midpoint a real colour and shares
-    // the time evenly between the two ends.
-    double ar = gr.plR[a] * ga, ag = gr.plG[a] * ga, ab = gr.plB[a] * ga;
-    double br = gr.plR[n2] * gb, bg = gr.plG[n2] * gb, bb = gr.plB[n2] * gb;
-
-    double ha, sa, va, hb2, sb2, vb2;
-    RgbToHsv(ar, ag, ab, out ha, out sa, out va);
-    RgbToHsv(br, bg, bb, out hb2, out sb2, out vb2);
-
-    double lr, lg, lb;
-    // A greyscale or black endpoint has no meaningful hue; fall back to a
-    // straight blend rather than swinging through an arbitrary one.
-    if (sa < 0.02 || sb2 < 0.02 || va < 0.002 || vb2 < 0.002) {
-      lr = ar + (br - ar) * w;
-      lg = ag + (bg - ag) * w;
-      lb = ab + (bb - ab) * w;
-    } else {
-      double dh = hb2 - ha;
-      if (dh > 180.0) dh -= 360.0; else if (dh < -180.0) dh += 360.0;
-      HsvToRgb(ha + dh * w, sa + (sb2 - sa) * w, va + (vb2 - va) * w,
-               out lr, out lg, out lb);
-    }
+    double lr = (gr.plR[a] * ga) + ((gr.plR[n2] * gb) - (gr.plR[a] * ga)) * w;
+    double lg = (gr.plG[a] * ga) + ((gr.plG[n2] * gb) - (gr.plG[a] * ga)) * w;
+    double lb = (gr.plB[a] * ga) + ((gr.plB[n2] * gb) - (gr.plB[a] * ga)) * w;
     r = ToSrgb(lr); g = ToSrgb(lg); b = ToSrgb(lb);
-  }
-
-  // HSV helpers working in LINEAR light, so the hue walk happens in the
-  // same space the rest of the blending uses.
-  static void RgbToHsv(double r, double g, double b,
-                       out double h, out double s, out double v) {
-    double mx = Math.Max(r, Math.Max(g, b));
-    double mn = Math.Min(r, Math.Min(g, b));
-    double d = mx - mn;
-    v = mx;
-    s = (mx <= 0.0) ? 0.0 : d / mx;
-    if (d <= 0.0) { h = 0.0; return; }
-    if (mx == r)      h = 60.0 * (((g - b) / d) % 6.0);
-    else if (mx == g) h = 60.0 * (((b - r) / d) + 2.0);
-    else              h = 60.0 * (((r - g) / d) + 4.0);
-    if (h < 0) h += 360.0;
-  }
-
-  static void HsvToRgb(double h, double s, double v,
-                       out double r, out double g, out double b) {
-    h = h % 360.0; if (h < 0) h += 360.0;
-    if (s < 0) s = 0; else if (s > 1) s = 1;
-    if (v < 0) v = 0;
-    double c = v * s;
-    double x = c * (1.0 - Math.Abs(((h / 60.0) % 2.0) - 1.0));
-    double m = v - c;
-    if      (h <  60.0) { r = c; g = x; b = 0; }
-    else if (h < 120.0) { r = x; g = c; b = 0; }
-    else if (h < 180.0) { r = 0; g = c; b = x; }
-    else if (h < 240.0) { r = 0; g = x; b = c; }
-    else if (h < 300.0) { r = x; g = 0; b = c; }
-    else                { r = c; g = 0; b = x; }
-    r += m; g += m; b += m;
   }
 
   // Pull every group's live inbox into its active settings.
@@ -554,10 +478,6 @@ public class LampEngine {
 
   int[] pr, pg, pb;        // last bytes actually sent
   double[] er, eg, eb;     // carried quantisation error, for temporal dither
-  int[] nr, ng, nb;        // staged this frame; promoted to pr/pg/pb only on success
-  double[] lr, lg, lb;     // last frame's target, to tell moving from held
-  int stillFrames = 0;     // consecutive frames with nothing moving
-  bool Animating = true;   // dither while true; snap when the scene is static
 
   // ---- live frame publishing -------------------------------------
   // The control panel used to redraw the preview by re-implementing the
@@ -658,21 +578,8 @@ public class LampEngine {
   // added to the next one. At 60fps the eye integrates the result, so a
   // value creeping at 0.4 LSB/frame fades smoothly instead of holding for
   // two frames and then stepping - which is the flicker seen at low speeds.
-  // moving: true when this lamp's target is actually changing. Error
-  // feedback is only worth anything on a value in motion - it trades a
-  // steady 1-LSB offset for an alternating one the eye averages out. On a
-  // HELD value there is nothing to average: a target like 128.4 toggles
-  // 128/129 forever, which is visible shimmer on a large zone. So a held
-  // value snaps to nearest and the error is dropped.
-  static int Dither(double v, double scale, ref double err, bool moving) {
-    double x = v * scale / 255.0;
-    if (!moving) {
-      err = 0.0;
-      int qs = (int)(x + 0.5);
-      if (qs < 0) qs = 0; else if (qs > 255) qs = 255;
-      return qs;
-    }
-    x += err;
+  static int Dither(double v, double scale, ref double err) {
+    double x = v * scale / 255.0 + err;
     int q = (int)(x + 0.5);
     if (q < 0) q = 0; else if (q > 255) q = 255;
     err = x - q;
@@ -684,17 +591,6 @@ public class LampEngine {
     int last = nbatch - 1;
     bool changed = force;
 
-    // Is anything moving at all? Checked once for the whole frame. A few
-    // frames of grace stops a momentarily-still animation from dropping
-    // its dither and stepping; only a scene that stays put goes static.
-    bool anyMoved = false;
-    for (int i = 0; i < LampCount; i++) {
-      if (fr[i] != lr[i] || fg[i] != lg[i] || fb[i] != lb[i]) { anyMoved = true; }
-      lr[i] = fr[i]; lg[i] = fg[i]; lb[i] = fb[i];
-    }
-    if (anyMoved) stillFrames = 0; else if (stillFrames < 1000) stillFrames++;
-    Animating = anyMoved || stillFrames < 20;
-
     for (int bi = 0; bi < nbatch; bi++) {
       byte[] b = bufs[bi];
       int first = bi * Slots;
@@ -702,24 +598,11 @@ public class LampEngine {
       for (int s = 0; s < n; s++) {
         int i = first + s;
         int st = Interleaved ? s*4 : s;
-        // Dither whenever the frame as a whole is animating. Deciding this
-        // per lamp, per channel was a mistake: on a slow scroll a channel
-        // is briefly unchanged between frames, and snapping it threw away
-        // the carried error, so it sat on a flat step and then jumped -
-        // banding that crawls instead of a colour that creeps.
-        int qr = Dither(fr[i], MaxR, ref er[i], Animating);
-        int qg = Dither(fg[i], MaxG, ref eg[i], Animating);
-        int qb = Dither(fb[i], MaxB, ref eb[i], Animating);
+        int qr = Dither(fr[i], MaxR, ref er[i]);
+        int qg = Dither(fg[i], MaxG, ref eg[i]);
+        int qb = Dither(fb[i], MaxB, ref eb[i]);
         if (qr != pr[i] || qg != pg[i] || qb != pb[i]) changed = true;
-        // Do NOT record these as sent yet. The device buffers every batch
-        // until the one carrying LampUpdateComplete arrives, so nothing is
-        // actually on screen until the final write succeeds. Recording them
-        // here meant a failed final write left the new colours marked as
-        // sent: the next frame saw no change, skipped the transfer, and the
-        // keyboard sat on a stale frame until something else moved it.
-        // Lamps 0-3 are the keyboard and always land in the buffered first
-        // batch, which is why it stuttered while the light bar did not.
-        nr[i] = qr; ng[i] = qg; nb[i] = qb;
+        pr[i] = qr; pg[i] = qg; pb[i] = qb;
         b[OffR + st] = (byte)qr;
         b[OffG + st] = (byte)qg;
         b[OffB + st] = (byte)qb;
@@ -738,11 +621,7 @@ public class LampEngine {
 
     // One failed write is noise (a busy endpoint). A run of them means the
     // handle is dead - almost always a resume from sleep.
-    if (allOk) {
-      failRun = 0;
-      // The whole frame landed, so it is now genuinely on the device.
-      for (int i = 0; i < LampCount; i++) { pr[i] = nr[i]; pg[i] = ng[i]; pb[i] = nb[i]; }
-    }
+    if (allOk) { failRun = 0; }
     else {
       failRun++;
       if (failRun >= 8) { DeviceLost = true; failRun = 0; }
