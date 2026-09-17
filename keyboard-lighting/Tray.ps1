@@ -169,6 +169,7 @@ $script:Cfg = [pscustomobject]@{
     Overlay    = $true
     Link       = $false       # copy keyboard changes onto the bar
     OnExit     = 'off'        # what the keyboard does once this app closes
+    Smooth     = $true        # off = allow temporal dither (see the engine)
     Kbd = New-GroupCfg 'Scrolling gradient' @('#FF0000','#FF7F00','#FFFF00','#00FF00','#0000FF','#8B00FF') $false
     Bar = New-GroupCfg 'Rainbow'            @('#00B4FF','#FF0066')                                         $true
 }
@@ -180,7 +181,7 @@ function Load-Cfg {
     if (-not (Test-Path $CfgFile)) { return }
     try {
         $o = Get-Content $CfgFile -Raw | ConvertFrom-Json
-        foreach ($p in 'Brightness','Overlay','Link','OnExit') {
+        foreach ($p in 'Brightness','Overlay','Link','OnExit','Smooth') {
             if ($null -ne $o.$p) { $script:Cfg.$p = $o.$p }
         }
         # Files written before the split had one flat set of values; load
@@ -241,6 +242,7 @@ function New-ThemeBlock {
 function Write-Theme {
     $o = [pscustomobject]@{
         Brightness = [double]$script:Cfg.Brightness / 100.0
+        Smooth     = [bool]$script:Cfg.Smooth
         Kbd        = (New-ThemeBlock $script:Cfg.Kbd)
         Bar        = (New-ThemeBlock $script:Cfg.Bar)
     }
@@ -855,6 +857,14 @@ $chkReverse = New-Toggle 'Reverse'         $colR 44 $colW
 $y += 78 + 14
 
 # ================================================================ whole-app options
+$chkSmooth = New-Object KbLight.Toggle
+$chkSmooth.Text     = 'Smooth colour (turn off if colours look banded)'
+$chkSmooth.Location = New-Object System.Drawing.Point(($M + 4), $y)
+$chkSmooth.Size     = New-Object System.Drawing.Size($CW, 26)
+$chkSmooth.Font     = $fontBd
+$body.Controls.Add($chkSmooth)
+$y += 26 + 4
+
 $chkOverlay = New-Object KbLight.Toggle
 $chkOverlay.Text     = 'Flash the battery level when the charger changes'
 $chkOverlay.Location = New-Object System.Drawing.Point(($M + 4), $y)
@@ -1354,6 +1364,14 @@ $chkLink.Add_CheckedChanged({
         Save-Cfg
     }
 })
+$chkSmooth.Add_CheckedChanged({
+    if ($script:Suppress) { return }
+    $script:Cfg.Smooth = [bool]$chkSmooth.Checked
+    Save-Cfg
+    # Applies live through theme.json, exactly like the colour controls.
+    # Deliberately does NOT restart the engine.
+    Write-Theme
+})
 $chkOverlay.Add_CheckedChanged({
     if ($script:Suppress) { return }
     $script:Cfg.Overlay = [bool]$chkOverlay.Checked
@@ -1586,6 +1604,7 @@ $script:Suppress = $true
 $trkMaster.Value = [Math]::Min(100, [Math]::Max(5, [int]$script:Cfg.Brightness))
 $valMB.Text      = ('{0}%' -f $trkMaster.Value)
 $chkLink.SetQuiet([bool]$script:Cfg.Link)
+$chkSmooth.SetQuiet([bool]$script:Cfg.Smooth)
 $chkOverlay.SetQuiet([bool]$script:Cfg.Overlay)
 $chkAuto.SetQuiet((Test-Autostart))
 $miAuto.Checked = $chkAuto.Checked

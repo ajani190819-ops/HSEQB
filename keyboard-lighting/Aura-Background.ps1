@@ -233,6 +233,26 @@ public class LampEngine {
   public int    OffCount, OffFlags, OffId, OffR, OffG, OffB, OffI;
   public int    MaxR = 255, MaxG = 255, MaxB = 255, MaxI = 255;
 
+  // Temporal dither trades a 1-level flicker for extra apparent colour
+  // depth. That is a good trade on a coarse panel and a bad one here: this
+  // keyboard reports a full 255 levels per channel, so there is no extra
+  // depth to win, and the error feedback just toggles the bottom bit
+  // forever (40,41,40,41...). The four keyboard lamps almost always carry
+  // the same colour, so they toggle in lockstep and it reads as a shimmer;
+  // the twelve bar lamps sit at different phases and average out, which is
+  // why the bar looked smooth while the keyboard did not.
+  // -1 = decide from the device scale, 0 = force off, 1 = force on.
+  public volatile int DitherMode = -1;
+  public bool UseDither {
+    get {
+      int m = DitherMode;
+      if (m == 0) return false;
+      if (m == 1) return true;
+      // Auto: only worth it when the panel is coarser than our 0..255.
+      return MaxR < 255 || MaxG < 255 || MaxB < 255;
+    }
+  }
+
   public string Effect     = "gradient";
   public double Speed      = 1.0;
   public double Brightness = 1.0;
@@ -447,12 +467,76 @@ public class LampEngine {
     double u = x - a;
     int n2 = (a + 1) % pc;
     a = a % pc;
+    // Linger a little longer on each palette colour. One extra smoothstep
+    // flattens both ends without ever stopping dead, so the crossing still
+    // has the whole step to happen in and motion stays smooth. Measured
+    // purple to orange: orange rises from 15% of the cycle to 25% and red
+    // and pink actually FALL from 15% to 12%, for a 10% rise in the
+    // largest per-frame change.
     double w = u * u * (3.0 - 2.0 * u);
+    w = w * w * (3.0 - 2.0 * w);
+
     double ga = gr.palGain[a], gb = gr.palGain[n2];
-    double lr = (gr.plR[a] * ga) + ((gr.plR[n2] * gb) - (gr.plR[a] * ga)) * w;
-    double lg = (gr.plG[a] * ga) + ((gr.plG[n2] * gb) - (gr.plG[a] * ga)) * w;
-    double lb = (gr.plB[a] * ga) + ((gr.plB[n2] * gb) - (gr.plB[a] * ga)) * w;
+    double ar = gr.plR[a] * ga, ag2 = gr.plG[a] * ga, ab = gr.plB[a] * ga;
+    double br = gr.plR[n2] * gb, bg = gr.plG[n2] * gb, bb = gr.plB[n2] * gb;
+
+    // Blend around the hue circle rather than straight through RGB. A
+    // straight line from purple to orange passes through the desaturated
+    // middle, and because sRGB keeps a falling channel visible far longer
+    // than its linear value suggests, the result reads as a long red-pink
+    // smear. Going round the circle keeps saturation up and crosses that
+    // region quickly.
+    double ha, sa, va, hb2, sb2, vb2;
+    RgbToHsv(ar, ag2, ab, out ha, out sa, out va);
+    RgbToHsv(br, bg, bb, out hb2, out sb2, out vb2);
+
+    double lr, lg, lb;
+    if (sa < 0.02 || sb2 < 0.02 || va < 0.002 || vb2 < 0.002) {
+      // Grey, white or black has no meaningful hue - rotating through one
+      // would swing via an arbitrary colour. Blend straight instead.
+      lr = ar + (br - ar) * w;
+      lg = ag2 + (bg - ag2) * w;
+      lb = ab + (bb - ab) * w;
+    } else {
+      double dh = hb2 - ha;
+      if (dh > 180.0) dh -= 360.0; else if (dh < -180.0) dh += 360.0;
+      HsvToRgb(ha + dh * w, sa + (sb2 - sa) * w, va + (vb2 - va) * w,
+               out lr, out lg, out lb);
+    }
     r = ToSrgb(lr); g = ToSrgb(lg); b = ToSrgb(lb);
+  }
+
+  // HSV helpers used only by GroupPal. These work in LINEAR light, matching
+  // the palette arrays, so the caller must not pre-encode to sRGB.
+  static void RgbToHsv(double r, double g, double b,
+                       out double h, out double s, out double v) {
+    double mx = Math.Max(r, Math.Max(g, b));
+    double mn = Math.Min(r, Math.Min(g, b));
+    double d = mx - mn;
+    v = mx;
+    s = (mx <= 0.0) ? 0.0 : d / mx;
+    if (d <= 0.0) { h = 0.0; return; }
+    if (mx == r)      h = 60.0 * (((g - b) / d) % 6.0);
+    else if (mx == g) h = 60.0 * (((b - r) / d) + 2.0);
+    else              h = 60.0 * (((r - g) / d) + 4.0);
+    if (h < 0.0) h += 360.0;
+  }
+
+  static void HsvToRgb(double h, double s, double v,
+                       out double r, out double g, out double b) {
+    h = h % 360.0; if (h < 0.0) h += 360.0;
+    if (s < 0.0) s = 0.0; else if (s > 1.0) s = 1.0;
+    if (v < 0.0) v = 0.0;
+    double c = v * s;
+    double x = c * (1.0 - Math.Abs((h / 60.0) % 2.0 - 1.0));
+    double m = v - c;
+    if      (h <  60.0) { r = c; g = x; b = 0; }
+    else if (h < 120.0) { r = x; g = c; b = 0; }
+    else if (h < 180.0) { r = 0; g = c; b = x; }
+    else if (h < 240.0) { r = 0; g = x; b = c; }
+    else if (h < 300.0) { r = x; g = 0; b = c; }
+    else                { r = c; g = 0; b = x; }
+    r += m; g += m; b += m;
   }
 
   // Pull every group's live inbox into its active settings.
@@ -600,8 +684,16 @@ public class LampEngine {
   // added to the next one. At 60fps the eye integrates the result, so a
   // value creeping at 0.4 LSB/frame fades smoothly instead of holding for
   // two frames and then stepping - which is the flicker seen at low speeds.
-  static int Dither(double v, double scale, ref double err) {
-    double x = v * scale / 255.0 + err;
+  static int Dither(double v, double scale, ref double err, bool on) {
+    double x = v * scale / 255.0;
+    if (!on) {
+      // Straight rounding. Clearing the carry matters: a stale error would
+      // bias the very next frame after dither is switched back off.
+      err = 0.0;
+      int p = (int)(x + 0.5);
+      return p < 0 ? 0 : (p > 255 ? 255 : p);
+    }
+    x += err;
     int q = (int)(x + 0.5);
     if (q < 0) q = 0; else if (q > 255) q = 255;
     err = x - q;
@@ -612,6 +704,7 @@ public class LampEngine {
   void Push(bool force) {
     int last = nbatch - 1;
     bool changed = force;
+    bool dith = UseDither;
 
     for (int bi = 0; bi < nbatch; bi++) {
       byte[] b = bufs[bi];
@@ -620,9 +713,9 @@ public class LampEngine {
       for (int s = 0; s < n; s++) {
         int i = first + s;
         int st = Interleaved ? s*4 : s;
-        int qr = Dither(fr[i], MaxR, ref er[i]);
-        int qg = Dither(fg[i], MaxG, ref eg[i]);
-        int qb = Dither(fb[i], MaxB, ref eb[i]);
+        int qr = Dither(fr[i], MaxR, ref er[i], dith);
+        int qg = Dither(fg[i], MaxG, ref eg[i], dith);
+        int qb = Dither(fb[i], MaxB, ref eb[i], dith);
         if (qr != pr[i] || qg != pg[i] || qb != pb[i]) changed = true;
         pr[i] = qr; pg[i] = qg; pb[i] = qb;
         b[OffR + st] = (byte)qr;
@@ -2988,6 +3081,15 @@ try {
                     # old single-group theme file still works unchanged.
                     $needAud = $false
                     $needScr = $false
+
+                    # Smooth is engine-wide rather than per-group: it
+                    # controls how colours are written to the hardware, not
+                    # what any one zone is showing. Absent means auto.
+                    if ($null -ne $j.Smooth) {
+                        $eng.DitherMode = $(if ($j.Smooth) { 0 } else { 1 })
+                    } else {
+                        $eng.DitherMode = -1
+                    }
 
                     $grp = @()
                     if ($eng.Groups.Length -gt 0) { $grp += ,@($eng.Groups[0], $j.Kbd, $j) }
