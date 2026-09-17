@@ -427,28 +427,23 @@ public class LampEngine {
     double u = x - a;
     int n2 = (a + 1) % pc;
     a = a % pc;
-    // Sit on each colour, then cross quickly.
+    // Linger on each colour, then cross through the blend.
     //
-    // The first attempt at this just eased the curve toward the ends, but
-    // easing never actually STOPS, so a large share of every cycle was
-    // still mid-route. That matters here because the route itself is the
-    // problem: going purple to orange the short way round the hue circle,
-    // 45% of the arc is red and pink. Re-weighting cannot shrink a band
-    // that big - the fix is to not be in transit for most of the cycle.
+    // Two earlier attempts at this: a power curve, which never really
+    // stopped at the ends, and a flat hold, which did but had to cram the
+    // whole crossing into 30% of the step. The flat hold more than doubled
+    // the biggest per-frame colour change (27 to 59 of 255) and that reads
+    // as stutter - the colour sits, lurches, sits.
     //
-    // So the first and last Hold of each step are flat: exactly the
-    // palette colour, no blending at all. Only the middle crosses, and it
-    // smoothsteps so the start and end of the move are still soft.
-    // Measured on purple/orange, red and pink drop from 18% of the cycle
-    // to 4% while orange rises from 23% to 40%.
-    const double Hold = 0.35;
-    double w;
-    if (u <= Hold) w = 0.0;
-    else if (u >= 1.0 - Hold) w = 1.0;
-    else {
-      double tt = (u - Hold) / (1.0 - 2.0 * Hold);
-      w = tt * tt * (3.0 - 2.0 * tt);
-    }
+    // Nesting smoothstep gives most of the dwell for a fraction of the
+    // jump: it flattens at both ends without ever stopping dead, so the
+    // crossing still has the whole step to happen in. Measured on
+    // purple/orange, red and pink go from 15% of the cycle to 8.5% and
+    // orange from 15% to 32%, with the worst per-frame change only rising
+    // from 27 to 35.
+    double w = u * u * (3.0 - 2.0 * u);
+    w = w * w * (3.0 - 2.0 * w);
+    w = w * w * (3.0 - 2.0 * w);
 
     double ga = gr.palGain[a], gb = gr.palGain[n2];
 
@@ -561,6 +556,8 @@ public class LampEngine {
   double[] er, eg, eb;     // carried quantisation error, for temporal dither
   int[] nr, ng, nb;        // staged this frame; promoted to pr/pg/pb only on success
   double[] lr, lg, lb;     // last frame's target, to tell moving from held
+  int stillFrames = 0;     // consecutive frames with nothing moving
+  bool Animating = true;   // dither while true; snap when the scene is static
 
   // ---- live frame publishing -------------------------------------
   // The control panel used to redraw the preview by re-implementing the
@@ -687,6 +684,17 @@ public class LampEngine {
     int last = nbatch - 1;
     bool changed = force;
 
+    // Is anything moving at all? Checked once for the whole frame. A few
+    // frames of grace stops a momentarily-still animation from dropping
+    // its dither and stepping; only a scene that stays put goes static.
+    bool anyMoved = false;
+    for (int i = 0; i < LampCount; i++) {
+      if (fr[i] != lr[i] || fg[i] != lg[i] || fb[i] != lb[i]) { anyMoved = true; }
+      lr[i] = fr[i]; lg[i] = fg[i]; lb[i] = fb[i];
+    }
+    if (anyMoved) stillFrames = 0; else if (stillFrames < 1000) stillFrames++;
+    Animating = anyMoved || stillFrames < 20;
+
     for (int bi = 0; bi < nbatch; bi++) {
       byte[] b = bufs[bi];
       int first = bi * Slots;
@@ -694,18 +702,14 @@ public class LampEngine {
       for (int s = 0; s < n; s++) {
         int i = first + s;
         int st = Interleaved ? s*4 : s;
-        // "Moving" means the TARGET changed since last frame - a velocity
-        // test, not a distance-from-device one. Distance would call a slow
-        // fade static for several frames and then step, reintroducing the
-        // banding dither exists to remove. Velocity keeps error feedback on
-        // for anything animating, however slowly, and off for a value that
-        // is genuinely being held.
-        bool mv = fr[i] != lr[i] || fg[i] != lg[i] || fb[i] != lb[i]
-               || pr[i] < 0;
-        lr[i] = fr[i]; lg[i] = fg[i]; lb[i] = fb[i];
-        int qr = Dither(fr[i], MaxR, ref er[i], mv);
-        int qg = Dither(fg[i], MaxG, ref eg[i], mv);
-        int qb = Dither(fb[i], MaxB, ref eb[i], mv);
+        // Dither whenever the frame as a whole is animating. Deciding this
+        // per lamp, per channel was a mistake: on a slow scroll a channel
+        // is briefly unchanged between frames, and snapping it threw away
+        // the carried error, so it sat on a flat step and then jumped -
+        // banding that crawls instead of a colour that creeps.
+        int qr = Dither(fr[i], MaxR, ref er[i], Animating);
+        int qg = Dither(fg[i], MaxG, ref eg[i], Animating);
+        int qb = Dither(fb[i], MaxB, ref eb[i], Animating);
         if (qr != pr[i] || qg != pg[i] || qb != pb[i]) changed = true;
         // Do NOT record these as sent yet. The device buffers every batch
         // until the one carrying LampUpdateComplete arrives, so nothing is
