@@ -425,8 +425,28 @@ public class LampEngine {
     int i = gr.Idx[slot];
     if (i < 0 || i >= LampCount) return;
 
+    // Dim in LINEAR light, not on the sRGB-encoded value.
+    //
+    // Multiplying the encoded number is both wrong and lossy. Wrong
+    // because sRGB is a curve, so half the encoded value is about a fifth
+    // of the actual light - the slider never matched what the eye saw.
+    // Lossy because the surviving values bunch together: at 30% a full
+    // 0-255 sweep collapsed to roughly 78 distinct steps instead of 150,
+    // and bunched steps are exactly what makes a slow gradient sit still
+    // and then jump. Converting to linear, scaling there, and converting
+    // back keeps the steps evenly spread and makes the slider mean what
+    // it says. Both directions are interpolated lookups, so this costs
+    // very little per lamp. BuildTables is idempotent and returns
+    // immediately once built - called here because SetZoneG has callers
+    // (the all-off path, for one) that never touch PrepPaletteG, and a
+    // null table would be a crash rather than a wrong colour.
     double br = gr.Brightness * gr.Master;
-    if (br < 0.999) { r *= br; g *= br; b *= br; }
+    if (br < 0.999) {
+      BuildTables();
+      r = ToSrgb(ToLin(r) * br);
+      g = ToSrgb(ToLin(g) * br);
+      b = ToSrgb(ToLin(b) * br);
+    }
     if (r < 0) r = 0; else if (r > 255) r = 255;
     if (g < 0) g = 0; else if (g > 255) g = 255;
     if (b < 0) b = 0; else if (b > 255) b = 255;
@@ -633,7 +653,8 @@ public class LampEngine {
   // status line so it can be measured rather than guessed at.
   public volatile int  WriteUs   = 0;   // last frame's two writes, microsec
   public volatile int  WriteUsMax = 0;  // worst seen
-  public volatile int  LateFrames = 0;  // frames that missed their deadline        // last bytes actually sent
+  public volatile int  LateFrames = 0;  // frames that missed their deadline
+  int overrun = 0;                      // consecutive frames whose writes overflowed        // last bytes actually sent
   double[] er, eg, eb;     // carried quantisation error, for temporal dither
 
   // ---- live frame publishing -------------------------------------
@@ -1506,17 +1527,29 @@ public class LampEngine {
           if (ms > 1) Thread.Sleep(ms - 1);
           while (sw.ElapsedTicks < next) Thread.SpinWait(40);
         } else {
-          // Missed the deadline. Writing to this device is synchronous and
-          // can take milliseconds, so asking for a frame rate the hardware
-          // cannot service does not produce smoother light - it produces
-          // frames that land whenever the previous write finally returns,
-          // which is uneven and reads as flicker. Count it, and if it keeps
-          // happening drop the target rate until the loop can hold cadence.
+          // Missed the deadline. Count it, but do NOT slow down just
+          // because of this: measurement on real hardware shows the two
+          // writes taking about 11% of a 60fps budget, and the misses
+          // being roughly 1% of frames caused by ordinary scheduler
+          // jitter. Backing off there would permanently degrade a device
+          // with 15ms of slack every frame - an earlier version of this
+          // code did exactly that.
+          //
+          // Only react when the writes themselves genuinely cannot fit in
+          // the budget, which is a real capacity limit rather than a
+          // hiccup. Requires a sustained run, so one slow write cannot
+          // trigger it.
           LateFrames++;
-          if (LateFrames >= 30 && per < freq / 15) {
-            per = per + per / 4;          // 20% slower, floor at ~15 fps
-            LateFrames = 0;
-            Fps = (int)(freq / per);
+          long budgetUs = (per * 1000000L) / freq;
+          if (WriteUs > (budgetUs * 3) / 4) {
+            overrun++;
+            if (overrun >= 120 && per < freq / 15) {
+              per = per + per / 4;        // 20% slower, floor at ~15 fps
+              overrun = 0;
+              Fps = (int)(freq / per);
+            }
+          } else if (overrun > 0) {
+            overrun--;
           }
           next = sw.ElapsedTicks;   // fell behind, resync rather than spiral
         }
@@ -3124,13 +3157,23 @@ try {
             break
         }
 
-        if (-not $script:TimingDone -and [DateTime]::UtcNow -gt $script:TimingAt) {
-            $script:TimingDone = $true
+        # Sampled repeatedly rather than once. The interesting number is
+        # not the steady state - that has measured fine - but the rare
+        # stall, and a single reading five seconds in cannot show whether
+        # those are isolated or building up. Each line resets the worst
+        # and late counters so every entry describes its own interval.
+        if ([DateTime]::UtcNow -gt $script:TimingAt) {
+            $script:TimingAt = [DateTime]::UtcNow.AddSeconds(60)
             $budget = [int](1000000 / [Math]::Max(1, $eng.Fps))
-            $msg = ('device write {0} us/frame (worst {1}), budget {2} us at {3} fps, late frames {4}' -f `
+            $msg = ('device write {0} us/frame (worst {1}), budget {2} us at {3} fps, late frames {4} in last interval' -f `
                     $eng.WriteUs, $eng.WriteUsMax, $budget, $eng.Fps, $eng.LateFrames)
-            Say ("  Timing: {0}" -f $msg) 'DarkGray'
+            if (-not $script:TimingDone) {
+                $script:TimingDone = $true
+                Say ("  Timing: {0}" -f $msg) 'DarkGray'
+            }
             Write-Log $msg
+            $eng.WriteUsMax = 0
+            $eng.LateFrames = 0
         }
         # --- resume from sleep / display wake ---
         if ($resumeOk) {
