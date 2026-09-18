@@ -202,9 +202,6 @@ public class Zone {
   public int[] PalB = new int[] { 0, 0, 255 };
 
   public double[] plR, plG, plB, palGain;
-  // Per-edge blend reshaping table. palWarp[i] covers the step from colour
-  // i to colour i+1; see PrepPaletteG for what it holds and why.
-  public double[][] palWarp;
   public double[] Heat = new double[0];
   public double Phase = 0.0;
 
@@ -489,11 +486,6 @@ public class LampEngine {
       }
     }
 
-    // Last, because the warp is measured on the gain-applied colours and
-    // Equalise above can still change those. One table per edge, 17 doubles
-    // each, rebuilt only when the palette itself changes - never per frame.
-    gr.palWarp = new double[pc][];
-    for (int i = 0; i < pc; i++) gr.palWarp[i] = BuildWarp(gr, i, (i + 1) % pc);
   }
 
   // OKLab, from LINEAR sRGB. Used only when the palette changes, to measure
@@ -502,6 +494,49 @@ public class LampEngine {
   // be an obvious jump in one part of the spectrum and invisible in
   // another, which is what made one palette colour hold the strip longer
   // than the next.
+  // Inverse of ToOklab: perceptual coordinates back to LINEAR sRGB.
+  static void FromOklab(double L, double A, double B2,
+                        out double r, out double g, out double b) {
+    double l_ = L + 0.3963377774 * A + 0.2158037573 * B2;
+    double m_ = L - 0.1055613458 * A - 0.0638541728 * B2;
+    double s_ = L - 0.0894841775 * A - 1.2914855480 * B2;
+    double l = l_ * l_ * l_, m = m_ * m_ * m_, s = s_ * s_ * s_;
+    r =  4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s;
+    g = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s;
+    b = -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s;
+  }
+
+  // Straight-line blend between two colours in OKLab, pulled back into the
+  // displayable range if it strays outside.
+  //
+  // A mix of two in-gamut colours can land on a colour the LEDs cannot
+  // make. Clamping each channel would bend the hue - a red that cannot go
+  // bright enough turns pink rather than just dimmer. Instead keep the
+  // lightness and the hue direction and ease the saturation back until it
+  // fits, which is the smallest change that stays honest to the colour.
+  static void MixOklab(double L1, double A1, double B1,
+                       double L2, double A2, double B2, double w,
+                       out double r, out double g, out double b) {
+    double L = L1 + (L2 - L1) * w;
+    double A = A1 + (A2 - A1) * w;
+    double B = B1 + (B2 - B1) * w;
+    FromOklab(L, A, B, out r, out g, out b);
+    if (r >= -1e-9 && g >= -1e-9 && b >= -1e-9 &&
+        r <= 1.000000001 && g <= 1.000000001 && b <= 1.000000001) return;
+    double lo = 0.0, hi = 1.0;
+    for (int it = 0; it < 18; it++) {
+      double mid = (lo + hi) * 0.5;
+      FromOklab(L, A * mid, B * mid, out r, out g, out b);
+      if (r >= -1e-9 && g >= -1e-9 && b >= -1e-9 &&
+          r <= 1.000000001 && g <= 1.000000001 && b <= 1.000000001) lo = mid;
+      else hi = mid;
+    }
+    FromOklab(L, A * lo, B * lo, out r, out g, out b);
+    if (r < 0) r = 0; else if (r > 1) r = 1;
+    if (g < 0) g = 0; else if (g > 1) g = 1;
+    if (b < 0) b = 0; else if (b > 1) b = 1;
+  }
+
   static void ToOklab(double r, double g, double b,
                       out double L, out double A, out double B2) {
     double l = 0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b;
@@ -513,91 +548,6 @@ public class LampEngine {
     L  = 0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s;
     A  = 1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s;
     B2 = 0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s;
-  }
-
-  // Walk one palette edge and record where the visible change actually
-  // happens, so the crossfade can be re-timed to spread it evenly.
-  //
-  // The crossfade weight runs 0..1 at a constant rate, but the colours it
-  // produces do not change at a constant rate: between purple and orange,
-  // the first half of the weight covers only about 37% of the change a
-  // person sees and the second half covers 63%. The blend therefore sits
-  // near the first colour and hurries through the second, so the first
-  // colour looks like it owns a wider band than the second. Every pair
-  // tested was lopsided, in both directions - it is not specific to one
-  // palette.
-  //
-  // Sample the edge, measure each step in OKLab, then invert: for K evenly
-  // spaced fractions of the total perceptual distance, store the weight
-  // that reaches it. Feeding the crossfade through that table makes the
-  // visible change advance at a steady rate, which makes the two bands the
-  // same width.
-  const int WarpK = 16;
-  double[] BuildWarp(Zone gr, int a, int b) {
-    double[] tab = new double[WarpK + 1];
-    const int M = 64;
-    double ga = gr.palGain[a], gb = gr.palGain[b];
-    double ha, sa, va, hb, sb, vb;
-    RgbToHsv(gr.plR[a] * ga, gr.plG[a] * ga, gr.plB[a] * ga, out ha, out sa, out va);
-    RgbToHsv(gr.plR[b] * gb, gr.plG[b] * gb, gr.plB[b] * gb, out hb, out sb, out vb);
-    double dh = hb - ha;
-    if (dh > 180.0) dh -= 360.0; else if (dh < -180.0) dh += 360.0;
-
-    // Greyscale endpoints take the straight-RGB path in GroupPal, so the
-    // table has to be measured along that same path or it would re-time a
-    // blend that is never used.
-    bool useHue = !(sa < 0.02 || sb < 0.02 || va < 0.002 || vb < 0.002);
-    double[] cum = new double[M + 1];
-    double pl = 0, pa = 0, pb2 = 0;
-    for (int i = 0; i <= M; i++) {
-      double w = i / (double)M, cr, cg, cb;
-      if (useHue) {
-        HsvToRgb(ha + dh * w, sa + (sb - sa) * w, va + (vb - va) * w, out cr, out cg, out cb);
-      } else {
-        cr = gr.plR[a] * ga + (gr.plR[b] * gb - gr.plR[a] * ga) * w;
-        cg = gr.plG[a] * ga + (gr.plG[b] * gb - gr.plG[a] * ga) * w;
-        cb = gr.plB[a] * ga + (gr.plB[b] * gb - gr.plB[a] * ga) * w;
-      }
-      double L, A, B2;
-      ToOklab(cr, cg, cb, out L, out A, out B2);
-      if (i == 0) cum[0] = 0.0;
-      else {
-        double dl = L - pl, da = A - pa, db = B2 - pb2;
-        cum[i] = cum[i - 1] + Math.Sqrt(dl * dl + da * da + db * db);
-      }
-      pl = L; pa = A; pb2 = B2;
-    }
-
-    double total = cum[M];
-    // Two identical palette entries have no distance to redistribute.
-    // Hand back the plain ramp rather than dividing by zero.
-    if (total < 1e-9) {
-      for (int k = 0; k <= WarpK; k++) tab[k] = k / (double)WarpK;
-      return tab;
-    }
-    for (int i = 0; i <= M; i++) cum[i] /= total;
-
-    int j = 0;
-    for (int k = 0; k <= WarpK; k++) {
-      double target = k / (double)WarpK;
-      while (j < M && cum[j + 1] < target) j++;
-      double span = cum[j + 1] - cum[j];
-      double fr = (span < 1e-12) ? 0.0 : (target - cum[j]) / span;
-      tab[k] = (j + fr) / (double)M;
-    }
-    tab[0] = 0.0; tab[WarpK] = 1.0;
-    return tab;
-  }
-
-  static double ApplyWarp(double[] tab, double w) {
-    if (tab == null) return w;
-    if (w <= 0.0) return tab[0];
-    if (w >= 1.0) return tab[WarpK];
-    double x = w * WarpK;
-    int i = (int)x;
-    if (i >= WarpK) return tab[WarpK];
-    double f = x - i;
-    return tab[i] + (tab[i + 1] - tab[i]) * f;
   }
 
   void GroupPal(Zone gr, double f, out double r, out double g, out double b) {
@@ -634,14 +584,28 @@ public class LampEngine {
     // holds. The only fix is to give a sparse zone more of its cycle to
     // move in.
     //
-    // So: twelve or more lamps keep the 40% window, four or fewer get 75%,
+    // So: twelve or more lamps keep a 35% window, four or fewer get 50%,
     // and anything between is interpolated. Both zones keep the same
-    // palette and the same hue path, so the colours are unchanged.
+    // palette and the same blend, so the colours are unchanged.
+    //
+    // The sparse zone used to get 75%. That was set when the blend still
+    // went round the HSV hue circle and spent most of its length in a
+    // washed-out smear, so a wide window was needed to keep the four
+    // keyboard lamps from all sitting on an endpoint and flipping in
+    // unison. Blending in OKLab removed the smear, which means the window
+    // can come back in and give the palette colours themselves more of the
+    // strip - measured on purple/orange, the second colour goes from 27.9%
+    // of the cycle to 35.3% and the muddy middle drops from 31.8% to 21.2%.
+    //
+    // 0.50 is the floor, not a preference. At 0.40 the four keyboard lamps
+    // are pinned on an endpoint 60% of the time and start snapping between
+    // colours together, which was rejected before; 0.50 holds that at 50.8%
+    // with a worst per-frame step of 7.7/255, still smooth.
     double nlamp = (double)gr.N;
     double trans;
-    if (nlamp >= 12.0) trans = 0.40;
-    else if (nlamp <= 4.0) trans = 0.75;
-    else trans = 0.75 + (0.40 - 0.75) * ((nlamp - 4.0) / 8.0);
+    if (nlamp >= 12.0) trans = 0.35;
+    else if (nlamp <= 4.0) trans = 0.50;
+    else trans = 0.50 + (0.35 - 0.50) * ((nlamp - 4.0) / 8.0);
     double edge = (1.0 - trans) / 2.0;
     double w;
     if (u <= edge) w = 0.0;
@@ -651,75 +615,31 @@ public class LampEngine {
       w = tt * tt * (3.0 - 2.0 * tt);
     }
 
-    // Re-time the crossfade so the visible change is spread evenly across
-    // it. Without this the blend lingers near one colour and rushes the
-    // other, which reads as one band being wider than its neighbour even
-    // though both are given exactly the same share of the cycle. The flat
-    // holds either side are untouched: w is still exactly 0 and exactly 1
-    // there, so the palette colours themselves are unchanged.
-    if (gr.palWarp != null && a < gr.palWarp.Length) w = ApplyWarp(gr.palWarp[a], w);
-
     double ga = gr.palGain[a], gb = gr.palGain[n2];
     double ar = gr.plR[a] * ga, ag2 = gr.plG[a] * ga, ab = gr.plB[a] * ga;
     double br = gr.plR[n2] * gb, bg = gr.plG[n2] * gb, bb = gr.plB[n2] * gb;
 
-    // Blend around the hue circle rather than straight through RGB. A
-    // straight line from purple to orange passes through the desaturated
-    // middle, and because sRGB keeps a falling channel visible far longer
-    // than its linear value suggests, the result reads as a long red-pink
-    // smear. Going round the circle keeps saturation up and crosses that
-    // region quickly.
-    double ha, sa, va, hb2, sb2, vb2;
-    RgbToHsv(ar, ag2, ab, out ha, out sa, out va);
-    RgbToHsv(br, bg, bb, out hb2, out sb2, out vb2);
-
+    // Blend in OKLab - a straight line between the two colours in a space
+    // built so that equal steps look equal.
+    //
+    // This used to rotate around the HSV hue circle, which is what made
+    // one band look thinner than its neighbour. Every HSV hue from violet
+    // round to red holds green at zero, so purple to orange kept green at
+    // zero for 90% of the sweep and only found orange's green=120 right at
+    // the end: the strip showed purple, then a long magenta-pink smear,
+    // then a moment of orange. Measured over the whole blend that is 70%
+    // pink and 7% orange, and the halfway point - where the colour stops
+    // being nearer purple and starts being nearer orange - sat at 0.69
+    // instead of 0.50.
+    //
+    // OKLab puts that halfway point at 0.500 for this palette and within
+    // 0.01 of it for every pair tested, and cuts the pink from 70% to 35%.
     double lr, lg, lb;
-    if (sa < 0.02 || sb2 < 0.02 || va < 0.002 || vb2 < 0.002) {
-      // Grey, white or black has no meaningful hue - rotating through one
-      // would swing via an arbitrary colour. Blend straight instead.
-      lr = ar + (br - ar) * w;
-      lg = ag2 + (bg - ag2) * w;
-      lb = ab + (bb - ab) * w;
-    } else {
-      double dh = hb2 - ha;
-      if (dh > 180.0) dh -= 360.0; else if (dh < -180.0) dh += 360.0;
-      HsvToRgb(ha + dh * w, sa + (sb2 - sa) * w, va + (vb2 - va) * w,
-               out lr, out lg, out lb);
-    }
+    double La, Aa, Ba, Lb, Ab, Bb;
+    ToOklab(ar, ag2, ab, out La, out Aa, out Ba);
+    ToOklab(br, bg, bb, out Lb, out Ab, out Bb);
+    MixOklab(La, Aa, Ba, Lb, Ab, Bb, w, out lr, out lg, out lb);
     r = ToSrgb(lr); g = ToSrgb(lg); b = ToSrgb(lb);
-  }
-
-  // HSV helpers used only by GroupPal. These work in LINEAR light, matching
-  // the palette arrays, so the caller must not pre-encode to sRGB.
-  static void RgbToHsv(double r, double g, double b,
-                       out double h, out double s, out double v) {
-    double mx = Math.Max(r, Math.Max(g, b));
-    double mn = Math.Min(r, Math.Min(g, b));
-    double d = mx - mn;
-    v = mx;
-    s = (mx <= 0.0) ? 0.0 : d / mx;
-    if (d <= 0.0) { h = 0.0; return; }
-    if (mx == r)      h = 60.0 * (((g - b) / d) % 6.0);
-    else if (mx == g) h = 60.0 * (((b - r) / d) + 2.0);
-    else              h = 60.0 * (((r - g) / d) + 4.0);
-    if (h < 0.0) h += 360.0;
-  }
-
-  static void HsvToRgb(double h, double s, double v,
-                       out double r, out double g, out double b) {
-    h = h % 360.0; if (h < 0.0) h += 360.0;
-    if (s < 0.0) s = 0.0; else if (s > 1.0) s = 1.0;
-    if (v < 0.0) v = 0.0;
-    double c = v * s;
-    double x = c * (1.0 - Math.Abs((h / 60.0) % 2.0 - 1.0));
-    double m = v - c;
-    if      (h <  60.0) { r = c; g = x; b = 0; }
-    else if (h < 120.0) { r = x; g = c; b = 0; }
-    else if (h < 180.0) { r = 0; g = c; b = x; }
-    else if (h < 240.0) { r = 0; g = x; b = c; }
-    else if (h < 300.0) { r = x; g = 0; b = c; }
-    else                { r = c; g = 0; b = x; }
-    r += m; g += m; b += m;
   }
 
   // Pull every group's live inbox into its active settings.
