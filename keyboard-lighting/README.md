@@ -74,7 +74,8 @@ engine is not running the strip dims and the labels say OFF.
 | Match both | Applies every change to both sections |
 | Master brightness | Dims everything. The Fn brightness keys use this |
 | Pattern | The animation. 22 of them, including music, screen mirror and meters |
-| Colours | Click a square to change it. `+` and `-` add and remove colours |
+| Colours | Click a square to change it. `+` and `-` add and remove colours. Colours you add under "Define Custom Colors" are remembered |
+| Band width | The bar under each colour. Drag it to give that colour more or less of the strip; double-click to put it back to even |
 | Speed | How fast the animation moves in this section |
 | Brightness for this part | This section's own level, on top of the master |
 | Mirror | Mirrors the pattern around the middle |

@@ -34,6 +34,12 @@ param(
     [string]$Color  = '#00B4FF',
     [string]$Color2 = '#FF0066',
 
+    # Relative band width per colour, same order and count as -Colors.
+    # '2,1' gives the first colour twice the strip of the second. Empty or
+    # the wrong count means even, which is what it always did.
+    [string]$Widths = '',
+    [string]$BarWidths = '',
+
     [ValidateRange(0.01, 50.0)]
     [double]$Speed = 1.0,
 
@@ -200,6 +206,10 @@ public class Zone {
   public int[] PalR = new int[] { 255, 0, 0 };
   public int[] PalG = new int[] { 0, 255, 0 };
   public int[] PalB = new int[] { 0, 0, 255 };
+  // How wide each colour's band is, relative to the others. All 1 = the
+  // even spacing this had before widths existed. Null or wrong-length is
+  // treated as all 1, so an old theme file still behaves the same.
+  public double[] PalW = null;
 
   public double[] plR, plG, plB, palGain;
   public double[] Heat = new double[0];
@@ -211,6 +221,7 @@ public class Zone {
   public volatile int    LiveSpeedMilli = -1;
   public volatile string LiveEffect     = null;
   public volatile int[]  LivePalR = null, LivePalG = null, LivePalB = null;
+  public volatile int[]  LivePalW = null;   // widths x1000, see PalW
   public volatile int    LiveFlags = -1;
   public volatile int    LiveEnabled = -1;
   public volatile bool   LiveDirty = false;
@@ -554,11 +565,6 @@ public class LampEngine {
     if (gr.plR == null || gr.plR.Length == 0) PrepPaletteG(gr);
     int pc = gr.plR.Length;
     f = f % 1.0; if (f < 0) f += 1.0;
-    double x = f * pc;
-    int a = (int)Math.Floor(x);
-    double u = x - a;
-    int n2 = (a + 1) % pc;
-    a = a % pc;
     // Hold each palette colour, then cross in a short window.
     //
     // The ask is for the palette colours themselves to dominate and the
@@ -606,13 +612,51 @@ public class LampEngine {
     if (nlamp >= 12.0) trans = 0.35;
     else if (nlamp <= 4.0) trans = 0.50;
     else trans = 0.50 + (0.35 - 0.50) * ((nlamp - 4.0) / 8.0);
-    double edge = (1.0 - trans) / 2.0;
-    double w;
-    if (u <= edge) w = 0.0;
-    else if (u >= 1.0 - edge) w = 1.0;
-    else {
-      double tt = (u - edge) / trans;
-      w = tt * tt * (3.0 - 2.0 * tt);
+
+    // Lay the cycle out as: hold colour 0, fade, hold colour 1, fade, ...
+    // Every fade is the same length; the holds are what the width sliders
+    // change. Widths are relative, so 2 and 1 means the first colour gets
+    // twice the strip of the second whatever the numbers actually are.
+    //
+    // With every width equal this is arithmetically identical to the fixed
+    // 1/pc slots it replaces - verified to 1e-15 - so a palette nobody has
+    // touched looks exactly as it did.
+    double fade = trans / pc;             // one fade, in cycle units
+    double holdTot = 1.0 - fade * pc;     // what is left for the flat holds
+    if (holdTot < 0.0) holdTot = 0.0;
+
+    double wsum = 0.0;
+    bool haveW = (gr.PalW != null && gr.PalW.Length == pc);
+    if (haveW) {
+      for (int i = 0; i < pc; i++) {
+        double v = gr.PalW[i];
+        if (v < 0.0) v = 0.0;
+        wsum += v;
+      }
+      if (wsum <= 1e-9) haveW = false;    // all zero: fall back to even
+    }
+
+    // Start half a hold early so colour 0 sits centred on f=0, which is
+    // where the old layout put it.
+    double firstHold = holdTot * (haveW ? (Math.Max(0.0, gr.PalW[0]) / wsum) : (1.0 / pc));
+    double xx = f + firstHold * 0.5;
+    xx = xx % 1.0; if (xx < 0) xx += 1.0;
+
+    int a = pc - 1, n2 = 0;
+    double w = 1.0;
+    double pos = 0.0;
+    for (int i = 0; i < pc; i++) {
+      double hi = holdTot * (haveW ? (Math.Max(0.0, gr.PalW[i]) / wsum) : (1.0 / pc));
+      if (xx < pos + hi) { a = i; n2 = (i + 1) % pc; w = 0.0; break; }
+      pos += hi;
+      if (xx < pos + fade) {
+        a = i; n2 = (i + 1) % pc;
+        double tt = (fade > 1e-12) ? (xx - pos) / fade : 1.0;
+        if (tt < 0.0) tt = 0.0; else if (tt > 1.0) tt = 1.0;
+        w = tt * tt * (3.0 - 2.0 * tt);
+        break;
+      }
+      pos += fade;
     }
 
     double ga = gr.palGain[a], gb = gr.palGain[n2];
@@ -665,6 +709,24 @@ public class LampEngine {
       if (pr2 != null && pg2 != null && pb2 != null && pr2.Length > 0 &&
           pr2.Length == pg2.Length && pr2.Length == pb2.Length) {
         gr.PalR = pr2; gr.PalG = pg2; gr.PalB = pb2; repal = true;
+      }
+
+      // Band widths arrive as thousandths so the inbox can stay an int[],
+      // which is what makes the hand-off safe without a lock. Length has
+      // to match the palette or it is ignored - a half-applied update
+      // during a colour change would index past the end.
+      int[] pw = gr.LivePalW;
+      if (pw != null && pw.Length == gr.PalR.Length) {
+        double[] nw = new double[pw.Length];
+        double tot = 0.0;
+        for (int i = 0; i < pw.Length; i++) {
+          double v = pw[i] / 1000.0;
+          if (v < 0.0) v = 0.0;
+          nw[i] = v; tot += v;
+        }
+        gr.PalW = (tot > 1e-9) ? nw : null;
+      } else if (pw != null && pw.Length == 0) {
+        gr.PalW = null;            // explicit "go back to even"
       }
 
       int lf = gr.LiveFlags;
@@ -2924,8 +2986,29 @@ function Parse-Stops {
     return $out
 }
 
+# Relative band widths, as a CSV of numbers matching the colour count.
+# Anything unparseable, negative, or the wrong length is dropped and the
+# zone falls back to even bands.
+function Parse-Widths {
+    param([string]$csv, [int]$want)
+    if (-not $csv) { return $null }
+    $out = @()
+    foreach ($tok in ($csv -split ',')) {
+        $t = $tok.Trim()
+        if (-not $t) { continue }
+        $v = 0.0
+        if (-not [double]::TryParse($t, [ref]$v)) { return $null }
+        if ($v -lt 0) { $v = 0.0 }
+        $out += $v
+    }
+    if ($out.Count -ne $want) { return $null }
+    $sum = 0.0; foreach ($v in $out) { $sum += $v }
+    if ($sum -le 0) { return $null }
+    return [double[]]$out
+}
+
 function Seed-Zone {
-    param($z, $eff, $spd, $brt, $mir, $rev, $equ, $lay, $stopsIn, $on)
+    param($z, $eff, $spd, $brt, $mir, $rev, $equ, $lay, $stopsIn, $on, $widthsIn)
     if ($z.Idx.Length -eq 0) { return }
     $z.Effect     = $eff
     $z.Speed      = [double]$spd
@@ -2943,13 +3026,14 @@ function Seed-Zone {
     } else {
         $z.PalR = $palR; $z.PalG = $palG; $z.PalB = $palB
     }
+    $z.PalW = Parse-Widths $widthsIn $z.PalR.Length
 }
 
 if ($Master -lt 0) { $Master = 0.0 }
 if ($Master -gt 1) { $Master = 1.0 }
 
 # keyboard deck
-Seed-Zone $zDeck $Effect $Speed $Brightness $Mirror $Reverse $Equalise $Layout $null (-not $KbdOff)
+Seed-Zone $zDeck $Effect $Speed $Brightness $Mirror $Reverse $Equalise $Layout $null (-not $KbdOff) $Widths
 
 # light bar: use its own switches where supplied
 $barEff = $Effect;     if ($BarEffect)              { $barEff = $BarEffect }
@@ -2958,7 +3042,8 @@ $barBrt = $Brightness; if ($BarBrightness -ge 0)    { $barBrt = $BarBrightness }
 $barEqu = $Equalise;   if ($BarEqualise)            { $barEqu = $BarEqualise }
 $barLay = $Layout;     if ($BarLayout)              { $barLay = $BarLayout }
 $barStops = Parse-Stops $BarColors
-Seed-Zone $zBar $barEff $barSpd $barBrt ($BarMirror.IsPresent) ($BarReverse.IsPresent) $barEqu $barLay $barStops (-not $BarOff)
+$barWid = $Widths; if ($BarWidths) { $barWid = $BarWidths }
+Seed-Zone $zBar $barEff $barSpd $barBrt ($BarMirror.IsPresent) ($BarReverse.IsPresent) $barEqu $barLay $barStops (-not $BarOff) $barWid
 
 # A saved zone map is the user telling us the real shape of their hardware,
 # so it wins over the panel's Wrap-around box. This has to run after
@@ -3393,6 +3478,41 @@ try {
                                 $z.LivePalR = [int[]]@($ns | ForEach-Object { $_[0] })
                                 $z.LivePalG = [int[]]@($ns | ForEach-Object { $_[1] })
                                 $z.LivePalB = [int[]]@($ns | ForEach-Object { $_[2] })
+
+                                # Widths have to line up with the palette as
+                                # the engine ended up holding it, not as the
+                                # panel sent it: a single colour is doubled
+                                # and a repeated last colour is dropped just
+                                # above, so the counts can differ. Sent as
+                                # thousandths to keep the inbox an int[].
+                                $wv = $null
+                                if ($null -ne $blk.Widths) { $wv = [string]$blk.Widths }
+                                $wOut = $null
+                                if ($wv) {
+                                    $tmp = @()
+                                    $bad = $false
+                                    foreach ($wtok in ($wv -split ',')) {
+                                        $wt = $wtok.Trim()
+                                        if (-not $wt) { continue }
+                                        $wd = 0.0
+                                        if ([double]::TryParse($wt, [ref]$wd)) {
+                                            if ($wd -lt 0) { $wd = 0.0 }
+                                            $tmp += $wd
+                                        } else { $bad = $true }
+                                    }
+                                    if (-not $bad -and $tmp.Count -eq $ns.Count) {
+                                        $tot = 0.0; foreach ($wd in $tmp) { $tot += $wd }
+                                        if ($tot -gt 0) {
+                                            $wOut = [int[]]@($tmp | ForEach-Object {
+                                                [int][Math]::Round($_ * 1000)
+                                            })
+                                        }
+                                    }
+                                }
+                                # Empty array is the signal for "even again",
+                                # which is how clearing the sliders gets through.
+                                if ($null -ne $wOut) { $z.LivePalW = $wOut }
+                                else                 { $z.LivePalW = [int[]]@() }
                             }
                         }
 

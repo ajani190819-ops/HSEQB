@@ -192,7 +192,29 @@ function New-GroupCfg {
         Equalise   = $true
         Loop       = $Loop
         Swatches   = [string[]]@($Swatches)
+        # One relative band width per swatch, always the same length. 1 is
+        # the neutral value, so a fresh palette looks exactly as it did
+        # before widths existed.
+        Widths     = [double[]]@(@($Swatches) | ForEach-Object { 1.0 })
     }
+}
+
+# Widths must always match the swatch count: the engine drops a set that
+# does not line up, so a stale array would silently disable the feature.
+# Called after anything that adds or removes a colour.
+function Fix-Widths {
+    param($g)
+    $n = @($g.Swatches).Count
+    $w = @()
+    if ($g.Widths) { $w = @($g.Widths) }
+    if ($w.Count -gt $n) { $w = @($w[0..($n-1)]) }
+    while ($w.Count -lt $n) { $w += 1.0 }
+    $g.Widths = [double[]]@($w | ForEach-Object {
+        $v = [double]$_
+        if ($v -lt 0.25) { $v = 0.25 }
+        if ($v -gt 4.0)  { $v = 4.0 }
+        $v
+    })
 }
 
 $script:Cfg = [pscustomobject]@{
@@ -201,6 +223,12 @@ $script:Cfg = [pscustomobject]@{
     Link       = $false       # copy keyboard changes onto the bar
     OnExit     = 'off'        # what the keyboard does once this app closes
     Smooth     = $true        # off = allow temporal dither (see the engine)
+    # The Windows colour picker's 16 custom slots. It cannot remember these
+    # itself - the dialog is created fresh each time it opens, and
+    # CustomColors is an in-memory property, so "Add to Custom Colors" only
+    # lasts as long as that one dialog. Keeping them here and handing them
+    # back makes them stick.
+    Custom     = @()
     Kbd = New-GroupCfg 'Scrolling gradient' @('#FF0000','#FF7F00','#FFFF00','#00FF00','#0000FF','#8B00FF') $false
     Bar = New-GroupCfg 'Rainbow'            @('#00B4FF','#FF0066')                                         $true
 }
@@ -215,6 +243,7 @@ function Load-Cfg {
         foreach ($p in 'Brightness','Overlay','Link','OnExit','Smooth') {
             if ($null -ne $o.$p) { $script:Cfg.$p = $o.$p }
         }
+        if ($null -ne $o.Custom) { $script:Cfg.Custom = @($o.Custom | ForEach-Object { [int]$_ }) }
         # Files written before the split had one flat set of values; load
         # them into the keyboard group so nothing is lost.
         if ($null -eq $o.Kbd -and $null -ne $o.Effect) {
@@ -223,6 +252,7 @@ function Load-Cfg {
                 if ($null -ne $o.$p) { $g.$p = $o.$p }
             }
             if ($o.Swatches) { $g.Swatches = [string[]]@($o.Swatches) }
+            Fix-Widths $g
             Log 'settings migrated from the old single-zone format'
             return
         }
@@ -234,6 +264,10 @@ function Load-Cfg {
                 if ($null -ne $src.$p) { $g.$p = $src.$p }
             }
             if ($src.Swatches) { $g.Swatches = [string[]]@($src.Swatches) }
+            if ($src.Widths)   { $g.Widths   = [double[]]@($src.Widths | ForEach-Object { [double]$_ }) }
+            # A settings file written before widths existed has none, and a
+            # hand-edited one may be the wrong length.
+            Fix-Widths $g
         }
         Log 'settings loaded'
     } catch { Log ("settings load failed: {0}" -f $_.Exception.Message) 'WARN' }
@@ -261,6 +295,7 @@ function New-ThemeBlock {
         On         = [bool]$g.On
         Effect     = (Get-EffectToken $g)
         Colors     = ($g.Swatches -join ',')
+        Widths     = (@($g.Widths) -join ',')
         Speed      = [double]$g.Speed / 10.0
         Brightness = [double]$g.Brightness / 100.0
         Mirror     = [bool]$g.Mirror
@@ -385,6 +420,10 @@ function Start-Engine {
     [void]$sb.Append(' -OnExit '); [void]$sb.Append($oe)
     if ($k.Swatches.Count -gt 0) {
         [void]$sb.Append(' -Colors "'); [void]$sb.Append(($k.Swatches -join ',')); [void]$sb.Append('"')
+        if ($k.Widths -and @($k.Widths).Count -eq $k.Swatches.Count) {
+            $wcsv = (@($k.Widths) | ForEach-Object { $_.ToString('0.###', $inv) }) -join ','
+            [void]$sb.Append(' -Widths "'); [void]$sb.Append($wcsv); [void]$sb.Append('"')
+        }
         [void]$sb.Append(' -Color "');  [void]$sb.Append($k.Swatches[0]); [void]$sb.Append('"')
         if ($k.Swatches.Count -gt 1) {
             [void]$sb.Append(' -Color2 "'); [void]$sb.Append($k.Swatches[1]); [void]$sb.Append('"')
@@ -402,6 +441,10 @@ function Start-Engine {
     [void]$sb.Append(' -BarBrightness '); [void]$sb.Append($bBrt)
     if ($bg.Swatches.Count -gt 0) {
         [void]$sb.Append(' -BarColors "'); [void]$sb.Append(($bg.Swatches -join ',')); [void]$sb.Append('"')
+        if ($bg.Widths -and @($bg.Widths).Count -eq $bg.Swatches.Count) {
+            $wcsv2 = (@($bg.Widths) | ForEach-Object { $_.ToString('0.###', $inv) }) -join ','
+            [void]$sb.Append(' -BarWidths "'); [void]$sb.Append($wcsv2); [void]$sb.Append('"')
+        }
     }
     if ($bg.Mirror)  { [void]$sb.Append(' -BarMirror') }
     if ($bg.Reverse) { [void]$sb.Append(' -BarReverse') }
@@ -794,9 +837,9 @@ $y += 15 + 9
 # ================================================================ colours
 New-Head 'COLOURS' $M $y 200 | Out-Null
 $lblColHint = New-Object System.Windows.Forms.Label
-$lblColHint.Text      = 'click to change'
+$lblColHint.Text      = 'click to change   -   drag the bar for band width'
 $lblColHint.Location  = New-Object System.Drawing.Point(($M + 90), $y)
-$lblColHint.Size      = New-Object System.Drawing.Size(240, 16)
+$lblColHint.Size      = New-Object System.Drawing.Size(340, 16)
 $lblColHint.ForeColor = [System.Drawing.Color]::FromArgb(96,102,122)
 $lblColHint.Font      = $fontSm
 $lblColHint.BackColor = [System.Drawing.Color]::Transparent
@@ -805,10 +848,10 @@ $y += 20
 
 $pnlCol = New-Object System.Windows.Forms.Panel
 $pnlCol.Location  = New-Object System.Drawing.Point($M, $y)
-$pnlCol.Size      = New-Object System.Drawing.Size($CW, 44)
+$pnlCol.Size      = New-Object System.Drawing.Size($CW, 60)
 $pnlCol.BackColor = [System.Drawing.Color]::Transparent
 $body.Controls.Add($pnlCol)
-$y += 44 + 12
+$y += 60 + 12
 
 # ================================================================ speed + zone brightness
 $cardSl = New-Object KbLight.Card
@@ -1134,6 +1177,59 @@ function Update-Preview {
 }
 
 # ---------------------------------------------------------------- swatches
+# Open the colour picker and remember the custom slots.
+#
+# The stock dialog does not persist them. CustomColors lives on the
+# ColorDialog object, and a new object is created every time this runs, so
+# anything put in those sixteen slots with "Add to Custom Colors" is gone
+# the moment the dialog closes. Load them in on the way up and read them
+# back on the way down, and they survive - across restarts too, because
+# they go into the settings file with everything else.
+#
+# Returns $null when cancelled.
+function Pick-Colour {
+    param([string]$startHex)
+
+    $dlg = New-Object System.Windows.Forms.ColorDialog
+    $dlg.FullOpen = $true
+    # Without this the dialog quietly refuses any colour the display cannot
+    # show exactly, which on some machines silently snaps the choice.
+    $dlg.AnyColor = $true
+    $dlg.SolidColorOnly = $false
+    try { $dlg.Color = [System.Drawing.ColorTranslator]::FromHtml($startHex) } catch { }
+
+    $saved = @($script:Cfg.Custom)
+    if ($saved.Count -gt 0) {
+        try { $dlg.CustomColors = [int[]]$saved } catch { }
+    }
+
+    $res = $dlg.ShowDialog()
+
+    # Read the slots back whether or not OK was pressed: the user may have
+    # added a colour and then cancelled, and losing it would be its own
+    # small betrayal.
+    try {
+        $now = @($dlg.CustomColors)
+        # The dialog pads unused slots with white (0x00FFFFFF). Keeping
+        # those is harmless, but trimming the all-white tail stops the
+        # settings file filling with noise.
+        while ($now.Count -gt 0 -and $now[-1] -eq 0x00FFFFFF) {
+            $now = @($now[0..($now.Count-2)])
+        }
+        $script:Cfg.Custom = @($now | ForEach-Object { [int]$_ })
+        Save-Cfg
+    } catch { }
+
+    # Read the colour BEFORE disposing: after Dispose the property is not
+    # guaranteed to be readable.
+    $hex = $null
+    if ($res -eq 'OK') {
+        $hex = '#{0:X2}{1:X2}{2:X2}' -f $dlg.Color.R, $dlg.Color.G, $dlg.Color.B
+    }
+    $dlg.Dispose()
+    return $hex
+}
+
 function Redraw-Swatches {
     $g = Cur
     $pnlCol.Controls.Clear()
@@ -1148,12 +1244,10 @@ function Redraw-Swatches {
         $sw.Add_Click({
             $idx = $this.Tag
             $gg  = Cur
-            $dlg = New-Object System.Windows.Forms.ColorDialog
-            $dlg.FullOpen = $true
-            try { $dlg.Color = [System.Drawing.ColorTranslator]::FromHtml($gg.Swatches[$idx]) } catch { }
-            if ($dlg.ShowDialog() -eq 'OK') {
+            $hex = Pick-Colour $gg.Swatches[$idx]
+            if ($hex) {
                 $arr = @($gg.Swatches)
-                $arr[$idx] = '#{0:X2}{1:X2}{2:X2}' -f $dlg.Color.R, $dlg.Color.G, $dlg.Color.B
+                $arr[$idx] = $hex
                 $gg.Swatches = [string[]]$arr
                 Sync-Link
                 Redraw-Swatches
@@ -1162,6 +1256,31 @@ function Redraw-Swatches {
             }
         })
         $pnlCol.Controls.Add($sw)
+
+        # Width bar directly under its own colour, so which one it belongs
+        # to needs no explaining.
+        $wb = New-Object KbLight.WidthBar
+        $wb.Location = New-Object System.Drawing.Point($x, 46)
+        $wb.Size     = New-Object System.Drawing.Size(44, 12)
+        $wv = 1.0
+        if ($g.Widths -and $i -lt @($g.Widths).Count) { $wv = [double]$g.Widths[$i] }
+        $wb.SetQuiet($wv)
+        $wb.Tag = $i
+        $wb.Add_ValueChanged({
+            if ($script:Suppress) { return }
+            $idx = $this.Tag
+            $gg  = Cur
+            $arr = @($gg.Widths)
+            while ($arr.Count -lt @($gg.Swatches).Count) { $arr += 1.0 }
+            if ($idx -lt $arr.Count) {
+                $arr[$idx] = [double]$this.Value
+                $gg.Widths = [double[]]$arr
+                Sync-Link
+                Update-Preview
+                Request-Apply
+            }
+        })
+        $pnlCol.Controls.Add($wb)
         $x += 50
     }
     if ($g.Swatches.Count -lt 8) {
@@ -1172,6 +1291,7 @@ function Redraw-Swatches {
         $add.Add_Click({
             $gg = Cur
             $gg.Swatches = [string[]]@(@($gg.Swatches) + '#FFFFFF')
+            Fix-Widths $gg
             Sync-Link
             Redraw-Swatches
             Update-Preview
@@ -1190,6 +1310,7 @@ function Redraw-Swatches {
             if ($gg.Swatches.Count -gt 2) {
                 $arr = @($gg.Swatches)
                 $gg.Swatches = [string[]]@($arr[0..($arr.Count-2)])
+                Fix-Widths $gg
                 Sync-Link
                 Redraw-Swatches
                 Update-Preview
@@ -1214,6 +1335,7 @@ function Sync-Link {
         $dst.$p = $src.$p
     }
     $dst.Swatches = [string[]]@($src.Swatches)
+    $dst.Widths   = [double[]]@($src.Widths)
 }
 
 # ---------------------------------------------------------------- live apply

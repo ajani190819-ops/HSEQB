@@ -408,6 +408,97 @@ public class Swatch : Control {
   }
 }
 
+// ---------------------------------------------------------------- width bar
+// A short horizontal bar under a swatch that sets how much of the strip
+// that colour gets. Deliberately not a full Slider: it has to sit in a
+// 44px column under each colour, and a labelled pill would not fit.
+//
+// Drag or click anywhere on it; the filled portion is the value. Raises
+// ValueChanged continuously while dragging so the keyboard follows the
+// mouse, the same way the brightness slider already behaves.
+public class WidthBar : Control {
+  double _v = 1.0;
+  bool _drag = false, _hover = false;
+  public double Min = 0.25, Max = 4.0;
+  public event EventHandler ValueChanged;
+
+  public double Value {
+    get { return _v; }
+    set {
+      double n = value;
+      if (n < Min) n = Min;
+      if (n > Max) n = Max;
+      if (Math.Abs(n - _v) < 1e-9) return;
+      _v = n;
+      Invalidate();
+      if (ValueChanged != null) ValueChanged(this, EventArgs.Empty);
+    }
+  }
+  // Set without raising the event, for loading saved values into the UI.
+  public void SetQuiet(double v) {
+    if (v < Min) v = Min;
+    if (v > Max) v = Max;
+    _v = v; Invalidate();
+  }
+
+  public WidthBar() {
+    SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint |
+             ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw |
+             ControlStyles.SupportsTransparentBackColor, true);
+    BackColor = Color.Transparent;
+    Size = new Size(44, 12);
+    Cursor = Cursors.SizeWE;
+  }
+  protected override void OnMouseEnter(EventArgs e) { base.OnMouseEnter(e); _hover = true;  Invalidate(); }
+  protected override void OnMouseLeave(EventArgs e) { base.OnMouseLeave(e); _hover = false; Invalidate(); }
+  protected override void OnMouseDown(MouseEventArgs e) {
+    base.OnMouseDown(e);
+    if (e.Button != MouseButtons.Left) return;
+    _drag = true; Apply(e.X);
+  }
+  protected override void OnMouseMove(MouseEventArgs e) {
+    base.OnMouseMove(e);
+    if (_drag) Apply(e.X);
+  }
+  protected override void OnMouseUp(MouseEventArgs e) { base.OnMouseUp(e); _drag = false; }
+  // Double-click snaps back to even, which is the way out of a mess.
+  protected override void OnDoubleClick(EventArgs e) { base.OnDoubleClick(e); Value = 1.0; }
+
+  void Apply(int px) {
+    int w = Width - 4;
+    if (w <= 0) return;
+    double t = (px - 2) / (double)w;
+    if (t < 0) t = 0; else if (t > 1) t = 1;
+    // Geometric, so 1.0 sits in the middle of the travel and the bar is
+    // as easy to halve as to double.
+    Value = Min * Math.Pow(Max / Min, t);
+  }
+
+  protected override void OnPaint(PaintEventArgs e) {
+    Graphics g = e.Graphics;
+    g.SmoothingMode = SmoothingMode.AntiAlias;
+    Rectangle r = new Rectangle(1, 3, Width - 3, Height - 7);
+    using (GraphicsPath p = Theme.Round(r, 3))
+    using (SolidBrush b = new SolidBrush(Theme.Panel2))
+      g.FillPath(b, p);
+    double t = Math.Log(_v / Min) / Math.Log(Max / Min);
+    if (t < 0) t = 0; else if (t > 1) t = 1;
+    int fw = (int)Math.Round(t * (r.Width - 2));
+    if (fw > 0) {
+      Rectangle fr = new Rectangle(r.X + 1, r.Y + 1, fw, r.Height - 2);
+      using (GraphicsPath p = Theme.Round(fr, 2))
+      using (SolidBrush b = new SolidBrush(_hover || _drag ? Theme.Accent
+                                                          : Color.FromArgb(150, Theme.Accent)))
+        g.FillPath(b, p);
+    }
+    // A notch at the neutral position so "even" is findable by eye.
+    double tn = Math.Log(1.0 / Min) / Math.Log(Max / Min);
+    int nx = r.X + 1 + (int)Math.Round(tn * (r.Width - 2));
+    using (Pen pen = new Pen(Color.FromArgb(120, 255, 255, 255)))
+      g.DrawLine(pen, nx, r.Y, nx, r.Bottom);
+  }
+}
+
 // ---------------------------------------------------------------- tiny round button
 public class MiniBtn : Control {
   bool _hover = false;
