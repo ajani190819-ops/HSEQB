@@ -207,7 +207,11 @@ function Fix-Widths {
     $n = @($g.Swatches).Count
     $w = @()
     if ($g.Widths) { $w = @($g.Widths) }
-    if ($w.Count -gt $n) { $w = @($w[0..($n-1)]) }
+    # Trim with an explicit empty case. "$w[0..($n-1)]" would misfire when
+    # n is 0, because the range 0..-1 counts DOWN through 0,-1 and hands
+    # back two elements instead of none. See the note in Pick-Colour.
+    if ($n -le 0)              { $w = @() }
+    elseif ($w.Count -gt $n)   { $w = @($w[0..($n-1)]) }
     while ($w.Count -lt $n) { $w += 1.0 }
     $g.Widths = [double[]]@($w | ForEach-Object {
         $v = [double]$_
@@ -1210,13 +1214,23 @@ function Pick-Colour {
     # small betrayal.
     try {
         $now = @($dlg.CustomColors)
-        # The dialog pads unused slots with white (0x00FFFFFF). Keeping
-        # those is harmless, but trimming the all-white tail stops the
-        # settings file filling with noise.
-        while ($now.Count -gt 0 -and $now[-1] -eq 0x00FFFFFF) {
-            $now = @($now[0..($now.Count-2)])
-        }
-        $script:Cfg.Custom = @($now | ForEach-Object { [int]$_ })
+        # The dialog always hands back all sixteen slots, padding the unused
+        # ones with white (0x00FFFFFF). Trimming that white tail keeps the
+        # settings file from filling with noise.
+        #
+        # Walk an index back from the end. Do NOT do this by re-slicing the
+        # array: in PowerShell "0..-1" is the descending sequence 0,-1, not
+        # an empty range, so $a[0..($a.Count-2)] on a ONE element array
+        # hands back TWO elements. The array then never gets shorter and
+        # the loop spins between one and two entries forever, freezing the
+        # window. A dialog with no custom colours yet is sixteen whites,
+        # which trims straight down into exactly that case - so this hung
+        # on the very first colour change.
+        $last = $now.Count - 1
+        while ($last -ge 0 -and $now[$last] -eq 0x00FFFFFF) { $last-- }
+        $keep = @()
+        if ($last -ge 0) { $keep = @($now[0..$last]) }
+        $script:Cfg.Custom = @($keep | ForEach-Object { [int]$_ })
         Save-Cfg
     } catch { }
 
