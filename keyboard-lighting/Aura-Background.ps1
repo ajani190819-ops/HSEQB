@@ -836,30 +836,32 @@ public class LampEngine {
     }
   }
 
-  // Tell the firmware again that WE drive the lamps. This is idempotent
-  // and cheap, and it is the only thing that reliably recovers control
-  // after the EC has taken the keyboard back (lid close, Modern Standby,
-  // display off) WITHOUT the USB device ever disappearing - in which case
-  // no write ever fails and nothing else would notice.
-  // Re-send the "host is in charge" control report. This exists for the
-  // case where the EC quietly takes the keyboard back - lid close, Modern
-  // Standby, display off - without the USB device ever disappearing.
+  // Re-send the "host is in charge" control report. This is the only thing
+  // that recovers the lighting after the EC quietly takes the keyboard back
+  // - lid close, Modern Standby, display off - WITHOUT the USB device ever
+  // disappearing. No write fails in that case, so nothing else notices.
   //
-  // It used to run unconditionally every 3 seconds, which is a third
-  // control transfer squeezed into one 16 ms frame plus a forced repaint of
-  // all 16 lamps. On this device the keyboard lamps sit in the buffered
-  // half of the pair, so that extra traffic lands exactly where a stall is
-  // visible, and re-sending a mode change to a device already in host mode
-  // can make the firmware blip. Now it only fires when something suggests
-  // control was actually lost, and force=true is reserved for a real
-  // resume.
+  // History worth keeping, because I got this wrong: this ran every 3
+  // seconds, I removed it while chasing a flicker, the flicker turned out
+  // to be brightness quantisation, and the lighting then stopped coming
+  // back after the lid was opened. The cost argument was wrong too - the
+  // measurements put one extra control transfer at well under a millisecond
+  // on a 16.7ms budget, once every 180 frames.
+  //
+  // So the heartbeat is back, with the part that actually could be seen
+  // removed: it no longer invalidates the colour cache. Re-asserting
+  // ownership does not change what the lamps are showing, so forcing a
+  // full 16-lamp repaint every 3 seconds was pure cost. A real wake still
+  // passes force=true and does invalidate, because there the cache genuinely
+  // is stale.
   public void ReAssert() { ReAssert(true); }
   public void ReAssert(bool force) {
     if (h == IntPtr.Zero || h == (IntPtr)(-1)) return;
-    if (!force) return;
     if (CtrlOff != null) HidD_SetFeature(h, CtrlOff, CtrlOff.Length);
-    // Whatever the panel is showing is now wrong: force the next Push to
-    // resend every zone even if the computed colours are identical.
+    if (!force) return;
+    // Only after a real wake: whatever the device was showing is gone, so
+    // the next Push has to resend every zone even if the computed colours
+    // are identical.
     if (pr != null) {
       for (int i = 0; i < LampCount; i++) { pr[i] = -1; pg[i] = -1; pb[i] = -1; }
     }
@@ -1502,14 +1504,20 @@ public class LampEngine {
         }
 
         // Re-assert ownership on a slow heartbeat, and immediately after a
-        // detected wake. Costs one 51-byte feature report every 3 seconds.
-        // Only on evidence of a wake. The old unconditional 3-second
-        // heartbeat was itself a visible glitch; a genuine EC takeover is
-        // still caught, because that path sets woke or fails writes.
+        // detected wake. One 51-byte feature report every 3 seconds, which
+        // the measurements show is nothing next to the frame budget.
+        //
+        // The heartbeat is what handles a lid open: the EC grabs the
+        // keyboard back without the USB device ever going away, so no write
+        // fails, DeviceLost never trips, and the wake detectors can stay
+        // silent. Nothing else would ever notice.
         if (woke) {
           ReAssert(true);
           nextAssert = now + 3.0;
           woke = false;
+        } else if (now >= nextAssert) {
+          ReAssert(false);          // no cache invalidation, no repaint
+          nextAssert = now + 3.0;
         }
 
         Frame(phase, dt);

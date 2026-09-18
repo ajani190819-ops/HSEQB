@@ -145,6 +145,9 @@ if (-not $IsAdmin -and -not $NoElevate) {
 # ---------------------------------------------------------------- config
 # Set before anything can call Start-Engine.
 $script:EngineErr = ''
+# Update-Status runs before the tray menu exists, so it has to know not to
+# touch those items yet.
+$script:MenuReady = $false
 
 $Effects = [ordered]@{
     'Scrolling gradient'   = 'gradient'
@@ -568,6 +571,12 @@ if (-not $script:CustomUi) {
 # Without this the whole window is bitmap-stretched on a high-DPI laptop
 # and every edge looks soft. Must happen before any window exists.
 try { [KbLight.Dpi]::Enable() } catch { }
+
+# Give the process its own taskbar identity. Without this Windows files
+# our window under whatever is hosting it - powershell.exe - so the
+# taskbar button borrows PowerShell's icon and grouping instead of ours.
+# Like the DPI call, this has to happen before the first window exists.
+try { [KbLight.Win]::SetAppId('KeyboardLighting.Panel') } catch { }
 
 # ---------------------------------------------------------------- icon
 function New-AppIcon {
@@ -1270,7 +1279,71 @@ function Load-UiFromCfg {
     $script:Suppress = $false
 }
 
+# Toggle one section from the tray. Writes the theme file exactly as the
+# panel's own controls do, so the change lands live on whichever section
+# was touched while the other keeps running.
+#
+# The window may be open while this happens, so the matching control has to
+# be moved too, or the panel would sit there showing the opposite of what
+# the keyboard is doing. Suppress stops that write-back from looping into
+# another apply.
+function Apply-Section {
+    param([string]$what)
+
+    $g = $script:Cfg.Kbd
+    if ($what -eq 'light bar') { $g = $script:Cfg.Bar }
+
+    # 'Match both' means the two sections are meant to be identical, so
+    # honour it here as well rather than silently breaking the link.
+    if ($script:Cfg.Link) {
+        $script:Cfg.Kbd.On = $g.On
+        $script:Cfg.Bar.On = $g.On
+    }
+
+    Save-Cfg
+
+    # Reflect it in the window if the visible tab is one of the sections
+    # that just changed.
+    $script:Suppress = $true
+    try { $chkOn.SetQuiet([bool](Cur).On) } catch { }
+    $script:Suppress = $false
+
+    if ($script:WantOff) {
+        # Nothing is running to receive it; the setting is saved and will
+        # be used the next time the lighting is switched on.
+        Log ("{0} set to {1} while lighting is off" -f $what, $(if ($g.On) { 'on' } else { 'off' }))
+        Update-Status
+        return
+    }
+
+    if (Test-EngineAlive) {
+        Write-Theme
+    } else {
+        [void](Start-Engine)
+    }
+    Log ("{0} turned {1} from the tray" -f $what, $(if ($g.On) { 'on' } else { 'off' }))
+    Update-Preview
+    Update-Status
+}
+
 function Update-Status {
+    # The tray items are built after this function, so guard every one of
+    # them: Update-Status is called during start-up too.
+    if ($script:MenuReady) {
+        $miKbd.Checked = [bool]$script:Cfg.Kbd.On
+        $miBar.Checked = [bool]$script:Cfg.Bar.On
+        if ($script:WantOff) {
+            $miToggle.Text    = 'Turn lighting on'
+            $miRefresh.Enabled = $false
+            $miKbd.Enabled     = $false
+            $miBar.Enabled     = $false
+        } else {
+            $miToggle.Text    = 'Turn lighting off'
+            $miRefresh.Enabled = $true
+            $miKbd.Enabled     = $true
+            $miBar.Enabled     = $true
+        }
+    }
     if ($script:WantOff) {
         $lblStatus.Text = 'Lighting is off'
         $dot.ForeColor  = $Mut
@@ -1384,6 +1457,9 @@ $chkOn.Add_CheckedChanged({
     if ($script:Suppress) { return }
     (Cur).On = [bool]$chkOn.Checked
     Sync-Link; Update-Preview; Request-Apply
+    # Keep the tray's two section ticks honest: the menu can be opened a
+    # second after this without anything else having run.
+    Update-Status
 })
 $chkLink.Add_CheckedChanged({
     if ($script:Suppress) { return }
@@ -1483,13 +1559,68 @@ $miPending = Add-Item 'Restart to finish update' { Restart-App }
 $miPending.Visible = $false
 $miPending.Font = New-Object System.Drawing.Font('Segoe UI', 9.75, [System.Drawing.FontStyle]::Bold)
 
-$miRestart = Add-Item 'Restart lighting' {
-    Log 'manual restart'
-    [void](Start-Engine)
+# One item that flips between on and off rather than two that half apply.
+# Update-Status keeps the wording honest.
+$miToggle = Add-Item 'Turn lighting off' {
+    if ($script:WantOff) {
+        $script:WdTries  = 0
+        $script:WdGaveUp = $false
+        $script:EngineErr = ''
+        [void](Start-Engine)
+    } else {
+        Set-AllOff
+    }
     Update-Status
 }
-$miOff = Add-Item 'Turn lighting off' {
-    Set-AllOff
+
+# Refresh: re-send everything without tearing the engine down. This is the
+# one to reach for when the lighting has gone out of step - after a lid
+# open, or a game that grabbed the keyboard - because it repaints in place
+# and the light never drops. Restart is the heavier hammer below.
+$miRefresh = Add-Item 'Refresh lighting' {
+    if ($script:WantOff) {
+        Log 'refresh ignored - lighting is off'
+        return
+    }
+    if (Test-EngineAlive) {
+        Log 'manual refresh'
+        Write-Theme
+        Write-LiveBrightness
+    } else {
+        Log 'refresh with no engine - starting it'
+        [void](Start-Engine)
+    }
+    Update-Status
+}
+
+Add-Sep
+# Per-section switches, matching the two sections in the window. These
+# write the same theme file the panel does, so they apply live - no
+# restart, and the other section keeps running untouched.
+#
+# A disabled caption rather than a submenu: two items do not earn the extra
+# click, and the tick beside each one reads as its state at a glance.
+$miParts = Add-Item 'Show lighting on' $null
+$miParts.Enabled = $false
+
+$miKbd = Add-Item 'Keyboard' {
+    $script:Cfg.Kbd.On = -not $script:Cfg.Kbd.On
+    Apply-Section 'keyboard'
+}
+$miBar = Add-Item 'Light bar' {
+    $script:Cfg.Bar.On = -not $script:Cfg.Bar.On
+    Apply-Section 'light bar'
+}
+
+Add-Sep
+$miRestart = Add-Item 'Restart lighting' {
+    Log 'manual restart'
+    # Clear the watchdog's give-up latch: the user is explicitly asking,
+    # and they may well have just fixed whatever was broken.
+    $script:WdTries  = 0
+    $script:WdGaveUp = $false
+    $script:EngineErr = ''
+    [void](Start-Engine)
     Update-Status
 }
 Add-Sep
@@ -1577,6 +1708,9 @@ $miExit = Add-Item 'Exit' {
     [System.Windows.Forms.Application]::Exit()
 }
 
+# Every tray item exists now, so Update-Status may drive them.
+$script:MenuReady = $true
+
 $icon.ContextMenuStrip = $menu
 $icon.Add_MouseDoubleClick({ Show-Window })
 $icon.Add_BalloonTipClicked({
@@ -1634,7 +1768,13 @@ $form.Add_KeyDown({
     if ($e.KeyCode -eq [System.Windows.Forms.Keys]::Escape) { $form.Hide(); Show-HideHint }
 })
 # Safe here: the handle exists and DPI scaling has been applied.
-$form.Add_Shown({ try { [KbLight.Win]::RoundCorners($form.Handle) } catch { } })
+$form.Add_Shown({
+    try { [KbLight.Win]::RoundCorners($form.Handle) } catch { }
+    # A borderless window never gets a caption, and Form.Icon only feeds
+    # the caption - so the taskbar was left with no icon to show. Hand it
+    # over explicitly now that there is a real handle to send it to.
+    try { [KbLight.Win]::SetIcon($form.Handle, $AppIcon.Handle) } catch { }
+})
 
 # ---------------------------------------------------------------- load UI
 $script:Suppress = $true
@@ -1716,6 +1856,9 @@ try {
 $watch = New-Object System.Windows.Forms.Timer
 $watch.Interval = 500
 $script:tick = 0
+$script:DeadRuns = 0
+$script:WdTries  = 0
+$script:WdGaveUp = $false
 $watch.Add_Tick({
     Update-Heartbeat
     if (Test-Path $ShowFile) {
@@ -1761,8 +1904,50 @@ $watch.Add_Tick({
         }
     }
 
+    # Watchdog. The engine can die for reasons that raise no power or
+    # session event at all - killed while the lid was shut, crashed, or
+    # stopped by something else - and until now nothing noticed until the
+    # next wake, so the keyboard just stayed dark. Check every ~4 seconds
+    # and bring it back if it should be running.
+    #
+    # WakeAt gates this so it cannot fight the resume path, which is
+    # already scheduled to act and deserves its settling time.
     $script:tick++
-    if ($script:tick % 8 -eq 0) { Update-Status }
+    if (($script:tick % 8) -eq 0) {
+        if (-not $script:WantOff -and $script:WakeAt -le 0 -and -not (Test-EngineAlive)) {
+            $script:DeadRuns++
+            # Two consecutive misses before acting: a restart started from
+            # the panel briefly has no process, and racing that would spawn
+            # a second engine.
+            if ($script:DeadRuns -ge 2) {
+                $script:DeadRuns = 0
+                # Give up after a few tries. A damaged engine fails
+                # identically every time, and retrying it every four
+                # seconds forever would spawn processes and flood the log
+                # for as long as the machine is on. Status already shows
+                # why, and Restart lighting resets the counter for anyone
+                # who has fixed it.
+                if ($script:WdTries -ge 3) {
+                    if (-not $script:WdGaveUp) {
+                        $script:WdGaveUp = $true
+                        Log 'engine will not stay running - watchdog stopping' 'ERROR'
+                        if (-not $script:EngineErr) {
+                            $script:EngineErr = 'The lighting keeps stopping. Run Setup.bat to repair it.'
+                        }
+                    }
+                } else {
+                    $script:WdTries++
+                    Log ('engine not running - watchdog restarting it ({0})' -f $script:WdTries) 'WARN'
+                    [void](Start-Engine)
+                }
+            }
+        } else {
+            $script:DeadRuns = 0
+            # Healthy again: allow the watchdog to act on a future failure.
+            if (Test-EngineAlive) { $script:WdTries = 0; $script:WdGaveUp = $false }
+        }
+        Update-Status
+    }
 
     if ($script:UpdJob -and -not $script:UpdPrompted) {
         try {

@@ -693,6 +693,34 @@ public static class Win {
   [System.Runtime.InteropServices.DllImport("dwmapi.dll")]
   static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int val, int size);
 
+  [System.Runtime.InteropServices.DllImport("user32.dll", CharSet = System.Runtime.InteropServices.CharSet.Auto)]
+  static extern IntPtr SendMessage(IntPtr hwnd, int msg, IntPtr wp, IntPtr lp);
+
+  [System.Runtime.InteropServices.DllImport("shell32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
+  static extern int SetCurrentProcessExplicitAppUserModelID(string id);
+
+  // The taskbar identifies a window by its Application User Model ID, and
+  // with none set it falls back to the host process - powershell.exe. That
+  // is why the taskbar button showed the wrong icon, or none: the button
+  // was being filed under PowerShell rather than under this app. Must be
+  // called before the first window exists.
+  public static void SetAppId(string id) {
+    try { SetCurrentProcessExplicitAppUserModelID(id); } catch { }
+  }
+
+  // Form.Icon only reaches the caption bar, and this window has no caption
+  // (FormBorderStyle.None), so nothing ever told the taskbar which icon to
+  // use. WM_SETICON says it directly. Both sizes plus the ICON_SMALL2 the
+  // shell asks for, otherwise some surfaces still come up blank.
+  public static void SetIcon(IntPtr hwnd, IntPtr hIcon) {
+    if (hwnd == IntPtr.Zero || hIcon == IntPtr.Zero) return;
+    try {
+      SendMessage(hwnd, 0x0080, (IntPtr)0, hIcon);   // ICON_SMALL
+      SendMessage(hwnd, 0x0080, (IntPtr)1, hIcon);   // ICON_BIG
+      SendMessage(hwnd, 0x0080, (IntPtr)2, hIcon);   // ICON_SMALL2
+    } catch { }
+  }
+
   // Windows 11 rounded corners. Silently ignored on Windows 10.
   public static void RoundCorners(IntPtr hwnd) {
     try {
