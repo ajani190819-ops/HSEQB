@@ -1748,6 +1748,15 @@ interface IMMDeviceEnumerator {
 interface IMMDevice {
   int Activate(ref Guid iid, int clsCtx, IntPtr actParams,
                [MarshalAs(UnmanagedType.IUnknown)] out object iface);
+  // OpenPropertyStore is never called, but COM dispatches by slot order,
+  // so it cannot be left out or GetId would land on the wrong function.
+  // Declared with a plain pointer to avoid dragging in IPropertyStore.
+  int OpenPropertyStore(int stgmAccess, out IntPtr props);
+  // Out as IntPtr, not [MarshalAs(LPWStr)] string: the string is allocated
+  // by COM and the caller has to free it. Marshalling it as a string would
+  // copy it and leak the original on every poll.
+  int GetId(out IntPtr id);
+  int GetState(out int state);
 }
 
 [ComImport, Guid("1CB9AD4C-DBFA-4c32-B178-C2F568A703B2"),
@@ -1811,15 +1820,58 @@ public class AudioCap {
       win[i] = 0.5 * (1.0 - Math.Cos(2.0 * Math.PI * i / (N - 1)));
   }
 
-  public bool Start() {
+  // Endpoint id of the device we are currently capturing, so a switch can
+  // be spotted. Null until the first successful open.
+  string curId = null;
+
+  // Ask Windows which device sound is going to right now, and what its
+  // endpoint id is. Returns null if there is nothing to play through.
+  static IMMDevice GetDefaultRender(out string id) {
+    id = null;
+    Type t = Type.GetTypeFromCLSID(new Guid("BCDE0395-E52F-467C-8E3D-C4579291692E"));
+    IMMDeviceEnumerator en = (IMMDeviceEnumerator)Activator.CreateInstance(t);
+    IMMDevice dev;
+    // 0 = eRender (speakers), 0 = eConsole
+    if (en.GetDefaultAudioEndpoint(0, 0, out dev) != 0 || dev == null) return null;
+    IntPtr p = IntPtr.Zero;
     try {
-      Type t = Type.GetTypeFromCLSID(new Guid("BCDE0395-E52F-467C-8E3D-C4579291692E"));
-      IMMDeviceEnumerator en = (IMMDeviceEnumerator)Activator.CreateInstance(t);
-      IMMDevice dev;
-      // 0 = eRender (speakers), 0 = eConsole
-      if (en.GetDefaultAudioEndpoint(0, 0, out dev) != 0 || dev == null) {
-        Err = "no playback device"; return false;
-      }
+      if (dev.GetId(out p) == 0 && p != IntPtr.Zero) id = Marshal.PtrToStringUni(p);
+    } catch { }
+    finally { if (p != IntPtr.Zero) Marshal.FreeCoTaskMem(p); }
+    return dev;
+  }
+
+  // True when Windows is now playing through a different device than the
+  // one we opened. Cheap enough to call once a second.
+  bool DeviceChanged() {
+    try {
+      string id;
+      IMMDevice d = GetDefaultRender(out id);
+      if (d != null) Marshal.ReleaseComObject(d);
+      if (id == null) return false;              // nothing to switch to yet
+      return (curId != null && id != curId);
+    } catch { return false; }
+  }
+
+  public bool Start() {
+    bool ok = Open();
+    if (!ok) return false;
+    run = true;
+    th = new Thread(new ThreadStart(Pump));
+    th.IsBackground = true;
+    th.Priority = ThreadPriority.BelowNormal;
+    th.Start();
+    Ok = true;
+    return true;
+  }
+
+  // Open (or re-open) the capture client on whatever the default playback
+  // device is right now. Split out from Start so the pump thread can call
+  // it again after the user switches to Bluetooth headphones.
+  bool Open() {
+    try {
+      IMMDevice dev = GetDefaultRender(out curId);
+      if (dev == null) { Err = "no playback device"; return false; }
       Guid iidAc = new Guid("1CB9AD4C-DBFA-4c32-B178-C2F568A703B2");
       object o;
       if (dev.Activate(ref iidAc, 23, IntPtr.Zero, out o) != 0) {
@@ -1855,18 +1907,29 @@ public class AudioCap {
 
       PrepBands();
       if (cli.Start() != 0) { Err = "start failed"; return false; }
-
-      run = true;
-      th = new Thread(new ThreadStart(Pump));
-      th.IsBackground = true;
-      th.Priority = ThreadPriority.BelowNormal;
-      th.Start();
-      Ok = true;
+      Err = "";
       return true;
     } catch (Exception ex) {
       Err = ex.Message;
       return false;
     }
+  }
+
+  // Drop the current client without touching the pump thread.
+  void CloseClient() {
+    try { if (cli != null) cli.Stop(); } catch { }
+    try { if (cap != null) Marshal.ReleaseComObject(cap); } catch { }
+    try { if (cli != null) Marshal.ReleaseComObject(cli); } catch { }
+    cap = null; cli = null;
+  }
+
+  // Re-open on the current default device. Called from the pump thread
+  // when the endpoint changes or goes invalid.
+  bool Reopen() {
+    CloseClient();
+    bool got = Open();
+    Ok = got;
+    return got;
   }
 
   // Log-spaced band edges:pitch perception is logarithmic, so linear bins
@@ -1895,20 +1958,52 @@ public class AudioCap {
   public void Stop() {
     run = false;
     try { if (th != null) th.Join(400); } catch { }
-    try { if (cli != null) cli.Stop(); } catch { }
-    cap = null; cli = null; Ok = false;
+    CloseClient();
+    Ok = false;
   }
 
+  // AUDCLNT_E_DEVICE_INVALIDATED - the endpoint went away underneath us.
+  const int E_INVALIDATED = unchecked((int)0x88890004);
+
   void Pump() {
+    int sinceCheck = 0;     // ms since we last asked "is this still the device?"
+    int retryIn    = 0;     // ms to wait before trying to open again
+
     while (run) {
       try {
+        // Not currently attached: keep trying to come back. This is the
+        // path taken when Bluetooth headphones connect and briefly leave
+        // the machine with no usable endpoint at all.
+        if (cli == null || cap == null) {
+          Decay();
+          Thread.Sleep(120);
+          retryIn -= 120;
+          if (retryIn <= 0) { if (!Reopen()) retryIn = 900; }
+          continue;
+        }
+
+        // A loopback client stays bound to the endpoint it was opened on,
+        // for ever. Switching output to Bluetooth headphones does not move
+        // it - it just goes quiet, because the speakers it is still
+        // watching are no longer being fed. Poll for the switch and
+        // re-open on the new device.
+        sinceCheck += 8;
+        if (sinceCheck >= 1000) {
+          sinceCheck = 0;
+          if (DeviceChanged()) { Reopen(); continue; }
+        }
+
         uint avail;
-        if (cap.GetNextPacketSize(out avail) != 0) { Thread.Sleep(10); continue; }
+        int hr = cap.GetNextPacketSize(out avail);
+        if (hr == E_INVALIDATED) { CloseClient(); Ok = false; retryIn = 0; continue; }
+        if (hr != 0) { Thread.Sleep(10); continue; }
         if (avail == 0) { Thread.Sleep(8); Decay(); continue; }
 
         while (avail > 0 && run) {
           IntPtr p; uint frames, flags; long dp, qp;
-          if (cap.GetBuffer(out p, out frames, out flags, out dp, out qp) != 0) break;
+          int hb = cap.GetBuffer(out p, out frames, out flags, out dp, out qp);
+          if (hb == E_INVALIDATED) { CloseClient(); Ok = false; retryIn = 0; break; }
+          if (hb != 0) break;
           bool silent = (flags & 0x2) != 0;
           if (frames > 0) {
             if (silent) {
@@ -1920,6 +2015,7 @@ public class AudioCap {
           cap.ReleaseBuffer(frames);
           if (cap.GetNextPacketSize(out avail) != 0) break;
         }
+        if (cli == null) continue;      // invalidated inside the drain loop
         Analyse();
       } catch {
         Thread.Sleep(50);

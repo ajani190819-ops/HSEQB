@@ -225,11 +225,18 @@ Scrolling gradient and Wave are deliberately different:
 Animated: Scrolling gradient, Rainbow, Wave, Comet, Scanner, Breathing,
 Pulse, Fire, Colour cycle, Strobe, Starry night, Ripple, Aurora, Solid.
 
-Music (listens to your speakers):
+Music (listens to whatever you are playing sound through):
   Music - spectrum      each zone is a frequency band
   Music - level meter   a bar that fills with loudness
   Music - beat flash    the whole keyboard flashes on the beat
   Music - bass pulse    bass pushes a wave out from the centre
+
+These follow your sound output, including Bluetooth headphones and
+speakers. Switch output while a music pattern is running and the lights
+pick up the new device within about a second - no restart. If Bluetooth
+disconnects, the lights go quiet and come back on their own when sound
+returns. Nothing needs to be plugged in and no microphone is used; it
+reads the audio Windows is already sending to the device.
 
 Screen mirror: the keyboard copies the colours on your screen.
 
