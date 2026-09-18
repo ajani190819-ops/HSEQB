@@ -202,6 +202,9 @@ public class Zone {
   public int[] PalB = new int[] { 0, 0, 255 };
 
   public double[] plR, plG, plB, palGain;
+  // Per-edge blend reshaping table. palWarp[i] covers the step from colour
+  // i to colour i+1; see PrepPaletteG for what it holds and why.
+  public double[][] palWarp;
   public double[] Heat = new double[0];
   public double Phase = 0.0;
 
@@ -465,24 +468,136 @@ public class LampEngine {
       gr.plB[i] = ToLin(gr.PalB[i]);
       gr.palGain[i] = 1.0;
     }
-    if (!gr.Equalise) return;
-    double logSum = 0; int n = 0;
-    for (int i = 0; i < pc; i++) {
-      double L = Luma(gr.plR[i], gr.plG[i], gr.plB[i]);
-      if (L > 0.0005) { logSum += Math.Log(L); n++; }
+    if (gr.Equalise) {
+      double logSum = 0; int n = 0;
+      for (int i = 0; i < pc; i++) {
+        double L = Luma(gr.plR[i], gr.plG[i], gr.plB[i]);
+        if (L > 0.0005) { logSum += Math.Log(L); n++; }
+      }
+      if (n > 0) {
+        double target = Math.Exp(logSum / n);
+        for (int i = 0; i < pc; i++) {
+          double L = Luma(gr.plR[i], gr.plG[i], gr.plB[i]);
+          if (L <= 0.0005) continue;
+          double gain = Math.Pow(target / L, 0.5);
+          double peak = Math.Max(gr.plR[i], Math.Max(gr.plG[i], gr.plB[i]));
+          if (peak > 0 && gain * peak > 1.0) gain = 1.0 / peak;
+          if (gain < 0.25) gain = 0.25;
+          if (gain > 4.00) gain = 4.00;
+          gr.palGain[i] = gain;
+        }
+      }
     }
-    if (n == 0) return;
-    double target = Math.Exp(logSum / n);
-    for (int i = 0; i < pc; i++) {
-      double L = Luma(gr.plR[i], gr.plG[i], gr.plB[i]);
-      if (L <= 0.0005) continue;
-      double gain = Math.Pow(target / L, 0.5);
-      double peak = Math.Max(gr.plR[i], Math.Max(gr.plG[i], gr.plB[i]));
-      if (peak > 0 && gain * peak > 1.0) gain = 1.0 / peak;
-      if (gain < 0.25) gain = 0.25;
-      if (gain > 4.00) gain = 4.00;
-      gr.palGain[i] = gain;
+
+    // Last, because the warp is measured on the gain-applied colours and
+    // Equalise above can still change those. One table per edge, 17 doubles
+    // each, rebuilt only when the palette itself changes - never per frame.
+    gr.palWarp = new double[pc][];
+    for (int i = 0; i < pc; i++) gr.palWarp[i] = BuildWarp(gr, i, (i + 1) % pc);
+  }
+
+  // OKLab, from LINEAR sRGB. Used only when the palette changes, to measure
+  // how far apart two colours LOOK rather than how far apart their numbers
+  // are. Plain RGB and HSV both lie about this: equal steps in either can
+  // be an obvious jump in one part of the spectrum and invisible in
+  // another, which is what made one palette colour hold the strip longer
+  // than the next.
+  static void ToOklab(double r, double g, double b,
+                      out double L, out double A, out double B2) {
+    double l = 0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b;
+    double m = 0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b;
+    double s = 0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b;
+    l = Math.Pow(l < 0 ? 0 : l, 1.0 / 3.0);
+    m = Math.Pow(m < 0 ? 0 : m, 1.0 / 3.0);
+    s = Math.Pow(s < 0 ? 0 : s, 1.0 / 3.0);
+    L  = 0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s;
+    A  = 1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s;
+    B2 = 0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s;
+  }
+
+  // Walk one palette edge and record where the visible change actually
+  // happens, so the crossfade can be re-timed to spread it evenly.
+  //
+  // The crossfade weight runs 0..1 at a constant rate, but the colours it
+  // produces do not change at a constant rate: between purple and orange,
+  // the first half of the weight covers only about 37% of the change a
+  // person sees and the second half covers 63%. The blend therefore sits
+  // near the first colour and hurries through the second, so the first
+  // colour looks like it owns a wider band than the second. Every pair
+  // tested was lopsided, in both directions - it is not specific to one
+  // palette.
+  //
+  // Sample the edge, measure each step in OKLab, then invert: for K evenly
+  // spaced fractions of the total perceptual distance, store the weight
+  // that reaches it. Feeding the crossfade through that table makes the
+  // visible change advance at a steady rate, which makes the two bands the
+  // same width.
+  const int WarpK = 16;
+  double[] BuildWarp(Zone gr, int a, int b) {
+    double[] tab = new double[WarpK + 1];
+    const int M = 64;
+    double ga = gr.palGain[a], gb = gr.palGain[b];
+    double ha, sa, va, hb, sb, vb;
+    RgbToHsv(gr.plR[a] * ga, gr.plG[a] * ga, gr.plB[a] * ga, out ha, out sa, out va);
+    RgbToHsv(gr.plR[b] * gb, gr.plG[b] * gb, gr.plB[b] * gb, out hb, out sb, out vb);
+    double dh = hb - ha;
+    if (dh > 180.0) dh -= 360.0; else if (dh < -180.0) dh += 360.0;
+
+    // Greyscale endpoints take the straight-RGB path in GroupPal, so the
+    // table has to be measured along that same path or it would re-time a
+    // blend that is never used.
+    bool useHue = !(sa < 0.02 || sb < 0.02 || va < 0.002 || vb < 0.002);
+    double[] cum = new double[M + 1];
+    double pl = 0, pa = 0, pb2 = 0;
+    for (int i = 0; i <= M; i++) {
+      double w = i / (double)M, cr, cg, cb;
+      if (useHue) {
+        HsvToRgb(ha + dh * w, sa + (sb - sa) * w, va + (vb - va) * w, out cr, out cg, out cb);
+      } else {
+        cr = gr.plR[a] * ga + (gr.plR[b] * gb - gr.plR[a] * ga) * w;
+        cg = gr.plG[a] * ga + (gr.plG[b] * gb - gr.plG[a] * ga) * w;
+        cb = gr.plB[a] * ga + (gr.plB[b] * gb - gr.plB[a] * ga) * w;
+      }
+      double L, A, B2;
+      ToOklab(cr, cg, cb, out L, out A, out B2);
+      if (i == 0) cum[0] = 0.0;
+      else {
+        double dl = L - pl, da = A - pa, db = B2 - pb2;
+        cum[i] = cum[i - 1] + Math.Sqrt(dl * dl + da * da + db * db);
+      }
+      pl = L; pa = A; pb2 = B2;
     }
+
+    double total = cum[M];
+    // Two identical palette entries have no distance to redistribute.
+    // Hand back the plain ramp rather than dividing by zero.
+    if (total < 1e-9) {
+      for (int k = 0; k <= WarpK; k++) tab[k] = k / (double)WarpK;
+      return tab;
+    }
+    for (int i = 0; i <= M; i++) cum[i] /= total;
+
+    int j = 0;
+    for (int k = 0; k <= WarpK; k++) {
+      double target = k / (double)WarpK;
+      while (j < M && cum[j + 1] < target) j++;
+      double span = cum[j + 1] - cum[j];
+      double fr = (span < 1e-12) ? 0.0 : (target - cum[j]) / span;
+      tab[k] = (j + fr) / (double)M;
+    }
+    tab[0] = 0.0; tab[WarpK] = 1.0;
+    return tab;
+  }
+
+  static double ApplyWarp(double[] tab, double w) {
+    if (tab == null) return w;
+    if (w <= 0.0) return tab[0];
+    if (w >= 1.0) return tab[WarpK];
+    double x = w * WarpK;
+    int i = (int)x;
+    if (i >= WarpK) return tab[WarpK];
+    double f = x - i;
+    return tab[i] + (tab[i + 1] - tab[i]) * f;
   }
 
   void GroupPal(Zone gr, double f, out double r, out double g, out double b) {
@@ -535,6 +650,14 @@ public class LampEngine {
       double tt = (u - edge) / trans;
       w = tt * tt * (3.0 - 2.0 * tt);
     }
+
+    // Re-time the crossfade so the visible change is spread evenly across
+    // it. Without this the blend lingers near one colour and rushes the
+    // other, which reads as one band being wider than its neighbour even
+    // though both are given exactly the same share of the cycle. The flat
+    // holds either side are untouched: w is still exactly 0 and exactly 1
+    // there, so the palette colours themselves are unchanged.
+    if (gr.palWarp != null && a < gr.palWarp.Length) w = ApplyWarp(gr.palWarp[a], w);
 
     double ga = gr.palGain[a], gb = gr.palGain[n2];
     double ar = gr.plR[a] * ga, ag2 = gr.plG[a] * ga, ab = gr.plB[a] * ga;
@@ -654,7 +777,7 @@ public class LampEngine {
   public volatile int  WriteUs   = 0;   // last frame's two writes, microsec
   public volatile int  WriteUsMax = 0;  // worst seen
   public volatile int  LateFrames = 0;  // frames that missed their deadline
-  int overrun = 0;                      // consecutive frames whose writes overflowed        // last bytes actually sent
+  int overrun = 0;                      // consecutive frames whose writes overflowed
   double[] er, eg, eb;     // carried quantisation error, for temporal dither
 
   // ---- live frame publishing -------------------------------------
