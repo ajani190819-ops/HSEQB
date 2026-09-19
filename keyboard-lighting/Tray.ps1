@@ -316,7 +316,28 @@ function Write-Theme {
         Kbd        = (New-ThemeBlock $script:Cfg.Kbd)
         Bar        = (New-ThemeBlock $script:Cfg.Bar)
     }
-    try { $o | ConvertTo-Json -Depth 5 | Set-Content -Path $ThemeFile -Encoding UTF8 -ErrorAction SilentlyContinue } catch { }
+    # Write to a temporary file and MOVE it into place, rather than writing
+    # over the live one.
+    #
+    # Set-Content truncates the existing file to zero and then writes it
+    # again, and Windows stamps the modified time on the truncate. The
+    # engine polls that stamp, so it could wake up mid-write, read an empty
+    # or half-finished file, fail to parse it, and throw the change away -
+    # the visible result being that the lighting jumped a moment later
+    # instead of changing cleanly when the change was made.
+    #
+    # A move is atomic: the engine sees either the whole old file or the
+    # whole new one, never a torn one.
+    try {
+        $json = $o | ConvertTo-Json -Depth 5
+        $tmp  = $ThemeFile + '.tmp'
+        Set-Content -Path $tmp -Value $json -Encoding UTF8 -ErrorAction Stop
+        Move-Item -LiteralPath $tmp -Destination $ThemeFile -Force -ErrorAction Stop
+    } catch {
+        # If the move cannot be done for any reason, a direct write is still
+        # better than dropping the change entirely.
+        try { $o | ConvertTo-Json -Depth 5 | Set-Content -Path $ThemeFile -Encoding UTF8 -ErrorAction SilentlyContinue } catch { }
+    }
 }
 
 function Write-LiveBrightness {

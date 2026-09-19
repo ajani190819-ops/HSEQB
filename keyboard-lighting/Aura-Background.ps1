@@ -184,6 +184,16 @@ using System.Threading;
 using System.Diagnostics;
 
 
+// One palette, complete, as handed from the settings watcher to the render
+// thread. Build it, publish it, never touch it again - that is what makes
+// the hand-off safe without a lock. W may be null, meaning even bands.
+public class PalSet {
+  public readonly int[] R, G, B;
+  public readonly double[] W;
+  public PalSet(int[] r, int[] g, int[] b, double[] w) { R = r; G = g; B = b; W = w; }
+  public int Count { get { return R.Length; } }
+}
+
 // One independently-controlled set of lamps. The deck keys and the light
 // bar each get one of these, so they can run different effects, palettes
 // and speeds at the same time.
@@ -220,11 +230,26 @@ public class Zone {
   public volatile int    LiveMaster     = -1;
   public volatile int    LiveSpeedMilli = -1;
   public volatile string LiveEffect     = null;
-  public volatile int[]  LivePalR = null, LivePalG = null, LivePalB = null;
-  public volatile int[]  LivePalW = null;   // widths x1000, see PalW
   public volatile int    LiveFlags = -1;
   public volatile int    LiveEnabled = -1;
   public volatile bool   LiveDirty = false;
+
+  // A whole palette handed over in one go.
+  //
+  // These used to be four separate volatile arrays (LivePalR, LivePalG,
+  // LivePalB, LivePalW) assigned one after another by the watcher thread
+  // while the render thread read them. Changing a colour without changing
+  // how MANY colours there are keeps every length the same, so the
+  // length check could not tell a half-applied update from a finished
+  // one, and a frame could be drawn with red from the new palette and
+  // blue from the old one. One wrong frame is a visible flash - the
+  // flicker seen on every change.
+  //
+  // Bundling them means the hand-off is a single reference assignment,
+  // which is atomic: the render thread sees either the entire old palette
+  // or the entire new one. Nothing is ever mutated after publishing, so
+  // there is nothing to tear.
+  public volatile PalSet LivePal = null;
 
   public void Alloc() {
     Heat = new double[Idx.Length];
@@ -705,28 +730,18 @@ public class LampEngine {
       int en = gr.LiveEnabled;
       if (en >= 0) gr.Enabled = (en != 0);
 
-      int[] pr2 = gr.LivePalR, pg2 = gr.LivePalG, pb2 = gr.LivePalB;
-      if (pr2 != null && pg2 != null && pb2 != null && pr2.Length > 0 &&
-          pr2.Length == pg2.Length && pr2.Length == pb2.Length) {
-        gr.PalR = pr2; gr.PalG = pg2; gr.PalB = pb2; repal = true;
-      }
-
-      // Band widths arrive as thousandths so the inbox can stay an int[],
-      // which is what makes the hand-off safe without a lock. Length has
-      // to match the palette or it is ignored - a half-applied update
-      // during a colour change would index past the end.
-      int[] pw = gr.LivePalW;
-      if (pw != null && pw.Length == gr.PalR.Length) {
-        double[] nw = new double[pw.Length];
-        double tot = 0.0;
-        for (int i = 0; i < pw.Length; i++) {
-          double v = pw[i] / 1000.0;
-          if (v < 0.0) v = 0.0;
-          nw[i] = v; tot += v;
-        }
-        gr.PalW = (tot > 1e-9) ? nw : null;
-      } else if (pw != null && pw.Length == 0) {
-        gr.PalW = null;            // explicit "go back to even"
+      // One read of one reference: whatever we get here is a complete,
+      // self-consistent palette. It cannot be a mix of the old and new
+      // ones, which is what used to put a wrong-coloured frame on the
+      // keyboard every time a colour was changed.
+      PalSet ps = gr.LivePal;
+      if (ps != null && ps.Count > 0 &&
+          ps.G.Length == ps.Count && ps.B.Length == ps.Count) {
+        gr.PalR = ps.R; gr.PalG = ps.G; gr.PalB = ps.B;
+        // Widths travel with the colours, so they can never be applied
+        // against a palette of a different size.
+        gr.PalW = (ps.W != null && ps.W.Length == ps.Count) ? ps.W : null;
+        repal = true;
       }
 
       int lf = gr.LiveFlags;
@@ -3512,8 +3527,18 @@ try {
             try {
                 $stamp = (Get-Item $themeFile -ErrorAction Stop).LastWriteTimeUtc.Ticks
                 if ($stamp -ne $script:ThemeStamp) {
+                    # Parse BEFORE recording the stamp. Recording it first
+                    # meant a read that failed - an empty or half-written
+                    # file - consumed the change: the stamp said "seen" but
+                    # nothing had been applied, and the update was lost
+                    # until something else happened to touch the file. The
+                    # panel now writes atomically, so this should not
+                    # trigger, but a dropped settings change is bad enough
+                    # to be worth being certain about.
+                    $raw = Get-Content $themeFile -Raw -ErrorAction Stop
+                    if (-not $raw -or -not $raw.Trim()) { throw 'empty theme file' }
+                    $j = $raw | ConvertFrom-Json
                     $script:ThemeStamp = $stamp
-                    $j = Get-Content $themeFile -Raw -ErrorAction Stop | ConvertFrom-Json
 
                     # The panel writes one block per group. Anything the bar
                     # block leaves out inherits the keyboard's value, so an
@@ -3571,16 +3596,11 @@ try {
                                 $ns = @($ns[0..($ns.Count-2)])
                             }
                             if ($ns.Count -gt 0) {
-                                $z.LivePalR = [int[]]@($ns | ForEach-Object { $_[0] })
-                                $z.LivePalG = [int[]]@($ns | ForEach-Object { $_[1] })
-                                $z.LivePalB = [int[]]@($ns | ForEach-Object { $_[2] })
-
                                 # Widths have to line up with the palette as
                                 # the engine ended up holding it, not as the
                                 # panel sent it: a single colour is doubled
                                 # and a repeated last colour is dropped just
-                                # above, so the counts can differ. Sent as
-                                # thousandths to keep the inbox an int[].
+                                # above, so the counts can differ.
                                 $wv = $null
                                 if ($null -ne $blk.Widths) { $wv = [string]$blk.Widths }
                                 $wOut = $null
@@ -3599,16 +3619,23 @@ try {
                                     if (-not $bad -and $tmp.Count -eq $ns.Count) {
                                         $tot = 0.0; foreach ($wd in $tmp) { $tot += $wd }
                                         if ($tot -gt 0) {
-                                            $wOut = [int[]]@($tmp | ForEach-Object {
-                                                [int][Math]::Round($_ * 1000)
-                                            })
+                                            $wOut = [double[]]@($tmp | ForEach-Object { [double]$_ })
                                         }
                                     }
                                 }
-                                # Empty array is the signal for "even again",
-                                # which is how clearing the sliders gets through.
-                                if ($null -ne $wOut) { $z.LivePalW = $wOut }
-                                else                 { $z.LivePalW = [int[]]@() }
+
+                                # Build the whole palette first, then hand it
+                                # over in ONE assignment. Assigning the three
+                                # colour arrays separately let the render
+                                # thread catch the set half-swapped and draw a
+                                # frame with new reds against old blues - a
+                                # visible flash on every colour change. Null
+                                # widths mean even bands.
+                                $z.LivePal = New-Object PalSet(
+                                    [int[]]@($ns | ForEach-Object { $_[0] }),
+                                    [int[]]@($ns | ForEach-Object { $_[1] }),
+                                    [int[]]@($ns | ForEach-Object { $_[2] }),
+                                    $wOut)
                             }
                         }
 
