@@ -222,6 +222,23 @@ public class Zone {
   public double[] PalW = null;
 
   public double[] plR, plG, plB, palGain;
+
+  // The palette being faded OUT of, held for the length of a changeover.
+  //
+  // Swapping the palette outright is what made changing a colour flash.
+  // The cycle keeps running while the colours underneath it are replaced,
+  // so whatever the lamps were showing jumped straight to whatever the new
+  // palette says for that same point in the cycle - measured at up to the
+  // full 255 in a single frame, worst exactly when the strip was already
+  // mid-crossfade. Keeping the old palette for a moment and easing across
+  // turns that step into a short, deliberate blend, which is what the eye
+  // reads as "the colours changed" rather than "something glitched".
+  public double[] oldR, oldG, oldB, oldGain;
+  public double[] oldW = null;
+  public int      oldCount = 0;
+  public double   XfadeLeft = 0.0;      // seconds remaining, 0 = not fading
+  public double   XfadeTotal = 0.0;
+
   public double[] Heat = new double[0];
   public double Phase = 0.0;
 
@@ -489,8 +506,62 @@ public class LampEngine {
     fr[i] = r; fg[i] = g; fb[i] = b;
   }
 
-  void PrepPaletteG(Zone gr) {
+  // Rebuild the working palette. When xfade is true, the palette being
+  // replaced is kept so GroupPal can ease across to the new one instead of
+  // cutting to it. Startup passes false: there is nothing to fade from,
+  // and fading up from an unset palette would itself be a visible blink.
+  void PrepPaletteG(Zone gr) { PrepPaletteG(gr, false); }
+  void PrepPaletteG(Zone gr, bool xfade) {
     BuildTables();
+
+    // Snapshot the outgoing palette BEFORE the new one overwrites it.
+    // Only worth doing if there is a complete one to snapshot.
+    if (xfade && gr.plR != null && gr.plR.Length > 0 &&
+        gr.palGain != null && gr.palGain.Length == gr.plR.Length) {
+
+      if (gr.XfadeLeft > 0.0 && gr.oldCount > 0 && gr.oldR != null) {
+        // A changeover is already running, so the palette in gr.plR is one
+        // the user has never actually seen in full - the lamps are showing
+        // a blend of it and the one before. Starting the next fade from
+        // gr.plR would jump straight to that unseen palette first, which
+        // is what made clicking quickly through colours look worse than
+        // one slow change. Freeze what is genuinely on screen right now
+        // and fade from that instead.
+        int fc = gr.plR.Length;
+        double[] fr2 = new double[fc], fg2 = new double[fc], fb2 = new double[fc];
+        double[] fgain = new double[fc];
+        double u0 = 1.0 - (gr.XfadeLeft / gr.XfadeTotal);
+        if (u0 < 0.0) u0 = 0.0; else if (u0 > 1.0) u0 = 1.0;
+        u0 = u0 * u0 * (3.0 - 2.0 * u0);
+        for (int i = 0; i < fc; i++) {
+          // Sample the two palettes entry-by-entry. Index against the OLD
+          // palette's own length: the two need not be the same size.
+          int oi = (gr.oldCount > 0) ? (i % gr.oldCount) : 0;
+          double og = gr.oldGain[oi], ng = gr.palGain[i];
+          double La, Aa, Ba, Lb, Ab, Bb, mr, mg, mb;
+          ToOklab(gr.oldR[oi]*og, gr.oldG[oi]*og, gr.oldB[oi]*og,
+                  out La, out Aa, out Ba);
+          ToOklab(gr.plR[i]*ng, gr.plG[i]*ng, gr.plB[i]*ng,
+                  out Lb, out Ab, out Bb);
+          MixOklab(La, Aa, Ba, Lb, Ab, Bb, u0, out mr, out mg, out mb);
+          fr2[i] = mr; fg2[i] = mg; fb2[i] = mb; fgain[i] = 1.0;
+        }
+        gr.oldR = fr2; gr.oldG = fg2; gr.oldB = fb2; gr.oldGain = fgain;
+        gr.oldW = gr.PalW;
+        gr.oldCount = fc;
+      } else {
+        gr.oldR = gr.plR; gr.oldG = gr.plG; gr.oldB = gr.plB;
+        gr.oldGain = gr.palGain;
+        gr.oldW = gr.PalW;
+        gr.oldCount = gr.plR.Length;
+      }
+      gr.XfadeTotal = PalXfadeSeconds;
+      gr.XfadeLeft  = PalXfadeSeconds;
+    } else if (!xfade) {
+      gr.XfadeLeft = 0.0;
+      gr.oldCount = 0;
+    }
+
     int pc = gr.PalR.Length;
     if (pc == 0) { pc = 1; gr.PalR = new int[]{255}; gr.PalG = new int[]{255}; gr.PalB = new int[]{255}; }
     gr.plR = new double[pc]; gr.plG = new double[pc]; gr.plB = new double[pc];
@@ -586,9 +657,58 @@ public class LampEngine {
     B2 = 0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s;
   }
 
+  // How long a palette change takes to ease in.
+  //
+  // The eased curve peaks at 1.5x the average rate, so the worst per-frame
+  // step for a full-range edit (a colour taken to black, say) is about
+  // 1.5 * 255 / (seconds * fps). At 60fps: 0.15s leaves a 42/255 step,
+  // 0.22s leaves 29, 0.30s leaves 21. Below roughly 20 it stops reading as
+  // a step at all. Going longer keeps helping in theory, but the panel
+  // starts to feel like it is lagging behind the click, and dragging a
+  // width bar would stack fades on top of each other.
+  public const double PalXfadeSeconds = 0.30;
+
   void GroupPal(Zone gr, double f, out double r, out double g, out double b) {
     if (gr.plR == null || gr.plR.Length == 0) PrepPaletteG(gr);
-    int pc = gr.plR.Length;
+
+    // Normal case: one palette, sample it and done.
+    if (gr.XfadeLeft <= 0.0 || gr.oldCount <= 0 || gr.oldR == null) {
+      SamplePal(gr, gr.plR, gr.plG, gr.plB, gr.palGain, gr.PalW, f,
+                out r, out g, out b);
+      return;
+    }
+
+    // Mid-changeover: sample BOTH palettes at this point in the cycle and
+    // ease from the old one to the new one. Both are sampled at the same
+    // phase, so the animation carries on travelling at the same speed
+    // throughout - only the colours move, which is exactly what a colour
+    // change should look like.
+    double o_r, o_g, o_b, n_r, n_g, n_b;
+    SamplePal(gr, gr.oldR, gr.oldG, gr.oldB, gr.oldGain, gr.oldW, f,
+              out o_r, out o_g, out o_b);
+    SamplePal(gr, gr.plR, gr.plG, gr.plB, gr.palGain, gr.PalW, f,
+              out n_r, out n_g, out n_b);
+
+    double u = 1.0 - (gr.XfadeLeft / gr.XfadeTotal);
+    if (u < 0.0) u = 0.0; else if (u > 1.0) u = 1.0;
+    u = u * u * (3.0 - 2.0 * u);     // ease in and out, no hard start/stop
+
+    // Cross in OKLab for the same reason the palette itself blends there:
+    // a straight line in sRGB dips in brightness through the middle, which
+    // would read as a dim pulse - precisely the artefact being removed.
+    double La, Aa, Ba, Lb, Ab, Bb, mr, mg, mb;
+    ToOklab(o_r, o_g, o_b, out La, out Aa, out Ba);
+    ToOklab(n_r, n_g, n_b, out Lb, out Ab, out Bb);
+    MixOklab(La, Aa, Ba, Lb, Ab, Bb, u, out mr, out mg, out mb);
+    r = ToSrgb(mr); g = ToSrgb(mg); b = ToSrgb(mb);
+  }
+
+  // Sample one palette at position f. Split out of GroupPal so the same
+  // layout maths serves both the live palette and the one being faded out.
+  void SamplePal(Zone gr, double[] plR, double[] plG, double[] plB,
+                 double[] palGain, double[] PalW, double f,
+                 out double r, out double g, out double b) {
+    int pc = plR.Length;
     f = f % 1.0; if (f < 0) f += 1.0;
     // Hold each palette colour, then cross in a short window.
     //
@@ -651,10 +771,10 @@ public class LampEngine {
     if (holdTot < 0.0) holdTot = 0.0;
 
     double wsum = 0.0;
-    bool haveW = (gr.PalW != null && gr.PalW.Length == pc);
+    bool haveW = (PalW != null && PalW.Length == pc);
     if (haveW) {
       for (int i = 0; i < pc; i++) {
-        double v = gr.PalW[i];
+        double v = PalW[i];
         if (v < 0.0) v = 0.0;
         wsum += v;
       }
@@ -663,7 +783,7 @@ public class LampEngine {
 
     // Start half a hold early so colour 0 sits centred on f=0, which is
     // where the old layout put it.
-    double firstHold = holdTot * (haveW ? (Math.Max(0.0, gr.PalW[0]) / wsum) : (1.0 / pc));
+    double firstHold = holdTot * (haveW ? (Math.Max(0.0, PalW[0]) / wsum) : (1.0 / pc));
     double xx = f + firstHold * 0.5;
     xx = xx % 1.0; if (xx < 0) xx += 1.0;
 
@@ -671,7 +791,7 @@ public class LampEngine {
     double w = 1.0;
     double pos = 0.0;
     for (int i = 0; i < pc; i++) {
-      double hi = holdTot * (haveW ? (Math.Max(0.0, gr.PalW[i]) / wsum) : (1.0 / pc));
+      double hi = holdTot * (haveW ? (Math.Max(0.0, PalW[i]) / wsum) : (1.0 / pc));
       if (xx < pos + hi) { a = i; n2 = (i + 1) % pc; w = 0.0; break; }
       pos += hi;
       if (xx < pos + fade) {
@@ -684,9 +804,9 @@ public class LampEngine {
       pos += fade;
     }
 
-    double ga = gr.palGain[a], gb = gr.palGain[n2];
-    double ar = gr.plR[a] * ga, ag2 = gr.plG[a] * ga, ab = gr.plB[a] * ga;
-    double br = gr.plR[n2] * gb, bg = gr.plG[n2] * gb, bb = gr.plB[n2] * gb;
+    double ga = palGain[a], gb = palGain[n2];
+    double ar = plR[a] * ga, ag2 = plG[a] * ga, ab = plB[a] * ga;
+    double br = plR[n2] * gb, bg = plG[n2] * gb, bb = plB[n2] * gb;
 
     // Blend in OKLab - a straight line between the two colours in a space
     // built so that equal steps look equal.
@@ -757,7 +877,9 @@ public class LampEngine {
           if (want != null && want.Length == gr.N) gr.Pos = want;
         }
       }
-      if (repal) PrepPaletteG(gr);
+      // true = ease across from the palette being replaced rather than
+      // cutting straight to the new one.
+      if (repal) PrepPaletteG(gr, true);
     }
   }
 
@@ -1208,6 +1330,19 @@ public class LampEngine {
     for (int z = 0; z < Groups.Length; z++) {
       Zone gr = Groups[z];
       if (!gr.Enabled) { BlankGroup(gr); continue; }
+
+      // Run down a palette changeover in real time, so it takes the same
+      // length whatever the frame rate. Released once finished: the old
+      // palette is only needed while it is still visible.
+      if (gr.XfadeLeft > 0.0) {
+        gr.XfadeLeft -= dt;
+        if (gr.XfadeLeft <= 0.0) {
+          gr.XfadeLeft = 0.0;
+          gr.oldR = null; gr.oldG = null; gr.oldB = null;
+          gr.oldGain = null; gr.oldW = null; gr.oldCount = 0;
+        }
+      }
+
       // Each group keeps its own phase so changing one group's speed can
       // never jump the other one.
       gr.Phase += dt * gr.Speed;
