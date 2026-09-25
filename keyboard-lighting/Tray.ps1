@@ -363,30 +363,41 @@ function Stop-Engine {
     # stop file instead and give it a moment to put the lighting where the
     # user wants it and release the device properly. Force is the fallback
     # for an engine that is wedged.
-    $procs = @()
-    try {
-        $procs = @(Get-CimInstance Win32_Process -Filter "Name='powershell.exe'" -ErrorAction SilentlyContinue |
-                   Where-Object { $_.CommandLine -like '*Aura-Background*' })
-    } catch { }
+    # Prefer the handle we already hold over asking Windows to list every
+    # process. The listing is a WMI call, and a sick WMI service can leave
+    # that call sitting there for a long time - which, on the way out of the
+    # app, looks exactly like Exit doing nothing at all. The handle answers
+    # instantly and cannot hang, so the common case never touches WMI.
+    $mine = $null
+    try { if ($script:EngineP -and -not $script:EngineP.HasExited) { $mine = $script:EngineP } } catch { }
 
-    if ($Graceful -and $procs.Count -gt 0) {
+    if ($Graceful) {
         try {
             if (-not (Test-Path $CfgDir)) { New-Item -ItemType Directory -Force -Path $CfgDir | Out-Null }
             Set-Content -Path (Join-Path $CfgDir 'stop.flag') -Value '1' -Encoding ASCII -ErrorAction SilentlyContinue
         } catch { }
 
-        # The engine checks the flag once per loop, so this is quick.
-        $deadline = (Get-Date).AddSeconds(3)
-        while ((Get-Date) -lt $deadline) {
-            Start-Sleep -Milliseconds 100
-            $alive = @()
-            try {
-                $alive = @(Get-CimInstance Win32_Process -Filter "Name='powershell.exe'" -ErrorAction SilentlyContinue |
-                           Where-Object { $_.CommandLine -like '*Aura-Background*' })
-            } catch { }
-            if ($alive.Count -eq 0) { break }
+        if ($mine) {
+            # The engine checks the flag once per loop, so this is quick.
+            try { [void]$mine.WaitForExit(3000) } catch { }
+        } else {
+            # No handle - an engine left over from a previous session. Fall
+            # back to watching the process list, still bounded.
+            $deadline = (Get-Date).AddSeconds(3)
+            while ((Get-Date) -lt $deadline) {
+                Start-Sleep -Milliseconds 100
+                $alive = @()
+                try {
+                    $alive = @(Get-CimInstance Win32_Process -Filter "Name='powershell.exe'" -ErrorAction SilentlyContinue |
+                               Where-Object { $_.CommandLine -like '*Aura-Background*' })
+                } catch { }
+                if ($alive.Count -eq 0) { break }
+            }
         }
     }
+
+    # Our own engine first, by handle, so this works even if WMI will not.
+    try { if ($mine -and -not $mine.HasExited) { $mine.Kill() } } catch { }
 
     # Anything still running did not stop on its own.
     try {
@@ -440,6 +451,10 @@ function Start-Engine {
     # frames land unevenly. The engine measures this and backs off further
     # if it still cannot hold cadence.
     [void]$sb.Append(' -Fps 60 -Quiet')
+    # Tie the engine's life to ours. If this app dies without getting the
+    # chance to clean up, the engine notices within a second and stops
+    # itself, instead of being left running with no tray icon to close it.
+    [void]$sb.Append(' -OwnerPid '); [void]$sb.Append($PID)
     $oe = "$($script:Cfg.OnExit)"
     if ($oe -ne 'off' -and $oe -ne 'white' -and $oe -ne 'firmware') { $oe = 'off' }
     [void]$sb.Append(' -OnExit '); [void]$sb.Append($oe)
@@ -1857,12 +1872,39 @@ $miLog = Add-Item 'Open logs folder' {
 }
 $miFolder = Add-Item 'Open program folder' { Start-Process explorer.exe $Here }
 Add-Sep
+# Always offered, not just when an update is waiting. If the app has got
+# itself into a bad state, closing and reopening it is the obvious thing to
+# reach for, and it should not mean finding the shortcut again.
+$miRestartApp = Add-Item 'Restart app' { Restart-App }
 $miExit = Add-Item 'Exit' {
     Log 'exit from menu'
     $script:Quitting = $true
-    Stop-Engine -Graceful
-    $icon.Visible = $false
-    [System.Windows.Forms.Application]::Exit()
+
+    # Take the icon away first. Quitting can take a moment while the engine
+    # puts the lighting back, and an icon that stays put through that reads
+    # as a click that did nothing - so people click again, or go hunting in
+    # Task Manager.
+    try { $icon.Visible = $false } catch { }
+
+    # Every step from here is optional. None of them is a reason to stay
+    # open: if tidying up fails, the app must still close.
+    try { Stop-Engine -Graceful } catch { Log ("stop on exit failed: {0}" -f $_.Exception.Message) 'ERROR' }
+    try { Remove-Item $LockFile -Force -ErrorAction SilentlyContinue } catch { }
+    try { [System.Windows.Forms.Application]::Exit() } catch { }
+
+    # Application.Exit is a polite request, and a nested loop - an open
+    # dialog, a menu still tearing down - can swallow it, leaving the app
+    # running with no icon and no way back. Give it a few seconds, then
+    # leave the hard way. Script scope on purpose: a local would be out of
+    # reach by the time the tick runs, and could be collected before it.
+    $script:BailTimer = New-Object System.Windows.Forms.Timer
+    $script:BailTimer.Interval = 4000
+    $script:BailTimer.Add_Tick({
+        try { $script:BailTimer.Stop() } catch { }
+        try { Log 'exit did not complete - forcing' 'WARN' } catch { }
+        [Environment]::Exit(0)
+    })
+    $script:BailTimer.Start()
 }
 
 # Every tray item exists now, so Update-Status may drive them.
@@ -1877,7 +1919,24 @@ $icon.Add_BalloonTipClicked({
 function Restart-App {
     Log 'restarting'
     $script:Quitting = $true
+    try { $icon.Visible = $false } catch { }
+
+    # Stop our engine before the replacement app starts.
+    #
+    # It now shuts itself down when we disappear, which would otherwise land
+    # about a second from now - after the new app has started its own engine
+    # - and its parting tidy-up would blank a keyboard the new engine had
+    # just taken over. Closing it here keeps the handover clean.
+    try { Stop-Engine } catch { }
+
+    # Release the single-instance lock BEFORE starting the replacement.
+    # The new copy checks that lock within a second of launching, and a lock
+    # that still looks live makes it assume another copy is already running:
+    # it would bow out quietly and the app would close instead of restart.
+    try { Remove-Item $LockFile -Force -ErrorAction SilentlyContinue } catch { }
+
     $exe = Join-Path $Here 'KeyboardLighting.exe'
+    $spawned = $false
     try {
         if (Test-Path $exe) {
             Start-Process -FilePath $exe
@@ -1889,9 +1948,38 @@ function Restart-App {
             $psi.CreateNoWindow  = $true
             [void][System.Diagnostics.Process]::Start($psi)
         }
+        $spawned = $true
     } catch { Log ("restart failed: {0}" -f $_.Exception.Message) 'ERROR' }
-    $icon.Visible = $false
-    [System.Windows.Forms.Application]::Exit()
+
+    if (-not $spawned) {
+        # Nothing took our place, so closing now would leave the user with
+        # no app at all and no icon to get it back. Undo the preparation and
+        # carry on running instead.
+        Log 'restart aborted - staying open' 'WARN'
+        $script:Quitting = $false
+        Update-Heartbeat
+        try { $icon.Visible = $true } catch { }
+        try {
+            $icon.BalloonTipTitle = 'Restart failed'
+            $icon.BalloonTipText  = 'The app could not restart itself, so it has stayed open. Try Exit, then start it again from the shortcut.'
+            $icon.ShowBalloonTip(7000)
+        } catch { }
+        try { [void](Start-Engine) } catch { }
+        return
+    }
+
+    try { [System.Windows.Forms.Application]::Exit() } catch { }
+
+    # Same safety net as Exit: never leave a copy of the app running with no
+    # icon, especially now that a replacement is already on its way up.
+    $script:BailTimer = New-Object System.Windows.Forms.Timer
+    $script:BailTimer.Interval = 4000
+    $script:BailTimer.Add_Tick({
+        try { $script:BailTimer.Stop() } catch { }
+        try { Log 'restart exit did not complete - forcing' 'WARN' } catch { }
+        [Environment]::Exit(0)
+    })
+    $script:BailTimer.Start()
 }
 
 # ---------------------------------------------------------------- window behaviour
@@ -2130,6 +2218,98 @@ $watch.Add_Tick({
     }
 })
 $watch.Start()
+
+# ------------------------------------------------- surviving our own faults
+#
+# Without these, one unexpected error anywhere in a button handler or a
+# timer tick ends the message loop and the process. Windows does not remove
+# a tray icon when its owner dies - it leaves the picture sitting there
+# until something makes the shell re-check it - so what the user saw was an
+# icon that was still present but did nothing, and a hidden engine still
+# running the lights. Task Manager was the only way out.
+#
+# A handler failing is not a reason to take the whole app down. Log it, say
+# so once, and keep the loop running so the menu still answers.
+
+$script:FaultCount = 0
+function Report-Fault($where, $ex) {
+    $script:FaultCount++
+    $msg = 'unknown error'
+    try { if ($ex) { $msg = $ex.Message } } catch { }
+
+    # A fault inside a timer tick repeats twice a second. Record the first
+    # few in full, then go quiet apart from an occasional marker, so the log
+    # stays readable and does not churn the disk.
+    $noisy = ($script:FaultCount -le 5)
+    if (-not $noisy -and ($script:FaultCount % 200) -eq 0) {
+        try { Log ("still faulting - {0} so far, latest: {1}" -f $script:FaultCount, $msg) 'ERROR' } catch { }
+    }
+    if ($noisy) {
+        try { Log ("caught fault in {0}: {1}" -f $where, $msg) 'ERROR' } catch { }
+        try {
+            if ($ex -and $ex.StackTrace) { Log ("  at {0}" -f ($ex.StackTrace -split "`n")[0].Trim()) 'ERROR' }
+        } catch { }
+    }
+    # Tell the user once. Repeating it for every tick of a broken timer
+    # would bury the machine in balloons.
+    if ($script:FaultCount -eq 1) {
+        try {
+            $icon.BalloonTipTitle = 'Something went wrong'
+            $icon.BalloonTipText  = 'The lighting app hit an error but is still running. Use the tray menu to restart or exit it.'
+            $icon.ShowBalloonTip(7000)
+        } catch { }
+    }
+    try { Update-Status } catch { }
+}
+
+# CatchException routes exceptions on the UI thread to ThreadException
+# instead of killing the process. It refuses to change once a window exists
+# on some runtimes, which is why this is wrapped rather than assumed.
+try {
+    [System.Windows.Forms.Application]::SetUnhandledExceptionMode(
+        [System.Windows.Forms.UnhandledExceptionMode]::CatchException)
+} catch { Log 'could not set catch mode for UI errors' 'WARN' }
+
+try {
+    [System.Windows.Forms.Application]::add_ThreadException(
+        [System.Threading.ThreadExceptionEventHandler]{
+            param($s, $e)
+            Report-Fault 'the interface' $e.Exception
+        })
+} catch { Log 'could not hook UI error handler' 'WARN' }
+
+# A fault on a background thread cannot be swallowed - the runtime is on its
+# way down by the time this runs - so use it to leave things tidy rather
+# than to carry on.
+try {
+    [AppDomain]::CurrentDomain.add_UnhandledException(
+        [UnhandledExceptionEventHandler]{
+            param($s, $e)
+            try { Log ("fatal background error: {0}" -f $e.ExceptionObject) 'ERROR' } catch { }
+            try { $icon.Visible = $false } catch { }
+        })
+} catch { }
+
+# Last line of defence. Runs whether we exit normally or are brought down by
+# an error, so the icon goes, the lock is released and the engine is not
+# left orphaned. It cannot run if the process is killed outright from Task
+# Manager - that is what -OwnerPid in the engine covers.
+try {
+    [AppDomain]::CurrentDomain.add_ProcessExit(
+        [EventHandler]{
+            param($s, $e)
+            try { $icon.Visible = $false; $icon.Dispose() } catch { }
+            try { Remove-Item $LockFile -Force -ErrorAction SilentlyContinue } catch { }
+            # Kill the engine by the handle we hold rather than calling
+            # Stop-Engine. Windows allows a shutdown hook only a couple of
+            # seconds before cutting it off, and Stop-Engine can reach for
+            # WMI to sweep up strays - too slow to rely on here. The engine
+            # watches our pid anyway, so a stray stops itself either way.
+            try {
+                if ($script:EngineP -and -not $script:EngineP.HasExited) { $script:EngineP.Kill() }
+            } catch { }
+        })
+} catch { }
 
 Log 'ready'
 [System.Windows.Forms.Application]::Run()

@@ -58,6 +58,18 @@ param(
 
     [string]$Custom,
 
+    # Process id of the app that launched us, or 0 when run by hand.
+    #
+    # Nothing else ties this process to the tray app, so if the app died the
+    # engine carried on forever: an invisible powershell.exe still driving
+    # the keyboard, with no tray icon left to stop it. The only way out was
+    # Task Manager. When an owner is given we watch it, and shut ourselves
+    # down properly the moment it disappears.
+    #
+    # Zones.ps1, MyEffect.ps1 and a manual run pass nothing, so they keep
+    # the old behaviour of running until told to stop.
+    [int]$OwnerPid = 0,
+
     [switch]$Mirror,
     [switch]$Reverse,
 
@@ -3531,12 +3543,39 @@ $step = 125    # 8 steps across the full range, like the firmware
 # frozen on the keyboard.
 $stopFile = Join-Path $stateDir 'stop.flag'
 if (Test-Path $stopFile) { Remove-Item $stopFile -Force -ErrorAction SilentlyContinue }
+
+# Take a handle to the owning app once, so the check in the loop is a cheap
+# flag read rather than a process lookup sixty times a second. If the owner
+# has already gone by the time we get here, treat it as no owner: a one-shot
+# launched by an app that has since exited should still finish its job.
+$ownerProc = $null
+if ($OwnerPid -gt 0) {
+    try { $ownerProc = [System.Diagnostics.Process]::GetProcessById($OwnerPid) }
+    catch { $ownerProc = $null; Write-Log ("owner pid {0} not found at startup" -f $OwnerPid) }
+    if ($ownerProc) { Write-Log ("watching owner pid {0}" -f $OwnerPid) }
+}
+$ownerNext = [DateTime]::UtcNow.AddSeconds(1)
+
 try {
     while ($true) {
         if (Test-Path $stopFile) {
             Remove-Item $stopFile -Force -ErrorAction SilentlyContinue
             Say "  Stop requested." 'Yellow'
             break
+        }
+
+        # The app that owns us has gone. Leave by the same door as a normal
+        # stop, so -OnExit is honoured and the device is released instead of
+        # being left frozen on the last frame.
+        if ($ownerProc -and [DateTime]::UtcNow -gt $ownerNext) {
+            $ownerNext = [DateTime]::UtcNow.AddSeconds(1)
+            $gone = $false
+            try { $gone = $ownerProc.HasExited } catch { $gone = $true }
+            if ($gone) {
+                Say "  The app that started us has closed. Shutting down." 'Yellow'
+                Write-Log ("owner pid {0} exited - stopping" -f $OwnerPid)
+                break
+            }
         }
 
         # Sampled repeatedly rather than once. The interesting number is
