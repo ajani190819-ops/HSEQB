@@ -70,6 +70,15 @@ param(
     # the old behaviour of running until told to stop.
     [int]$OwnerPid = 0,
 
+    # Hardware backlight level to hold, 0 to 3, or -1 to leave it alone.
+    #
+    # Defaults to full. This is not the app's brightness slider - that
+    # scales the colour values we send and is still the control the user
+    # actually adjusts. This is the controller's own master level, which
+    # only has four steps and gates everything above it, so holding it at
+    # the top gives the slider its full range to work in.
+    [int]$KbdBacklight = 3,
+
     [switch]$Mirror,
     [switch]$Reverse,
 
@@ -3472,6 +3481,61 @@ function Write-Log($msg, $level = 'INFO') {
 $script:SysTick = 0
 $script:LastAc  = $null
 $script:LastPct = 100
+
+# ---- the keyboard's own backlight level ---------------------------------
+#
+# This is a different thing from the colours, and missing it is why the
+# keyboard could come back from a closed lid dark until F3 was pressed.
+#
+# The colours we send are per-LED data over HID. On top of that the
+# machine's embedded controller keeps a master backlight level, 0 to 3 -
+# the one Fn+F3 raises and Fn+F2 lowers. At level 0 the LEDs are simply
+# off, whatever colours we are sending them. So the engine could be
+# running perfectly, pushing a correct frame sixty times a second, into a
+# keyboard the controller had switched off.
+#
+# Windows leaves that level at 0 across suspend on this hardware family -
+# the same behaviour is documented against USB id 0B05:19B6, and the Linux
+# kernel carries a fix that re-asserts it on resume for exactly this
+# reason. Nothing in the app ever set it, so the only thing that brought
+# it back was pressing the key by hand.
+#
+# Reading the level back is unreliable here (the firmware reports it as
+# absent on several models even though setting it works), so we set it
+# rather than test it first.
+$script:AtkInst  = $null
+$script:AtkTried = $false
+function Set-KbdBacklight([int]$level) {
+    if ($level -lt 0) { return $false }        # negative means leave it alone
+    if ($level -gt 3) { $level = 3 }
+
+    if (-not $script:AtkTried) {
+        $script:AtkTried = $true
+        try {
+            $script:AtkInst = @(Get-CimInstance -Namespace 'root/wmi' `
+                -ClassName 'AsusAtkWmi_WMNB' -ErrorAction Stop)[0]
+        } catch { $script:AtkInst = $null }
+        if ($script:AtkInst) { Write-Log 'hardware backlight level: control available' }
+        else { Write-Log 'hardware backlight level: ASUS ATK WMI not present - leaving it to the Fn keys' 'WARN' }
+    }
+    if (-not $script:AtkInst) { return $false }
+
+    try {
+        # Device 0x00050021 is the backlight level. The top bit of the
+        # value is a "set this" flag, so level 3 goes out as 0x83.
+        $arg = 0x80 -bor ($level -band 0x7F)
+        [void](Invoke-CimMethod -InputObject $script:AtkInst -MethodName 'DEVS' `
+            -Arguments @{ Device_ID = 0x00050021; Control_status = $arg } -ErrorAction Stop)
+        return $true
+    } catch {
+        Write-Log ("could not set hardware backlight level: {0}" -f $_.Exception.Message) 'WARN'
+        # Do not retry a broken interface every second for the rest of the
+        # session; one complaint in the log is enough.
+        $script:AtkInst = $null
+        return $false
+    }
+}
+
 $script:LiveLevel = [int]([Math]::Round($Master * 1000))
 # Ignore whatever theme file is already on disk: the arguments we were
 # launched with already describe it. Only react to later writes.
@@ -3556,6 +3620,37 @@ if ($OwnerPid -gt 0) {
 }
 $ownerNext = [DateTime]::UtcNow.AddSeconds(1)
 
+# ---- waking back up -----------------------------------------------------
+#
+# Coming back from a closed lid is not one moment, it is a short untidy
+# period: the USB port is still powering up, the firmware has taken its
+# lighting back, and the backlight level may have been zeroed. A single
+# repair attempt is a guess at when that has finished, and the old code
+# guessed once, 800ms in, having blocked the loop with a sleep to get
+# there. If the port was not ready yet the attempt was wasted and the
+# keyboard stayed dark until something else happened to poke it - which is
+# why it came back "eventually", or not until a key was pressed.
+#
+# So: try several times over the first few seconds, and never block.
+# Repeating a repair that already worked costs one HID write and is
+# invisible; missing the one chance is what the user actually notices.
+$repairAt = New-Object System.Collections.ArrayList
+function Schedule-Repair {
+    $repairAt.Clear()
+    $n = [DateTime]::UtcNow
+    foreach ($ms in 0, 400, 1200, 2500, 5000) {
+        [void]$repairAt.Add($n.AddMilliseconds($ms))
+    }
+}
+# Assert the level once at startup too. If the app is launched while the
+# level happens to be 0 - after a crash, or straight from a cold boot -
+# the lighting would otherwise never appear at all.
+[void]$repairAt.Add([DateTime]::UtcNow)
+
+# Watched so a reopen can trigger the same repair a wake does.
+$lastReopens = 0
+try { $lastReopens = $eng.Reopens } catch { }
+
 try {
     while ($true) {
         if (Test-Path $stopFile) {
@@ -3608,9 +3703,12 @@ try {
                     # handle is usually still valid and only ownership was
                     # lost. ReAssert covers that; genuine disconnects are
                     # still caught by failed writes in Push().
-                    Start-Sleep -Milliseconds 800
-                    $eng.ReAssert()
-                    foreach ($z in $eng.Groups) { $z.LiveDirty = $true }
+                    #
+                    # No sleep. Sleeping here stalled the whole loop - the
+                    # theme and brightness files stop being read too - and
+                    # still only bought one attempt. Queue several instead.
+                    Write-Log 'resume - scheduling lighting repair'
+                    Schedule-Repair
                 }
                 $pe = Get-Event -SourceIdentifier 'AuraPower' -ErrorAction SilentlyContinue
             }
@@ -3648,13 +3746,52 @@ try {
         }
 
         # --- lock / unlock / lid ---
+        # Opening the lid often shows up here rather than as a power event,
+        # so this gets the same staggered repair.
         if ($sessionOk) {
             $se = Get-Event -SourceIdentifier 'AuraSession' -ErrorAction SilentlyContinue
+            $any = $false
             while ($se) {
                 Remove-Event -EventIdentifier $se.EventIdentifier -ErrorAction SilentlyContinue
+                $any = $true
+                $se = Get-Event -SourceIdentifier 'AuraSession' -ErrorAction SilentlyContinue
+            }
+            if ($any) {
+                Write-Log 'session change - scheduling lighting repair'
+                Schedule-Repair
+            }
+        }
+
+        # --- the device itself came back ---
+        # A reopen means the handle died and was re-established: the port
+        # was power-cycled, or the keyboard re-enumerated. The firmware
+        # reverts to running its own lighting across that, and the backlight
+        # level can come back at zero, so this needs the same repair as a
+        # wake. It is also the reliable signal - it fires when the device is
+        # genuinely back, however long that took, rather than at a time we
+        # guessed in advance. The counter only moves on a successful reopen,
+        # so a device that is really gone cannot spin this.
+        $rc = $lastReopens
+        try { $rc = $eng.Reopens } catch { }
+        if ($rc -ne $lastReopens) {
+            $lastReopens = $rc
+            Write-Log ("device reopened ({0}) - scheduling lighting repair" -f $rc)
+            Schedule-Repair
+        }
+
+        # --- run any repair that has come due ---
+        if ($repairAt.Count -gt 0) {
+            $nowU = [DateTime]::UtcNow
+            $due  = $false
+            # RemoveAt shrinks the list every pass, so this always ends.
+            while ($repairAt.Count -gt 0 -and $nowU -ge $repairAt[0]) {
+                $due = $true
+                $repairAt.RemoveAt(0)
+            }
+            if ($due) {
+                [void](Set-KbdBacklight $KbdBacklight)
                 $eng.ReAssert()
                 foreach ($z in $eng.Groups) { $z.LiveDirty = $true }
-                $se = Get-Event -SourceIdentifier 'AuraSession' -ErrorAction SilentlyContinue
             }
         }
 
