@@ -415,6 +415,7 @@ public class LampEngine {
     }
     fr = new double[LampCount]; fg = new double[LampCount]; fb = new double[LampCount];
     er = new double[LampCount]; eg = new double[LampCount]; eb = new double[LampCount];
+    SeedDither();
     pr = new int[LampCount]; pg = new int[LampCount]; pb = new int[LampCount];
     for (int i = 0; i < LampCount; i++) { pr[i] = -1; pg[i] = -1; pb[i] = -1; }
     heat = new double[LampCount];
@@ -917,6 +918,11 @@ public class LampEngine {
   public volatile int  WriteUs   = 0;   // last frame's two writes, microsec
   public volatile int  WriteUsMax = 0;  // worst seen
   public volatile int  LateFrames = 0;  // frames that missed their deadline
+  // Writes the device refused. A failed write leaves the lamps showing the
+  // previous frame for one cycle, which looks like a flicker, and until now
+  // nothing counted them - so there was no way to tell that apart from a
+  // timing problem when reading the log.
+  public volatile int  WriteFails = 0;
   int overrun = 0;                      // consecutive frames whose writes overflowed
   double[] er, eg, eb;     // carried quantisation error, for temporal dither
 
@@ -928,8 +934,66 @@ public class LampEngine {
   public string FramePath = null;      // null = don't publish
   public int    FrameHz    = 20;       // cap: the panel cannot use more
   double nextFrameAt = -1.0;
+  double nextLayoutAt = -1.0;
   byte[] frameBuf = null;
   char[] hexPairs = "0123456789abcdef".ToCharArray();
+
+  // ---- getting the preview to disk without stalling the render ----------
+  //
+  // frame.txt used to be created, written and closed twenty times a second
+  // on the render thread, and it kept doing it whether or not anything was
+  // reading it. Every one of those goes through the filesystem filter
+  // stack - Defender included, and LOCALAPPDATA is a scanned location - so
+  // a write that normally costs a fraction of a millisecond can now and
+  // then take several.
+  //
+  // On the render thread that directly delays the next frame. Because the
+  // animation advances by real elapsed time, the frame after a stall then
+  // covers a larger step and the gradient lurches. Small irregular lurches
+  // a few times a second is exactly the stuttery, candle-like flicker this
+  // produces - and it is invisible in the timing figures, because the cost
+  // lands outside the part of the frame being measured.
+  //
+  // The render thread now only copies bytes into a buffer. A background
+  // thread owns the disk, and if the disk is slow it is the preview that
+  // falls behind, never the lighting.
+  readonly object pubLock = new object();
+  byte[] pubBuf   = null;
+  int    pubLen   = 0;
+  volatile bool pubReady = false;
+  string pendingLayout = null;
+  Thread pubTh  = null;
+  volatile bool pubRun = false;
+
+  void PubLoop() {
+    byte[] local = null;
+    while (pubRun) {
+      int len = 0;
+      string lay = null;
+      lock (pubLock) {
+        if (pubReady) {
+          len = pubLen;
+          if (local == null || local.Length < len) local = new byte[len];
+          Buffer.BlockCopy(pubBuf, 0, local, 0, len);
+          pubReady = false;
+        }
+        if (pendingLayout != null) { lay = pendingLayout; pendingLayout = null; }
+      }
+      if (lay != null && LayoutPath != null) {
+        try { File.WriteAllText(LayoutPath, lay); } catch { }
+      }
+      if (len > 0 && FramePath != null) {
+        try {
+          using (FileStream fs = new FileStream(FramePath, FileMode.Create,
+                                                FileAccess.Write, FileShare.ReadWrite)) {
+            fs.Write(local, 0, len);
+          }
+        } catch { }
+      }
+      Thread.Sleep(25);
+    }
+  }
+
 
   // Physical layout, written whenever it changes. gr.Pos switches between
   // the across and loop maps when the user toggles Loop, so this cannot be
@@ -974,14 +1038,27 @@ public class LampEngine {
     string txt = sb.ToString();
     if (txt == lastLayout) return;      // only write on a real change
     lastLayout = txt;
-    try { File.WriteAllText(LayoutPath, txt); } catch { }
+    // Queued for the writer thread rather than written here, for the same
+    // reason as the frame itself.
+    lock (pubLock) { pendingLayout = txt; }
   }
 
   void PublishFrame() {
     if (FramePath == null) return;
     if (Now < nextFrameAt) return;
     nextFrameAt = Now + (1.0 / (double)(FrameHz > 0 ? FrameHz : 20));
-    PublishLayout();
+
+    // The layout only changes when the user toggles something structural,
+    // but working out whether it changed meant rebuilding the whole string
+    // - sorting each group and allocating as it went - twenty times a
+    // second. That churn is pure garbage for the collector to clear up,
+    // and a collection that lands mid-frame is another source of the same
+    // stutter. Once a second is far more often than the layout can
+    // actually change.
+    if (Now >= nextLayoutAt) {
+      nextLayoutAt = Now + 1.0;
+      PublishLayout();
+    }
 
     int n = LampCount;
     // "<count>;" then 6 hex chars per lamp, in device lamp order.
@@ -1003,17 +1080,46 @@ public class LampEngine {
       frameBuf[w++] = (byte)hexPairs[(g >> 4) & 15]; frameBuf[w++] = (byte)hexPairs[g & 15];
       frameBuf[w++] = (byte)hexPairs[(b2 >> 4) & 15]; frameBuf[w++] = (byte)hexPairs[b2 & 15];
     }
-    try {
-      // Write the whole thing in one call and keep the handle for the
-      // shortest possible time; the reader tolerates a torn read anyway.
-      using (FileStream fs = new FileStream(FramePath, FileMode.Create,
-                                            FileAccess.Write, FileShare.ReadWrite)) {
-        fs.Write(frameBuf, 0, w);
-      }
-    } catch { }
+    // Hand the bytes to the writer thread. This is a buffer copy and
+    // nothing else - no file handle is opened on the render thread - so it
+    // cannot be delayed by the disk or by a scanner. If the previous frame
+    // has not been written yet it is simply replaced: the panel wants the
+    // newest frame, not every frame.
+    lock (pubLock) {
+      if (pubBuf == null || pubBuf.Length < w) pubBuf = new byte[w];
+      Buffer.BlockCopy(frameBuf, 0, pubBuf, 0, w);
+      pubLen = w;
+      pubReady = true;
+    }
   }
 
   void Push() { Push(false); }
+
+  // Stagger the dither so lamps do not all step on the same frame.
+  //
+  // The carried error started at zero for every lamp. Error feedback is
+  // deterministic, so any two lamps showing the same colour then rounded
+  // the same way on the same frame and stepped together for as long as
+  // they matched. The four keyboard lamps almost always carry the same
+  // colour, so all four flipped at once - a whole-keyboard pulse rather
+  // than a per-lamp one, which is exactly the candle shimmer the dither
+  // was supposed to avoid. The light bar escaped it only by accident,
+  // because its twelve lamps hold different colours and so drift apart.
+  //
+  // Giving each lamp and channel a different starting fraction breaks the
+  // symmetry permanently: they still each average out to the right colour,
+  // but they take their steps on different frames, so across the group the
+  // steps cancel instead of adding up. The golden ratio is used because
+  // successive multiples of it spread out evenly and never fall into a
+  // short repeating pattern.
+  void SeedDither() {
+    const double G = 0.6180339887498949;
+    for (int i = 0; i < LampCount; i++) {
+      er[i] = ((i * G) % 1.0) - 0.5;
+      eg[i] = (((i * G) + 0.3333) % 1.0) - 0.5;
+      eb[i] = (((i * G) + 0.6667) % 1.0) - 0.5;
+    }
+  }
 
   // Quantise with error feedback: the fraction we throw away this frame is
   // added to the next one. At 60fps the eye integrates the result, so a
@@ -1094,6 +1200,7 @@ public class LampEngine {
     // handle is dead - almost always a resume from sleep.
     if (allOk) { failRun = 0; }
     else {
+      WriteFails++;
       failRun++;
       if (failRun >= 8) { DeviceLost = true; failRun = 0; }
     }
@@ -1153,7 +1260,7 @@ public class LampEngine {
       for (int i = 0; i < LampCount; i++) { pr[i] = -1; pg[i] = -1; pb[i] = -1; }
     }
     if (er != null) {
-      for (int i = 0; i < LampCount; i++) { er[i] = 0; eg[i] = 0; eb[i] = 0; }
+      SeedDither();
     }
     failRun = 0;
     DeviceLost = false;
@@ -1848,6 +1955,15 @@ public class LampEngine {
 
   public void Start() {
     running = true;
+    // Below normal on purpose: this thread exists so that disk waits happen
+    // somewhere other than the render thread, and it must never compete
+    // with it for CPU.
+    pubRun = true;
+    pubTh = new Thread(new ThreadStart(PubLoop));
+    pubTh.IsBackground = true;
+    try { pubTh.Priority = ThreadPriority.BelowNormal; } catch { }
+    pubTh.Start();
+
     th = new Thread(new ThreadStart(Loop));
     th.IsBackground = true;
     try { th.Priority = ThreadPriority.AboveNormal; } catch { }
@@ -1857,6 +1973,9 @@ public class LampEngine {
   public void Stop() {
     running = false;
     if (th != null) { try { th.Join(600); } catch { } }
+    // After the render thread, so any last staged frame still gets out.
+    pubRun = false;
+    if (pubTh != null) { try { pubTh.Join(400); } catch { } }
   }
 
   // Light one raw lamp by its device index, bypassing all grouping and
@@ -3681,8 +3800,8 @@ try {
         if ([DateTime]::UtcNow -gt $script:TimingAt) {
             $script:TimingAt = [DateTime]::UtcNow.AddSeconds(60)
             $budget = [int](1000000 / [Math]::Max(1, $eng.Fps))
-            $msg = ('device write {0} us/frame (worst {1}), budget {2} us at {3} fps, late frames {4} in last interval' -f `
-                    $eng.WriteUs, $eng.WriteUsMax, $budget, $eng.Fps, $eng.LateFrames)
+            $msg = ('device write {0} us/frame (worst {1}), budget {2} us at {3} fps, late frames {4}, failed writes {5}, reopens {6} in last interval' -f `
+                    $eng.WriteUs, $eng.WriteUsMax, $budget, $eng.Fps, $eng.LateFrames, $eng.WriteFails, $eng.Reopens)
             if (-not $script:TimingDone) {
                 $script:TimingDone = $true
                 Say ("  Timing: {0}" -f $msg) 'DarkGray'
@@ -3690,6 +3809,7 @@ try {
             Write-Log $msg
             $eng.WriteUsMax = 0
             $eng.LateFrames = 0
+            $eng.WriteFails = 0
         }
         # --- resume from sleep / display wake ---
         if ($resumeOk) {
