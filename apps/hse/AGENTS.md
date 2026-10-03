@@ -5,6 +5,12 @@ player/team management, session library, and cross-session analytics.
 State syncs through Firebase Realtime Database; the committed **`index.html`
 is the deployable artifact** (static GitHub Pages).
 
+> **Location:** this app lives in `apps/hse/` of the HSEQB monorepo
+> (alongside the white-label `apps/template/`). It is served at
+> `…/HSEQB/apps/hse/`; the repo root carries a redirect page so the original
+> Pages URL keeps working. Run all `npm` commands from this folder — the
+> build scripts are self-contained here.
+
 ## Build system (byte-exact)
 
 `src/` is the source of truth. `index.html` is generated from it and must be

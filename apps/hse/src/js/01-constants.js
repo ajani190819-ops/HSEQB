@@ -1,5 +1,5 @@
-const VERSION = '3.12.0'; // auto-managed by bump.js
-const DOWNLOAD_URL = 'https://raw.githubusercontent.com/ajani190819-ops/HSEQB/main/index.html';
+const VERSION = '3.12.1'; // auto-managed by bump.js
+const DOWNLOAD_URL = 'https://raw.githubusercontent.com/ajani190819-ops/HSEQB/main/apps/hse/index.html';
 const DEFAULT_ACCENT = '#003da5'; // Tricolor blue from the default HSE palette
 const DEFAULT_COLOR_THEME = 'tricolor';
 // Named color themes. Each palette supplies a primary color, a gradient partner,
