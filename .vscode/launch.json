@@ -29,6 +29,19 @@
             "request": "launch",
             "name": "Open template index.html",
             "file": "${workspaceFolder}/apps/template/index.html"
+        },
+        {
+            "name": "Launch Chrome (FAMU HASC app)",
+            "request": "launch",
+            "type": "chrome",
+            "url": "http://localhost:8080/apps/famu/",
+            "webRoot": "${workspaceFolder}"
+        },
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Open FAMU HASC index.html",
+            "file": "${workspaceFolder}/apps/famu/index.html"
         }
     ]
 }

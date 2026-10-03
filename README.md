@@ -10,6 +10,7 @@ management, a session library, and cross-session analytics.
 | --- | --- |
 | [`apps/hse/`](apps/hse/) | **HSE Quiz Bowl Tracker** — the original HSE-branded app, synced to the HSE team's Firebase project. Deployed at `…/HSEQB/apps/hse/` (the repo root redirects there so legacy links keep working). |
 | [`apps/template/`](apps/template/) | **QB Tracker template** — the white-label base for new forks. Identical feature set, standard themes, no HSE branding, no Firebase credentials. Runs fully offline out of the box; plug in your own Firebase project to enable sync. |
+| [`apps/famu/`](apps/famu/) | **FAMU HASC** — the Florida A&M University Honda All Star Challenge tracker, the first fork built from the template. FAMU orange & green default theme; runs in offline mode until FAMU's own Firebase project is connected. |
 | `index.html` (root) | Redirect to `apps/hse/` — keeps the original GitHub Pages URL, bookmarks, and installed PWAs working. |
 | `.vscode/` | Shared editor config for the repo. |
 
@@ -27,7 +28,7 @@ npm run bump      # patch/minor/major version bump + rebuild
 ## Creating a fork for another school or organization
 
 Start from `apps/template/` — see its [README](apps/template/README.md) for
-the full checklist (branding, themes, Firebase setup, rules, deployment).
+the full checklist. (Working example: [`apps/famu/`](apps/famu/README.md).) (branding, themes, Firebase setup, rules, deployment).
 The template intentionally ships **without any Firebase credentials**, so a
 fork cannot touch the HSE team's data: each fork connects to its own
 Firebase project.
