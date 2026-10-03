@@ -1,8 +1,8 @@
 {
-  "name": "famu-hasc",
+  "name": "famu-hcasc",
   "version": "1.0.0",
   "private": true,
-  "description": "FAMU HASC (Honda All Star Challenge) quiz bowl tracker — forked from the QB Tracker template.",
+  "description": "FAMU HCASC (Honda Campus All-Star Challenge) quiz bowl tracker — forked from the QB Tracker template.",
   "scripts": {
     "build": "node build.js",
     "check": "node bump.js --check && node guard.js",

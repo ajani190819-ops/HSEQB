@@ -9,324 +9,265 @@ two disagree.
 the work stands, what was already decided, what was tried and failed, and what
 to do next. A new chat has no memory of the last one, so that file is the
 memory — and you are expected to **update it before your session ends**
-(`MEMORY.md` §9 is the checklist).
+(its final section is the checklist).
 
 Companion documents, also mandatory when relevant:
 
 * `MEMORY.md` — state of the work + session log. Read first, update last.
-* `docs/ORCA-PLUGIN-FACTS.md` — hard-won facts about OrcaSlicer's plugin system.
-  Do not re-derive them; do not contradict them.
 * `docs/ROADMAP.md` — what is planned, what is in flight, and every open
   question. Read it before planning work; update it as part of the work.
+* `apps/<app>/AGENTS.md` — the deep technical doc for each app (build system,
+  module map, theming invariants, gotchas). Read the one for any app you are
+  about to touch. Do not re-derive what is written there; do not contradict it.
 
-The division of labour between the three: `MEMORY.md` is **where we are**,
-`docs/ROADMAP.md` is **where we are going**, `docs/ORCA-PLUGIN-FACTS.md` is
-**what is already known**. Keep them from contradicting each other.
+The division of labour: `MEMORY.md` is **where we are**, `docs/ROADMAP.md` is
+**where we are going**, the per-app `AGENTS.md` files are **what is already
+known about how each app is built**. Keep them from contradicting each other.
 
 ---
 
 ## 1. Who you are working for
 
-The owner of this repo is **a beginner** at both Python and 3D-printing
-internals. That is a design constraint, not an apology:
+The owner of this repo runs a quiz bowl program (the HSE team) and is turning
+its tracker into a product family that other schools and organizations can
+fork — FAMU HCASC is the first. The owner is not a professional web developer;
+that is a design constraint, not an apology:
 
-* **Explain plainly.** Short sentences. Define every piece of jargon the first
-  time it appears (there is a glossary at the bottom of this file — use and
-  extend it). "The .bat reads plugins.json" beats "the installer consumes the
-  manifest".
+* **Explain plainly.** Short sentences. Define jargon the first time it
+  appears (there is a glossary at the bottom of this file — use and extend
+  it). "The build script glues the modules into one HTML file" beats "the
+  bundler emits a single-file artifact".
 * **Never hide a failure.** If something did not work, or was not tested, say
-  so in plain words. A honest "I could not test this because there is no
-  Windows here" is worth more than a green checkmark.
-* **Beginner-safe defaults.** Tools must never overwrite the user's input
-  files, must say exactly what they did, and must refuse (with a plain-English
-  fix) rather than produce broken output.
+  so in plain words. An honest "I could not run this in a browser here, click
+  through the preview and check X" is worth more than a green checkmark.
+* **Safe defaults.** The live HSE app and its Firebase data are sacred:
+  nothing you do may break the site for the team or risk their data. When in
+  doubt, leave the HSE app untouched and verify that you did (content diff
+  against `main`).
 
 ## 2. How to work — the standards
 
 These are the owner's explicit expectations for how AI assistance goes:
 
 1. **Write out what is about to happen, before it happens.** For any task that
-   needs more than a couple of minutes of work: post the plan first — what you
-   will do, in what order, what you will NOT do, and where the risks are. The
-   owner should never watch a 15-minute silent build with no idea what is
-   coming. Update `docs/ROADMAP.md` so the plan also lives in the repo.
+   needs more than a couple of minutes: post the plan first — what you will
+   do, in what order, what you will NOT do, and where the risks are. Update
+   `docs/ROADMAP.md` so the plan also lives in the repo.
 2. **Ask instead of guessing.** Whenever a decision is user-facing, ambiguous,
-   or a matter of taste, ask a clarifying question with concrete options and a
-   recommended default — batch the questions so they can all be answered at
-   once. Asking one round of good questions is efficient, not annoying.
-3. **Work in small, reviewable steps.** One logical change at a time, verified
-   before moving on. If a step turns out wrong, it should be cheap to throw
-   away.
-4. **Verify, then say what you verified.** Run the repo's tests (`python3
-   tests/test_installer.py`) after touching the updater, the catalogue, or the
-   .bat. After any file edit, confirm the edit actually landed — silent
+   or a matter of taste (app names, colors, folder layout, version bumps),
+   ask a clarifying question with concrete options and a recommended default —
+   batch the questions so they can all be answered at once. Asking one round
+   of good questions is efficient, not annoying.
+3. **Work in small, reviewable steps.** One logical change per commit,
+   verified before moving on. If a step turns out wrong, it should be cheap
+   to throw away.
+4. **Verify, then say what you verified.** Run the per-app checks
+   (`npm run check` inside the app folder) after touching anything under
+   `src/`. After any file edit, confirm the edit actually landed — silent
    no-op edits happen. In your report, separate "verified" from "not tested".
 5. **Report in three parts:** what I did / what it means for you / what is
    next. Keep it short enough to actually read.
-6. **Be honest about uncertainty.** Label guesses as guesses. If the docs say
-   something has never been tested on real hardware, keep saying so.
+6. **Be honest about uncertainty.** Label guesses as guesses. If something was
+   only verified by static analysis and not in a real browser, keep saying so.
 7. **Leave the next session a memory.** Before you finish, update `MEMORY.md`
    — state, decisions, answered questions, next actions, and a session-log
-   entry (its §9 is the checklist). The owner should be able to open a brand
-   new chat, point it at this repo, and have it pick up mid-stride.
+   entry. The owner should be able to open a brand new chat, point it at this
+   repo, and have it pick up mid-stride.
 
 ## 3. Repo map
 
 ```
-Orca-Plugins.bat            THE ONE FILE A USER DOWNLOADS, the whole updater
-                            since 2.0.0, and the ONLY .bat in the repository
-                            since 2.1.0: the menu, the build picker (main or
-                            the five newest test branches), the OrcaSlicer
-                            folder picker, the remembered choices, the
-                            install engine and self-update all live in it.
-                            It hands over to a newer copy of itself rather
-                            than overwriting itself mid-run. The old
-                            Update-Orca-Plugins.bat and
-                            Choose-Orca-Plugin-Version.bat filenames were
-                            removed at 2.1.0 at the owner's request; copies
-                            on disk keep working (an old launcher
-                            self-updates into this file), so do not
-                            reintroduce them without the owner asking.
-plugins.json                the catalogue the updater reads (what + where + version)
+index.html (root)           THE REDIRECT: sends the original GitHub Pages URL
+                            to apps/hse/. Bookmarks and installed PWAs depend
+                            on it. Never delete or "clean up" this file.
+README.md                   human-facing front door / monorepo tour
 AGENTS.md                   this rulebook
-MEMORY.md                   handoff: state of the work + session log. Read at the
-                            start of a session, update at the end of it.
-README.md                   human-facing front door / tour
+MEMORY.md                   handoff: state of the work + session log.
+                            Read at the start of a session, update at the end.
+package.json (root)         convenience scripts only (check:all etc.);
+                            the real scripts live in each app folder
 docs/
-  ORCA-PLUGIN-FACTS.md      OrcaSlicer plugin-system facts (do not re-derive)
   ROADMAP.md                what's planned and every open question
-  reference/                supplied OrcaSlicer wiki/PDF reference snapshots
-plugins/
-  wave-overhangs/           OrcaSlicer pipeline plugin: support-free steep overhangs
-  unlayered-infill/         OrcaSlicer pipeline plugin: non-planar interlocking infill
-archive/                    NOT shipped: work kept for reference, with its own
-                            README explaining why and how to revive it.
-                            wave-overhangs-geometry/ lives here (archived 2026-10-02)
-tools/
-  nonplanar-infill-tool/    standalone double-click tool (the predecessor of the
-                            unlayered-infill plugin; kept as reference, GPL-3.0)
-  sync_engine.py            copy the shared engine between its two homes (--check)
-  sync_changelog.py         push the newest release notes into the plugin files
-keyboard-lighting/          unrelated personal project; DO NOT reorganize or "fix" it
-tests/
-  fake_orca.py              minimal stand-in for Orca's `orca` module
-  fixtures/                 supplied STL and captured real G-code regression input
-  test_installer.py         contract test: catalogue / .bat / files must agree
-  test_post_script.py       functional test: the engine really rewrites G-code
-  test_plugin_runtime.py    runtime test: the PLUGIN loads, runs and logs
-  test_plugin_audit.py      imports all shipped plugins under Orca's audit hook
-  test_wave_gcode.py        captured real-export Wave replacement regression
-  test_unlayered_waves.py   Unlayered Infill wave shaping: pattern, angle,
-                            shape, layer phase, Z ceiling, and that the
-                            defaults still reproduce the previous release
-  wave_cases.py             the synthetic Wave exports the Wave tests slice
-```
+apps/
+  hse/                      THE LIVE APP — HSE Quiz Bowl Tracker (v3.12.x).
+                            Firebase-connected to the HSE team's project.
+                            Everything here is production: treat gently.
+  template/                 THE FORK BASE — white-label "QB Tracker" (v1.x).
+                            No credentials, offline by design, guard enforced.
+                            New forks start as copies of THIS folder, never
+                            of apps/hse/.
+  famu/                     FIRST FORK — FAMU HCASC (v1.x), official orange &
+                            green. Offline until FAMU connects its own
+                            Firebase project.
 
-The `plugins.json` entry `path` is a URL path into this repo (forward slashes,
-relative to the repo root). The updater downloads
-`https://raw.githubusercontent.com/ajani190819-ops/Tests/main/<path>`, so after
-moving a plugin file you must update `path` in `plugins.json` **and** the
-hardcoded fallback list inside the .bat — `tests/test_installer.py` fails if
-you forget, and it is the safety net for exactly this.
+Each app folder is self-contained: src/ (the source of truth), build.js,
+bump.js, package.json, manifest.webmanifest, icons/, firebase rules, its own
+AGENTS.md with the full module map and invariants.
+```
 
 ## 4. Hard rules — breaking these breaks real users
 
-1. **The repo must stay public.** The updater makes unauthenticated
-   raw.githubusercontent.com downloads; a private repo 404s every file.
-2. **`Orca-Plugins.bat` must stay CRLF.** All lines, byte-exact.
-   `*.bat -text` in `.gitattributes` keeps git from re-normalizing it. Never
-   edit it with tools that convert line endings (Python `Path.write_text`
-   does — use binary mode). After editing, assert the CRLF count. It is the
-   only .bat in the repository; `tests/test_installer.py` fails if a second
-   top-level .bat appears.
-3. **Version bumps take edits in lockstep.** Update the plugin's PEP 723
-   `# version = "..."` header, its module-level `PLUGIN_VERSION`, the catalogue
-   entry, and the .bat fallback row. For Unlayered Infill also update
-   `TOOL_VERSION` and the standalone engine marker, then run
-   `python3 tools/sync_engine.py` so both engine copies move together. The
-   tests enforce every version surface, including exported G-code stamps.
-   **Never change the PEP 723 `name` casually.** The Plugin Development PDF
-   says Orca saves `plugin_name` inside preset/config identities. Both package
-   and capability names are permanently version-free: `Wave Overhangs` and
-   `Unlayered Infill`. Release numbers belong only in explicit version fields,
-   logs, Check setup, changelogs, tools and G-code stamps. The updater writes
-   that stable package name to its sidecar; it does not append the release
-   number to the identity. `tests/test_installer.py` enforces this — run it.
-   **Every bump also needs a changelog entry.** Add a `## <version> — <date>`
-   section at the top of `plugins/<id>/CHANGELOG.md` describing what the owner
-   will notice, add a dated entry to the root `CHANGELOG.md`, then run
-   `python3 tools/sync_changelog.py`. The generator copies the newest three
-   plugin releases into `CHANGELOG_RECENT` and refreshes the PEP 723 description.
-   `tests/test_installer.py` fails if the newest entry does not match the file.
-   **The version must never go into a capability name** — a process preset
-   stores that name as its value, so renaming it orphans the preset. See
-   `docs/ORCA-PLUGIN-FACTS.md`.
-4. **No `|`, `^`, `%`, `!` in any catalogue field** — they corrupt the .bat's
-   pipe-delimited plan or cmd.exe parsing.
-5. **Exactly two capabilities per plugin** in the catalogue — the .bat's plan
-   has two capability slots.
-6. **Never delete or rewrite `keyboard-lighting/`** — it is here for storage,
-   not review.
-7. **GPL-3.0 attribution must survive.** `unlayered-infill` and
-   `tools/nonplanar-infill-tool` derive from Roman Tenger's NonPlanarInfill
-   (GPL-3.0). Keep the copyright headers; keep the licence when distributing.
-8. **Git discipline:** all work happens on **the session branch you were
-   handed** (`arena/<id>-tests` — it is a different one every chat; session 1
-   was `arena/01a0f42b-tests`). Push only to that branch, open PRs only from
-   it, never commit straight to `main`, never force-push, never commit
-   credentials or generated junk. Don't trust a branch name hardcoded in a
-   doc — the current branch is whatever this session was given.
-9. **Orca plugin facts live in `docs/ORCA-PLUGIN-FACTS.md`** and they are
-   binding: e.g. import third-party deps at module load (never inside a
-   capability), never read `post_process_plugin` from config, G-code
-   transforms must be idempotent because the export step can run twice.
-10. **The shared engine exists twice, verbatim.** `nonplanar_core` lives as
-    plain source between the `BEGIN/END nonplanar_core` markers in
-    `plugins/unlayered-infill/unlayered_infill_post.py` (**edit this one**) and
-    as an escaped string literal in `unlayered_infill_orca.py`. After editing,
-    run `python3 tools/sync_engine.py` to push it across;
-    `tests/test_post_script.py` fails if they drift. Two front ends, one
-    engine; that is the whole point of decision C1.
-11. **Logging must never be able to break a print.** Every `_log()` call is
-    wrapped so that a full disk, a read-only folder or a missing Downloads
-    directory can only lose the log line, never fail the export. The log goes
-    to `<Downloads>/orca-plugins.log` because the owner has to be able to find
-    it; all plugins share the one file. Keep the step trace bounded (log each
-    pipeline step once) or it will fill their Downloads folder.
-12. **Never make the .bat overwrite itself while it runs.** `cmd.exe` streams
-    a batch file from disk by byte offset as it executes, so a self-overwrite
-    can jump into garbage mid-run, and a bad download would leave the owner
-    with no working updater. `:self_update` downloads the new copy to `%TEMP%`,
-    verifies it, and hands over to it; the file on disk is never touched.
-    `tests/test_installer.py` enforces this.
-13. **Never touch the filesystem at plugin import time.** Module level does
-    metadata, constants and `import` statements — nothing else. No log line,
-    no state file, no `open()`, no `print()`. OrcaSlicer installs a CPython
-    audit hook *before* it imports any plugin, and a write during import has
-    no plugin identity attached: it can throw a permission prompt in the
-    owner's face mid-install, or fail the load outright. A failed load is
-    invisible except in the Plugins dialog's **Diagnostics** tab, so it looks
-    to the owner like "it won't install". Log lazily instead — a
-    `_LOADED_LOGGED` flag plus `_log_loaded_once()` as the first statement of
-    every capability's `execute()`. v0.3.0 / v0.0.5 shipped this bug;
-    `tests/test_plugin_audit.py` is the regression guard and imports each
-    plugin under a hook that denies every write.
-14. **One entry file per plugin folder.** Orca picks a plugin's entry point by
-    scanning its folder for a single `.py` (or `.whl`). A second `.py` beside
-    it makes the entry ambiguous. This is why the standalone tools stage to
-    `Downloads\OrcaPlugins\tools\` (`%TOOLDIR%`) and never beside the plugin
-    copies.
+1. **The HSE app must stay byte-stable.** It is deployed from this repo's
+   `main` via GitHub Pages. Changes under `apps/hse/` must be surgical and
+   justified; after any change, diff the app's content against the previous
+   release and enumerate every differing file in the PR. "Nothing damaged" is
+   a promise, not a vibe.
+2. **Never edit `index.html` by hand — in any app.** `src/` is the source of
+   truth; `index.html` is generated by `build.js` and must remain a
+   **byte-exact** rebuild of `src/`. Edit `src/`, run `npm run build`, commit
+   both together. `npm run check` (inside the app folder) fails on drift — it
+   is the safety net; run it before every push.
+3. **Versions move in lockstep, only via `bump.js`.** `VERSION` in
+   `src/js/01-constants.js`, `package.json`, and the rebuilt `index.html`
+   must always agree. Never hand-edit the number. Patch for fixes, minor for
+   features, major for breaking changes; on feature branches you normally do
+   NOT bump — bump when the change ships.
+4. **Module order is execution order.** The 31 JS modules share one script
+   scope in `src/manifest.json` order. Known traps that look like bugs but
+   must not be "fixed": `renamePlayer` is defined twice on purpose; module
+   `20-analytics-charts.js` contains a literal `</style>` inside a template
+   literal; no module may contain a literal `</script>`. Details in each
+   app's AGENTS.md.
+5. **HSE data protection is non-negotiable.**
+   * The HSE Firebase config lives in `apps/hse/` and nowhere else. Never
+     copy it into the template, a fork, a test, a scratch file, or a PR
+     description.
+   * Forks are created from `apps/template/` — never from `apps/hse/`.
+   * The template and forks ship `firebaseConfig = null` (offline mode). A
+     fork connecting its OWN project appends the `// fork-configured` marker
+     to that line in `src/js/01-constants.js` — that marker is the only
+     sanctioned way to opt out of the null-config check.
+   * `guard.js` (part of `npm run check` in template and forks) fails the
+     build if any HSE identifier (names, repo URLs, API key, the legacy admin
+     password) appears. If it fires, **remove the leak — never weaken the
+     guard.** Internal CSS paint-slot names like `--hse-blue` are the
+     documented exception: they are shared identifiers so modules can be
+     ported between apps by file copy.
+6. **Pre-boot colors are computed, never eyeballed.** `css/core.css`
+   `:root` / `html.dark-mode` must carry the exact output of
+   `_paintColors(primary, secondary)` for the app's default palette (the
+   helpers live in `21-sidebar-ui.js`). When a default palette changes,
+   recompute with the real helpers. Two standing traps: never declare a
+   `_paintColors`-owned property inside a bare `.dark-mode` rule (body carries
+   that class too — it would flatten custom palettes); canvas code cannot
+   read CSS variables, use `accentRgba()`.
+7. **The root redirect must survive restructures.** GitHub Pages serves the
+   repo root of `main`; the original URL `…/HSEQB/` must keep working because
+   installed PWAs and old links resolve there. If apps move again, keep a
+   redirect at the root and update `DOWNLOAD_URL` in the HSE constants
+   (local-file users' update fallback depends on it), then ship a version
+   bump so they get prompted to update.
+8. **Multiple apps on one origin share `localStorage`** (e.g. the monorepo's
+   Pages host). That is known and benign — session data never mixes (HSE →
+   its Firebase; forks → their own project or the `qb_local_db` key), and
+   fallbacks handle foreign stored values (a stored HSE theme id in a fork
+   falls back to that fork's default). Do not "fix" this by renaming keys;
+   the HSE app's existing users depend on the current keys.
+9. **Git discipline:** all work happens on **the session branch you were
+   handed** (`arena/<id>-hseqb`; it is different every chat). Push only to
+   that branch, open PRs only from it, never commit straight to `main`, never
+   force-push, never commit credentials or generated junk. Don't trust a
+   branch name hardcoded in a doc — the current branch is whatever this
+   session was given. Note: the platform snapshot can reset local git state
+   between sessions while keeping files — if history looks wrong,
+   `git fetch` and compare against the remote branch before assuming
+   anything was lost.
+10. **`local-settings.js` is intentionally untracked** (optional per-user
+    visual overrides, loaded with `onerror="void 0"`). It is gitignored on
+    purpose; do not commit one.
 
 ## 5. How to verify your work
 
+From the app folder you touched (`apps/hse`, `apps/template`, `apps/famu`):
+
 ```bash
-python3 tests/test_installer.py        # catalogue / .bat / files agree
-python3 tests/test_post_script.py      # the engine really rewrites G-code
-python3 tests/test_plugin_runtime.py   # the plugin loads, runs, and logs
-python3 tests/test_plugin_audit.py     # it imports under Orca's audit hook
-python3 tests/test_unlayered_waves.py  # Unlayered Infill wave shaping
-python3 tests/test_wave_gcode.py       # captured export; needs numpy + shapely
-                                      # -- it SKIPS without them. A skip is not
-                                      # a pass; install them before claiming it.
-python3 tools/sync_engine.py --check   # the two engine copies are identical
-python3 tools/sync_changelog.py --check  # changelogs match the plugins
-python3 tools/dump_default_config.py --check  # docs/config-reference is current
-python3 tools/check_all.py            # ALL of the above, both dependency states
-git ls-files --eol Orca-Plugins.bat   # must say i/crlf; it is the only .bat
+npm run check        # version agreement + byte-exact rebuild (+ branding
+                     #   guard in template/famu) — run before every push
+npm run build        # regenerate index.html on its own
+
+# every module parses standalone:
+for f in src/js/*.js; do
+  node -e "new Function(require('fs').readFileSync(process.argv[1],'utf8'))" "$f" \
+    || echo "PARSE FAIL: $f"; done
+
+# the concatenated main script parses as the browser will run it:
+node -e "const m=require('./src/manifest.json');const f=require('fs');" \
+     -e "new Function(m.blocks['@@@JS_MAIN@@@'].map(x=>f.readFileSync(x,'utf8')).join(''))"
 ```
 
-The .bat itself is Windows-only and cannot be executed in this sandbox. When
-you change it: keep it one logical change at a time, re-read the whole file
-afterwards, and simulate the pieces you can (the repo test already simulates
-the `for /f` tokenization the .bat performs — extend it rather than trusting
-your eyes).
+From the repo root, `npm run check:all` runs every app's check in sequence.
 
-Anything touching real slicing behaviour is verified against a fake harness at
-best. Say so in the PR. The first real slice on real OrcaSlicer is the real
-test; `data_dir()/log/python_*.log` holds the traceback if it fails.
+There is no automated browser test. A change to boot/auth/sync behavior is
+**not verified** until someone opens the built `index.html` in a real browser:
+guest mode, sign-in, rapid-tap scoring, the tablet breakpoints (768 px
+portrait drawer, 1024 px+ desktop), light/dark mode. Say clearly in the PR
+which of those were and were not done. The offline mode of template/famu has
+a shim you can unit-test in Node (see that app's AGENTS.md) — reuse the
+existing test approach rather than writing a new harness.
 
-## 5a. The release playbook — do a version bump THIS way
+## 5a. The release playbook — shipping a version THIS way
 
-Shipping a change touches ten files that must agree, and discovering the
-disagreement one failing test at a time is what makes a small change take an
-hour. Do it in this order, in as few tool calls as possible.
+Shipping touches files that must agree; do it in this order:
 
-**Before writing code**
-1. If anything about the request is ambiguous -- how aggressive a default
-   should be, which plugin first, whether a behaviour change is wanted --
-   **ask**. One round of 2-4 questions costs a minute. Guessing wrong costs a
-   rewrite, and the owner has said plainly that they want to be asked.
-2. Decide the version numbers now, not at the end.
-
-**Environment, once per session**
-```bash
-pip install --break-system-packages -q shapely numpy   # test_wave_gcode needs these
-mkdir -p /tmp/nodeps && printf 'raise ImportError("blocked")\n' > /tmp/nodeps/numpy.py \
-  && cp /tmp/nodeps/numpy.py /tmp/nodeps/shapely.py    # for the deps-absent path
-```
-The sandbox can be reset between turns and lose both. If a geometry test
-suddenly reports `'NoneType' object has no attribute 'geometry'`, shapely is
-gone -- reinstall, do not debug the plugin.
-
-**The bump itself**: one script, not ten edits. `tools/bump_version.py NAME
-VERSION` does every file below and refuses to half-finish:
-
-| file | what must change |
-| --- | --- |
-| `plugins/<p>/<p>_orca.py` | PEP 723 `# version`, `PLUGIN_VERSION` |
-| `plugins/<p>/<p>_post.py` | `TOOL_VERSION`, `MARKER_VERSION` (Unlayered only) |
-| `plugins.json` | the catalogue entry |
-| `Orca-Plugins.bat` | the `^|`-joined fallback line |
-| `plugins/<p>/CHANGELOG.md` | a new entry, bullets FIRST |
-| `CHANGELOG.md` | one dated entry covering the release |
-
-**Then, in one command:**
-```bash
-python3 tools/sync_engine.py && python3 tools/sync_changelog.py \
-  && python3 tools/dump_default_config.py && python3 tools/check_all.py
-```
-`tools/check_all.py` runs every test in both dependency states and prints one
-line per check. Use it instead of running six test files by hand.
-
-**Traps that have cost real time here, all now avoidable**
-* **Never write `Orca-Plugins.bat` with Python text mode.** `write_text`
-  converts CRLF to LF and the installer test fails with five errors at once.
-  Use `read_bytes`/`write_bytes`, or `sed -i` on a line number.
-* **`tools/sync_changelog.py` rewrites the PEP 723 `description`** from the
-  FIRST bullet of the new changelog entry. Write that bullet as a one-line
-  summary and the description comes out right with no hand-editing.
-* **Changelog entries must lead with `*` bullets**, prose after. The
-  generator reads the bullets.
-* **Test files are standalone scripts.** `python3 tests/test_x.py`. Never
-  pytest -- it dies with INTERNALERROR because they `sys.exit` at module
-  scope.
-* **A pinned geometry count in `test_wave_gcode.py` is measuring geometry,
-  not defaults.** If you change a default, run the fixture against the
-  explicit `LEGACY` config and give the new behaviour its own assertions;
-  do not just edit the pinned number.
-* **One edit, one verification.** Batch independent edits into a single
-  patch script and verify once, rather than edit-test-edit-test.
+1. **Before writing code:** if anything about the request is ambiguous —
+   branding, default behavior, whether a change should ship to all apps or
+   one — **ask** (§2.2). One round of 2–4 questions costs a minute; a wrong
+   guess costs a rewrite.
+2. **Decide the version number now, not at the end** (patch/minor/major), and
+   decide whether it applies to one app or several. Forks and the template
+   version independently of HSE — parity is documented in MEMORY.md, not
+   encoded in matching numbers.
+3. **Make the change in `src/`, never the built file.** Rebuild with
+   `npm run build` and commit `src/` + `index.html` together.
+4. **Gate:** `npm run check` (and `check:all` at the root if several apps
+   changed). A red guard means a leak — remove it, do not bypass it.
+5. **Bump when ready to ship:** `npm run bump` (add `-- minor` / `-- major`
+   when appropriate) from the app folder — it rewrites `VERSION`,
+   `package.json`, and the rebuilt `index.html` in one step — then `npm run
+   check` again.
+6. **After merge (HSE app):** an admin publishes the build through the
+   in-app Updates panel ("Publish"). That uploads the new `index.html` to
+   Firebase (`releaseHtml`) and updates `appVersion`, which drives the update
+   banner for local-file users. Publishing also records the current
+   `DOWNLOAD_URL` — which is why rule 7 (keep it pointing at the real file
+   path) matters.
 
 ## 6. Glossary (extend as needed)
 
-* **catalogue** — `plugins.json`: the list of plugins the updater can install.
-* **updater** — `Orca-Plugins.bat`. Double-clickable Windows script; menu,
-  build picker, folder picker and install engine in one file since 2.0.0,
-  and the only .bat in the repository since 2.1.0 (the old chooser/updater
-  filenames were removed then; copies already on disk keep working).
-* **PEP 723 header** — the `# /// script` comment block at the top of a
-  plugin file; carries the plugin's name/version/dependencies.
-* **sidecar** — Orca's `.install_state.json` next to a plugin; says it is
-  installed, enabled, and which capabilities are on. The updater writes it so
-  plugins appear already enabled.
-* **pipeline plugin** — an OrcaSlicer plugin that hooks into slicing steps
-  (e.g. `posSlice`, `psGCodePostProcess`). Needs Orca newer than 2.4.2 or a
-  nightly.
-* **post-processing script** — a plain script run on the finished G-code,
-  either by hand or via Orca's *Post-processing scripts* setting. Works on any
-  Orca version; this is what `tools/nonplanar-infill-tool` is.
-* **CRLF** — Windows line endings (`\r\n`). The .bat needs them.
-* **raw.githubusercontent.com** — GitHub's "give me this file as-is" URL
-  service; how the updater downloads.
-* **GPL-3.0** — a copyleft licence; derived code must keep attribution and the
-  same licence.
+* **byte-exact build** — `build.js` glues the `src/` modules into one
+  `index.html`; rebuilding must reproduce the committed file byte for byte.
+  `npm run check` enforces it.
+* **marker** — a `@@@NAME@@@` token in `src/index.template.html` that the
+  build replaces with the concatenated source files listed in
+  `src/manifest.json`.
+* **`src/manifest.json` vs `manifest.webmanifest`** — the first is the BUILD
+  manifest (which sources glue where); the second is the PWA manifest (app
+  name, icon, install behavior). Completely different things.
+* **paint slots** — the `--hse-blue` / `--hse-red` / `--hse-white` CSS custom
+  properties. Legacy names shared by all apps so modules port cleanly;
+  `_paintColors()` writes them. Invisible to users.
+* **offline mode** — how template/forks run while `firebaseConfig` is `null`:
+  no sign-in gate, everything works, data persists to `localStorage` under
+  `qb_local_db` via the local database shim. Nothing leaves the browser.
+* **local database shim** — `createLocalDatabase()` in `04-firebase-init.js`
+  (template/forks): a miniature Realtime Database implementing the exact
+  Firebase API surface the app uses, backed by `localStorage`.
+* **guard** — `guard.js` in template/forks: the branding firewall wired into
+  `npm run check`. Fails on any HSE identifier and on an unmarked
+  `firebaseConfig`.
+* **fork-configured** — the `// fork-configured` marker comment appended to
+  the `firebaseConfig` line when a fork connects its own Firebase project;
+  it opts out of the null-config check while the identifier scans continue.
+* **RTDB rules** — `firebase.database.rules.json` per app: server-side
+  security rules for the Realtime Database (who may read/write what).
+  Deployed via the Firebase console/CLI, not GitHub Pages.
+* **`releaseHtml` / `appVersion`** — Firebase nodes where admins publish the
+  built file and version metadata; local-file users download updates from
+  there, falling back to `DOWNLOAD_URL` on GitHub raw.
+* **THeard** — "toss-ups heard", the denominator of the app's normalized
+  player metrics; increments on the first outcome of a toss-up.
+* **Pages redirect** — the root `index.html` forwarding `…/HSEQB/` to
+  `apps/hse/` so pre-restructure URLs, bookmarks, and installed PWAs keep
+  working.
+* **session branch** — the `arena/<id>-hseqb` branch each AI chat works on.
+  Push only to it; PRs target `main`.

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Branding firewall for the FAMU HASC fork.
+ * Branding firewall for the FAMU HCASC fork.
  *
  * This app was forked from the QB Tracker template so FAMU's Honda All
  * Star Challenge team gets the full quiz bowl tracker WITHOUT any HSE
@@ -83,4 +83,4 @@ if (!/fork-configured/.test(cfgLine[0]) && !/\bnull\b/.test(cfgLine[0].split('//
 }
 
 if (violations) fail(`${violations} HSE identifier(s) leaked into the template — remove them and rebuild`);
-console.log('\u2714 branding guard passed: no HSE identifiers in the FAMU HASC build');
+console.log('\u2714 branding guard passed: no HSE identifiers in the FAMU HCASC build');

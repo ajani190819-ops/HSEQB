@@ -1,8 +1,8 @@
 {
-  "name": "FAMU HASC",
-  "short_name": "FAMU HASC",
-  "description": "FAMU Honda All Star Challenge — live quiz bowl score, answer, and analytics tracker.",
-  "id": "famu-hasc",
+  "name": "FAMU HCASC",
+  "short_name": "FAMU HCASC",
+  "description": "FAMU Honda Campus All-Star Challenge — live quiz bowl score, answer, and analytics tracker.",
+  "id": "famu-hcasc",
   "start_url": ".",
   "scope": ".",
   "display": "standalone",

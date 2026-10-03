@@ -31,7 +31,7 @@
             "file": "${workspaceFolder}/apps/template/index.html"
         },
         {
-            "name": "Launch Chrome (FAMU HASC app)",
+            "name": "Launch Chrome (FAMU HCASC app)",
             "request": "launch",
             "type": "chrome",
             "url": "http://localhost:8080/apps/famu/",
@@ -40,7 +40,7 @@
         {
             "type": "chrome",
             "request": "launch",
-            "name": "Open FAMU HASC index.html",
+            "name": "Open FAMU HCASC index.html",
             "file": "${workspaceFolder}/apps/famu/index.html"
         }
     ]

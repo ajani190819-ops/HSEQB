@@ -1,11 +1,11 @@
-# FAMU HASC — Quiz Bowl Tracker
+# FAMU HCASC — Quiz Bowl Tracker
 
-The Florida A&M University **Honda All Star Challenge** tracker: live
+The Florida A&M University **Honda Campus All-Star Challenge** tracker: live
 scoring, player/team management, sessions, and cross-session analytics.
 Forked from the [`apps/template/`](../template/) QB Tracker base — every
 feature, FAMU branding, and **zero connection to the HSE app or its data**.
 
-- **App name:** FAMU HASC
+- **App name:** FAMU HCASC
 - **Colors:** FAMU orange & green — the default **FAMU** theme uses official
   green `#008344` (structural color) and orange `#F4811F` (accent/highlights);
   7 standard themes remain available
@@ -23,7 +23,7 @@ nothing leaves the device.
 Follow [the template README's Firebase guide](../template/README.md) —
 the short version:
 
-1. Create a Firebase project for FAMU HASC (free tier is plenty).
+1. Create a Firebase project for FAMU HCASC (free tier is plenty).
 2. Enable **Authentication** (Email/Password + Anonymous) and create a
    **Realtime Database** with the rules from `firebase.database.rules.json`.
 3. In `src/js/01-constants.js`, replace `const firebaseConfig = null;` with

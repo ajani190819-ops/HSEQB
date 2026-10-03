@@ -1,8 +1,8 @@
-# FAMU HASC
+# FAMU HCASC
 
 Single-file web app for running live quiz-bowl sessions: real-time scoring,
 player/team management, session library, and cross-session analytics. This is
-the **FAMU Honda All Star Challenge** fork — built from the QB Tracker
+the **FAMU Honda Campus All-Star Challenge** fork — built from the QB Tracker
 template (feature-identical to the HSE app, no HSE branding, **no Firebase
 credentials yet**). The committed **`index.html` is the deployable artifact**
 (any static host).

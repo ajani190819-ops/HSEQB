@@ -4,12 +4,12 @@ const VERSION = '1.0.0'; // auto-managed by bump.js
    (Brand strings that live in src/index.template.html and
    manifest.webmanifest are listed in README.md → "Branding checklist".)
    ═══════════════════════════════════════════════════════════════════════════ */
-// App identity — FAMU HASC (Honda All Star Challenge) tracker.
+// App identity — FAMU HCASC (Honda Campus All-Star Challenge) tracker.
 // Shows up in release titles, admin prefill, and fallback text.
-const APP_NAME = 'FAMU HASC';
+const APP_NAME = 'FAMU HCASC';
 // Base name for downloaded files (…-all-sessions-<date>.json / .csv / .xlsx
 // and the standalone <name>.html build download).
-const APP_FILE_BASENAME = 'famu-hasc';
+const APP_FILE_BASENAME = 'famu-hcasc';
 // Password for the admin danger-zone "reset all data" action.
 // '' disables the action entirely (recommended until you set your own).
 const ADMIN_RESET_PASSWORD = '';
