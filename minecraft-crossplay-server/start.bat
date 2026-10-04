@@ -5,7 +5,7 @@ title FLOOR 5 WORLDWIDE - Minecraft Cross-Play Server
 cd /d "%~dp0"
 
 echo ======================================================================
-echo  Starting [FLOOR 5 WORLDWIDE] Minecraft Crossplay Server (8GB RAM)...
+echo  Starting [FLOOR 5 WORLDWIDE] Minecraft Crossplay Server (12GB RAM)...
 echo  Java Port: 25565 -- Bedrock Port: 19132
 echo ======================================================================
 echo.
@@ -18,8 +18,8 @@ if not exist "server.jar" (
     exit /b 1
 )
 
-:: Optimized G1GC JVM flags for 50 players & 16 chunk view distance
-java -Xms8G -Xmx8G ^
+:: Optimized Aikar's G1GC JVM flags for 12GB Dedicated RAM Hosting
+java -Xms10G -Xmx12G ^
   -XX:+UseG1GC ^
   -XX:+ParallelRefProcEnabled ^
   -XX:MaxGCPauseMillis=200 ^
