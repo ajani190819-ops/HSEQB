@@ -1,23 +1,47 @@
 {
     // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
+    // Hover to view descriptions.
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch Chrome",
+            "name": "Launch Chrome (HSE app)",
             "request": "launch",
             "type": "chrome",
-            "url": "http://localhost:8080",
+            "url": "http://localhost:8080/apps/hse/",
             "webRoot": "${workspaceFolder}"
         },
-
-        
+        {
+            "name": "Launch Chrome (template app)",
+            "request": "launch",
+            "type": "chrome",
+            "url": "http://localhost:8080/apps/template/",
+            "webRoot": "${workspaceFolder}"
+        },
         {
             "type": "chrome",
             "request": "launch",
-            "name": "Open index.html",
-            "file": "C:\\Users\\kamau\\OneDrive\\Documents\\GitHub\\HSEQB\\index.html"
+            "name": "Open HSE index.html",
+            "file": "${workspaceFolder}/apps/hse/index.html"
+        },
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Open template index.html",
+            "file": "${workspaceFolder}/apps/template/index.html"
+        },
+        {
+            "name": "Launch Chrome (FAMU HCASC app)",
+            "request": "launch",
+            "type": "chrome",
+            "url": "http://localhost:8080/apps/famu/",
+            "webRoot": "${workspaceFolder}"
+        },
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Open FAMU HCASC index.html",
+            "file": "${workspaceFolder}/apps/famu/index.html"
         }
     ]
 }

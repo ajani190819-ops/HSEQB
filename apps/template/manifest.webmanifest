@@ -1,0 +1,15 @@
+{
+  "name": "QB Tracker",
+  "short_name": "QB Tracker",
+  "description": "Live quiz bowl score, answer, and analytics tracker.",
+  "id": "qb-tracker",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f4f6fb",
+  "theme_color": "#667eea",
+  "icons": [
+    { "src": "icons/icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
