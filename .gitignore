@@ -1,2 +1,4 @@
 node_modules/
 .DS_Store
+# Optional local-only visual-settings override (loaded with onerror="void 0")
+local-settings.js

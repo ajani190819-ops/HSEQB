@@ -1,0 +1,12 @@
+{
+  "name": "qb-tracker-template",
+  "version": "1.0.0",
+  "private": true,
+  "description": "QB Tracker template - white-label single-file quiz bowl app built from src/ modules. Fork me for your school or organization.",
+  "scripts": {
+    "build": "node build.js",
+    "check": "node bump.js --check && node guard.js",
+    "guard": "node guard.js",
+    "bump": "node bump.js"
+  }
+}

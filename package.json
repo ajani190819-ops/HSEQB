@@ -1,11 +1,17 @@
 {
-  "name": "hseqb",
-  "version": "3.12.0",
+  "name": "hseqb-monorepo",
   "private": true,
-  "description": "HSE Quiz Bowl Tracker - single-file app built from src/ modules.",
+  "description": "Root convenience scripts for the HSEQB multi-app monorepo. Each app in apps/ is self-contained — run its own npm scripts from its folder.",
   "scripts": {
-    "build": "node build.js",
-    "check": "node bump.js --check",
-    "bump": "node bump.js"
+    "build:hse": "cd apps/hse && npm run build",
+    "build:template": "cd apps/template && npm run build",
+    "build:famu": "cd apps/famu && npm run build",
+    "check:hse": "cd apps/hse && npm run check",
+    "check:template": "cd apps/template && npm run check",
+    "check:famu": "cd apps/famu && npm run check",
+    "check:all": "npm run check:hse && npm run check:template && npm run check:famu",
+    "bump:hse": "cd apps/hse && npm run bump",
+    "bump:template": "cd apps/template && npm run bump",
+    "bump:famu": "cd apps/famu && npm run bump"
   }
 }

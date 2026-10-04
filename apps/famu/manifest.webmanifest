@@ -1,0 +1,15 @@
+{
+  "name": "FAMU HCASC",
+  "short_name": "FAMU HCASC",
+  "description": "FAMU Honda Campus All-Star Challenge — live quiz bowl score, answer, and analytics tracker.",
+  "id": "famu-hcasc",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f4f6fb",
+  "theme_color": "#008344",
+  "icons": [
+    { "src": "icons/icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
