@@ -1,0 +1,23 @@
+# Minecraft World & Runtime Data
+world/
+world_nether/
+world_the_end/
+logs/
+crash-reports/
+cache/
+libraries/
+versions/
+.paper-remapped/
+*.log.gz
+*.lck
+
+# Large downloaded binaries (downloaded via scripts)
+server.jar
+paper*.jar
+plugins/*.jar
+!plugins/README.md
+
+# Floodgate private key generated on first boot
+plugins/floodgate/key.pem
+plugins/Geyser-Spigot/key.pem
+usercache.json

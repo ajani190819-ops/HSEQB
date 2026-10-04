@@ -1,0 +1,7 @@
+# ViaVersion Configuration
+check-version: true
+checkforupdates: true
+prevent-invalid-player-movement: false
+use-new-effect-names: true
+use-new-deathmessages: true
+suppress-conversion-warnings: true

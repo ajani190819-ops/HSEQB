@@ -1,0 +1,21 @@
+# Paper Global Configuration
+_version: 30
+chunk-loading-basic:
+  player-max-chunk-load-rate: 100.0
+  player-max-concurrent-loads: 20.0
+chunk-loading-advanced:
+  auto-config-send-distance: true
+  player-max-concurrent-loads: 20.0
+misc:
+  max-joins-per-tick: 3
+  fix-entity-position-desync: true
+proxies:
+  velocity:
+    enabled: false
+    online-mode: false
+    secret: ''
+  bungee-cord:
+    online-mode: true
+timings:
+  enabled: false
+  verbose: false

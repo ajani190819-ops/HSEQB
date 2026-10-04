@@ -1,0 +1,68 @@
+# Paper World Defaults Configuration
+_version: 30
+chunks:
+  auto-save-interval: 6000
+  delay-chunk-unloads-by: 10s
+  entity-per-chunk-save-limit:
+    arrow: 16
+    ender_pearl: 8
+    experience_orb: 16
+    item: 32
+  max-auto-save-chunks-per-tick: 24
+  prevent-moving-into-unloaded-chunks: true
+
+entities:
+  armor-stands:
+    do-collision-entity-lookups: false
+    tick: false
+  behavior:
+    disable-chest-cat-detection: true
+    spawner-nerfed-mobs-should-jump: false
+  spawning:
+    all-chunks-are-slime-chunks: false
+    alt-item-despawn-rate:
+      enabled: true
+      items:
+        cobblestone: 300
+        dirt: 300
+        gravel: 300
+        netherrack: 300
+        sand: 300
+    despawn-ranges:
+      ambient:
+        hard: 72
+        soft: 32
+      axolotls:
+        hard: 72
+        soft: 32
+      creature:
+        hard: 72
+        soft: 32
+      misc:
+        hard: 72
+        soft: 32
+      monster:
+        hard: 96
+        soft: 32
+      underground_water_creature:
+        hard: 72
+        soft: 32
+      water_ambient:
+        hard: 64
+        soft: 32
+      water_creature:
+        hard: 72
+        soft: 32
+
+tick-rates:
+  behavior:
+    villager:
+      validatenearbypoi: 60
+      acquirepoi: 120
+  sensor:
+    villager:
+      secondarypoisensor: 80
+      nearestbedsensor: 80
+      villagerbabiessensor: 40
+      playersensor: 40
+      nearestlivingentitysensor: 40

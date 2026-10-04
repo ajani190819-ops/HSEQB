@@ -1,0 +1,23 @@
+# ---------------------------------------------------------------------------------
+# Floodgate Configuration File
+# Handles hybrid authentication between Bedrock and Java accounts
+# ---------------------------------------------------------------------------------
+
+# Prefix added to Bedrock player gamertags to avoid collision with Java accounts.
+# For example, if a Bedrock player is "Steve", on the Java server they appear as ".Steve"
+username-prefix: "."
+
+# Replace spaces in Xbox gamertags with underscores
+replace-spaces: true
+
+# Key settings
+key: key.pem
+
+# Disconnect messages
+messages:
+  invalid-key: "Failed to verify your Bedrock login session."
+  invalid-arguments: "Invalid Bedrock login arguments."
+  not-whitelisted: "You are not whitelisted on this server!"
+
+# Whether to send proxy skin data to players
+send-floodgate-data: true
