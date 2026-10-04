@@ -5,16 +5,16 @@ questions honest — they are decisions the owner has NOT made yet.
 
 ## In flight
 
-* **PR #18 — the monorepo restructure.** HSE → `apps/hse/` (v3.12.1) with a
-  root redirect, plus `apps/template/` and `apps/famu/` (FAMU HCASC).
-  Awaiting owner review/merge. On merge, GitHub Pages redeploys: root starts
-  redirecting to `apps/hse/`, and `/apps/template/` + `/apps/famu/` become
-  publicly reachable (they double as live offline demos).
+* Nothing right now. PR #18 (the monorepo restructure) was **merged
+  2026-10-04** (`7c45a79`) and the Pages deploy was verified live: root
+  redirects to `apps/hse/`, FAMU HCASC serves at `/apps/famu/`, the
+  template at `/apps/template/` (live offline demos).
 
 ## Planned next
 
-1. **Publish HSE v3.12.1** via the in-app Updates panel right after the
-   merge, so local-file users pick up the new `DOWNLOAD_URL` fallback.
+1. **Publish HSE v3.12.1** via the in-app Updates panel (owner action:
+   open the live HSE app → ↻ Updates → Publish) so local-file users pick
+   up the new `DOWNLOAD_URL` fallback.
 2. **FAMU Firebase connection** (owner-triggered, when cross-device sync is
    wanted): create a free Firebase project, enable Email/Password +
    Anonymous auth, create the Realtime Database with the rules from
