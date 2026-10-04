@@ -13,9 +13,8 @@ echo.
 echo [*] Checking Java installation...
 java -version >nul 2>&1
 if %ERRORLEVEL% NEQ 0 (
-    echo [!] WARNING: Java 21 was not found in your system PATH!
-    echo     Minecraft 1.20.5+ requires Java 21 JDK.
-    echo     Download it from: https://adoptium.net/temurin/releases/?version=21
+    echo [!] WARNING: Java 21+ was not found in your system PATH!
+    echo     Please install Java JDK from: https://adoptium.net/temurin/releases/?version=21
     echo.
 ) else (
     echo [+] Java is installed.
@@ -28,44 +27,17 @@ if not exist "plugins\floodgate" mkdir "plugins\floodgate"
 if not exist "plugins\ViaVersion" mkdir "plugins\ViaVersion"
 if not exist "config" mkdir "config"
 
-:: 3. Download Server Core, Geyser, Floodgate, ViaVersion using embedded PowerShell
+:: 3. Download Server Core (Stable 1.21.4), Geyser, Floodgate, ViaVersion
 echo.
-echo [*] Downloading server engine and crossplay plugins...
-echo     (This may take a minute depending on your internet connection)
+echo [*] Downloading Minecraft 1.21.4 Stable Server Engine and Crossplay Plugins...
 echo.
 
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
   "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; " ^
   "$ua = @{ 'User-Agent' = 'Minecraft-Crossplay-Setup/1.0 (server@laptop)' }; " ^
-  "$serverDownloaded = $false; " ^
-  "Write-Host '[1/4] Fetching latest Minecraft server engine...' -ForegroundColor Cyan; " ^
-  "try { " ^
-  "  $purpurMeta = Invoke-RestMethod -Uri 'https://api.purpurmc.org/v2/purpur' -Headers $ua -UseBasicParsing; " ^
-  "  $latestVer = $purpurMeta.versions[-1]; " ^
-  "  $downloadUrl = ('https://api.purpurmc.org/v2/purpur/{0}/latest/download' -f $latestVer); " ^
-  "  Write-Host ('    Downloading server core ({0})...' -f $latestVer) -ForegroundColor Gray; " ^
-  "  Invoke-WebRequest -Uri $downloadUrl -OutFile 'server.jar' -Headers $ua -UseBasicParsing; " ^
-  "  $serverDownloaded = $true; " ^
-  "} catch { " ^
-  "  Write-Host '    Purpur lookup failed, trying Paper Fill v3...' -ForegroundColor Yellow; " ^
-  "}; " ^
-  "if (-not $serverDownloaded) { " ^
-  "  try { " ^
-  "    $paperMeta = Invoke-RestMethod -Uri 'https://fill.papermc.io/v3/projects/paper' -Headers $ua -UseBasicParsing; " ^
-  "    $latestVer = if ($paperMeta.versions -is [System.Collections.IDictionary]) { ($paperMeta.versions.Values | Select-Object -First 1)[0] } else { $paperMeta.versions[-1] }; " ^
-  "    if (-not $latestVer) { $latestVer = '1.21.4' }; " ^
-  "    $builds = Invoke-RestMethod -Uri ('https://fill.papermc.io/v3/projects/paper/versions/{0}/builds' -f $latestVer) -Headers $ua -UseBasicParsing; " ^
-  "    $latestBuild = $builds[-1]; " ^
-  "    $url = $latestBuild.downloads.'server:default'.url; " ^
-  "    if (-not $url) { $url = $latestBuild.downloads.server.url }; " ^
-  "    Invoke-WebRequest -Uri $url -OutFile 'server.jar' -Headers $ua -UseBasicParsing; " ^
-  "    $serverDownloaded = $true; " ^
-  "  } catch { " ^
-  "    Write-Host '    Downloading fallback 1.21.4 server core...' -ForegroundColor Yellow; " ^
-  "    Invoke-WebRequest -Uri 'https://api.purpurmc.org/v2/purpur/1.21.4/latest/download' -OutFile 'server.jar' -Headers $ua -UseBasicParsing; " ^
-  "  }; " ^
-  "}; " ^
-  "Write-Host '[+] Server core (server.jar) downloaded successfully!' -ForegroundColor Green; " ^
+  "Write-Host '[1/4] Downloading stable Minecraft 1.21.4 server engine (server.jar)...' -ForegroundColor Cyan; " ^
+  "Invoke-WebRequest -Uri 'https://api.purpurmc.org/v2/purpur/1.21.4/latest/download' -OutFile 'server.jar' -Headers $ua -UseBasicParsing; " ^
+  "Write-Host '[+] Stable 1.21.4 server core downloaded!' -ForegroundColor Green; " ^
   "Write-Host '[2/4] Downloading Geyser-Spigot (Bedrock protocol support)...' -ForegroundColor Cyan; " ^
   "Invoke-WebRequest -Uri 'https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/spigot' -OutFile 'plugins/Geyser-Spigot.jar' -Headers $ua -UseBasicParsing; " ^
   "Write-Host '[+] Geyser-Spigot downloaded successfully!' -ForegroundColor Green; " ^
@@ -93,13 +65,10 @@ if not exist "eula.txt" (
 if not exist "start.bat" (
 (
 echo @echo off
-echo setlocal enabledelayedexpansion
-echo title Minecraft Bedrock + Java Cross-Play Server
 echo cd /d "%%~dp0"
-echo echo Starting Minecraft Server...
-echo echo Java Port: 25565 -- Bedrock Port: 19132
+echo title Minecraft Bedrock + Java Server
+echo echo Starting Minecraft Crossplay Server...
 echo java -Xms2G -Xmx4G -XX:+UseG1GC -jar server.jar --nogui
-echo if %%ERRORLEVEL%% NEQ 0 echo [!] Server stopped with error code %%ERRORLEVEL%%.
 echo pause
 ) > "start.bat"
     echo [+] Created start.bat
@@ -120,35 +89,6 @@ echo enforce-secure-profile=false
 echo motd=\u00a7aCrossplay Server \u00a77\u00bb \u00a7bJava \u00a77+ \u00a7eBedrock
 ) > "server.properties"
     echo [+] Created server.properties
-)
-
-:: 7. Auto-generate Geyser config if missing
-if not exist "plugins\Geyser-Spigot\config.yml" (
-(
-echo bedrock:
-echo   address: 0.0.0.0
-echo   port: 19132
-echo   motd1: "Crossplay Server"
-echo   motd2: "Java + Bedrock Supported!"
-echo remote:
-echo   address: 127.0.0.1
-echo   port: 25565
-echo   auth-type: floodgate
-echo show-cooldown: title
-echo show-coordinates: true
-echo passthrough-motd: true
-) > "plugins\Geyser-Spigot\config.yml"
-    echo [+] Created plugins\Geyser-Spigot\config.yml
-)
-
-:: 8. Auto-generate Floodgate config if missing
-if not exist "plugins\floodgate\config.yml" (
-(
-echo username-prefix: "."
-echo replace-spaces: true
-echo key: key.pem
-) > "plugins\floodgate\config.yml"
-    echo [+] Created plugins\floodgate\config.yml
 )
 
 echo.
