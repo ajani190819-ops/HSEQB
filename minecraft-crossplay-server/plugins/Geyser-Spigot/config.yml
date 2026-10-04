@@ -1,5 +1,5 @@
 # ---------------------------------------------------------------------------------
-# Geyser Configuration File (Geyser-Spigot) - "45 Worldwide"
+# Geyser Configuration File (Geyser-Spigot) - "Floor 5 Worldwide"
 # ---------------------------------------------------------------------------------
 
 bedrock:
@@ -7,9 +7,9 @@ bedrock:
   port: 19132
   clone-remote-port: false
   # MOTD lines shown in the Bedrock server list
-  motd1: "§6§l✦ §e§l45 WORLDWIDE §6§l✦"
+  motd1: "§6§l✦ §e§lFLOOR 5 WORLDWIDE §6§l✦"
   motd2: "§b§l➤ §fCrossplay §7│ §bJava §7+ §eBedrock"
-  server-name: "45 Worldwide"
+  server-name: "Floor 5 Worldwide"
   compression-level: 6
   broadcast-sub-domain: true
 
