@@ -1,38 +1,23 @@
 # ---------------------------------------------------------------------------------
-# Geyser Configuration File (Geyser-Spigot)
-# Geyser is a bridge/proxy allowing Bedrock clients to join Java edition servers.
+# Geyser Configuration File (Geyser-Spigot) - "45 Worldwide"
 # ---------------------------------------------------------------------------------
 
 bedrock:
-  # The IP address Bedrock clients connect to (0.0.0.0 listens on all interfaces)
   address: 0.0.0.0
-  # The default Bedrock UDP port
   port: 19132
-  # Set to true if you want Geyser to use the port defined in remote.port
   clone-remote-port: false
   # MOTD lines shown in the Bedrock server list
-  motd1: "§aCrossplay Minecraft Server"
-  motd2: "§bJava + Bedrock Supported!"
-  # Server name displayed in the pause menu
-  server-name: "Geyser Crossplay"
-  # Compression level (0 to 9, 6 is balanced for laptops)
+  motd1: "§6§l✦ §e§l45 WORLDWIDE §6§l✦"
+  motd2: "§b§l➤ §fCrossplay §7│ §bJava §7+ §eBedrock"
+  server-name: "45 Worldwide"
   compression-level: 6
-  # Broadcast local LAN presence so Bedrock players on Wi-Fi see it in Friends tab
   broadcast-sub-domain: true
 
 remote:
-  # The address of your local Paper Java server
   address: 127.0.0.1
-  # The port of your local Paper Java server
   port: 25565
-  # Authentication type:
-  # 'floodgate' = Bedrock players join using their Xbox gamertag without needing a Java account
-  # 'online' = Bedrock players must log into a valid paid Java account
-  # 'offline' = No authentication (not recommended)
   auth-type: floodgate
-  # Use HAProxy proxy protocol
   use-proxy-protocol: false
-  # Forward hostname to server
   forward-hostname: false
 
 # Bedrock Player Options
@@ -65,5 +50,4 @@ enable-proxy-connections: false
 mtu: 1400
 use-direct-connection: true
 
-# Config Version (Do not change)
 config-version: 4

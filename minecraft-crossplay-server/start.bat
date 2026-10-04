@@ -1,11 +1,11 @@
 @echo off
 setlocal enabledelayedexpansion
-title Minecraft Bedrock + Java Cross-Play Server
+title 45 WORLDWIDE - Minecraft Cross-Play Server
 
 cd /d "%~dp0"
 
 echo ======================================================================
-echo  Starting Minecraft Server...
+echo  Starting [45 WORLDWIDE] Minecraft Crossplay Server (8GB RAM)...
 echo  Java Port: 25565 -- Bedrock Port: 19132
 echo ======================================================================
 echo.
@@ -13,13 +13,31 @@ echo.
 if not exist "server.jar" (
     echo [!] ERROR: server.jar was not found in:
     echo     %~dp0
-    echo     Please make sure you downloaded server.jar into this folder.
     echo.
     pause
     exit /b 1
 )
 
-java -Xms2G -Xmx4G -XX:+UseG1GC -jar server.jar --nogui
+:: Optimized G1GC JVM flags for 50 players & 16 chunk view distance
+java -Xms8G -Xmx8G ^
+  -XX:+UseG1GC ^
+  -XX:+ParallelRefProcEnabled ^
+  -XX:MaxGCPauseMillis=200 ^
+  -XX:+UnlockExperimentalVMOptions ^
+  -XX:+DisableExplicitGC ^
+  -XX:+AlwaysPreTouch ^
+  -XX:G1NewSizePercent=30 ^
+  -XX:G1MaxNewSizePercent=40 ^
+  -XX:G1ReservePercent=20 ^
+  -XX:G1HeapWastePercent=5 ^
+  -XX:G1MixedGCCountTarget=4 ^
+  -XX:InitiatingHeapOccupancyPercent=15 ^
+  -XX:G1MixedGCLiveThresholdPercent=90 ^
+  -XX:G1RSetUpdatingPauseTimePercent=5 ^
+  -XX:SurvivorRatio=32 ^
+  -XX:+PerfDisableSharedMem ^
+  -XX:MaxTenuringThreshold=1 ^
+  -jar server.jar --nogui
 
 if %ERRORLEVEL% NEQ 0 (
     echo.
