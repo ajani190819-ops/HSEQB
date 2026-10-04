@@ -11,6 +11,8 @@ feature, FAMU branding, and **zero connection to the HSE app or its data**.
   7 standard themes remain available
 - **Version:** 1.0.0 (feature parity with HSE v3.12.x / template v1.0.0)
 
+**New: full step-by-step guide in [SETUP.md](SETUP.md)** — using the app today (offline) and turning on Firebase sync when ready.
+
 ## Current status: offline mode (safe by default)
 
 Until FAMU's own Firebase project is connected, the app is fully usable with
