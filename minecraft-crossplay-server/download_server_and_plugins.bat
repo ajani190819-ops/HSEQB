@@ -97,7 +97,7 @@ echo setlocal enabledelayedexpansion
 echo title Minecraft Bedrock + Java Cross-Play Server
 echo cd /d "%%~dp0"
 echo echo Starting Minecraft Server...
-echo echo Java Port: 25565 ^| Bedrock Port: 19132
+echo echo Java Port: 25565 -- Bedrock Port: 19132
 echo java -Xms2G -Xmx4G -XX:+UseG1GC -jar server.jar --nogui
 echo if %%ERRORLEVEL%% NEQ 0 echo [!] Server stopped with error code %%ERRORLEVEL%%.
 echo pause
