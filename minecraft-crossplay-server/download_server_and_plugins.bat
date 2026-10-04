@@ -93,16 +93,14 @@ if not exist "eula.txt" (
 if not exist "start.bat" (
 (
 echo @echo off
-echo setlocal
+echo setlocal enabledelayedexpansion
 echo title Minecraft Bedrock + Java Cross-Play Server
-echo set RAM=4G
-echo echo Starting Minecraft Server with %%RAM%% RAM...
+echo cd /d "%%~dp0"
+echo echo Starting Minecraft Server...
 echo echo Java Port: 25565 ^| Bedrock Port: 19132
-echo :loop
-echo java -Xms%%RAM%% -Xmx%%RAM%% -XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 -XX:+UnlockExperimentalVMOptions -XX:+DisableExplicitGC -XX:+AlwaysPreTouch -jar server.jar --nogui
-echo echo Server stopped. Press any key to restart or Ctrl+C to exit.
+echo java -Xms2G -Xmx4G -XX:+UseG1GC -jar server.jar --nogui
+echo if %%ERRORLEVEL%% NEQ 0 echo [!] Server stopped with error code %%ERRORLEVEL%%.
 echo pause
-echo goto loop
 ) > "start.bat"
     echo [+] Created start.bat
 )

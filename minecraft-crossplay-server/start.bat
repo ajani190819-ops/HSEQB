@@ -1,84 +1,59 @@
 @echo off
-setlocal
+setlocal enabledelayedexpansion
 title Minecraft Bedrock + Java Cross-Play Server
 
-:: ============================================================================
-:: CONFIGURATION: RAM ALLOCATION
-:: ============================================================================
-:: Minimum RAM (Xms) and Maximum RAM (Xmx).
-:: For an 8 GB laptop: set RAM=3G or 4G.
-:: For a 16 GB laptop: set RAM=6G or 8G.
-set RAM=4G
+cd /d "%~dp0"
 
-:: ============================================================================
-:: CHECK PREREQUISITES
-:: ============================================================================
+echo ======================================================================
+echo  Minecraft Bedrock + Java Server Launcher
+echo ======================================================================
+echo.
+
+:: 1. Check if server.jar exists
 if not exist "server.jar" (
-    echo ======================================================================
-    echo [!] server.jar NOT FOUND in this folder!
-    echo ======================================================================
-    echo It looks like you haven't downloaded the server files yet.
-    echo Would you like to run the automated downloader now?
+    echo [!] ERROR: 'server.jar' is missing from this folder:
+    echo     %~dp0
     echo.
-    set /p RUN_DOWNLOAD="Download server files now? (Y/N): "
-    if /i "!RUN_DOWNLOAD!"=="Y" (
-        call download_server_and_plugins.bat
-    ) else (
-        echo Please place your server.jar here and run start.bat again.
-        pause
-        exit /b 1
-    )
-)
-
-java -version >nul 2>&1
-if %ERRORLEVEL% NEQ 0 (
-    echo ======================================================================
-    echo [!] ERROR: Java is not installed or not in your system PATH!
-    echo ======================================================================
-    echo Minecraft 1.20.5+ requires Java 21 JDK.
-    echo Please install Eclipse Temurin JDK 21:
-    echo https://adoptium.net/temurin/releases/?version=21
+    echo     Please double-click 'download_server_and_plugins.bat' first!
     echo ======================================================================
     pause
     exit /b 1
 )
 
-:: ============================================================================
-:: LAUNCH MINECRAFT SERVER WITH AIKAR'S OPTIMIZED FLAGS
-:: ============================================================================
-echo ======================================================================
-echo  Starting Minecraft Bedrock + Java Server with %RAM% RAM...
-echo  Java Port:    25565 (TCP)
-echo  Bedrock Port: 19132 (UDP)
-echo ======================================================================
+:: 2. Check Java
+where java >nul 2>&1
+if %ERRORLEVEL% NEQ 0 (
+    echo [!] ERROR: Java is not detected in your PATH.
+    echo     Please download and install Java 21 JDK from:
+    echo     https://adoptium.net/temurin/releases/?version=21
+    echo ======================================================================
+    pause
+    exit /b 1
+)
 
-:server_loop
-java -Xms%RAM% -Xmx%RAM% ^
-  -XX:+UseG1GC ^
-  -XX:+ParallelRefProcEnabled ^
-  -XX:MaxGCPauseMillis=200 ^
-  -XX:+UnlockExperimentalVMOptions ^
-  -XX:+DisableExplicitGC ^
-  -XX:+AlwaysPreTouch ^
-  -XX:G1NewSizePercent=30 ^
-  -XX:G1MaxNewSizePercent=40 ^
-  -XX:G1ReservePercent=20 ^
-  -XX:G1HeapWastePercent=5 ^
-  -XX:G1MixedGCCountTarget=4 ^
-  -XX:InitiatingHeapOccupancyPercent=15 ^
-  -XX:G1MixedGCLiveThresholdPercent=90 ^
-  -XX:G1RSetUpdatingPauseTimePercent=5 ^
-  -XX:SurvivorRatio=32 ^
-  -XX:+PerfDisableSharedMem ^
-  -XX:MaxTenuringThreshold=1 ^
-  -Dusing.aikars.flags=https://mcflags.emc.gs ^
-  -Daikars.new.flags=true ^
-  -jar server.jar --nogui
+echo [*] Java detected:
+java -version
+echo.
+
+:: 3. Launch Server
+echo ======================================================================
+echo  Starting server... (Please wait a few seconds)
+echo  Java Port:    25565
+echo  Bedrock Port: 19132
+echo ======================================================================
+echo.
+
+java -Xms2G -Xmx4G -XX:+UseG1GC -jar server.jar --nogui
+
+if %ERRORLEVEL% NEQ 0 (
+    echo.
+    echo ======================================================================
+    echo [!] The server stopped unexpectedly with error code %ERRORLEVEL%.
+    echo     - If it says 'UnsupportedClassVersionError', you need Java 21 JDK.
+    echo     - If it says 'Could not reserve enough space', edit start.bat to 2G.
+    echo ======================================================================
+)
 
 echo.
-echo ======================================================================
-echo Server stopped.
-echo ======================================================================
-echo Press Ctrl+C to terminate, or press any key to restart the server...
+echo Press any key to exit or close this window...
 pause >nul
-goto server_loop
