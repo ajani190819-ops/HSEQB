@@ -11,13 +11,13 @@ The HSEQB monorepo: a family of single-file quiz bowl tracker apps.
 guard-enforced). New schools/organizations fork from the template —
 `apps/famu/` (FAMU HCASC) is the first.
 
-## Current state (2026-10-03)
+## Current state (2026-10-04)
 
-* **PR #18 is open** from the session branch, containing the whole
-  restructure: HSE moved to `apps/hse/` (v3.12.1, download URL updated),
-  root redirect added, `apps/template/` (v1.0.0) and `apps/famu/`
-  (v1.0.0, FAMU HCASC) created. All checks green in all three apps.
-  **Not yet merged. `main` still has the old single-app layout.**
+* **PR #18 is MERGED** (merge commit `7c45a79`, 2026-10-04). `main` now
+  carries the monorepo: `apps/hse/` (v3.12.1), `apps/template/` (v1.0.0),
+  `apps/famu/` (v1.0.0, FAMU HCASC), root redirect. GitHub Pages rebuilt
+  and the live site was verified: `…/HSEQB/` redirects to `apps/hse/`,
+  and `…/HSEQB/apps/famu/` serves FAMU HCASC 1.0.0 publicly.
 * HSE app is byte-identical to `main` except: `01-constants.js` (version +
   `DOWNLOAD_URL`), `package.json`, rebuilt `index.html`, an AGENTS.md note.
 * FAMU HCASC runs in **offline mode** — no Firebase project connected yet.
@@ -92,6 +92,11 @@ guard-enforced). New schools/organizations fork from the template —
   fork isolation both ways (own-config fork passes guard; HSE config pasted
   into a fork FAILS the guard). Local git had been reset by the platform;
   re-synced from the pushed branch.
+* **2026-10-04 (session 4 — merge & deploy):** merged PR #18 on the
+  owner's request (merge commit `7c45a79`); watched the Pages build go
+  green; verified live: root redirect works, HSE app serves from
+  `apps/hse/`, FAMU HCASC serves publicly at `apps/famu/`. Added
+  `apps/famu/SETUP.md` (click-by-click usage + Firebase guide).
 * **2026-10-03 (session 3 — FAMU + rulebook):** created `apps/famu/` from the
   template: FAMU colors (green `#008344` / orange `#F4811F`), FAMU theme as
   default, offline mode, guard retargeted, icon, docs; registered in root
@@ -104,15 +109,15 @@ guard-enforced). New schools/organizations fork from the template —
 
 ## Next actions
 
-1. Owner reviews and merges **PR #18** (Pages redeploys on merge; root starts
-   redirecting).
-2. After merge: an admin publishes the **v3.12.1** build via the in-app
-   Updates panel so local-file HSE users get the new download URL.
-3. FAMU: connect its own Firebase project when cross-device sync is wanted
-   (README in `apps/famu/` has the steps; `// fork-configured` marker).
-4. Decide FAMU's long-term home: stay at `apps/famu/` or move to its own
+1. **An HSE admin publishes the v3.12.1 build** via the in-app Updates
+   panel (open the live app → ↻ Updates → Publish) so local-file HSE users
+   get the new download URL. Owner action; no code change needed.
+2. FAMU: connect its own Firebase project when cross-device sync is wanted
+   (`apps/famu/SETUP.md` has the click-by-click steps; `// fork-configured`
+   marker; owner can paste the config to an AI session to wire it).
+3. Decide FAMU's long-term home: stay at `apps/famu/` or move to its own
    repository (recommended once FAMU students run it themselves).
-5. Optional hardening (owner aware, not decided): HSE Firebase rules allow
+4. Optional hardening (owner aware, not decided): HSE Firebase rules allow
    any signed-in user to read/write `sessions`; an email-domain allowlist or
    disabled anonymous auth would tighten that. Tradeoff: new legit users
    must be pre-approved.
