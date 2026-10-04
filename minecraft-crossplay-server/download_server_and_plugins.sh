@@ -1,54 +1,75 @@
 #!/usr/bin/env bash
-# Minecraft Bedrock + Java Cross-Play Server Downloader (Linux/macOS)
+# Minecraft Bedrock + Java Cross-Play Server 1-Click Installer (Linux / macOS)
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PLUGINS_DIR="${SCRIPT_DIR}/plugins"
-mkdir -p "${PLUGINS_DIR}"
+cd "${SCRIPT_DIR}"
 
 echo "======================================================================"
-echo "  Minecraft Bedrock + Java Cross-Play Downloader (Bash)"
+echo "  Minecraft Bedrock + Java Cross-Play Server 1-Click Installer"
 echo "======================================================================"
+echo ""
 
-# Try Python downloader first if installed
-if command -v python3 >/dev/null 2>&1; then
-    echo "[*] Python 3 found. Running Python downloader..."
-    python3 "${SCRIPT_DIR}/download_server_and_plugins.py"
-    exit 0
-elif command -v python >/dev/null 2>&1; then
-    echo "[*] Python found. Running Python downloader..."
-    python "${SCRIPT_DIR}/download_server_and_plugins.py"
-    exit 0
+# 1. Check for Java
+if ! command -v java &>/dev/null; then
+    echo "[!] WARNING: Java was not found in your PATH."
+    echo "    Please install OpenJDK 21 (e.g., sudo apt install openjdk-21-jdk / brew install openjdk@21)"
+    echo ""
+else
+    echo "[+] Java is installed."
 fi
 
-# Fallback to curl
-echo "[*] Using curl for downloads..."
+# 2. Ensure directories exist
+mkdir -p plugins/Geyser-Spigot plugins/floodgate plugins/ViaVersion config
 
-# 1. PaperMC
-echo "[*] Fetching PaperMC..."
-PAPER_FALLBACK="https://api.papermc.io/v2/projects/paper/versions/1.21.4/builds/147/downloads/paper-1.21.4-147.jar"
-curl -sL -A "Mozilla/5.0" "${PAPER_FALLBACK}" -o "${SCRIPT_DIR}/server.jar"
-echo "[+] PaperMC downloaded as server.jar"
+# 3. Download PaperMC
+echo "[*] [1/4] Downloading PaperMC (server.jar)..."
+PAPER_URL="https://api.papermc.io/v2/projects/paper/versions/1.21.4/builds/147/downloads/paper-1.21.4-147.jar"
+curl -sL -A "Mozilla/5.0" "${PAPER_URL}" -o server.jar
+echo "[+] PaperMC downloaded."
 
-# 2. Geyser-Spigot
-echo "[*] Fetching Geyser-Spigot..."
+# 4. Download Geyser
+echo "[*] [2/4] Downloading Geyser-Spigot (Bedrock protocol support)..."
 GEYSER_URL="https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/spigot"
-curl -sL -A "Mozilla/5.0" "${GEYSER_URL}" -o "${PLUGINS_DIR}/Geyser-Spigot.jar"
-echo "[+] Geyser-Spigot downloaded"
+curl -sL -A "Mozilla/5.0" "${GEYSER_URL}" -o plugins/Geyser-Spigot.jar
+echo "[+] Geyser-Spigot downloaded."
 
-# 3. Floodgate-Spigot
-echo "[*] Fetching Floodgate-Spigot..."
+# 5. Download Floodgate
+echo "[*] [3/4] Downloading Floodgate-Spigot (Bedrock Xbox authentication)..."
 FLOODGATE_URL="https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/spigot"
-curl -sL -A "Mozilla/5.0" "${FLOODGATE_URL}" -o "${PLUGINS_DIR}/floodgate-spigot.jar"
-echo "[+] Floodgate-Spigot downloaded"
+curl -sL -A "Mozilla/5.0" "${FLOODGATE_URL}" -o plugins/floodgate-spigot.jar
+echo "[+] Floodgate-Spigot downloaded."
 
-# 4. ViaVersion
-echo "[*] Fetching ViaVersion..."
-VIAVERSION_URL="https://hangarcdn.papermc.io/plugins/ViaVersion/ViaVersion/versions/5.2.1/PAPER/ViaVersion-5.2.1.jar"
-curl -sL -A "Mozilla/5.0" "${VIAVERSION_URL}" -o "${PLUGINS_DIR}/ViaVersion.jar" || true
-echo "[+] ViaVersion downloaded"
+# 6. Download ViaVersion
+echo "[*] [4/4] Downloading ViaVersion (Multi-version support)..."
+VIA_URL="https://hangarcdn.papermc.io/plugins/ViaVersion/ViaVersion/versions/5.2.1/PAPER/ViaVersion-5.2.1.jar"
+curl -sL -A "Mozilla/5.0" "${VIA_URL}" -o plugins/ViaVersion.jar || true
+echo "[+] ViaVersion downloaded."
 
+# 7. Auto-generate eula.txt if missing
+if [ ! -f "eula.txt" ]; then
+    echo "eula=true" > eula.txt
+    echo "[+] Created eula.txt"
+fi
+
+# 8. Auto-generate start.sh if missing
+if [ ! -f "start.sh" ]; then
+cat << 'EOF' > start.sh
+#!/usr/bin/env bash
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "${SCRIPT_DIR}"
+RAM="4G"
+echo "Starting Minecraft Server with ${RAM} RAM..."
+exec java -Xms${RAM} -Xmx${RAM} -XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 -XX:+UnlockExperimentalVMOptions -XX:+DisableExplicitGC -XX:+AlwaysPreTouch -jar server.jar --nogui
+EOF
+    chmod +x start.sh
+    echo "[+] Created start.sh"
+fi
+
+echo ""
 echo "======================================================================"
-echo "  All downloads complete! Make start.sh executable and run it:"
+echo "  SETUP COMPLETE!"
+echo ""
+echo "  To start your Minecraft server:"
 echo "    chmod +x start.sh && ./start.sh"
 echo "======================================================================"
