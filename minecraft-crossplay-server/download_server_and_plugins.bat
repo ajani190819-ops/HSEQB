@@ -28,35 +28,52 @@ if not exist "plugins\floodgate" mkdir "plugins\floodgate"
 if not exist "plugins\ViaVersion" mkdir "plugins\ViaVersion"
 if not exist "config" mkdir "config"
 
-:: 3. Download PaperMC, Geyser, Floodgate, ViaVersion using embedded PowerShell
+:: 3. Download Server Core, Geyser, Floodgate, ViaVersion using embedded PowerShell
 echo.
-echo [*] Downloading PaperMC server and plugins...
-echo     (This may take a moment depending on your internet connection)
+echo [*] Downloading server engine and crossplay plugins...
+echo     (This may take a minute depending on your internet connection)
 echo.
 
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
   "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; " ^
-  "Write-Host '[1/4] Fetching latest PaperMC server build...' -ForegroundColor Cyan; " ^
+  "$ua = @{ 'User-Agent' = 'Minecraft-Crossplay-Setup/1.0 (server@laptop)' }; " ^
+  "$serverDownloaded = $false; " ^
+  "Write-Host '[1/4] Fetching latest Minecraft server engine...' -ForegroundColor Cyan; " ^
   "try { " ^
-  "  $api = 'https://api.papermc.io/v2/projects/paper'; " ^
-  "  $proj = Invoke-RestMethod -Uri $api -UseBasicParsing; " ^
-  "  $latestVer = $proj.versions[-1]; " ^
-  "  $verData = Invoke-RestMethod -Uri ('{0}/versions/{1}' -f $api, $latestVer) -UseBasicParsing; " ^
-  "  $latestBuild = $verData.builds[-1]; " ^
-  "  $jarName = ('paper-{0}-{1}.jar' -f $latestVer, $latestBuild); " ^
-  "  $url = ('{0}/versions/{1}/builds/{2}/downloads/{3}' -f $api, $latestVer, $latestBuild, $jarName); " ^
-  "  Write-Host ('    Downloading Paper {0} (Build #{1})...' -f $latestVer, $latestBuild) -ForegroundColor Gray; " ^
-  "  Invoke-WebRequest -Uri $url -OutFile 'server.jar' -UseBasicParsing; " ^
+  "  $purpurMeta = Invoke-RestMethod -Uri 'https://api.purpurmc.org/v2/purpur' -Headers $ua -UseBasicParsing; " ^
+  "  $latestVer = $purpurMeta.versions[-1]; " ^
+  "  $downloadUrl = ('https://api.purpurmc.org/v2/purpur/{0}/latest/download' -f $latestVer); " ^
+  "  Write-Host ('    Downloading server core ({0})...' -f $latestVer) -ForegroundColor Gray; " ^
+  "  Invoke-WebRequest -Uri $downloadUrl -OutFile 'server.jar' -Headers $ua -UseBasicParsing; " ^
+  "  $serverDownloaded = $true; " ^
   "} catch { " ^
-  "  Write-Host '    API lookup failed, downloading Paper 1.21.4 direct...' -ForegroundColor Yellow; " ^
-  "  Invoke-WebRequest -Uri 'https://api.papermc.io/v2/projects/paper/versions/1.21.4/builds/147/downloads/paper-1.21.4-147.jar' -OutFile 'server.jar' -UseBasicParsing; " ^
+  "  Write-Host '    Purpur lookup failed, trying Paper Fill v3...' -ForegroundColor Yellow; " ^
   "}; " ^
+  "if (-not $serverDownloaded) { " ^
+  "  try { " ^
+  "    $paperMeta = Invoke-RestMethod -Uri 'https://fill.papermc.io/v3/projects/paper' -Headers $ua -UseBasicParsing; " ^
+  "    $latestVer = if ($paperMeta.versions -is [System.Collections.IDictionary]) { ($paperMeta.versions.Values | Select-Object -First 1)[0] } else { $paperMeta.versions[-1] }; " ^
+  "    if (-not $latestVer) { $latestVer = '1.21.4' }; " ^
+  "    $builds = Invoke-RestMethod -Uri ('https://fill.papermc.io/v3/projects/paper/versions/{0}/builds' -f $latestVer) -Headers $ua -UseBasicParsing; " ^
+  "    $latestBuild = $builds[-1]; " ^
+  "    $url = $latestBuild.downloads.'server:default'.url; " ^
+  "    if (-not $url) { $url = $latestBuild.downloads.server.url }; " ^
+  "    Invoke-WebRequest -Uri $url -OutFile 'server.jar' -Headers $ua -UseBasicParsing; " ^
+  "    $serverDownloaded = $true; " ^
+  "  } catch { " ^
+  "    Write-Host '    Downloading fallback 1.21.4 server core...' -ForegroundColor Yellow; " ^
+  "    Invoke-WebRequest -Uri 'https://api.purpurmc.org/v2/purpur/1.21.4/latest/download' -OutFile 'server.jar' -Headers $ua -UseBasicParsing; " ^
+  "  }; " ^
+  "}; " ^
+  "Write-Host '[+] Server core (server.jar) downloaded successfully!' -ForegroundColor Green; " ^
   "Write-Host '[2/4] Downloading Geyser-Spigot (Bedrock protocol support)...' -ForegroundColor Cyan; " ^
-  "Invoke-WebRequest -Uri 'https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/spigot' -OutFile 'plugins/Geyser-Spigot.jar' -UseBasicParsing; " ^
+  "Invoke-WebRequest -Uri 'https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/spigot' -OutFile 'plugins/Geyser-Spigot.jar' -Headers $ua -UseBasicParsing; " ^
+  "Write-Host '[+] Geyser-Spigot downloaded successfully!' -ForegroundColor Green; " ^
   "Write-Host '[3/4] Downloading Floodgate-Spigot (Bedrock Xbox authentication)...' -ForegroundColor Cyan; " ^
-  "Invoke-WebRequest -Uri 'https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/spigot' -OutFile 'plugins/floodgate-spigot.jar' -UseBasicParsing; " ^
+  "Invoke-WebRequest -Uri 'https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/spigot' -OutFile 'plugins/floodgate-spigot.jar' -Headers $ua -UseBasicParsing; " ^
+  "Write-Host '[+] Floodgate-Spigot downloaded successfully!' -ForegroundColor Green; " ^
   "Write-Host '[4/4] Downloading ViaVersion (Multi-version support)...' -ForegroundColor Cyan; " ^
-  "try { Invoke-WebRequest -Uri 'https://hangarcdn.papermc.io/plugins/ViaVersion/ViaVersion/versions/5.2.1/PAPER/ViaVersion-5.2.1.jar' -OutFile 'plugins/ViaVersion.jar' -UseBasicParsing; } catch { Write-Host '    ViaVersion optional download skipped.' -ForegroundColor Gray; }; " ^
+  "try { Invoke-WebRequest -Uri 'https://hangarcdn.papermc.io/plugins/ViaVersion/ViaVersion/versions/5.2.1/PAPER/ViaVersion-5.2.1.jar' -OutFile 'plugins/ViaVersion.jar' -Headers $ua -UseBasicParsing; Write-Host '[+] ViaVersion downloaded!' -ForegroundColor Green; } catch { Write-Host '    ViaVersion optional download skipped.' -ForegroundColor Gray; }; " ^
   "Write-Host 'All downloads finished successfully!' -ForegroundColor Green;"
 
 if %ERRORLEVEL% NEQ 0 (

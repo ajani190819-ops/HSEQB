@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Minecraft Cross-Play Server Downloader
-Automatically downloads the latest PaperMC server JAR, Geyser-Spigot, Floodgate-Spigot, and ViaVersion plugins.
+Automatically downloads the server JAR, Geyser-Spigot, Floodgate-Spigot, and ViaVersion plugins.
 """
 
 import os
@@ -14,7 +14,7 @@ SERVER_DIR = os.path.dirname(os.path.abspath(__file__))
 PLUGINS_DIR = os.path.join(SERVER_DIR, "plugins")
 
 HEADERS = {
-    "User-Agent": "Minecraft-Server-Setup-Script/1.0"
+    "User-Agent": "Minecraft-Crossplay-Setup/1.0 (server@laptop)"
 }
 
 def download_file(url, dest_path, desc="Downloading"):
@@ -47,29 +47,25 @@ def download_file(url, dest_path, desc="Downloading"):
                     sys.stdout.write(f"\r    Downloaded: {mb_downloaded:.1f} MB")
                     sys.stdout.flush()
             print("\n    [+] Done!")
-    except urllib.error.URLError as e:
+    except Exception as e:
         print(f"\n    [!] Failed to download from {url}: {e}")
         return False
     return True
 
-def get_latest_paper_url():
-    print("[*] Checking PaperMC API for the latest release build...")
-    api_base = "https://api.papermc.io/v2/projects/paper"
-    req = urllib.request.Request(api_base, headers=HEADERS)
-    with urllib.request.urlopen(req) as resp:
-        proj_data = json.loads(resp.read().decode())
+def get_latest_server_url():
+    print("[*] Checking Purpur / Paper API for latest build...")
+    try:
+        api_base = "https://api.purpurmc.org/v2/purpur"
+        req = urllib.request.Request(api_base, headers=HEADERS)
+        with urllib.request.urlopen(req) as resp:
+            proj_data = json.loads(resp.read().decode())
+        latest_version = proj_data["versions"][-1]
+        download_url = f"{api_base}/{latest_version}/latest/download"
+        return download_url, latest_version
+    except Exception as e:
+        print(f"[!] Purpur API check skipped: {e}")
     
-    latest_version = proj_data["versions"][-1]
-    
-    version_url = f"{api_base}/versions/{latest_version}"
-    req = urllib.request.Request(version_url, headers=HEADERS)
-    with urllib.request.urlopen(req) as resp:
-        ver_data = json.loads(resp.read().decode())
-    
-    latest_build = ver_data["builds"][-1]
-    jar_filename = f"paper-{latest_version}-{latest_build}.jar"
-    download_url = f"{api_base}/versions/{latest_version}/builds/{latest_build}/downloads/{jar_filename}"
-    return download_url, latest_version, latest_build
+    return "https://api.purpurmc.org/v2/purpur/1.21.4/latest/download", "1.21.4"
 
 def main():
     print("=" * 60)
@@ -77,17 +73,10 @@ def main():
     print("=" * 60)
     os.makedirs(PLUGINS_DIR, exist_ok=True)
     
-    # 1. Download Paper
+    # 1. Download Server Core
     server_jar = os.path.join(SERVER_DIR, "server.jar")
-    try:
-        paper_url, ver, build = get_latest_paper_url()
-        print(f"[+] Found PaperMC {ver} (Build #{build})")
-        download_file(paper_url, server_jar, f"Downloading PaperMC {ver} (Build #{build})")
-    except Exception as e:
-        print(f"[!] Could not fetch latest build from PaperMC API: {e}")
-        print("[!] Trying fallback Paper 1.21.4 direct URL...")
-        fallback_paper = "https://api.papermc.io/v2/projects/paper/versions/1.21.4/builds/147/downloads/paper-1.21.4-147.jar"
-        download_file(fallback_paper, server_jar, "Downloading PaperMC 1.21.4")
+    server_url, ver = get_latest_server_url()
+    download_file(server_url, server_jar, f"Downloading Minecraft Server Core ({ver})")
         
     # 2. Download Geyser-Spigot
     geyser_jar = os.path.join(PLUGINS_DIR, "Geyser-Spigot.jar")

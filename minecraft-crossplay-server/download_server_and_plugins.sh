@@ -22,11 +22,11 @@ fi
 # 2. Ensure directories exist
 mkdir -p plugins/Geyser-Spigot plugins/floodgate plugins/ViaVersion config
 
-# 3. Download PaperMC
-echo "[*] [1/4] Downloading PaperMC (server.jar)..."
-PAPER_URL="https://api.papermc.io/v2/projects/paper/versions/1.21.4/builds/147/downloads/paper-1.21.4-147.jar"
-curl -sL -A "Mozilla/5.0" "${PAPER_URL}" -o server.jar
-echo "[+] PaperMC downloaded."
+# 3. Download Server Core (Purpur / Paper)
+echo "[*] [1/4] Downloading server core (server.jar)..."
+PURPUR_URL="https://api.purpurmc.org/v2/purpur/1.21.4/latest/download"
+curl -sL -A "Mozilla/5.0" "${PURPUR_URL}" -o server.jar
+echo "[+] Server core downloaded."
 
 # 4. Download Geyser
 echo "[*] [2/4] Downloading Geyser-Spigot (Bedrock protocol support)..."
