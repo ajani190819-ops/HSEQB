@@ -12,11 +12,20 @@ const APP_NAME = 'FAMU HCASC';
 const APP_FILE_BASENAME = 'famu-hcasc';
 // Password for the admin danger-zone "reset all data" action.
 // '' disables the action entirely (recommended until you set your own).
-const ADMIN_RESET_PASSWORD = '';
+const ADMIN_RESET_PASSWORD = 'HSE261781';
 // Your own Firebase project config (see README → "Connect Firebase").
 // null = OFFLINE MODE: the app is fully usable, data is stored in this
 // browser only (localStorage), and nothing ever leaves the device.
-const firebaseConfig = null; // e.g. { apiKey:"…", authDomain:"…", databaseURL:"…", projectId:"…", storageBucket:"…", messagingSenderId:"…", appId:"…" }
+const firebaseConfig = {
+  apiKey: "AIzaSyBRCk1-fLM8GjxUzfCv-AZAOILJbdHnbCg",
+  authDomain: "famu-hcasc.firebaseapp.com",
+  databaseURL: "https://famu-hcasc-default-rtdb.firebaseio.com",
+  projectId: "famu-hcasc",
+  storageBucket: "famu-hcasc.firebasestorage.app",
+  messagingSenderId: "123248966307",
+  appId: "1:123248966307:web:09b316f1d3de1930691d16",
+  measurementId: "G-ZZP27L6JSP"
+};
 // Your fork's GitHub repository (leave '' until you publish the fork).
 // Drives the header version badge deploy status, update-download fallbacks,
 // and issue/release links.
