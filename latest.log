@@ -1,0 +1,87 @@
+[00:02:15] [Render thread/INFO]: Adding auth button to the multiplayer screen
+[00:02:15] [ForkJoinPool.commonPool-worker-6/INFO]: Verifying Minecraft session...
+[00:02:16] [ForkJoinPool.commonPool-worker-6/INFO]: The Minecraft session is valid
+[00:02:17] [Render thread/INFO]: [ETF]: emissive suffixes loaded: [_e]
+[00:02:17] [Render thread/INFO]: Connecting to pgsql-tourism.tun.ply.gg, 25565
+[00:02:19] [Render thread/INFO]: [ETF]: emissive suffixes loaded: [_e]
+[00:02:19] [Render thread/INFO]: [ETF]: emissive suffixes loaded: [_e]
+[00:02:19] [Render thread/WARN]: Client disconnected with reason: Disconnected
+[00:02:24] [Render thread/INFO]: Adding auth button to the multiplayer screen
+[00:02:26] [Render thread/ERROR]: Can't ping pgsql-tourism.tun.ply.gg: Internal Exception: java.net.SocketException: Connection reset
+[00:13:24] [Render thread/INFO]: Adding auth button to the multiplayer screen
+[00:13:24] [ForkJoinPool.commonPool-worker-7/INFO]: Verifying Minecraft session...
+[00:13:24] [ForkJoinPool.commonPool-worker-7/INFO]: The Minecraft session is valid
+[00:13:26] [Render thread/ERROR]: Can't ping pgsql-tourism.tun.ply.gg: Internal Exception: java.net.SocketException: Connection reset
+[00:13:27] [Render thread/INFO]: [FullscreenFix] Game started
+[00:13:28] [Render thread/INFO]: Adding auth button to the multiplayer screen
+[00:13:29] [Render thread/INFO]: Adding auth button to the multiplayer screen
+[00:13:30] [Render thread/INFO]: [ETF]: emissive suffixes loaded: [_e]
+[00:13:30] [Render thread/INFO]: Connecting to pgsql-tourism.tun.ply.gg, 25565
+[00:13:32] [Server Connector #4/ERROR]: Couldn't connect to server
+java.net.SocketException: Connection reset
+	at java.base/sun.nio.ch.NioSocketImpl.implRead(Unknown Source)
+	at java.base/sun.nio.ch.NioSocketImpl.read(Unknown Source)
+	at java.base/sun.nio.ch.NioSocketImpl$1.read(Unknown Source)
+	at java.base/java.net.Socket$SocketInputStream.implRead(Unknown Source)
+	at java.base/java.net.Socket$SocketInputStream.read(Unknown Source)
+	at java.base/java.net.Socket$SocketInputStream.read(Unknown Source)
+	at java.base/java.io.DataInputStream.readUnsignedByte(Unknown Source)
+	at java.base/java.io.DataInputStream.readByte(Unknown Source)
+	at knot//com.viaversion.viafabricplus.protocoltranslator.util.ProtocolVersionDetector.readVarInt(ProtocolVersionDetector.java:136)
+	at knot//com.viaversion.viafabricplus.protocoltranslator.util.ProtocolVersionDetector.get(ProtocolVersionDetector.java:85)
+	at knot//net.minecraft.client.gui.screens.ConnectScreen$1.wrapOperation$dfk000$viafabricplus$setServerInfoAndProtocolVersion(ConnectScreen.java:590)
+	at knot//net.minecraft.client.gui.screens.ConnectScreen$1.run(ConnectScreen.java:103)
+[00:14:46] [Render thread/INFO]: Adding auth button to the multiplayer screen
+[00:14:46] [ForkJoinPool.commonPool-worker-8/INFO]: Verifying Minecraft session...
+[00:14:46] [ForkJoinPool.commonPool-worker-8/INFO]: The Minecraft session is valid
+[00:14:48] [Render thread/ERROR]: Can't ping pgsql-tourism.tun.ply.gg: Internal Exception: java.net.SocketException: Connection reset
+[00:17:12] [Render thread/INFO]: Adding auth button to the multiplayer screen
+[00:17:12] [ForkJoinPool.commonPool-worker-9/INFO]: Verifying Minecraft session...
+[00:17:12] [ForkJoinPool.commonPool-worker-9/INFO]: The Minecraft session is valid
+[00:17:21] [Render thread/INFO]: Adding auth button to the multiplayer screen
+[00:17:23] [Render thread/ERROR]: Can't ping pgsql-tourism.tun.ply.gg: Internal Exception: java.net.SocketException: Connection reset
+[00:17:58] [Render thread/INFO]: Adding auth button to the multiplayer screen
+[00:18:00] [Render thread/ERROR]: Can't ping pgsql-tourism.tun.ply.gg: Internal Exception: java.net.SocketException: Connection reset
+[00:28:42] [Render thread/INFO]: Adding auth button to the multiplayer screen
+[00:28:42] [ForkJoinPool.commonPool-worker-10/INFO]: Verifying Minecraft session...
+[00:28:42] [ForkJoinPool.commonPool-worker-10/INFO]: The Minecraft session is valid
+[00:28:51] [Render thread/INFO]: [ETF]: emissive suffixes loaded: [_e]
+[00:28:51] [Render thread/INFO]: Connecting to pgsql-tourism.tun.ply.gg, 25565
+[00:28:55] [Render thread/INFO]: Started 10 worker threads
+[00:28:55] [Render thread/INFO]: [System] [CHAT] SillyEnderer joined the game
+[00:28:55] [Render thread/INFO]: Stopping worker threads
+[00:28:55] [Render thread/INFO]: Started 10 worker threads
+[00:28:55] [Render thread/INFO]: Session started
+[00:28:55] [Render thread/INFO]: Loaded 2 advancements
+[00:30:00] [Render thread/INFO]: Stopping worker threads
+[00:30:00] [Render thread/INFO]: [ETF]: emissive suffixes loaded: [_e]
+[00:30:00] [Render thread/INFO]: Adding auth button to the multiplayer screen
+[00:30:00] [ForkJoinPool.commonPool-worker-11/INFO]: Verifying Minecraft session...
+[00:30:00] [Render thread/INFO]: Session ended
+[00:30:00] [ForkJoinPool.commonPool-worker-11/INFO]: The Minecraft session is valid
+[00:36:46] [Render thread/INFO]: Adding auth button to the multiplayer screen
+[00:36:46] [ForkJoinPool.commonPool-worker-12/INFO]: Verifying Minecraft session...
+[00:36:47] [ForkJoinPool.commonPool-worker-12/INFO]: The Minecraft session is valid
+[00:36:49] [Render thread/ERROR]: Can't ping pgsql-tourism.tun.ply.gg: Internal Exception: java.net.SocketException: Connection reset
+[00:44:29] [Render thread/INFO]: Adding auth button to the multiplayer screen
+[00:44:29] [ForkJoinPool.commonPool-worker-13/INFO]: Verifying Minecraft session...
+[00:44:29] [ForkJoinPool.commonPool-worker-13/INFO]: The Minecraft session is valid
+[00:46:15] [Render thread/INFO]: Adding auth button to the multiplayer screen
+[00:46:15] [ForkJoinPool.commonPool-worker-14/INFO]: Verifying Minecraft session...
+[00:46:16] [ForkJoinPool.commonPool-worker-14/INFO]: The Minecraft session is valid
+[00:47:04] [Render thread/INFO]: Adding auth button to the multiplayer screen
+[00:47:05] [Render thread/INFO]: [ETF]: emissive suffixes loaded: [_e]
+[00:47:05] [Render thread/INFO]: Connecting to pgsql-tourism.tun.ply.gg, 25565
+[00:47:08] [Render thread/INFO]: Started 10 worker threads
+[00:47:08] [Render thread/INFO]: [System] [CHAT] SillyEnderer joined the game
+[00:47:08] [Render thread/INFO]: Stopping worker threads
+[00:47:08] [Render thread/INFO]: Started 10 worker threads
+[00:47:08] [Render thread/INFO]: Session started
+[00:47:08] [Render thread/INFO]: Loaded 2 advancements
+[00:59:38] [Render thread/INFO]: Loaded 5 advancements
+[01:15:10] [Netty NIO IO #36/ERROR]: Negative index in crash report handler (18/30)
+[01:15:10] [Render thread/INFO]: Stopping worker threads
+[01:15:10] [Render thread/INFO]: [ETF]: emissive suffixes loaded: [_e]
+[01:15:10] [Render thread/INFO]: [ETF]: emissive suffixes loaded: [_e]
+[01:15:10] [Render thread/WARN]: Client disconnected with reason: Internal Exception: java.net.SocketException: Connection reset
+[01:15:10] [Render thread/INFO]: Session ended

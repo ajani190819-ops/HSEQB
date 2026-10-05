@@ -1,0 +1,498 @@
+---- Minecraft Crash Report ----
+// Hey, that tickles! Hehehe!
+
+Time: 2026-10-05 01:24:08
+Description: Mod loading failures have occurred; consult the issue messages for more details
+
+net.neoforged.neoforge.logging.CrashReportExtender$ModLoadingCrashException: Mod loading has failed
+
+
+A detailed walkthrough of the error, its code path and all known details is as follows:
+---------------------------------------------------------------------------------------
+
+-- Mod loading issue for: fabric_renderer_indigo --
+Details:
+	Mod file: /C:/Users/kamau/AppData/Roaming/ModrinthApp/profiles/935 (2)/mods/forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar#457!/META-INF/jars/fabric-renderer-indigo-1.7.1+9125b6dc19.jar
+	Failure message: Mod fabric_renderer_indigo requires neoforge 21.1.248 or above
+		Currently, neoforge is 21.1.235
+		
+	Mod version: 1.7.1+9125b6dc19
+	Mod issues URL: https://github.com/Sinytra/ForgifiedFabricAPI/issues
+	Exception message: <No associated exception found>
+
+-- Mod loading issue for: fabric_recipe_api_v1 --
+Details:
+	Mod file: /C:/Users/kamau/AppData/Roaming/ModrinthApp/profiles/935 (2)/mods/forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar#457!/META-INF/jars/fabric-recipe-api-v1-5.0.16+59440bcc19.jar
+	Failure message: Mod fabric_recipe_api_v1 requires neoforge 21.1.248 or above
+		Currently, neoforge is 21.1.235
+		
+	Mod version: 5.0.16+59440bcc19
+	Mod issues URL: https://github.com/Sinytra/ForgifiedFabricAPI/issues
+	Exception message: <No associated exception found>
+
+-- Mod loading issue for: fabric_convention_tags_v2 --
+Details:
+	Mod file: /C:/Users/kamau/AppData/Roaming/ModrinthApp/profiles/935 (2)/mods/forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar#457!/META-INF/jars/fabric-convention-tags-v2-2.12.0+75d3639619.jar
+	Failure message: Mod fabric_convention_tags_v2 requires neoforge 21.1.248 or above
+		Currently, neoforge is 21.1.235
+		
+	Mod version: 2.12.0+75d3639619
+	Mod issues URL: https://github.com/Sinytra/ForgifiedFabricAPI/issues
+	Exception message: <No associated exception found>
+
+-- Mod loading issue for: fabric_transitive_access_wideners_v1 --
+Details:
+	Mod file: /C:/Users/kamau/AppData/Roaming/ModrinthApp/profiles/935 (2)/mods/forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar#457!/META-INF/jars/fabric-transitive-access-wideners-v1-6.2.0+6c854b6f19.jar
+	Failure message: Mod fabric_transitive_access_wideners_v1 requires neoforge 21.1.248 or above
+		Currently, neoforge is 21.1.235
+		
+	Mod version: 6.2.0+6c854b6f19
+	Mod issues URL: https://github.com/Sinytra/ForgifiedFabricAPI/issues
+	Exception message: <No associated exception found>
+
+-- Mod loading issue for: fabric_object_builder_api_v1 --
+Details:
+	Mod file: /C:/Users/kamau/AppData/Roaming/ModrinthApp/profiles/935 (2)/mods/forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar#457!/META-INF/jars/fabric-object-builder-api-v1-15.2.1+cc242efd19.jar
+	Failure message: Mod fabric_object_builder_api_v1 requires neoforge 21.1.248 or above
+		Currently, neoforge is 21.1.235
+		
+	Mod version: 15.2.1+cc242efd19
+	Mod issues URL: https://github.com/Sinytra/ForgifiedFabricAPI/issues
+	Exception message: <No associated exception found>
+
+-- Mod loading issue for: fabric_entity_events_v1 --
+Details:
+	Mod file: /C:/Users/kamau/AppData/Roaming/ModrinthApp/profiles/935 (2)/mods/forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar#457!/META-INF/jars/fabric-entity-events-v1-1.8.0+e46a02ca19.jar
+	Failure message: Mod fabric_entity_events_v1 requires neoforge 21.1.248 or above
+		Currently, neoforge is 21.1.235
+		
+	Mod version: 1.8.0+e46a02ca19
+	Mod issues URL: https://github.com/Sinytra/ForgifiedFabricAPI/issues
+	Exception message: <No associated exception found>
+
+-- Mod loading issue for: fabric_events_interaction_v0 --
+Details:
+	Mod file: /C:/Users/kamau/AppData/Roaming/ModrinthApp/profiles/935 (2)/mods/forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar#457!/META-INF/jars/fabric-events-interaction-v0-0.7.14+057f5afd19.jar
+	Failure message: Mod fabric_events_interaction_v0 requires neoforge 21.1.248 or above
+		Currently, neoforge is 21.1.235
+		
+	Mod version: 0.7.14+057f5afd19
+	Mod issues URL: https://github.com/Sinytra/ForgifiedFabricAPI/issues
+	Exception message: <No associated exception found>
+
+-- Mod loading issue for: fabric_convention_tags_v1 --
+Details:
+	Mod file: /C:/Users/kamau/AppData/Roaming/ModrinthApp/profiles/935 (2)/mods/forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar#457!/META-INF/jars/fabric-convention-tags-v1-2.1.7+7f945d5b19.jar
+	Failure message: Mod fabric_convention_tags_v1 requires neoforge 21.1.248 or above
+		Currently, neoforge is 21.1.235
+		
+	Mod version: 2.1.7+7f945d5b19
+	Mod issues URL: https://github.com/Sinytra/ForgifiedFabricAPI/issues
+	Exception message: <No associated exception found>
+
+-- Mod loading issue for: fabric_data_attachment_api_v1 --
+Details:
+	Mod file: /C:/Users/kamau/AppData/Roaming/ModrinthApp/profiles/935 (2)/mods/forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar#457!/META-INF/jars/fabric-data-attachment-api-v1-1.4.7+26d408aa19.jar
+	Failure message: Mod fabric_data_attachment_api_v1 requires neoforge 21.1.248 or above
+		Currently, neoforge is 21.1.235
+		
+	Mod version: 1.4.7+26d408aa19
+	Mod issues URL: https://github.com/Sinytra/ForgifiedFabricAPI/issues
+	Exception message: <No associated exception found>
+
+-- Mod loading issue for: armor_hider --
+Details:
+	Mod file: /C:/Users/kamau/AppData/Roaming/ModrinthApp/profiles/935 (2)/mods/armor-hider-neoforge-0.14.4+mc-1.21.0-1.jar
+	Failure message: Mod armor_hider requires neoforge 21.1.244 or above
+		Currently, neoforge is 21.1.235
+		
+	Mod version: 0.14.4+mc-1.21.0-1
+	Mod issues URL: <No issues URL found>
+	Exception message: <No associated exception found>
+
+-- Mod loading issue for: fabric_biome_api_v1 --
+Details:
+	Mod file: /C:/Users/kamau/AppData/Roaming/ModrinthApp/profiles/935 (2)/mods/forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar#457!/META-INF/jars/fabric-biome-api-v1-13.0.31+1e62d33c19.jar
+	Failure message: Mod fabric_biome_api_v1 requires neoforge 21.1.248 or above
+		Currently, neoforge is 21.1.235
+		
+	Mod version: 13.0.31+1e62d33c19
+	Mod issues URL: https://github.com/Sinytra/ForgifiedFabricAPI/issues
+	Exception message: <No associated exception found>
+
+-- Mod loading issue for: fabric_resource_conditions_api_v1 --
+Details:
+	Mod file: /C:/Users/kamau/AppData/Roaming/ModrinthApp/profiles/935 (2)/mods/forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar#457!/META-INF/jars/fabric-resource-conditions-api-v1-4.3.0+5bdd099819.jar
+	Failure message: Mod fabric_resource_conditions_api_v1 requires neoforge 21.1.248 or above
+		Currently, neoforge is 21.1.235
+		
+	Mod version: 4.3.0+5bdd099819
+	Mod issues URL: https://github.com/Sinytra/ForgifiedFabricAPI/issues
+	Exception message: <No associated exception found>
+
+-- Mod loading issue for: fabric_registry_sync_v0 --
+Details:
+	Mod file: /C:/Users/kamau/AppData/Roaming/ModrinthApp/profiles/935 (2)/mods/forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar#457!/META-INF/jars/fabric-registry-sync-v0-5.3.2+f9aace1619.jar
+	Failure message: Mod fabric_registry_sync_v0 requires neoforge 21.1.248 or above
+		Currently, neoforge is 21.1.235
+		
+	Mod version: 5.3.2+f9aace1619
+	Mod issues URL: https://github.com/Sinytra/ForgifiedFabricAPI/issues
+	Exception message: <No associated exception found>
+
+-- Mod loading issue for: fabric_loot_api_v2 --
+Details:
+	Mod file: /C:/Users/kamau/AppData/Roaming/ModrinthApp/profiles/935 (2)/mods/forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar#457!/META-INF/jars/fabric-loot-api-v2-3.0.15+a3ee712d19.jar
+	Failure message: Mod fabric_loot_api_v2 requires neoforge 21.1.248 or above
+		Currently, neoforge is 21.1.235
+		
+	Mod version: 3.0.15+a3ee712d19
+	Mod issues URL: https://github.com/Sinytra/ForgifiedFabricAPI/issues
+	Exception message: <No associated exception found>
+
+-- Mod loading issue for: fabric_command_api_v2 --
+Details:
+	Mod file: /C:/Users/kamau/AppData/Roaming/ModrinthApp/profiles/935 (2)/mods/forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar#457!/META-INF/jars/fabric-command-api-v2-2.2.28+36d727be19.jar
+	Failure message: Mod fabric_command_api_v2 requires neoforge 21.1.248 or above
+		Currently, neoforge is 21.1.235
+		
+	Mod version: 2.2.28+36d727be19
+	Mod issues URL: https://github.com/Sinytra/ForgifiedFabricAPI/issues
+	Exception message: <No associated exception found>
+
+-- Mod loading issue for: fabric_screen_api_v1 --
+Details:
+	Mod file: /C:/Users/kamau/AppData/Roaming/ModrinthApp/profiles/935 (2)/mods/forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar#457!/META-INF/jars/fabric-screen-api-v1-2.0.26+9991ca2f19.jar
+	Failure message: Mod fabric_screen_api_v1 requires neoforge 21.1.248 or above
+		Currently, neoforge is 21.1.235
+		
+	Mod version: 2.0.26+9991ca2f19
+	Mod issues URL: https://github.com/Sinytra/ForgifiedFabricAPI/issues
+	Exception message: <No associated exception found>
+
+-- Mod loading issue for: fabric_resource_loader_v0 --
+Details:
+	Mod file: /C:/Users/kamau/AppData/Roaming/ModrinthApp/profiles/935 (2)/mods/forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar#457!/META-INF/jars/fabric-resource-loader-v0-1.3.1+4ea8954419.jar
+	Failure message: Mod fabric_resource_loader_v0 requires neoforge 21.1.248 or above
+		Currently, neoforge is 21.1.235
+		
+	Mod version: 1.3.1+4ea8954419
+	Mod issues URL: https://github.com/Sinytra/ForgifiedFabricAPI/issues
+	Exception message: <No associated exception found>
+
+-- Mod loading issue for: fabric_gametest_api_v1 --
+Details:
+	Mod file: /C:/Users/kamau/AppData/Roaming/ModrinthApp/profiles/935 (2)/mods/forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar#457!/META-INF/jars/fabric-gametest-api-v1-2.0.5+29f188ce19.jar
+	Failure message: Mod fabric_gametest_api_v1 requires neoforge 21.1.248 or above
+		Currently, neoforge is 21.1.235
+		
+	Mod version: 2.0.5+29f188ce19
+	Mod issues URL: https://github.com/Sinytra/ForgifiedFabricAPI/issues
+	Exception message: <No associated exception found>
+
+-- Mod loading issue for: fabric_block_api_v1 --
+Details:
+	Mod file: /C:/Users/kamau/AppData/Roaming/ModrinthApp/profiles/935 (2)/mods/forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar#457!/META-INF/jars/fabric-block-api-v1-1.1.0+b0c22bb819.jar
+	Failure message: Mod fabric_block_api_v1 requires neoforge 21.1.248 or above
+		Currently, neoforge is 21.1.235
+		
+	Mod version: 1.1.0+b0c22bb819
+	Mod issues URL: https://github.com/Sinytra/ForgifiedFabricAPI/issues
+	Exception message: <No associated exception found>
+
+-- Mod loading issue for: fabric_loot_api_v3 --
+Details:
+	Mod file: /C:/Users/kamau/AppData/Roaming/ModrinthApp/profiles/935 (2)/mods/forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar#457!/META-INF/jars/fabric-loot-api-v3-1.0.3+333dfad919.jar
+	Failure message: Mod fabric_loot_api_v3 requires neoforge 21.1.248 or above
+		Currently, neoforge is 21.1.235
+		
+	Mod version: 1.0.3+333dfad919
+	Mod issues URL: https://github.com/Sinytra/ForgifiedFabricAPI/issues
+	Exception message: <No associated exception found>
+
+-- Mod loading issue for: fabric_item_group_api_v1 --
+Details:
+	Mod file: /C:/Users/kamau/AppData/Roaming/ModrinthApp/profiles/935 (2)/mods/forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar#457!/META-INF/jars/fabric-item-group-api-v1-4.1.7+e324903319.jar
+	Failure message: Mod fabric_item_group_api_v1 requires neoforge 21.1.248 or above
+		Currently, neoforge is 21.1.235
+		
+	Mod version: 4.1.7+e324903319
+	Mod issues URL: https://github.com/Sinytra/ForgifiedFabricAPI/issues
+	Exception message: <No associated exception found>
+
+-- Mod loading issue for: eunomia --
+Details:
+	Mod file: /C:/Users/kamau/AppData/Roaming/ModrinthApp/profiles/935 (2)/mods/eunomia-neoforge-0.3.14+mc-1.21.0-1.jar
+	Failure message: Mod eunomia requires neoforge 21.1.244 or above
+		Currently, neoforge is 21.1.235
+		
+	Mod version: 0.3.14+mc-1.21.0-1
+	Mod issues URL: <No issues URL found>
+	Exception message: <No associated exception found>
+
+-- Mod loading issue for: fabric_transfer_api_v1 --
+Details:
+	Mod file: /C:/Users/kamau/AppData/Roaming/ModrinthApp/profiles/935 (2)/mods/forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar#457!/META-INF/jars/fabric-transfer-api-v1-5.4.4+6244b11119.jar
+	Failure message: Mod fabric_transfer_api_v1 requires neoforge 21.1.248 or above
+		Currently, neoforge is 21.1.235
+		
+	Mod version: 5.4.4+6244b11119
+	Mod issues URL: https://github.com/Sinytra/ForgifiedFabricAPI/issues
+	Exception message: <No associated exception found>
+
+-- Mod loading issue for: fabric_sound_api_v1 --
+Details:
+	Mod file: /C:/Users/kamau/AppData/Roaming/ModrinthApp/profiles/935 (2)/mods/forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar#457!/META-INF/jars/fabric-sound-api-v1-1.0.23+10b84f8419.jar
+	Failure message: Mod fabric_sound_api_v1 requires neoforge 21.1.248 or above
+		Currently, neoforge is 21.1.235
+		
+	Mod version: 1.0.23+10b84f8419
+	Mod issues URL: https://github.com/Sinytra/ForgifiedFabricAPI/issues
+	Exception message: <No associated exception found>
+
+-- Mod loading issue for: fabric_content_registries_v0 --
+Details:
+	Mod file: /C:/Users/kamau/AppData/Roaming/ModrinthApp/profiles/935 (2)/mods/forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar#457!/META-INF/jars/fabric-content-registries-v0-8.0.19+5e0d320019.jar
+	Failure message: Mod fabric_content_registries_v0 requires neoforge 21.1.248 or above
+		Currently, neoforge is 21.1.235
+		
+	Mod version: 8.0.19+5e0d320019
+	Mod issues URL: https://github.com/Sinytra/ForgifiedFabricAPI/issues
+	Exception message: <No associated exception found>
+
+-- Mod loading issue for: fabric_model_loading_api_v1 --
+Details:
+	Mod file: /C:/Users/kamau/AppData/Roaming/ModrinthApp/profiles/935 (2)/mods/forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar#457!/META-INF/jars/fabric-model-loading-api-v1-2.1.0+6e8f52c719.jar
+	Failure message: Mod fabric_model_loading_api_v1 requires neoforge 21.1.248 or above
+		Currently, neoforge is 21.1.235
+		
+	Mod version: 2.1.0+6e8f52c719
+	Mod issues URL: https://github.com/Sinytra/ForgifiedFabricAPI/issues
+	Exception message: <No associated exception found>
+
+-- Mod loading issue for: fabric_rendering_v1 --
+Details:
+	Mod file: /C:/Users/kamau/AppData/Roaming/ModrinthApp/profiles/935 (2)/mods/forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar#457!/META-INF/jars/fabric-rendering-v1-5.1.0+1a09bd5a19.jar
+	Failure message: Mod fabric_rendering_v1 requires neoforge 21.1.248 or above
+		Currently, neoforge is 21.1.235
+		
+	Mod version: 5.1.0+1a09bd5a19
+	Mod issues URL: https://github.com/Sinytra/ForgifiedFabricAPI/issues
+	Exception message: <No associated exception found>
+
+-- Mod loading issue for: fabric_api_lookup_api_v1 --
+Details:
+	Mod file: /C:/Users/kamau/AppData/Roaming/ModrinthApp/profiles/935 (2)/mods/forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar#457!/META-INF/jars/fabric-api-lookup-api-v1-1.6.72+6244b11119.jar
+	Failure message: Mod fabric_api_lookup_api_v1 requires neoforge 21.1.248 or above
+		Currently, neoforge is 21.1.235
+		
+	Mod version: 1.6.72+6244b11119
+	Mod issues URL: https://github.com/Sinytra/ForgifiedFabricAPI/issues
+	Exception message: <No associated exception found>
+
+-- Mod loading issue for: fabric_renderer_registries_v1 --
+Details:
+	Mod file: /C:/Users/kamau/AppData/Roaming/ModrinthApp/profiles/935 (2)/mods/forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar#457!/META-INF/jars/fabric-renderer-registries-v1-3.2.69+df3654b319.jar
+	Failure message: Mod fabric_renderer_registries_v1 requires neoforge 21.1.248 or above
+		Currently, neoforge is 21.1.235
+		
+	Mod version: 3.2.69+df3654b319
+	Mod issues URL: https://github.com/Sinytra/ForgifiedFabricAPI/issues
+	Exception message: <No associated exception found>
+
+-- Mod loading issue for: fabric_screen_handler_api_v1 --
+Details:
+	Mod file: /C:/Users/kamau/AppData/Roaming/ModrinthApp/profiles/935 (2)/mods/forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar#457!/META-INF/jars/fabric-screen-handler-api-v1-1.3.91+8dbc56dd19.jar
+	Failure message: Mod fabric_screen_handler_api_v1 requires neoforge 21.1.248 or above
+		Currently, neoforge is 21.1.235
+		
+	Mod version: 1.3.91+8dbc56dd19
+	Mod issues URL: https://github.com/Sinytra/ForgifiedFabricAPI/issues
+	Exception message: <No associated exception found>
+
+-- Mod loading issue for: fabric_key_binding_api_v1 --
+Details:
+	Mod file: /C:/Users/kamau/AppData/Roaming/ModrinthApp/profiles/935 (2)/mods/forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar#457!/META-INF/jars/fabric-key-binding-api-v1-1.0.47+62cc7ce119.jar
+	Failure message: Mod fabric_key_binding_api_v1 requires neoforge 21.1.248 or above
+		Currently, neoforge is 21.1.235
+		
+	Mod version: 1.0.47+62cc7ce119
+	Mod issues URL: https://github.com/Sinytra/ForgifiedFabricAPI/issues
+	Exception message: <No associated exception found>
+
+-- Mod loading issue for: fabric_particles_v1 --
+Details:
+	Mod file: /C:/Users/kamau/AppData/Roaming/ModrinthApp/profiles/935 (2)/mods/forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar#457!/META-INF/jars/fabric-particles-v1-4.0.2+824f924c19.jar
+	Failure message: Mod fabric_particles_v1 requires neoforge 21.1.248 or above
+		Currently, neoforge is 21.1.235
+		
+	Mod version: 4.0.2+824f924c19
+	Mod issues URL: https://github.com/Sinytra/ForgifiedFabricAPI/issues
+	Exception message: <No associated exception found>
+
+-- Mod loading issue for: fabric_data_generation_api_v1 --
+Details:
+	Mod file: /C:/Users/kamau/AppData/Roaming/ModrinthApp/profiles/935 (2)/mods/forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar#457!/META-INF/jars/fabric-data-generation-api-v1-20.3.0+3e2bcb4b19.jar
+	Failure message: Mod fabric_data_generation_api_v1 requires neoforge 21.1.248 or above
+		Currently, neoforge is 21.1.235
+		
+	Mod version: 20.3.0+3e2bcb4b19
+	Mod issues URL: https://github.com/Sinytra/ForgifiedFabricAPI/issues
+	Exception message: <No associated exception found>
+
+-- Mod loading issue for: fabric_message_api_v1 --
+Details:
+	Mod file: /C:/Users/kamau/AppData/Roaming/ModrinthApp/profiles/935 (2)/mods/forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar#457!/META-INF/jars/fabric-message-api-v1-6.0.14+6a754fce19.jar
+	Failure message: Mod fabric_message_api_v1 requires neoforge 21.1.248 or above
+		Currently, neoforge is 21.1.235
+		
+	Mod version: 6.0.14+6a754fce19
+	Mod issues URL: https://github.com/Sinytra/ForgifiedFabricAPI/issues
+	Exception message: <No associated exception found>
+
+-- Mod loading issue for: fabric_game_rule_api_v1 --
+Details:
+	Mod file: /C:/Users/kamau/AppData/Roaming/ModrinthApp/profiles/935 (2)/mods/forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar#457!/META-INF/jars/fabric-game-rule-api-v1-1.0.53+36d727be19.jar
+	Failure message: Mod fabric_game_rule_api_v1 requires neoforge 21.1.248 or above
+		Currently, neoforge is 21.1.235
+		
+	Mod version: 1.0.53+36d727be19
+	Mod issues URL: https://github.com/Sinytra/ForgifiedFabricAPI/issues
+	Exception message: <No associated exception found>
+
+-- Mod loading issue for: fabric_item_api_v1 --
+Details:
+	Mod file: /C:/Users/kamau/AppData/Roaming/ModrinthApp/profiles/935 (2)/mods/forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar#457!/META-INF/jars/fabric-item-api-v1-11.3.0+b24c12f719.jar
+	Failure message: Mod fabric_item_api_v1 requires neoforge 21.1.248 or above
+		Currently, neoforge is 21.1.235
+		
+	Mod version: 11.3.0+b24c12f719
+	Mod issues URL: https://github.com/Sinytra/ForgifiedFabricAPI/issues
+	Exception message: <No associated exception found>
+
+-- Mod loading issue for: fabric_lifecycle_events_v1 --
+Details:
+	Mod file: /C:/Users/kamau/AppData/Roaming/ModrinthApp/profiles/935 (2)/mods/forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar#457!/META-INF/jars/fabric-lifecycle-events-v1-2.6.0+e40d8add19.jar
+	Failure message: Mod fabric_lifecycle_events_v1 requires neoforge 21.1.248 or above
+		Currently, neoforge is 21.1.235
+		
+	Mod version: 2.6.0+e40d8add19
+	Mod issues URL: https://github.com/Sinytra/ForgifiedFabricAPI/issues
+	Exception message: <No associated exception found>
+
+-- Mod loading issue for: fabric_client_tags_api_v1 --
+Details:
+	Mod file: /C:/Users/kamau/AppData/Roaming/ModrinthApp/profiles/935 (2)/mods/forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar#457!/META-INF/jars/fabric-client-tags-api-v1-1.2.0+5adff2d719.jar
+	Failure message: Mod fabric_client_tags_api_v1 requires neoforge 21.1.248 or above
+		Currently, neoforge is 21.1.235
+		
+	Mod version: 1.2.0+5adff2d719
+	Mod issues URL: https://github.com/Sinytra/ForgifiedFabricAPI/issues
+	Exception message: <No associated exception found>
+
+-- Mod loading issue for: fabric_tag_api_v1 --
+Details:
+	Mod file: /C:/Users/kamau/AppData/Roaming/ModrinthApp/profiles/935 (2)/mods/forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar#457!/META-INF/jars/fabric-tag-api-v1-1.3.0+3e2bcb4b19.jar
+	Failure message: Mod fabric_tag_api_v1 requires neoforge 21.1.248 or above
+		Currently, neoforge is 21.1.235
+		
+	Mod version: 1.3.0+3e2bcb4b19
+	Mod issues URL: https://github.com/Sinytra/ForgifiedFabricAPI/issues
+	Exception message: <No associated exception found>
+
+-- Mod loading issue for: fabric_blockrenderlayer_v1 --
+Details:
+	Mod file: /C:/Users/kamau/AppData/Roaming/ModrinthApp/profiles/935 (2)/mods/forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar#457!/META-INF/jars/fabric-blockrenderlayer-v1-1.1.52+c290471319.jar
+	Failure message: Mod fabric_blockrenderlayer_v1 requires neoforge 21.1.248 or above
+		Currently, neoforge is 21.1.235
+		
+	Mod version: 1.1.52+c290471319
+	Mod issues URL: https://github.com/Sinytra/ForgifiedFabricAPI/issues
+	Exception message: <No associated exception found>
+
+-- Mod loading issue for: fabric_rendering_fluids_v1 --
+Details:
+	Mod file: /C:/Users/kamau/AppData/Roaming/ModrinthApp/profiles/935 (2)/mods/forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar#457!/META-INF/jars/fabric-rendering-fluids-v1-3.1.6+ddc51b4719.jar
+	Failure message: Mod fabric_rendering_fluids_v1 requires neoforge 21.1.248 or above
+		Currently, neoforge is 21.1.235
+		
+	Mod version: 3.1.6+ddc51b4719
+	Mod issues URL: https://github.com/Sinytra/ForgifiedFabricAPI/issues
+	Exception message: <No associated exception found>
+
+-- Mod loading issue for: fabric_networking_api_v1 --
+Details:
+	Mod file: /C:/Users/kamau/AppData/Roaming/ModrinthApp/profiles/935 (2)/mods/forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar#457!/META-INF/jars/fabric-networking-api-v1-4.3.1+7e3d421f19.jar
+	Failure message: Mod fabric_networking_api_v1 requires neoforge 21.1.248 or above
+		Currently, neoforge is 21.1.235
+		
+	Mod version: 4.3.1+7e3d421f19
+	Mod issues URL: https://github.com/Sinytra/ForgifiedFabricAPI/issues
+	Exception message: <No associated exception found>
+
+-- System Details --
+Details:
+	Minecraft Version: 1.21.1
+	Minecraft Version ID: 1.21.1
+	Operating System: Windows 11 (amd64) version 10.0
+	Java Version: 21.0.11, Azul Systems, Inc.
+	Java VM Version: OpenJDK 64-Bit Server VM (mixed mode, sharing), Azul Systems, Inc.
+	Memory: 375580472 bytes (358 MiB) / 1203765248 bytes (1148 MiB) up to 8589934592 bytes (8192 MiB)
+	CPUs: 32
+	Processor Vendor: GenuineIntel
+	Processor Name: Intel(R) Core(TM) i9-14900HX
+	Identifier: Intel64 Family 6 Model 183 Stepping 1
+	Microarchitecture: Raptor Lake
+	Frequency (GHz): 2.42
+	Number of physical packages: 1
+	Number of physical CPUs: 24
+	Number of logical CPUs: 32
+	Graphics card #0 name: NVIDIA GeForce RTX 5070 Laptop GPU
+	Graphics card #0 vendor: NVIDIA
+	Graphics card #0 VRAM (MiB): 8151.00
+	Graphics card #0 deviceId: VideoController1
+	Graphics card #0 versionInfo: 32.0.16.1088
+	Graphics card #1 name: Intel(R) UHD Graphics
+	Graphics card #1 vendor: Intel Corporation
+	Graphics card #1 VRAM (MiB): 2048.00
+	Graphics card #1 deviceId: VideoController2
+	Graphics card #1 versionInfo: 32.0.101.7076
+	Memory slot #0 capacity (MiB): 16384.00
+	Memory slot #0 clockSpeed (GHz): 5.60
+	Memory slot #0 type: Unknown
+	Memory slot #1 capacity (MiB): 16384.00
+	Memory slot #1 clockSpeed (GHz): 5.60
+	Memory slot #1 type: Unknown
+	Virtual memory max (MiB): 38258.32
+	Virtual memory used (MiB): 30027.04
+	Swap memory total (MiB): 5888.00
+	Swap memory used (MiB): 947.07
+	Space in storage for jna.tmpdir (MiB): available: 201541.91, total: 946399.31
+	Space in storage for org.lwjgl.system.SharedLibraryExtractPath (MiB): available: 201541.91, total: 946399.31
+	Space in storage for io.netty.native.workdir (MiB): available: 201541.91, total: 946399.31
+	Space in storage for java.io.tmpdir (MiB): available: 201541.91, total: 946399.31
+	Space in storage for workdir (MiB): available: 201541.91, total: 946399.31
+	JVM Flags: 2 total; -XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump -Xmx8192M
+	ModLauncher: 11.0.5+main.901c6ea8
+	ModLauncher launch target: forgeclient
+	ModLauncher services: 
+		sponge-mixin-0.15.2+mixin.0.8.7.jar mixin PLUGINSERVICE 
+		loader-4.0.42.jar slf4jfixer PLUGINSERVICE 
+		loader-4.0.42.jar runtime_enum_extender PLUGINSERVICE 
+		at-modlauncher-10.0.1.jar accesstransformer PLUGINSERVICE 
+		loader-4.0.42.jar runtimedistcleaner PLUGINSERVICE 
+		modlauncher-11.0.5.jar mixin TRANSFORMATIONSERVICE 
+		modlauncher-11.0.5.jar essential-loader TRANSFORMATIONSERVICE 
+		modlauncher-11.0.5.jar fml TRANSFORMATIONSERVICE 
+		modlauncher-11.0.5.jar crash_assistant TRANSFORMATIONSERVICE 
+		modlauncher-11.0.5.jar asynclogger TRANSFORMATIONSERVICE 
+		modlauncher-11.0.5.jar connector_loader TRANSFORMATIONSERVICE 
+	FML Language Providers: 
+		kotlinforforge@5.12.0
+		Configured Defaults@21.1.3
+		javafml@4.0
+		lowcodefml@4.0
+		minecraft@4.0
+	Mod List: 
+		client-1.21.1-20240808.144430-srg.jar             |Minecraft                     |minecraft                     |1.21.1              |Manifest: a1:d4:5e:04:4f:d3:d6:e0:7b:37:97:cf:77:b0:de:ad:4a:47:ce:8c:96:49:5f:0a:cf:8c:ae:b2:6d:4b:8a:3f
+		neoforge-21.1.235-universal.jar                   |NeoForge                      |neoforge                      |21.1.235            |Manifest: NOSIGNATURE
