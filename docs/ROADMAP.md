@@ -5,26 +5,32 @@ questions honest — they are decisions the owner has NOT made yet.
 
 ## In flight
 
-* **PR #18 — the monorepo restructure.** HSE → `apps/hse/` (v3.12.1) with a
-  root redirect, plus `apps/template/` and `apps/famu/` (FAMU HCASC).
-  Awaiting owner review/merge. On merge, GitHub Pages redeploys: root starts
-  redirecting to `apps/hse/`, and `/apps/template/` + `/apps/famu/` become
-  publicly reachable (they double as live offline demos).
+* **FAMU online sync deployment.** The repo-side build is Firebase-configured
+  and passes `npm run check:all` on the session branch. The remaining work is
+  deployment and Firebase-console setup: merge the branch to `main`, let
+  GitHub Pages redeploy, make sure Firebase Auth/providers + Realtime
+  Database rules are enabled, and seed the first admin UID.
 
 ## Planned next
 
-1. **Publish HSE v3.12.1** via the in-app Updates panel right after the
-   merge, so local-file users pick up the new `DOWNLOAD_URL` fallback.
-2. **FAMU Firebase connection** (owner-triggered, when cross-device sync is
-   wanted): create a free Firebase project, enable Email/Password +
-   Anonymous auth, create the Realtime Database with the rules from
-   `apps/famu/firebase.database.rules.json`, paste the config with the
-   `// fork-configured` marker, seed the owner's UID in `adminUids`, set
-   `ADMIN_RESET_PASSWORD`. Full steps in `apps/famu/README.md`.
-3. **FAMU's long-term home** — recommendation on record: move to its own
+1. **Deploy FAMU online sync build:** push/open PR from the session branch,
+   merge to `main`, wait for Pages, then smoke-test sign-in at
+   `/HSEQB/apps/famu/`.
+2. **Finish Firebase console setup:** publish `apps/famu/firebase.database.rules.json`,
+   confirm Email/Password + Anonymous auth providers, sign in once, and add
+   the first admin UID under `adminUids`.
+3. **Optional reset password:** leave `ADMIN_RESET_PASSWORD` blank unless the
+   owner chooses a FAMU-specific phrase; it only controls the admin danger-zone
+   reset and is not required for sync.
+4. **Publish HSE v3.12.1** via the in-app Updates panel if local-file users
+   have not already received the new `DOWNLOAD_URL` fallback.
+5. **FAMU's long-term home** — recommendation on record: move to its own
    repository once FAMU students run it themselves (completely separate
    origin, own Pages, no shared anything). Owner has not decided.
-4. **Port future features** HSE → template → forks by module file copies
+6. **Configure FAMU deployment metadata** once the permanent URL/repo is known:
+   set `GITHUB_REPO_URL`, `DOWNLOAD_URL`, and `DEPLOY_HOSTNAMES`, then rebuild
+   and check.
+7. **Port future features** HSE → template → forks by module file copies
    (the shared paint-slot names and identical module structure exist exactly
    for this). After any port: rebuild + check + guard in every touched app.
 

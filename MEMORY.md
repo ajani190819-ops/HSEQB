@@ -11,22 +11,26 @@ The HSEQB monorepo: a family of single-file quiz bowl tracker apps.
 guard-enforced). New schools/organizations fork from the template —
 `apps/famu/` (FAMU HCASC) is the first.
 
-## Current state (2026-10-03)
+## Current state (2026-10-05)
 
-* **PR #18 is open** from the session branch, containing the whole
-  restructure: HSE moved to `apps/hse/` (v3.12.1, download URL updated),
-  root redirect added, `apps/template/` (v1.0.0) and `apps/famu/`
-  (v1.0.0, FAMU HCASC) created. All checks green in all three apps.
-  **Not yet merged. `main` still has the old single-app layout.**
-* HSE app is byte-identical to `main` except: `01-constants.js` (version +
-  `DOWNLOAD_URL`), `package.json`, rebuilt `index.html`, an AGENTS.md note.
-* FAMU HCASC runs in **offline mode** — no Firebase project connected yet.
-  Official FAMU colors: green `#008344` (structural) + orange `#F4811F`
-  (accent), default theme id `famu`.
-* Template default theme: Indigo (`#667eea`/`#764ba2`).
-* Live site (until merge): `https://ajani190819-ops.github.io/HSEQB/` serves
-  the old root app from `main`. After merge: root redirects to
-  `apps/hse/`, and `/apps/template/` + `/apps/famu/` become reachable.
+* The monorepo restructure is present on `origin/main` / current branch:
+  root redirects to `apps/hse/`, with `apps/template/` and `apps/famu/`
+  included. `gh pr list --head arena/01a10c0b-hseqb --base main --state all`
+  returned no PRs for the current session branch.
+* `npm run check:all` passes after the FAMU sync build fix.
+* FAMU HCASC is Firebase-configured in source and built artifact on this
+  branch: `apps/famu/src/js/01-constants.js` and `apps/famu/index.html` both
+  contain the FAMU Firebase config with the sanctioned `// fork-configured`
+  marker. `ADMIN_RESET_PASSWORD` is blank, so the danger-zone reset remains
+  disabled until the owner chooses a FAMU-specific value.
+* The public GitHub Pages URL may still serve the previous offline build until
+  this branch is merged to `main` and Pages redeploys.
+* Official FAMU colors remain green `#008344` (structural) + orange
+  `#F4811F` (accent), default theme id `famu`. Template default theme remains
+  Indigo (`#667eea`/`#764ba2`).
+* If GitHub Pages is enabled from `main`, the intended monorepo URL for FAMU
+  is `https://ajani190819-ops.github.io/HSEQB/apps/famu/`; for production,
+  the recommended long-term option is still a separate FAMU-owned repo.
 
 ## Decisions already made (do not relitigate without the owner)
 
@@ -102,20 +106,38 @@ guard-enforced). New schools/organizations fork from the template —
   Firebase free-tier question answered: a second (free) project is only
   needed when FAMU wants cross-device sync.
 
+* **2026-10-05 (session 4 — FAMU setup audit):** repo check only. Fetched latest `origin/main` and fast-forwarded the session branch. No PR
+  exists for the session branch. Verified HSE and template checks pass. FAMU
+  check failed because the built `index.html` was stale versus configured
+  Firebase source; the check command temporarily rebuilt `apps/famu/index.html`
+  and it was reverted before doc updates.
+* **2026-10-05 (session 5 — FAMU online sync build):** finished the repo-side
+  Firebase sync build for FAMU: moved the `// fork-configured` marker onto the
+  actual `const firebaseConfig = …` line, rebuilt `apps/famu/index.html`, and
+  blanked `ADMIN_RESET_PASSWORD` rather than publishing an HSE-looking reset
+  phrase. Verified with `npm run check:all` (HSE, template, FAMU all green).
+
 ## Next actions
 
-1. Owner reviews and merges **PR #18** (Pages redeploys on merge; root starts
-   redirecting).
-2. After merge: an admin publishes the **v3.12.1** build via the in-app
-   Updates panel so local-file HSE users get the new download URL.
-3. FAMU: connect its own Firebase project when cross-device sync is wanted
-   (README in `apps/famu/` has the steps; `// fork-configured` marker).
-4. Decide FAMU's long-term home: stay at `apps/famu/` or move to its own
+1. Merge/deploy the FAMU sync build: push/open PR from the session branch,
+   merge to `main`, then wait for GitHub Pages to redeploy
+   `https://ajani190819-ops.github.io/HSEQB/apps/famu/`.
+2. In Firebase, ensure Email/Password + Anonymous auth are enabled, publish
+   `apps/famu/firebase.database.rules.json`, create/sign into the first FAMU
+   account, then seed `adminUids/<uid> = true`.
+3. Optional: choose a FAMU-specific `ADMIN_RESET_PASSWORD` if the admin
+   danger-zone reset should be enabled; rebuild/check after setting it.
+4. Configure FAMU deployment metadata once its permanent URL/repo is chosen:
+   `GITHUB_REPO_URL`, `DOWNLOAD_URL`, and `DEPLOY_HOSTNAMES` in
+   `apps/famu/src/js/01-constants.js`, then rebuild/check.
+5. If HSE v3.12.1 has not yet been announced to local-file users, an admin
+   should publish it through the in-app Updates panel.
+6. Decide FAMU's long-term home: stay at `apps/famu/` or move to its own
    repository (recommended once FAMU students run it themselves).
-5. Optional hardening (owner aware, not decided): HSE Firebase rules allow
-   any signed-in user to read/write `sessions`; an email-domain allowlist or
-   disabled anonymous auth would tighten that. Tradeoff: new legit users
-   must be pre-approved.
+7. Optional hardening (owner aware, not decided): HSE/FAMU Firebase rules
+   allow any signed-in user to read/write shared data; an email-domain
+   allowlist or disabled anonymous auth would tighten that. Tradeoff: new
+   legit users must be pre-approved.
 
 ## Before you finish a session (checklist)
 
