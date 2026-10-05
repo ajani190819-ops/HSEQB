@@ -20,9 +20,12 @@ it.**
 3. **Add players** (Players → type a name → Add Player, or import a CSV/TXT
    roster). Rename typos with **Rename**; combine duplicates with **Merge**.
 4. **Make teams** (Teams → Team Name → Add Team → click players to assign).
-5. **Record answers** in the main area — each player has a row of buttons:
-   **Power +15 · Toss-up +10 · Neg −5 · Miss 0 · Bonus +10/team**. Pick the
-   category when asked. Keyboard shortcuts exist (see the Help "?" button).
+5. **Run the match** from the HCASC scoreboard — choose Face-Off 1, 2, or 3,
+   select the category, team, and responder, then use **Face-Off +10 · Bonus
+   +20/team · Turnover +10 · incorrect 0**. Switch to **Ultimate Challenge**
+   for each team's 60-second clock and **+25 per correct answer**. Pick the
+   category before logging the ruling; keyboard shortcuts for the legacy
+   correction form are listed in Help (the `?` button).
 6. **See stats** — flip the **Tracker / Stats** toggle in the header:
    leaderboard, per-player detail, team compositions, charts.
 7. **Export** (Export / Import → Excel, JSON, or CSV) — **do this regularly

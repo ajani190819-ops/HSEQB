@@ -86,6 +86,8 @@ drifted from the committed output.
 | 28 | `recording-and-stats.js` | point types, `recordAnswer`, keyboard shortcuts, answer log, session stats |
 | 29 | `data-io.js` | JSON/CSV/Excel import & export, file download |
 | 30 | `debug-boot.js` | debug data injection/clear/reset, `DOMContentLoaded` boot |
+| 31 | `updates.js` | public release history, update center, admin publishing |
+| 32 | `hcasc-mode.js` | official HCASC rounds, clocks, category board, team scoreboard, audit metadata |
 
 ## Automatic versioning
 
@@ -163,12 +165,18 @@ Bonuses are recorded against a pseudo-player `__team__<id>` (rendered as
 
 ## Scoring model
 
-Point values: Power **+15**, Toss-up **+10**, Neg **−5**, Miss **0**, Dead
-**0**, Team Bonus **+10/part (team only)**.
+HCASC point values: Face-Off **+10**, Team Bonus **+20**, Ultimate Challenge
+**+25 per correct answer**, and incorrect/pass/miss **0**. There are no power
+bonuses or negative-point penalties. A sudden-death Face-Off is worth **+10**.
 
-**Toss-Ups Heard (THeard)** increments once on the first outcome of a
-toss-up; a correct answer after a Neg/Miss is a follow-up (no new THeard).
-Required for all normalized player metrics.
+The app keeps the legacy `Toss-up`, `Neg`, `Miss`, and `Dead` event names for
+imports and analytics compatibility; new HCASC events carry `format`, `round`,
+`phase`, `teamId`, `questionId`, `questionNumber`, and `hcascCategory`.
+
+**Toss-Ups Heard (THeard)** remains a practice/analytics exposure counter and
+increments once on the first outcome of a toss-up; a correct answer after a
+Neg/Miss is a follow-up (no new THeard). It is not part of the official team
+score.
 
 Player metrics (official toss-up decisions only):
 

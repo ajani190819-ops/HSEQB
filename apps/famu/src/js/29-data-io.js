@@ -10,8 +10,9 @@ if(!data.sessionName||(!data.players&&!data.answerLog)) throw new Error('Not a v
 const existingId=Object.keys(state.sessions).find(id=>state.sessions[id].name===data.sessionName);
 const doImport = () =>{
 const sid=existingId||Date.now().toString();
-const imported={id:sid,name:data.sessionName,created:data.created||new Date().toISOString(),lastUpdated:new Date().toISOString(),players:data.players||{},teams:data.teams||[],categories:data.categories||[],answers:data.answers||[],answerLog:data.answerLog||[]};
+const imported={id:sid,name:data.sessionName,created:data.created||new Date().toISOString(),lastUpdated:new Date().toISOString(),format:data.format,currentRound:data.currentRound||1,currentPhase:data.currentPhase||'Face-Off',rounds:data.rounds||undefined,players:data.players||{},teams:data.teams||[],categories:data.categories||[],answers:data.answers||[],answerLog:data.answerLog||[]};
 Object.keys(imported.players).forEach(name=>{imported.players[name].answers=imported.answerLog.filter(a=>a.player===name);imported.players[name].points=imported.players[name].answers.filter(isPlayerPerformanceAnswer).reduce((s,a)=>s+(a.points||0),0);});
+if (typeof hcascEnsureSession === 'function') hcascEnsureSession(imported);
 state.sessions[sid]=imported; state.currentSessionId=sid;
 loadSessionData(); saveAllData(); renderAll();
 statusEl.style.color='var(--success)'; statusEl.textContent='Imported "'+imported.name+'" with '+imported.answerLog.length+' answers.';
@@ -30,7 +31,7 @@ const s=getCurrentSession(); if(!s) return;
 const ps=calculatePlayerStats(),ts=calculateTeamStats(),csv=[];
 if($('exportPlayers').classList.contains('selected')){csv.push('Player Statistics','Player Name,Total Toss-up Points,Total Decisions,Correct TUs,Powered TUs,Negs,Misses');ps.forEach(p=>csv.push([p.name,p.points,p.totalAnswers,p.powers+p.tossupsCorrect,p.powers,p.negs,p.misses].join(',')));csv.push('');}
 if($('exportTeamStats').classList.contains('selected')&&ts.length){csv.push('Team Statistics','Team Name,Total Points,Total Answers,Members');ts.forEach(t=>csv.push([t.name,t.totalPoints,t.totalAnswers,'"'+t.members.join(', ')+'"'].join(',')));csv.push('');}
-if($('exportAnswerLog').classList.contains('selected')){csv.push('Answer Log','Player,Point Type,Category,Points,Timestamp');(s.answerLog||[]).forEach(a=>csv.push([a.player,a.pointType,a.category,a.points,new Date(a.timestamp).toLocaleString()].join(',')));}
+if($('exportAnswerLog').classList.contains('selected')){csv.push('Answer Log','Player,Point Type,Phase,Round,Team ID,Question Number,Question ID,Category,Points,Timestamp');(s.answerLog||[]).forEach(a=>csv.push([a.player,a.pointType,a.phase||'',a.round||'',a.teamId||'',a.questionNumber||'',a.questionId||'',a.category,a.points,new Date(a.timestamp).toLocaleString()].join(',')));}
 downloadFile(csv.join('\n'),'quiz-bowl-'+s.name+'-'+new Date().toISOString().split('T')[0]+'.csv','text/csv');
 }
 function exportAllData(format){
@@ -45,10 +46,10 @@ showToast('All sessions exported as JSON.', 'success');
 if (typeof XLSX === 'undefined'){ showToast('Excel library not loaded yet — try again.', 'warn'); return; }
 const wb = XLSX.utils.book_new();
 // Sheet 1: Answer Log (all sessions)
-const logRows = [['Session','Player','Point Type','Category','Points','Timestamp']];
+const logRows = [['Session','Player','Point Type','Phase','Round','Team ID','Question Number','Question ID','Category','Points','Timestamp']];
 allSessions.forEach(s =>{
 (s.answerLog||[]).forEach(a =>{
-logRows.push([s.name||'', a.player||'', a.pointType||'', a.category||'', a.points, new Date(a.timestamp).toLocaleString()]);
+logRows.push([s.name||'', a.player||'', a.pointType||'', a.phase||'', a.round||'', a.teamId||'', a.questionNumber||'', a.questionId||'', a.category||'', a.points, new Date(a.timestamp).toLocaleString()]);
 });
 });
 XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(logRows), 'Answer Log');
@@ -78,13 +79,14 @@ XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(summaryRows), 'Session 
 XLSX.writeFile(wb, APP_FILE_BASENAME + '-all-sessions-'+date+'.xlsx');
 showToast('All sessions exported as Excel.', 'success');
 } else {
-const rows = ['Session,Player,Point Type,Category,Points,Timestamp'];
+const rows = ['Session,Player,Point Type,Phase,Round,Team ID,Question Number,Question ID,Category,Points,Timestamp'];
 allSessions.forEach(s =>{
 (s.answerLog||[]).forEach(a =>{
 rows.push([
 '"'+(s.name||'').replace(/"/g,'""')+'"',
 '"'+(a.player||'').replace(/"/g,'""')+'"',
-a.pointType, '"'+(a.category||'').replace(/"/g,'""')+'"',
+a.pointType, '"'+(a.phase||'').replace(/"/g,'""')+'"',
+a.round||'', '"'+(a.teamId||'').replace(/"/g,'""')+'"', a.questionNumber||'', '"'+(a.questionId||'').replace(/"/g,'""')+'"', '"'+(a.category||'').replace(/"/g,'""')+'"',
 a.points, new Date(a.timestamp).toLocaleString()
 ].join(','));
 });
@@ -95,7 +97,7 @@ showToast('All sessions exported as CSV.', 'success');
 }
 function exportToJSON(){
 const s=getCurrentSession(); if(!s) return;
-downloadFile(JSON.stringify({sessionName:s.name,created:s.created,lastUpdated:s.lastUpdated,players:s.players,teams:s.teams,answerLog:s.answerLog,categories:state.categories},null,2),'quiz-bowl-'+s.name+'-'+new Date().toISOString().split('T')[0]+'.json','application/json');
+downloadFile(JSON.stringify({sessionName:s.name,created:s.created,lastUpdated:s.lastUpdated,format:s.format,currentRound:s.currentRound,currentPhase:s.currentPhase,rounds:s.rounds,players:s.players,teams:s.teams,answerLog:s.answerLog,categories:state.categories},null,2),'famu-hcasc-'+s.name+'-'+new Date().toISOString().split('T')[0]+'.json','application/json');
 }
 function downloadFile(content,filename,mimeType){
 const a=document.createElement('a');
