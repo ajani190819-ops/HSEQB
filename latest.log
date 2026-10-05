@@ -1,87 +1,762 @@
-[00:02:15] [Render thread/INFO]: Adding auth button to the multiplayer screen
-[00:02:15] [ForkJoinPool.commonPool-worker-6/INFO]: Verifying Minecraft session...
-[00:02:16] [ForkJoinPool.commonPool-worker-6/INFO]: The Minecraft session is valid
-[00:02:17] [Render thread/INFO]: [ETF]: emissive suffixes loaded: [_e]
-[00:02:17] [Render thread/INFO]: Connecting to pgsql-tourism.tun.ply.gg, 25565
-[00:02:19] [Render thread/INFO]: [ETF]: emissive suffixes loaded: [_e]
-[00:02:19] [Render thread/INFO]: [ETF]: emissive suffixes loaded: [_e]
-[00:02:19] [Render thread/WARN]: Client disconnected with reason: Disconnected
-[00:02:24] [Render thread/INFO]: Adding auth button to the multiplayer screen
-[00:02:26] [Render thread/ERROR]: Can't ping pgsql-tourism.tun.ply.gg: Internal Exception: java.net.SocketException: Connection reset
-[00:13:24] [Render thread/INFO]: Adding auth button to the multiplayer screen
-[00:13:24] [ForkJoinPool.commonPool-worker-7/INFO]: Verifying Minecraft session...
-[00:13:24] [ForkJoinPool.commonPool-worker-7/INFO]: The Minecraft session is valid
-[00:13:26] [Render thread/ERROR]: Can't ping pgsql-tourism.tun.ply.gg: Internal Exception: java.net.SocketException: Connection reset
-[00:13:27] [Render thread/INFO]: [FullscreenFix] Game started
-[00:13:28] [Render thread/INFO]: Adding auth button to the multiplayer screen
-[00:13:29] [Render thread/INFO]: Adding auth button to the multiplayer screen
-[00:13:30] [Render thread/INFO]: [ETF]: emissive suffixes loaded: [_e]
-[00:13:30] [Render thread/INFO]: Connecting to pgsql-tourism.tun.ply.gg, 25565
-[00:13:32] [Server Connector #4/ERROR]: Couldn't connect to server
-java.net.SocketException: Connection reset
-	at java.base/sun.nio.ch.NioSocketImpl.implRead(Unknown Source)
-	at java.base/sun.nio.ch.NioSocketImpl.read(Unknown Source)
-	at java.base/sun.nio.ch.NioSocketImpl$1.read(Unknown Source)
-	at java.base/java.net.Socket$SocketInputStream.implRead(Unknown Source)
-	at java.base/java.net.Socket$SocketInputStream.read(Unknown Source)
-	at java.base/java.net.Socket$SocketInputStream.read(Unknown Source)
-	at java.base/java.io.DataInputStream.readUnsignedByte(Unknown Source)
-	at java.base/java.io.DataInputStream.readByte(Unknown Source)
-	at knot//com.viaversion.viafabricplus.protocoltranslator.util.ProtocolVersionDetector.readVarInt(ProtocolVersionDetector.java:136)
-	at knot//com.viaversion.viafabricplus.protocoltranslator.util.ProtocolVersionDetector.get(ProtocolVersionDetector.java:85)
-	at knot//net.minecraft.client.gui.screens.ConnectScreen$1.wrapOperation$dfk000$viafabricplus$setServerInfoAndProtocolVersion(ConnectScreen.java:590)
-	at knot//net.minecraft.client.gui.screens.ConnectScreen$1.run(ConnectScreen.java:103)
-[00:14:46] [Render thread/INFO]: Adding auth button to the multiplayer screen
-[00:14:46] [ForkJoinPool.commonPool-worker-8/INFO]: Verifying Minecraft session...
-[00:14:46] [ForkJoinPool.commonPool-worker-8/INFO]: The Minecraft session is valid
-[00:14:48] [Render thread/ERROR]: Can't ping pgsql-tourism.tun.ply.gg: Internal Exception: java.net.SocketException: Connection reset
-[00:17:12] [Render thread/INFO]: Adding auth button to the multiplayer screen
-[00:17:12] [ForkJoinPool.commonPool-worker-9/INFO]: Verifying Minecraft session...
-[00:17:12] [ForkJoinPool.commonPool-worker-9/INFO]: The Minecraft session is valid
-[00:17:21] [Render thread/INFO]: Adding auth button to the multiplayer screen
-[00:17:23] [Render thread/ERROR]: Can't ping pgsql-tourism.tun.ply.gg: Internal Exception: java.net.SocketException: Connection reset
-[00:17:58] [Render thread/INFO]: Adding auth button to the multiplayer screen
-[00:18:00] [Render thread/ERROR]: Can't ping pgsql-tourism.tun.ply.gg: Internal Exception: java.net.SocketException: Connection reset
-[00:28:42] [Render thread/INFO]: Adding auth button to the multiplayer screen
-[00:28:42] [ForkJoinPool.commonPool-worker-10/INFO]: Verifying Minecraft session...
-[00:28:42] [ForkJoinPool.commonPool-worker-10/INFO]: The Minecraft session is valid
-[00:28:51] [Render thread/INFO]: [ETF]: emissive suffixes loaded: [_e]
-[00:28:51] [Render thread/INFO]: Connecting to pgsql-tourism.tun.ply.gg, 25565
-[00:28:55] [Render thread/INFO]: Started 10 worker threads
-[00:28:55] [Render thread/INFO]: [System] [CHAT] SillyEnderer joined the game
-[00:28:55] [Render thread/INFO]: Stopping worker threads
-[00:28:55] [Render thread/INFO]: Started 10 worker threads
-[00:28:55] [Render thread/INFO]: Session started
-[00:28:55] [Render thread/INFO]: Loaded 2 advancements
-[00:30:00] [Render thread/INFO]: Stopping worker threads
-[00:30:00] [Render thread/INFO]: [ETF]: emissive suffixes loaded: [_e]
-[00:30:00] [Render thread/INFO]: Adding auth button to the multiplayer screen
-[00:30:00] [ForkJoinPool.commonPool-worker-11/INFO]: Verifying Minecraft session...
-[00:30:00] [Render thread/INFO]: Session ended
-[00:30:00] [ForkJoinPool.commonPool-worker-11/INFO]: The Minecraft session is valid
-[00:36:46] [Render thread/INFO]: Adding auth button to the multiplayer screen
-[00:36:46] [ForkJoinPool.commonPool-worker-12/INFO]: Verifying Minecraft session...
-[00:36:47] [ForkJoinPool.commonPool-worker-12/INFO]: The Minecraft session is valid
-[00:36:49] [Render thread/ERROR]: Can't ping pgsql-tourism.tun.ply.gg: Internal Exception: java.net.SocketException: Connection reset
-[00:44:29] [Render thread/INFO]: Adding auth button to the multiplayer screen
-[00:44:29] [ForkJoinPool.commonPool-worker-13/INFO]: Verifying Minecraft session...
-[00:44:29] [ForkJoinPool.commonPool-worker-13/INFO]: The Minecraft session is valid
-[00:46:15] [Render thread/INFO]: Adding auth button to the multiplayer screen
-[00:46:15] [ForkJoinPool.commonPool-worker-14/INFO]: Verifying Minecraft session...
-[00:46:16] [ForkJoinPool.commonPool-worker-14/INFO]: The Minecraft session is valid
-[00:47:04] [Render thread/INFO]: Adding auth button to the multiplayer screen
-[00:47:05] [Render thread/INFO]: [ETF]: emissive suffixes loaded: [_e]
-[00:47:05] [Render thread/INFO]: Connecting to pgsql-tourism.tun.ply.gg, 25565
-[00:47:08] [Render thread/INFO]: Started 10 worker threads
-[00:47:08] [Render thread/INFO]: [System] [CHAT] SillyEnderer joined the game
-[00:47:08] [Render thread/INFO]: Stopping worker threads
-[00:47:08] [Render thread/INFO]: Started 10 worker threads
-[00:47:08] [Render thread/INFO]: Session started
-[00:47:08] [Render thread/INFO]: Loaded 2 advancements
-[00:59:38] [Render thread/INFO]: Loaded 5 advancements
-[01:15:10] [Netty NIO IO #36/ERROR]: Negative index in crash report handler (18/30)
-[01:15:10] [Render thread/INFO]: Stopping worker threads
-[01:15:10] [Render thread/INFO]: [ETF]: emissive suffixes loaded: [_e]
-[01:15:10] [Render thread/INFO]: [ETF]: emissive suffixes loaded: [_e]
-[01:15:10] [Render thread/WARN]: Client disconnected with reason: Internal Exception: java.net.SocketException: Connection reset
-[01:15:10] [Render thread/INFO]: Session ended
+[01:30:47] [main/INFO]: ModLauncher running: args [--username, SillyEnderer, --version, 1.21.1, --gameDir, C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2), --assetsDir, C:\Users\kamau\AppData\Roaming\ModrinthApp\meta\assets, --assetIndex, 17, --uuid, acf27cca4ddf4ab2928283a4feb6d235, --accessToken, ❄❄❄❄❄❄❄❄, --clientId, c4502edb-87c6-40cb-b595-64a280cf8906, --xuid, 0, --userType, msa, --versionType, release, --width, 854, --height, 480, --fml.neoForgeVersion, 21.1.255, --fml.fmlVersion, 4.0.45, --fml.mcVersion, 1.21.1, --fml.neoFormVersion, 20240808.144430, --launchTarget, forgeclient]
+[01:30:47] [main/INFO]: JVM identified as Azul Systems, Inc. OpenJDK 64-Bit Server VM 21.0.11+10-LTS
+[01:30:47] [main/INFO]: ModLauncher 11.0.5+main.901c6ea8 starting: java version 21.0.11 by Azul Systems, Inc.; OS Windows 11 arch amd64 version 10.0
+[01:30:47] [main/INFO]: Searching for graphics cards...
+[01:30:48] [main/INFO]: Found graphics adapter: AdapterInfo{vendor=NVIDIA, description='NVIDIA GeForce RTX 5070 Laptop GPU', adapterType=0x00002313, openglIcdFilePath='C:\Windows\System32\DriverStore\FileRepository\nvami.inf_amd64_46b14a8ba26be7f7\nvoglv64.dll', openglIcdVersion=32.0.16.1088}
+[01:30:48] [main/INFO]: Found graphics adapter: AdapterInfo{vendor=INTEL, description='Intel(R) RaptorLake-S Mobile Graphics Controller', adapterType=0x0000232B, openglIcdFilePath='C:\Windows\System32\DriverStore\FileRepository\iigd_dch.inf_amd64_20cdaaedd9005d64\igxelpicd64.dll', openglIcdVersion=32.0.101.7076}
+[01:30:48] [main/WARN]: Sodium has applied one or more workarounds to prevent crashes or other issues on your system: [NVIDIA_THREADED_OPTIMIZATIONS_BROKEN]
+[01:30:48] [main/WARN]: This is not necessarily an issue, but it may result in certain features or optimizations being disabled. You can sometimes fix these issues by upgrading your graphics driver.
+[01:30:49] [main/INFO]: Successfully configured async logger context with [wrapSysOutSysErr=false, filtering.enabled=false, filtering.global=false]
+[01:30:49] [main/INFO]: ImmediateWindowProvider not loading because splash screen is disabled
+[01:30:49] [main/INFO]: Starting Essential Loader (stage2) version 1.8.0 (4dad5866273e5beba83449a1e0460378) [stable]
+[01:30:49] [main/INFO]: Launching CrashAssistantApp (CrashAssistant-neoforge-1.20.6-1.21.4-1.11.12.jar)
+[01:30:50] [main/INFO]: SpongePowered MIXIN Subsystem Version=0.8.7 Source=union:/C:/Users/kamau/AppData/Roaming/ModrinthApp/meta/libraries/net/fabricmc/sponge-mixin/0.16.4+mixin.0.8.7/sponge-mixin-0.16.4+mixin.0.8.7.jar%23166!/ Service=ModLauncher Env=CLIENT
+[01:30:50] [CrashAssistantApp process logger/INFO]: CrashAssistantApp process successfully started.
+[01:30:50] [main/INFO]: Found mod file "neoforge-21.1.255-universal.jar" [locator: PathBasedLocator[name=neoforge, paths=[C:\Users\kamau\AppData\Roaming\ModrinthApp\meta\libraries\net\neoforged\neoforge\21.1.255\neoforge-21.1.255-universal.jar]], reader: mod manifest]
+[01:30:50] [main/INFO]: Found library file "~nonexistent" [locator: org.sinytra.connector.locator.ConnectorEarlyLocatorBootstrap@52831a73]
+[01:30:50] [main/INFO]: Found mod file "net.caffeinemc.sodium-neoforge-0.8.13+mc1.21.1-mod.jar" [locator: net.caffeinemc.mods.sodium.service.SodiumServiceModLocator@6f1c3f18, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "fabric-rendering-data-attachment-v1-0.3.48+73761d2e19.jar" [locator: net.caffeinemc.mods.sodium.service.SodiumServiceModLocator@6f1c3f18, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "fabric-renderer-api-v1-3.4.1+9125b6dc19.jar" [locator: net.caffeinemc.mods.sodium.service.SodiumServiceModLocator@6f1c3f18, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "fabric-block-view-api-v2-1.0.10+9afaaf8c19.jar" [locator: net.caffeinemc.mods.sodium.service.SodiumServiceModLocator@6f1c3f18, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "fabric-api-base-0.4.42+d1308ded19.jar" [locator: net.caffeinemc.mods.sodium.service.SodiumServiceModLocator@6f1c3f18, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "0Pack2Reload-NeoForge-1.21.1-1.0.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "a_good_place-1.21-1.2.6-neoforge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "acedium-0.4.2+mc1.21.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "AdvancementPlaques-1.21.1-neoforge-1.6.8.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "Almanac-1.21.1-2-neoforge-1.5.2.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "alternate_current-mc1.21-1.9.0.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "animatedlogo-2.1+1.21-neoforge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "animatedmojanglogo-2.6.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "antismooth-1.21.1-neoforge-2.0.4.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "anvianslib-neoforge-1.21-1.4.2.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "appleskin-neoforge-mc1.21-3.0.9.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "architectury-13.0.11-neoforge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "armor-hider-neoforge-0.14.4+mc-1.21.0-1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "async-locator-refined-neoforge-1.21.1-1.6.0.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "authme-neoforge-9.0.1+1.21.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "baguettelib-1.21.1-NeoForge-2.0.7.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "balm-neoforge-1.21.1-21.0.66.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "better-compatability-checker-neoforge-21.1.8.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "better_modlist-21.1.3.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "BetterAdvancements-NeoForge-1.21.1-0.4.3.21.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "betterbiomeblend-1.5.2.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "bettercombat-neoforge-2.4.0+1.21.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "borderless-neoforge-1.21.1-1.7.5_1-all.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "bounced-4.1.4-neoforge.1.21.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "CameraOverhaul-v2.1.2-neoforge+mc[1.21-1.21.1].jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "cat_jam-neoforge-mc1.21-1.3.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "chat_heads-0.15.7-neoforge-1.21.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "chatanimation-neoforge-1.3.3+mc1.21.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "chloride-NEOFORGE-mc1.21.1-v1.8.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "chunksfadein-neoforge-3.0.26-1.21.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "classic-minecraft-icon-v1.1.10-mc1.21.11-neoforge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "clickthrough-plus-neoforge-3.5.0+1.21.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "clienttweaks-neoforge-1.21.1-21.1.15.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "cloth-config-15.0.140-neoforge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "Clumps-neoforge-1.21.1-19.0.0.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "collective-1.21.1-8.42.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found library file "ConfiguredDefaults-v21.1.3-1.21.1-NeoForge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "coroutil-neoforge-1.21.0-1.3.8.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "CreativeCore_NEOFORGE_v2.13.50_mc1.21.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "datapackloaderrorfix-neoforge-1.21-2.0.0.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "DeleteWorldsToTrash-v21.1.0-1.21.1-NeoForge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "do_a_barrel_roll-neoforge-3.7.3+1.21.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "draggable_lists-mc1.20.6-1.0.8-build.44.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "durabilitytooltip-1.2.0-neoforge-mc1.21.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "DynamicBrightness-neoforge-1.3.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "emi-1.1.24+1.21.1+neoforge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "emi_accelerator-1.1.4.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "emi_ores-1.3+1.21.1+neoforge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "emibook-neoforge-1.21.1-1.1.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "emixx-2.1.0.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "enhanced_attack_indicator-1.1.1+1.21-forge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "entity_model_features-3.3.11-1.21-neoforge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "entity_sound_features-0.8.2-1.21-neoforge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "entity_texture_features-7.2.5-1.21-neoforge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "entityculling-neoforge-1.11.2-mc1.21.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "eunomia-neoforge-0.3.14+mc-1.21.0-1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "EuphoriaPatcher-1.10.5-r5.9.3-neoforge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "extra-mod-integrations-all-neoforge-1.0.3+1.21.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "fastrecipesearch-1.21.1-1.7-neoforge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "ferritecore-7.0.3-neoforge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "fishingreal-neoforge-1.21.1-1.9.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "FpsOverlay-neoforge-1.21.1-5.5.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "fwa+1.21.1-neoforge-1.2.31.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "fzzy_config-0.7.7+1.21+neoforge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "geckolib-neoforge-1.21.1-4.9.3.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "gnetum-3.3.6.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "gpumemleakfix-neoforge-1.21.1-1.0.0.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "GPUTape-1.20.6-1.21x-1.0.3.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "Iceberg-1.21.1-neoforge-1.3.2.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "ImmediatelyFast-NeoForge-1.6.14+1.21.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "immersivearmorhud-neoforge-1.0.1-1.21.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "inventory-item-groups-1.5.3-neoforge+1.21.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "InvMove-0.9.3+1.21.1-NeoForge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "InvMoveCompats-0.5.0+1.21.8-NeoForge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "iris-neoforge-1.8.14-beta.1+mc1.21.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "IrisSearch-1.4.1-neoforge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "irisveil-0.3.0.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "ItemPhysicLite_NEOFORGE_v1.6.13_mc1.21.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "Jade-1.21.1-NeoForge-15.10.6.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "jamlib-neoforge-1.3.6+1.21.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "jeb_1.21.1-1.1.0.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "jumpoverfences-neoforge-1.21.1-1.6.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "jupiter-2.3.7-1.21.1-neoforge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "Kerria-1.3.2+1.21.1-neoforge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/WARN]: Skipping jar. File mods\KeyBindingsKeeper+1.21.1+0.0.1.jar is a Fabric mod and cannot be loaded
+[01:30:50] [main/INFO]: Found mod file "Kiwi-1.21.1-NeoForge-15.8.7.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found library file "kotlinforforge-5.12.0-all.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "krypton_fnp-neoforge-1.21.1-0.2.28.1-1.21.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "lambdynamiclights-4.8.11+1.21.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "ldlib2-neoforge-1.21.1-2.2.42-all.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "letmedespawn-1.21.x-neoforge-1.5.0.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "libIPN-neoforge-1.21.1-6.6.3.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "libjf-3.17.7+forge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "lightspeed-1.21.1-2.0.2.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "lighty-neoforge-3.0.0-beta.8+1.21.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "lithium-neoforge-0.15.4+mc1.21.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "lithostitched-1.8.0-neoforge-21.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "lmft-1.1.1+1.21.9-neoforge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "loadsupport-neoforge-1.21.1-1.2.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "mercuryium.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "midnightlib-neoforge-1.9.3+1.21.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "modefite-neoforge-1.0.1+1.21.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "modelfix-1.21-1.10.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "modernfix-neoforge-5.27.24+mc1.21.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "monsters_in_the_closet-1.0.3+1.21-forge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "moonlight-1.21.1-3.7.0-neoforge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "moreculling-neoforge-1.21.1-1.0.10.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "MossyLib-1.6.0+1.21.1+neoforge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "MouseTweaks-neoforge-mc1.21-2.26.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "mru-1.0.41+1.21.1-neoforge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "neo_language_reload-1.0.0.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "no_resource_pack_warnings_forge-1.21-1.0.0.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "Not Enough Recipe Book-NEOFORGE-0.4.3+1.21.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "noworldbordertint-neoforge-1.0.0+1.21.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "nyfsspiders-neoforge-1.21.1-3.0.2.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "OctoLib-NEOFORGE-0.6.2+1.21.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "owo-lib-neoforge-0.12.15.5-beta.1+1.21.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "packetfixer-3.3.1-1.20.5-1.21.X-merged.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "particlerain-4.0.0-beta.11+1.21.1-neoforge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "PatPat-1.3.1+1.21.1+neoforge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "PersistentCreativeInventory-1.0.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "PickUpNotifier-v21.1.1-1.21.1-NeoForge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "pingfix-3.2.0.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "Platform-neoforge-1.21.1-1.3.3.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "player-animation-lib-forge-2.0.4+1.21.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "polytone-1.21-4.5.3-neoforge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "PresenceFootsteps-1.21.1-1.12.0-beta.1-1.21NeoForge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "punchy-2.8d-neoforge-1.21.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:50] [main/INFO]: Found mod file "puzzleslib-v21.1.62-mc1.21.1+neoforge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "ResourcePackOverrides-v21.1.0-1.21.1-NeoForge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "Resourcify (1.21.1-neoforge)-1.8.7.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "respackopts-4.14.0+1.21.1.forge.4.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "ritchiesprojectilelib-2.1.2+mc.1.21.1-neoforge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "rolling-down-in-the-deep-0.2.1+1.21.1-neoforge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "rpc-1.2.5+1.20.5-1.21.4-neoforge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "rrls-5.0.11+mc1.21.1-forge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "satisfying_buttons-neoforge-1.1.2-1.21.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "saturn-mc1.21.1-0.1.5.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "seamless-2.3.3-neoforge-1.21.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "seamless-loading-screen-2.2.1+1.21-neoforge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "seamlesssleep-neoforge-1.21-2.5.3.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "servercore-neoforge-1.5.19+1.21.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "ShoulderSurfing-NeoForge-1.21.1-5.2.0.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "shulkerboxtooltip-neoforge-5.1.9+1.21.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "shut_up_gl_error-neoforge-2.0.0+1.21.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "Signs Faster (v1.0.0) - 1.21.1 (NeoForge).jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "SlotCycler-v21.1.1-1.21.1-NeoForge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "smoothswapping-0.9.3.2-1.21.1-neoforge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "sodium-extra-neoforge-0.9.4+mc1.21.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "sodium-shadowy-path-blocks-neoforge-4.1.0.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "SodiumExtraInformation-neoforge-2.6.0.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "sound-physics-remastered-neoforge-1.21.1-1.5.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "sounds-2.4.22+lts+1.21.1-neoforge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "spawnanimations-v1.11.6-mc1.17-26.3.9-mod.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "statuseffectbars-1.21.1-NeoForge-1.0.2.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "StylishEffects-v21.1.3-1.21.1-NeoForge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "substrate-4.2+1.21.1-neoforge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "supermartijn642configlib-1.1.8-neoforge-mc1.21.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "thread_weave-0.2.3.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "threatengl-neoforge-2.0.4-release.10.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "Toadlib-1.3.2-1.21-1.21.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "Too Many Entities 1.21.1 NeoForge v1.2.0.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "tooltips_reforged-1.7-1.21.1-neoforge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "txnilib-neoforge-1.0.24-1.21.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "Updating World Icon-neoforge-1.21.1-1.0.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "veil-neoforge-1.21.1-4.5.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "visuality-forge-3.0.0.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "visualoverhaul-neoforge-5.2.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "VoidFog-1.21.1-2.1.36.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "wakes-1.21.1-NeoForge-1.4.1.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "watut-neoforge-1.21.0-1.2.7.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "windy-1.1.1+1.21-neoforge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "xaerominimap-neoforge-1.21.1-26.5.0.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "xaeroworldmap-neoforge-1.21.1-1.46.0.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "yeetusexperimentus-neoforge-87.0.0.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "yet_another_config_lib_v3-3.8.2+1.21.1-neoforge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "zfastnoise-1.0.13+1.21.1+neoforge.jar" [locator: {mods folder locator at C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods}, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "crash_assistant-neoforge.jar" [parent: , locator: jarinjar, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "Ixeris-4.6.8+1.21.1-neoforge-mod.jar" [parent: , locator: jarinjar, reader: mod manifest]
+[01:30:51] [main/INFO]: Found mod file "asynclogger-2.2.2+1.21.1-neoforge-mod.jar" [parent: , locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/WARN]: Attempted to select two dependency jars from JarJar which have the same identification: Nested Mod File  in Mod File: C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods\moreculling-neoforge-1.21.1-1.0.10.jar and Nested Mod File  in Mod File: C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods\moreculling-neoforge-1.21.1-1.0.10.jar. Using Nested Mod File  in Mod File: C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2)\mods\moreculling-neoforge-1.21.1-1.0.10.jar
+[01:30:52] [main/WARN]: Attempted to select a dependency jar for JarJar which was passed in as source: fabric_renderer_api_v1. Using Mod File: 
+[01:30:52] [main/WARN]: Attempted to select a dependency jar for JarJar which was passed in as source: fabric_block_view_api_v2. Using Mod File: 
+[01:30:52] [main/WARN]: Attempted to select a dependency jar for JarJar which was passed in as source: library:net.fabricmc.loader. Using Mod File: \~nonexistent
+[01:30:52] [main/WARN]: Attempted to select a dependency jar for JarJar which was passed in as source: fabric_rendering_data_attachment_v1. Using Mod File: 
+[01:30:52] [main/WARN]: Attempted to select a dependency jar for JarJar which was passed in as source: fabric_api_base. Using Mod File: 
+[01:30:52] [main/INFO]: Found 131 dependencies adding them to mods collection
+[01:30:52] [main/INFO]: Found mod file "kuma-api-neoforge-21.0.8+1.21.jar" [parent: balm-neoforge-1.21.1-21.0.66.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "codecui-neoforge-1.21.1-1.4.5.jar" [parent: moonlight-1.21.1-3.7.0-neoforge.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found library file "glsl-processor-0.2.3.jar" [parent: veil-neoforge-1.21.1-4.5.1.jar, locator: jarinjar]
+[01:30:52] [main/INFO]: Found library file "sewlia-config-1.0.0-20250810.044244-13.jar" [parent: krypton_fnp-neoforge-1.21.1-0.2.28.1-1.21.1.jar, locator: jarinjar]
+[01:30:52] [main/INFO]: Found mod file "fabric-item-api-v1-11.3.0+b24c12f719.jar" [parent: forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found library file "greenlight-api-0.1.0+mc1.21.10.jar" [parent: sodium-extra-neoforge-0.9.4+mc1.21.1.jar, locator: jarinjar]
+[01:30:52] [main/INFO]: Found mod file "fabric-rendering-fluids-v1-3.1.6+ddc51b4719.jar" [parent: forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "TextPlaceholderAPI-neoforge-e1a427d5b9.jar" [parent: better_modlist-21.1.3.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "libjf-unsafe-v0-3.17.4+forge.jar" [parent: libjf-3.17.7+forge.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "apollib-1.2.0-neoforge-21.1.jar" [parent: lithostitched-1.8.0-neoforge-21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "hotbarslotcycling-neoforge-21.1.1.jar" [parent: SlotCycler-v21.1.1-1.21.1-NeoForge.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found gamelibrary file "yumi-commons-collections-1.0.0.jar" [parent: lambdynamiclights-api-4.8.11+1.21.1-mojmap.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "com.kneelawk.extra-mod-integrations.extra-mod-integrations-pneumaticcraft-neoforge-1.0.3+1.21.1.jar" [parent: extra-mod-integrations-all-neoforge-1.0.3+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found library file "netty-0.1.4.1.jar" [parent: owo-lib-neoforge-0.12.15.5-beta.1+1.21.jar, locator: jarinjar]
+[01:30:52] [main/INFO]: Found mod file "fabric-convention-tags-v1-2.1.7+7f945d5b19.jar" [parent: forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found library file "kotlinx-coroutines-core-jvm-1.11.0.jar" [parent: kotlinforforge-5.12.0-all.jar, locator: jarinjar]
+[01:30:52] [main/INFO]: Found library file "endec-0.1.8.1.jar" [parent: owo-lib-neoforge-0.12.15.5-beta.1+1.21.jar, locator: jarinjar]
+[01:30:52] [main/INFO]: Found mod file "emlib-1.0.2+1.21-neoforge-SNAPSHOT.jar" [parent: chatanimation-neoforge-1.3.3+mc1.21.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "fabric-convention-tags-v2-2.12.0+75d3639619.jar" [parent: forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "fabric-command-api-v2-2.2.28+36d727be19.jar" [parent: forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "fabric-data-attachment-api-v1-1.4.7+26d408aa19.jar" [parent: forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found gamelibrary file "RecipeSearch-1.1.jar" [parent: fastrecipesearch-1.21.1-1.7-neoforge.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "tiny-config-3.1.0-neoforge.jar" [parent: bettercombat-neoforge-2.4.0+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found gamelibrary file "yumi-commons-event-1.0.0.jar" [parent: lambdynamiclights-api-4.8.11+1.21.1-mojmap.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "com.kneelawk.extra-mod-integrations.extra-mod-integrations-reliquary-neoforge-1.0.3+1.21.1.jar" [parent: extra-mod-integrations-all-neoforge-1.0.3+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found library file "kotlin-stdlib-jdk7-2.4.0.jar" [parent: kotlinforforge-5.12.0-all.jar, locator: jarinjar]
+[01:30:52] [main/INFO]: Found library file "kotlin-stdlib-jdk8-2.4.0.jar" [parent: kotlinforforge-5.12.0-all.jar, locator: jarinjar]
+[01:30:52] [main/INFO]: Found mod file "fabric-screen-api-v1-2.0.26+9991ca2f19.jar" [parent: forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found library file "dazzleconf-core-1.3.0-M2.jar" [parent: servercore-neoforge-1.5.19+1.21.1.jar, locator: jarinjar]
+[01:30:52] [main/INFO]: Found mod file "forgified-fabric-api-0.115.6+2.1.0+1.21.1.jar" [parent: txnilib-neoforge-1.0.24-1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "pridelib-1.2.4+1.21.1-mojmap.jar" [parent: lambdynamiclights-4.8.11+1.21.1-neoforge.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "fabric-content-registries-v0-8.0.19+5e0d320019.jar" [parent: forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "integration-neoforge-0.2.jar" [parent: tooltips_reforged-1.7-1.21.1-neoforge.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found library file "kotlinx-serialization-json-jvm-1.11.0.jar" [parent: kotlinforforge-5.12.0-all.jar, locator: jarinjar]
+[01:30:52] [main/INFO]: Found mod file "com.kneelawk.extra-mod-integrations.extra-mod-integrations-chipped-neoforge-1.0.3+1.21.1.jar" [parent: extra-mod-integrations-all-neoforge-1.0.3+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found library file "exp4j-0.4.8.jar" [parent: polytone-1.21-4.5.3-neoforge.jar, locator: jarinjar]
+[01:30:52] [main/INFO]: Found library file "snakeyaml-2.6.jar" [parent: servercore-neoforge-1.5.19+1.21.1.jar, locator: jarinjar]
+[01:30:52] [main/INFO]: Found gamelibrary file "mixinextras-neoforge-0.5.5.jar" [parent: neoforge-21.1.255-universal.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found gamelibrary file "yumi-commons-core-1.0.0.jar" [parent: lambdynamiclights-api-4.8.11+1.21.1-mojmap.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found library file "nexp-1.2.1.jar" [parent: polytone-1.21-4.5.3-neoforge.jar, locator: jarinjar]
+[01:30:52] [main/INFO]: Found mod file "fabric-game-rule-api-v1-1.0.53+36d727be19.jar" [parent: forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "fabric-api-lookup-api-v1-1.6.72+6244b11119.jar" [parent: forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "awcapi-neoforge-1.21.1-1.0.3.jar" [parent: nyfsspiders-neoforge-1.21.1-3.0.2.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "libjf-resource-pack-entry-widgets-v0-3.17.4+forge.jar" [parent: libjf-3.17.7+forge.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found library file "imageio-metadata-3.12.0.jar" [parent: yet_another_config_lib_v3-3.8.2+1.21.1-neoforge.jar, locator: jarinjar]
+[01:30:52] [main/INFO]: Found mod file "resourcefulconfig-neoforge-1.21-3.0.9.jar" [parent: authme-neoforge-9.0.1+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found library file "jcpp-1.4.14.jar" [parent: iris-neoforge-1.8.14-beta.1+mc1.21.1.jar, locator: jarinjar]
+[01:30:52] [main/INFO]: Found library file "kotlin-stdlib-2.4.0.jar" [parent: kotlinforforge-5.12.0-all.jar, locator: jarinjar]
+[01:30:52] [main/INFO]: Found library file "taffy-1.1.5.jar" [parent: ldlib2-neoforge-1.21.1-2.2.42-all.jar, locator: jarinjar]
+[01:30:52] [main/INFO]: Found mod file "libjf-config-commands-3.17.4+forge.jar" [parent: libjf-3.17.7+forge.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found library file "tomlkt-jvm-0.3.7.jar" [parent: fzzy_config-0.7.7+1.21+neoforge.jar, locator: jarinjar]
+[01:30:52] [main/INFO]: Found mod file "fabric-entity-events-v1-1.8.0+e46a02ca19.jar" [parent: forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found library file "MixinSquared-0.3.7-beta.2.jar" [parent: mixinsquared-neoforge-0.3.7-beta.2.jar, locator: jarinjar]
+[01:30:52] [main/INFO]: Found gamelibrary file "waterconfig-gamelib-1.0.0.2.jar" [parent: chloride-NEOFORGE-mc1.21.1-v1.8.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found library file "common-io-3.12.0.jar" [parent: yet_another_config_lib_v3-3.8.2+1.21.1-neoforge.jar, locator: jarinjar]
+[01:30:52] [main/INFO]: Found mod file "lambdynamiclights-4.8.11+1.21.1-neoforge.jar" [parent: lambdynamiclights-4.8.11+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "fabric-loot-api-v2-3.0.15+a3ee712d19.jar" [parent: forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "fabric-loot-api-v3-1.0.3+333dfad919.jar" [parent: forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "conditional-mixin-neoforge-0.6.3.jar" [parent: moreculling-neoforge-1.21.1-1.0.10.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "TRansition-1.0.25-1.21.1-neoforge-SNAPSHOT.jar" [parent: entityculling-neoforge-1.11.2-mc1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "libjf-mainhttp-v0-3.17.4+forge.jar" [parent: libjf-3.17.7+forge.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "com.kneelawk.extra-mod-integrations.extra-mod-integrations-isns-neoforge-1.0.3+1.21.1.jar" [parent: extra-mod-integrations-all-neoforge-1.0.3+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found library file "imageio-webp-3.12.0.jar" [parent: yet_another_config_lib_v3-3.8.2+1.21.1-neoforge.jar, locator: jarinjar]
+[01:30:52] [main/INFO]: Found mod file "fabric-networking-api-v1-4.3.1+7e3d421f19.jar" [parent: forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found library file "kotlinx-serialization-core-jvm-1.11.0.jar" [parent: kotlinforforge-5.12.0-all.jar, locator: jarinjar]
+[01:30:52] [main/INFO]: Found mod file "com.kneelawk.extra-mod-integrations.extra-mod-integrations-actually-additions-neoforge-1.0.3+1.21.1.jar" [parent: extra-mod-integrations-all-neoforge-1.0.3+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "fabric-lifecycle-events-v1-2.6.0+e40d8add19.jar" [parent: forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found library file "imageio-core-3.12.0.jar" [parent: yet_another_config_lib_v3-3.8.2+1.21.1-neoforge.jar, locator: jarinjar]
+[01:30:52] [main/INFO]: Found mod file "fabric-key-binding-api-v1-1.0.47+62cc7ce119.jar" [parent: forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "fabric-client-tags-api-v1-1.2.0+5adff2d719.jar" [parent: forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "fabric-transfer-api-v1-5.4.4+6244b11119.jar" [parent: forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found library file "dazzleconf-ext-snakeyaml-1.3.0-M2.jar" [parent: servercore-neoforge-1.5.19+1.21.1.jar, locator: jarinjar]
+[01:30:52] [main/INFO]: Found mod file "libjf-data-v0-3.17.4+forge.jar" [parent: libjf-3.17.7+forge.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found gamelibrary file "mixinconstraints-1.1.0.jar" [parent: animatedlogo-2.1+1.21-neoforge.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "com.kneelawk.extra-mod-integrations.extra-mod-integrations-rechiseled-neoforge-1.0.3+1.21.1.jar" [parent: extra-mod-integrations-all-neoforge-1.0.3+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found library file "jankson-0.1.5.1.jar" [parent: owo-lib-neoforge-0.12.15.5-beta.1+1.21.jar, locator: jarinjar]
+[01:30:52] [main/INFO]: Found mod file "muscript-encapsulated-3.17.4+forge.jar" [parent: respackopts-4.14.0+1.21.1.forge.4.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found library file "json5-java-3.0.0.jar" [parent: apollib-1.2.0-neoforge-21.1.jar, locator: jarinjar]
+[01:30:52] [main/INFO]: Found library file "net.neoforged.neoforge-coremods-21.1.255.jar" [parent: neoforge-21.1.255-universal.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "fabric-model-loading-api-v1-2.1.0+6e8f52c719.jar" [parent: forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "libjf-data-manipulation-v0-3.17.4+forge.jar" [parent: libjf-3.17.7+forge.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "xaerolib-neoforge-1.21.1-1.7.3.jar" [parent: xaeroworldmap-neoforge-1.21.1-1.46.0.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "fabric-screen-handler-api-v1-1.3.91+8dbc56dd19.jar" [parent: forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "fabric-resource-loader-v0-1.3.1+4ea8954419.jar" [parent: forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "TRender-1.0.17-1.21.1-neoforge-SNAPSHOT.jar" [parent: entityculling-neoforge-1.11.2-mc1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "libjf-config-core-v2-3.17.4+forge.jar" [parent: libjf-3.17.7+forge.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "fabric-rendering-v1-5.1.0+1a09bd5a19.jar" [parent: forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "fabric-renderer-indigo-1.7.1+9125b6dc19.jar" [parent: forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found gamelibrary file "mixinsquared-neoforge-0.3.7-beta.2.jar" [parent: emibook-neoforge-1.21.1-1.1.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found library file "kotlinx-coroutines-jdk8-1.11.0.jar" [parent: kotlinforforge-5.12.0-all.jar, locator: jarinjar]
+[01:30:52] [main/INFO]: Found library file "molang-compiler-3.1.1.19.jar" [parent: veil-neoforge-1.21.1-4.5.1.jar, locator: jarinjar]
+[01:30:52] [main/INFO]: Found library file "Reflect-1.6.2.jar" [parent: ImmediatelyFast-NeoForge-1.6.14+1.21.1.jar, locator: jarinjar]
+[01:30:52] [main/INFO]: Found mod file "fabric-particles-v1-4.0.2+824f924c19.jar" [parent: forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "libjf-config-ui-tiny-3.17.4+forge.jar" [parent: libjf-3.17.7+forge.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found library file "common-image-3.12.0.jar" [parent: yet_another_config_lib_v3-3.8.2+1.21.1-neoforge.jar, locator: jarinjar]
+[01:30:52] [main/INFO]: Found mod file "fabric-transitive-access-wideners-v1-6.2.0+6c854b6f19.jar" [parent: forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found library file "jankson-1.2.3.jar" [parent: jamlib-neoforge-1.3.6+1.21.1.jar, locator: jarinjar]
+[01:30:52] [main/INFO]: Found library file "gson-0.1.5.1.jar" [parent: owo-lib-neoforge-0.12.15.5-beta.1+1.21.jar, locator: jarinjar]
+[01:30:52] [main/INFO]: Found mod file "libjf-base-3.17.4+forge.jar" [parent: libjf-3.17.7+forge.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "fabric-renderer-registries-v1-3.2.69+df3654b319.jar" [parent: forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "fabric-blockrenderlayer-v1-1.1.52+c290471319.jar" [parent: forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "fabric-block-api-v1-1.1.0+b0c22bb819.jar" [parent: forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found library file "thedarkcolour.kfflang-5.12.0.jar" [parent: kotlinforforge-5.12.0-all.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found gamelibrary file "thedarkcolour.kfflib-5.12.0.jar" [parent: kotlinforforge-5.12.0-all.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "fabric-resource-conditions-api-v1-4.3.0+5bdd099819.jar" [parent: forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "libjf-translate-v1-3.17.4+forge.jar" [parent: libjf-3.17.7+forge.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found library file "glsl-transformer-3.0.0-pre3.jar" [parent: iris-neoforge-1.8.14-beta.1+mc1.21.1.jar, locator: jarinjar]
+[01:30:52] [main/INFO]: Found mod file "thedarkcolour.kffmod-5.12.0.jar" [parent: kotlinforforge-5.12.0-all.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found library file "gson-0.2.1.jar" [parent: yet_another_config_lib_v3-3.8.2+1.21.1-neoforge.jar, locator: jarinjar]
+[01:30:52] [main/INFO]: Found library file "kotlin-reflect-2.4.0.jar" [parent: kotlinforforge-5.12.0-all.jar, locator: jarinjar]
+[01:30:52] [main/INFO]: Found library file "velocity-native-3.4.0-SNAPSHOT.jar" [parent: krypton_fnp-neoforge-1.21.1-0.2.28.1-1.21.1.jar, locator: jarinjar]
+[01:30:52] [main/INFO]: Found mod file "fabric-item-group-api-v1-4.1.7+e324903319.jar" [parent: forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found library file "yoga-1.0.0.jar" [parent: ldlib2-neoforge-1.21.1-2.2.42-all.jar, locator: jarinjar]
+[01:30:52] [main/INFO]: Found mod file "fabric-gametest-api-v1-2.0.5+29f188ce19.jar" [parent: forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "spruceui-6.2.5+1.21.1-mojmap.jar" [parent: lambdynamiclights-4.8.11+1.21.1-neoforge.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "yumi-mc-foundation-1.0.0-beta.1+1.21.1-mojmap.jar" [parent: lambdynamiclights-4.8.11+1.21.1-neoforge.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "fabric-biome-api-v1-13.0.31+1e62d33c19.jar" [parent: forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found library file "json-0.2.1.jar" [parent: yet_another_config_lib_v3-3.8.2+1.21.1-neoforge.jar, locator: jarinjar]
+[01:30:52] [main/INFO]: Found mod file "fabric-registry-sync-v0-5.3.2+f9aace1619.jar" [parent: forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "lambdynamiclights-api-4.8.11+1.21.1-mojmap.jar" [parent: lambdynamiclights-4.8.11+1.21.1-neoforge.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "fabric-recipe-api-v1-5.0.16+59440bcc19.jar" [parent: forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "libjf-web-v1-3.17.4+forge.jar" [parent: libjf-3.17.7+forge.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "com.kneelawk.extra-mod-integrations.extra-mod-integrations-farmers-delight-neoforge-1.0.3+1.21.1.jar" [parent: extra-mod-integrations-all-neoforge-1.0.3+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "fabric-object-builder-api-v1-15.2.1+cc242efd19.jar" [parent: forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "fabric-sound-api-v1-1.0.23+10b84f8419.jar" [parent: forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "fabric-message-api-v1-6.0.14+6a754fce19.jar" [parent: forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found library file "common-lang-3.12.0.jar" [parent: yet_another_config_lib_v3-3.8.2+1.21.1-neoforge.jar, locator: jarinjar]
+[01:30:52] [main/INFO]: Found mod file "fabric-data-generation-api-v1-20.3.0+3e2bcb4b19.jar" [parent: forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "com.kneelawk.extra-mod-integrations.extra-mod-integrations-core-neoforge-1.0.3+1.21.1.jar" [parent: extra-mod-integrations-all-neoforge-1.0.3+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "fabric-tag-api-v1-1.3.0+3e2bcb4b19.jar" [parent: forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Found mod file "fabric-events-interaction-v0-0.7.14+057f5afd19.jar" [parent: forgified-fabric-api-0.116.15+2.3.5+1.21.1.jar, locator: jarinjar, reader: mod manifest]
+[01:30:52] [main/INFO]: Fabric mod metadata not found in jar kotlinforforge.all, ignoring
+[01:30:52] [main/INFO]: Dependency resolution found 2 candidates to load
+[01:30:53] [main/INFO]: Found mod file "KeyBindingsKeeper+1.21.1+0.0.1_mapped_moj_1.21.1.jar" [locator: org.sinytra.connector.locator.ConnectorLocator@f613067]
+[01:30:53] [main/INFO]: Found gamelibrary file "KeyBindingsKeeper+1.21.1+0.0.1$PhouprawJavaUtils-0.3.0_mapped_moj_1.21.1.jar" [locator: org.sinytra.connector.locator.ConnectorLocator@f613067]
+[01:30:53] [main/INFO]: Found 2 dependencies adding them to mods collection
+[01:30:53] [main/INFO]: Found mod file "org.sinytra.connector-2.0.0-beta.17+1.21.1-mod.jar" [parent: , locator: org.sinytra.connector.locator.ConnectorLocator@f613067, reader: mod manifest]
+[01:30:53] [main/INFO]: Found gamelibrary file "runtime-1.0.0+1.21.1.jar" [parent: , locator: org.sinytra.connector.locator.ConnectorLocator@f613067, reader: mod manifest]
+[01:30:53] [main/INFO]: 
+     Mod List:
+		Name Version (Mod Id)
+
+		0Pack2Reload 1.21.1-1.0.1 (opack2reload)
+		A Good Place 1.21-1.2.6 (a_good_place)
+		Acedium Sodiumized 0.4.2+mc1.21.1 (acedium)
+		Advanced Wall Climber API 1.0.3 (awcapi)
+		Advancement Plaques 1.6.8 (advancementplaques)
+		Almanac 1.5.2 (almanac)
+		Alternate Current 1.9.0 (alternate_current)
+		Animated Loading Screen 2.1 (animatedlogo)
+		Animated Mojang Logo 2.6 (animatedmojanglogo)
+		Anti-Smooth 2.0.4 (antismooth)
+		Anvian's Lib 1.4.2 (anvianslib)
+		Apollib 1.2.0 (apollib)
+		AppleSkin 3.0.9+mc1.21 (appleskin)
+		Architectury 13.0.11 (architectury)
+		Armor Hider 0.14.4+mc-1.21.0-1 (armor_hider)
+		Async Logger 2.2.2+1.21.1-neoforge (asynclogger)
+		AsyncLocator-Refined 1.6.0 (asynclocator)
+		Auth Me 9.0.1+1.21.1 (authme)
+		BaguetteLib 2.0.7 (baguettelib)
+		Balm 21.0.66 (balm)
+		Better Advancements 0.4.3.21 (betteradvancements)
+		Better Biome Reblend 1.5.2 (betterbiomereblend)
+		Better Combat 2.4.0+1.21.1 (bettercombat)
+		Better Compatibility Checker 21.1.8 (bcc)
+		Better ModList 21.1.3 (mod_menu)
+		Borderless Window 1.21.1-1.7.5_1 (borderlesswindow)
+		Bounced 4.1.4 (bounced)
+		CameraOverhaul 2.1.2-neoforge+mc.1.21-1.21.1 (cameraoverhaul)
+		cat_jam 1.3.1 (cat_jam)
+		Chat Heads 0.15.7 (chat_heads)
+		ChatAnimation 1.3.3 (chatanimation)
+		Chloride 1.8.1 (chloride)
+		Chunks Fade In 3.0.26-1.21 (chunksfadein)
+		Classic Minecraft Icon 1.1.10 (classic_minecraft_icon)
+		ClickThrough Plus 3.5.0+1.21.1 (clickthrough)
+		Client Tweaks 21.1.15 (clienttweaks)
+		Cloth Config v15 API 15.0.140 (cloth_config)
+		Clumps 19.0.0.1 (clumps)
+		CodecUI 1.21.1-1.4.5 (codecui)
+		Collective 8.42 (collective)
+		conditional mixin 0.6.3 (conditional_mixin)
+		Configured Defaults 21.1.3 (configureddefaults)
+		CoroUtil 1.21.0-1.3.8 (coroutil)
+		Crash Assistant 1.11.12 (crash_assistant)
+		CreativeCore 2.13.50 (creativecore)
+		Datapack Load Error Fix 2.0.0-neoforge-1.21 (datapackloaderrorfix)
+		Delete Worlds To Trash 21.1.0 (deleteworldstotrash)
+		Do a Barrel Roll 3.7.3 (do_a_barrel_roll)
+		Draggable Lists 1.0.8 (draggable_lists)
+		Durability Tooltip 1.2.0 (durabilitytooltip)
+		Dynamic Brightness 1.3.1 (dynamicbrightness)
+		EMI 1.1.24+1.21.1+neoforge (emi)
+		EMI Accelerator 1.1.4 (emi_accelerator)
+		EMI Book 1.1.1 (emibook)
+		EMI Ores 1.3+1.21.1+neoforge (emi_ores)
+		EMI++ 2.1.0 (emixx)
+		EmLib 1.0.2 (emlib)
+		Enhanced Attack Indicator 1.1.1+1.21-forge (enhanced_attack_indicator)
+		Entity Model Features 3.3.11 (entity_model_features)
+		Entity Sound Features 0.8.2 (entity_sound_features)
+		Entity Texture Features 7.2.5 (entity_texture_features)
+		EntityCulling 1.11.2 (entityculling)
+		Eunomia 0.3.14+mc-1.21.0-1 (eunomia)
+		Euphoria Patcher 1.10.5-r5.9.3-neoforge (euphoria_patcher)
+		ExMI Actually Additions 1.0.3+1.21.1 (extra_mod_integrations_actually_additions)
+		ExMI Chipped 1.0.3+1.21.1 (extra_mod_integrations_chipped)
+		ExMI Farmer's Delight 1.0.3+1.21.1 (extra_mod_integrations_farmers_delight)
+		ExMI Iron's Spells 'n Spellbooks 1.0.3+1.21.1 (extra_mod_integrations_irons_spellbooks)
+		ExMI PneumaticCraft 1.0.3+1.21.1 (extra_mod_integrations_pneumaticcraft)
+		ExMI Rechiseled 1.0.3+1.21.1 (extra_mod_integrations_rechiseled)
+		ExMI Reliquary 1.0.3+1.21.1 (extra_mod_integrations_reliquary)
+		Extra Mod Integrations 1.0.3+1.21.1 (extra_mod_integrations)
+		Extra Mod Integrations Core 1.0.3+1.21.1 (extra_mod_integrations_core)
+		Fancy World Animations 1.2.31 (fwa)
+		Fast Noise Mod 1.0.13+1.21.1+neoforge (zfastnoise)
+		Fast Recipe Search 1.21.1-1.7-neoforge (fastrecipesearch)
+		Ferrite Core 7.0.3 (ferritecore)
+		FishingReal 1.9.1 (fishingreal)
+		Forgified Fabric API 0.116.15+2.3.5+1.21.1 (fabric_api)
+		Forgified Fabric API Base 0.4.42+d1308ded19 (fabric_api_base)
+		Forgified Fabric API Lookup API (v1) 1.6.72+6244b11119 (fabric_api_lookup_api_v1)
+		Forgified Fabric Biome API (v1) 13.0.31+1e62d33c19 (fabric_biome_api_v1)
+		Forgified Fabric Block API (v1) 1.1.0+b0c22bb819 (fabric_block_api_v1)
+		Forgified Fabric BlockRenderLayer Registration (v1) 1.1.52+c290471319 (fabric_blockrenderlayer_v1)
+		Forgified Fabric BlockView API (v2) 1.0.10+9afaaf8c19 (fabric_block_view_api_v2)
+		Forgified Fabric Client Tags 1.2.0+5adff2d719 (fabric_client_tags_api_v1)
+		Forgified Fabric Command API (v2) 2.2.28+36d727be19 (fabric_command_api_v2)
+		Forgified Fabric Content Registries (v0) 8.0.19+5e0d320019 (fabric_content_registries_v0)
+		Forgified Fabric Convention Tags 2.1.7+7f945d5b19 (fabric_convention_tags_v1)
+		Forgified Fabric Convention Tags (v2) 2.12.0+75d3639619 (fabric_convention_tags_v2)
+		Forgified Fabric Data Attachment API (v1) 1.4.7+26d408aa19 (fabric_data_attachment_api_v1)
+		Forgified Fabric Data Generation API (v1) 20.3.0+3e2bcb4b19 (fabric_data_generation_api_v1)
+		Forgified Fabric Entity Events (v1) 1.8.0+e46a02ca19 (fabric_entity_events_v1)
+		Forgified Fabric Events Interaction (v0) 0.7.14+057f5afd19 (fabric_events_interaction_v0)
+		Forgified Fabric Game Rule API (v1) 1.0.53+36d727be19 (fabric_game_rule_api_v1)
+		Forgified Fabric Game Test API (v1) 2.0.5+29f188ce19 (fabric_gametest_api_v1)
+		Forgified Fabric Item API (v1) 11.3.0+b24c12f719 (fabric_item_api_v1)
+		Forgified Fabric Item Group API (v1) 4.1.7+e324903319 (fabric_item_group_api_v1)
+		Forgified Fabric Key Binding API (v1) 1.0.47+62cc7ce119 (fabric_key_binding_api_v1)
+		Forgified Fabric Lifecycle Events (v1) 2.6.0+e40d8add19 (fabric_lifecycle_events_v1)
+		Forgified Fabric Loot API (v2) 3.0.15+a3ee712d19 (fabric_loot_api_v2)
+		Forgified Fabric Loot API (v3) 1.0.3+333dfad919 (fabric_loot_api_v3)
+		Forgified Fabric Message API (v1) 6.0.14+6a754fce19 (fabric_message_api_v1)
+		Forgified Fabric Model Loading API (v1) 2.1.0+6e8f52c719 (fabric_model_loading_api_v1)
+		Forgified Fabric Networking API (v1) 4.3.1+7e3d421f19 (fabric_networking_api_v1)
+		Forgified Fabric Object Builder API (v1) 15.2.1+cc242efd19 (fabric_object_builder_api_v1)
+		Forgified Fabric Particles (v1) 4.0.2+824f924c19 (fabric_particles_v1)
+		Forgified Fabric Recipe API (v1) 5.0.16+59440bcc19 (fabric_recipe_api_v1)
+		Forgified Fabric Registry Sync (v0) 5.3.2+f9aace1619 (fabric_registry_sync_v0)
+		Forgified Fabric Renderer - Indigo 1.7.1+9125b6dc19 (fabric_renderer_indigo)
+		Forgified Fabric Renderer API (v1) 3.4.1+9125b6dc19 (fabric_renderer_api_v1)
+		Forgified Fabric Renderer Registries (v1) 3.2.69+df3654b319 (fabric_renderer_registries_v1)
+		Forgified Fabric Rendering (v1) 5.1.0+1a09bd5a19 (fabric_rendering_v1)
+		Forgified Fabric Rendering Data Attachment (v1) 0.3.48+73761d2e19 (fabric_rendering_data_attachment_v1)
+		Forgified Fabric Rendering Fluids (v1) 3.1.6+ddc51b4719 (fabric_rendering_fluids_v1)
+		Forgified Fabric Resource Conditions API (v1) 4.3.0+5bdd099819 (fabric_resource_conditions_api_v1)
+		Forgified Fabric Resource Loader (v0) 1.3.1+4ea8954419 (fabric_resource_loader_v0)
+		Forgified Fabric Screen API (v1) 2.0.26+9991ca2f19 (fabric_screen_api_v1)
+		Forgified Fabric Screen Handler API (v1) 1.3.91+8dbc56dd19 (fabric_screen_handler_api_v1)
+		Forgified Fabric Sound API (v1) 1.0.23+10b84f8419 (fabric_sound_api_v1)
+		Forgified Fabric Tag API (v1) 1.3.0+3e2bcb4b19 (fabric_tag_api_v1)
+		Forgified Fabric Transfer API (v1) 5.4.4+6244b11119 (fabric_transfer_api_v1)
+		Forgified Fabric Transitive Access Wideners (v1) 6.2.0+6c854b6f19 (fabric_transitive_access_wideners_v1)
+		Fps Overlay 5.5 (fps_overlay)
+		Fzzy Config 0.7.7+1.21+neoforge (fzzy_config)
+		GeckoLib 4 4.9.3 (geckolib)
+		Gnetum 3.3.6 (gnetum)
+		GPU Memory Leak Fix 1.0.0 (gpumemleakfix)
+		GPUTape 1.0.2 (gpu_tape)
+		Hotbar Slot Cycling 21.1.1 (hotbarslotcycling)
+		Iceberg 1.3.2 (iceberg)
+		ImmediatelyFast 1.6.14+1.21.1 (immediatelyfast)
+		Immersive Armor HUD 1.0.1 (immersivearmorhud)
+		Integration 0.2 (integration)
+		Inventory Item Groups 1.5.3-neoforge+1.21 (inventory_item_groups)
+		InvMove 0.9.3 (invmove)
+		InvMoveCompats 0.5.0 (invmove_compat)
+		Iris 1.8.14-beta.1+mc1.21.1 (iris)
+		Iris Veil Compat 0.3.0 (irisveil)
+		IrisSearch 1.4.1-neoforge (iris_search)
+		ItemPhysicLite 1.6.13 (itemphysiclite)
+		Ixeris 4.6.8+1.21.1-neoforge (ixeris)
+		Jade 15.10.6+neoforge (jade)
+		JamLib 1.3.6+1.21.1 (jamlib)
+		JEB_1.21.1 1.1.0-1.21 (jeb_1_21_1)
+		Jump Over Fences 1.6.1 (jumpoverfences)
+		Jupiter 2.3.7 (jupiter)
+		Kerria 1.3.2+1.21.1-neoforge (kerria)
+		Key Bindings Keeper 0.0.1 (keybindingskeeper)
+		Kiwi Library 15.8.7+neoforge (kiwi)
+		Kotlin For Forge 5.12.0 (kotlinforforge)
+		Krypton FNP 0.2.28.1-1.21.1 (krypton_fnp)
+		KumaAPI 21.0.8 (kuma_api)
+		LambDynamicLights 4.8.11+1.21.1 (lambdynlights)
+		LambDynamicLights (API) 4.8.11+1.21.1 (lambdynlights_api)
+		LambDynamicLights (Runtime) 4.8.11+1.21.1 (lambdynlights_runtime)
+		Let Me Despawn 1.5.0 (letmedespawn)
+		libIPN 6.6.3 (libipn)
+		LibJF 3.17.7+forge (libjf)
+		LibJF Base 3.17.4+forge (libjf_base)
+		LibJF Config Commands 3.17.4+forge (libjf_config_commands)
+		LibJF Config Core 3.17.4+forge (libjf_config_core_v2)
+		LibJF Config UI: Tiny 3.17.4+forge (libjf_config_ui_tiny)
+		LibJF Data 3.17.4+forge (libjf_data_v0)
+		LibJF Data Manipulation 3.17.4+forge (libjf_data_manipulation_v0)
+		LibJF MainHTTP 3.17.4+forge (libjf_mainhttp_v0)
+		LibJF Resource Pack Entry Widgets 3.17.4+forge (libjf_resource_pack_entry_widgets_v0)
+		LibJF Translate 3.17.4+forge (libjf_translate_v1)
+		LibJF Unsafe 3.17.6+forge (libjf_unsafe_v0)
+		LibJF Web 3.17.4+forge (libjf_web_v1)
+		Lightspeed 1.21.1-2.0.2 (lightspeed)
+		Lighty 3.0.0-beta.8 (lighty)
+		Lithium 0.15.4+mc1.21.1 (lithium)
+		Lithostitched 1.8.0 (lithostitched)
+		Load My F***ing Tags 1.1.1+1.21.9 (lmft)
+		Load Support 1.2.1 (loadsupport)
+		LowDragLib2 2.2.42 (ldlib2)
+		mercuryium 1.0.2 (mercuryium)
+		MidnightLib 1.9.3 (midnightlib)
+		Modefite 1.0.1+1.21.1 (modefite)
+		Model Gap Fix 1.21-1.10 (modelfix)
+		ModernFix 5.27.24+mc1.21.1 (modernfix)
+		Monsters In The Closet 1.0.3+1.21-forge (monsters_in_the_closet)
+		Moonlight Lib 1.21.1-3.7.0 (moonlight)
+		More Culling 1.0.10 (moreculling)
+		MossyLib 1.6.0+1.21.1+neoforge (mossylib)
+		Mouse Tweaks 2.26.1 (mousetweaks)
+		MRU 1.0.41+1.21.1 (mru)
+		MuScript (encapsulated) 3.17.4+forge (muscript)
+		Neo Language Reload 1.0.0 (neo_language_reload)
+		NeoForge 21.1.255 (neoforge)
+		No Resource Pack Warnings Forge 1.0.0 (no_resource_pack_warnings_forge)
+		Not Enough Recipe Book 0.4.3 (nerb)
+		NoWorldborderTint 1.0.0 (noworldbordertint)
+		Nyf's Spiders 3.0.2 (nyfsspiders)
+		OctoLib 0.6.2 (octolib)
+		oωo 0.12.15.5-beta.1+1.21 (owo)
+		PacketFixer 3.3.1 (packetfixer)
+		Particle Rain 4.0.0-beta.11 (particlerain)
+		PatPat 1.3.1+1.21.1+neoforge (patpat)
+		Persistent Creative Inventory 1.0.1 (persistentcreativeinventory)
+		Pick Up Notifier 21.1.1 (pickupnotifier)
+		PingFix 3.2.0 (pingfix)
+		Placeholder API Neoforge 2.4.1+1.21 (placeholder_api)
+		Platform 1.3.3 (platform)
+		Player Animator 2.0.4+1.21.1 (playeranimator)
+		Polytone 1.21-4.5.3 (polytone)
+		Presence Footsteps (NeoForge) 1.21.1-1.12.0-beta.1 (presencefootsteps)
+		Pride Lib 1.2.4+1.21.1 (pride)
+		Punchy 2.8d (punchy)
+		Puzzles Lib 21.1.62 (puzzleslib)
+		Remove Reloading Screen 5.0.11+mc1.21.1-forge (rrls)
+		Resource Pack Options 4.14.0+1.21.1.forge.4 (respackopts)
+		Resource Pack Overrides 21.1.0 (resourcepackoverrides)
+		Resourcefulconfig 3.0.9 (resourcefulconfig)
+		ResourcePackCached 1.2.5 (rpc)
+		Resourcify 1.8.7 (resourcify)
+		Ritchie's Projectile Library 2.1.2 (ritchiesprojectilelib)
+		Rolling Down in the Deep 0.2.1+1.21.1-neoforge (rolling_down_in_the_deep)
+		Satisfying Buttons 1.1.1 (satisfying_buttons)
+		Saturn 0.1.5 (saturn)
+		Seamless 2.3.3 (seamless)
+		Seamless Loading Screen 2.2.1+1.21 (seamless_loading_screen)
+		Seamless Sleep 2.5.3 (seamlesssleep)
+		ServerCore 1.5.19+1.21.1 (servercore)
+		Shoulder Surfing Reloaded 1.21.1-5.2.0 (shouldersurfing)
+		ShulkerBoxTooltip 5.1.9+1.21.1 (shulkerboxtooltip)
+		Shut Up GL Error 2.0.0+1.21.1 (shut_up_gl_error)
+		Sign Faster NeoForge 1.0.0 (sign_faster_neoforge)
+		Sinytra Connector 2.0.0-beta.17+1.21.1 (connector)
+		Slot Cycler 21.1.1 (slotcycler)
+		Smooth Swapping 0.9.3.2 (smoothswapping)
+		Sodium 0.8.13+mc1.21.1 (sodium)
+		Sodium Extra 0.9.4+mc1.21.1 (sodium_extra)
+		Sodium Extra Information 2.3 (sodiumextrainformation)
+		Sodium Shadowy Path Blocks 4.1.0 (sspb)
+		Sound Physics Remastered 1.21.1-1.5.1 (sound_physics_remastered)
+		Sounds 2.4.22+lts (sounds)
+		Spawn Animations 1.11.6+mod (spawnanimations)
+		SpruceUI 6.2.5+1.21.1 (spruceui)
+		Status Effect Bars 1.0.2 (statuseffectbars)
+		Stylish Effects 21.1.3 (stylisheffects)
+		Substrate 4.2 (substrate)
+		SuperMartijn642's Config Library 1.1.8 (supermartijn642configlib)
+		ThreadWeave 0.2.3 (thread_weave)
+		ThreatenGL 2.0.4-release.10 (threatengl)
+		Tiny Config 3.1.0 (tiny_config)
+		ToadLib 1.3.2 (toadlib)
+		Too Many Entities 1.2.0 (too_many_entities)
+		Tooltips Reforged 1.7 (tooltips_reforged)
+		TRansition 1.0.25 (transition)
+		TRender 1.0.17 (trender)
+		TxniLib 1.0.24 (txnilib)
+		Updating World Icon 1.0.1 (updatingworldicon)
+		Veil 4.5.1 (veil)
+		Visuality: Reforged 3.0.0 (visuality)
+		VisualOverhaul 5.2.1 (visualoverhaul)
+		VoidFog 1.21.1-2.1.36 (voidfog)
+		Wakes 1.4.1 (wakes)
+		What Are They Up To 1.21.0-1.2.7 (watut)
+		Windy 1.1.1+1.21-neoforge (windy)
+		Xaero's Minimap 26.5.0 (xaerominimap)
+		Xaero's World Map 1.46.0 (xaeroworldmap)
+		XaeroLib 1.7.3 (xaerolib)
+		Yeetus Experimentus 87.0.0 (yeetusexperimentus)
+		YetAnotherConfigLib 3.8.2+1.21.1-neoforge (yet_another_config_lib_v3)
+		Yumi Minecraft Libraries: Foundation 1.0.0-beta.1+1.21.1 (yumi_mc_core)
+[01:30:53] [main/ERROR]: Access transformer file META-INF/accesstransformer.cfg provided by mod pride does not exist!
+[01:30:53] [main/INFO]: Found Kotlin-containing mod Jar[union:/C:/Users/kamau/AppData/Roaming/ModrinthApp/profiles/935%20(2)/mods/kotlinforforge-5.12.0-all.jar%23482_/META-INF/jarjar/kotlin-stdlib-2.4.0.jar%23907!/], checking whether we need to upgrade it..
+[01:30:53] [main/INFO]: Looks like a standalone Kotlin jar. Keeping as is.
+[01:30:53] [main/INFO]: Applying default files...
+[01:30:53] [main/ERROR]: Missing or unsupported mandatory dependencies:
+	Mod ID: 'minecraft', Requested by: 'fabric_block_view_api_v2', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'betteradvancements', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'iceberg', Expected range: '[1.21.1,1.21.1]', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'emixx', Expected range: '[1.21.1,)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'threatengl', Expected range: '[1.21.1,)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fabric_screen_handler_api_v1', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'saturn', Expected range: '[1.21.1,1.21.1]', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'forgified_fabric_api', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fishingreal', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fabric_loot_api_v3', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'advancementplaques', Expected range: '[1.21.1,1.21.1]', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fabric_convention_tags_v2', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'noworldbordertint', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'irisveil', Expected range: '[1.21.1,1.21.1]', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fwa', Expected range: '[1.21.1,1.21.2)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'lighty', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'gnetum', Expected range: '[1.21.1,1.21.2)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fabric_renderer_registries_v1', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fabric_rendering_fluids_v1', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'spruceui', Expected range: '[1.21.1,)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fabric_lifecycle_events_v1', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fabric_gametest_api_v1', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fabric_convention_tags_v1', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fabric_object_builder_api_v1', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fabric_item_api_v1', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'chloride', Expected range: '[1.21.1,1.21.2)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'bcc', Expected range: '[1.21.1,1.21.3)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'gpu_tape', Expected range: '[1.21.1,)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fabric_content_registries_v0', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'slotcycler', Expected range: '[1.21.1,1.21.1]', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'libjf_translate_v1', Expected range: '[1.21.1,)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'deleteworldstotrash', Expected range: '[1.21.1,1.21.1]', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'modefite', Expected range: '[1.21.1,)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fabric_resource_conditions_api_v1', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'iris_search', Expected range: '[1.21.1,)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fabric_screen_api_v1', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'pingfix', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'libjf_base', Expected range: '[1.21.1,)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'krypton_fnp', Expected range: '[1.21.1,1.21.2]', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fps_overlay', Expected range: '[1.21.1,)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'stylisheffects', Expected range: '[1.21.1,1.21.1]', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'wakes', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fabric_client_tags_api_v1', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'codecui', Expected range: '[1.21.1,1.21.2)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fabric_game_rule_api_v1', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fabric_model_loading_api_v1', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fabric_resource_loader_v0', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'pickupnotifier', Expected range: '[1.21.1,1.21.1]', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fabric_blockrenderlayer_v1', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'asynclocator', Expected range: '[1.21.1,1.21.1]', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fabric_rendering_v1', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'puzzleslib', Expected range: '[1.21.1,1.21.2)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'immersivearmorhud', Expected range: '[1.21.1,)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fabric_registry_sync_v0', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'balm', Expected range: '[1.21.1,)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'libipn', Expected range: '[1.21.1,1.21.2)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'libjf_config_ui_tiny', Expected range: '[1.21.1,)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'resourcepackoverrides', Expected range: '[1.21.1,1.21.1]', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'neo_language_reload', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fabric_recipe_api_v1', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fabric_block_api_v1', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fabric_command_api_v2', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fabric_renderer_api_v1', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fabric_tag_api_v1', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'ferritecore', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fabric_loot_api_v2', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'sodium_extra', Expected range: '[1.21.1,1.21.1]', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'itemphysiclite', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'loadsupport', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fabric_entity_events_v1', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fabric_data_generation_api_v1', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'libjf_config_commands', Expected range: '[1.21.1,)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fabric_sound_api_v1', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fabric_data_attachment_api_v1', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'shulkerboxtooltip', Expected range: '[1.21.1,)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fabric_api', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'txnilib', Expected range: '[1.21.1,)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'yumi_mc_core', Expected range: '[1.21.1,1.21.8]', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'clumps', Expected range: '[1.21.1,1.21.1]', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'transition', Expected range: '[1.21.1,1.21.1]', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'emi_accelerator', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fabric_transitive_access_wideners_v1', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fabric_networking_api_v1', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'rpc', Expected range: '[1.21.1,)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'authme', Expected range: '[1.21.1,)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fabric_api_base', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'kerria', Expected range: '[1.21.1,1.21.1]', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'hotbarslotcycling', Expected range: '[1.21.1,1.21.1]', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'statuseffectbars', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'rolling_down_in_the_deep', Expected range: '[1.21.1,1.21.1]', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'packetfixer', Expected range: '[1.21.1,)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fabric_message_api_v1', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'libjf_mainhttp_v0', Expected range: '[1.21.1,)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'zfastnoise', Expected range: '[1.21.1,1.21.8]', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'placeholder_api', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'punchy', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'libjf_data_v0', Expected range: '[1.21.1,)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'satisfying_buttons', Expected range: '[1.21.1,)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'moonlight', Expected range: '[1.21.1,1.21.1]', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'rrls', Expected range: '[1.21.1,)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fabric_events_interaction_v0', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'sodiumextrainformation', Expected range: '[1.21.1,)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fabric_api_lookup_api_v1', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'creativecore', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fabric_item_group_api_v1', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fabric_rendering_data_attachment_v1', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'muscript', Expected range: '[1.21.1,)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'veil', Expected range: '[1.21.1,1.21.3]', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'acedium', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'gpumemleakfix', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'lightspeed', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fabric_transfer_api_v1', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fabric_key_binding_api_v1', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'libjf_web_v1', Expected range: '[1.21.1,)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'trender', Expected range: '[1.21.1,1.21.1]', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'libjf_data_manipulation_v0', Expected range: '[1.21.1,)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fabric_biome_api_v1', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'emibook', Expected range: '[1.21.1,1.21.1]', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'platform', Expected range: '[1.21.1,)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'sign_faster_neoforge', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'polytone', Expected range: '[1.21.1,1.21.1]', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'too_many_entities', Expected range: '[1.21.1,)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'mercuryium', Expected range: '[1.21.1,1.21.1]', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'particlerain', Expected range: '[1.21.1,1.21.1]', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'entityculling', Expected range: '[1.21.1,1.21.1]', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'baguettelib', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'presencefootsteps', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'libjf_config_core_v2', Expected range: '[1.21.1,)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fabric_particles_v1', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+	Mod ID: 'minecraft', Requested by: 'fabric_renderer_indigo', Expected range: '[1.21.1,1.22)', Actual version: '[MISSING]'
+[01:30:53] [main/INFO]: Successfully made module authlib transformable
+[01:30:53] [main/INFO]: Successfully made module brigadier transformable
+[01:30:53] [main/ERROR]: Skipping early mod setup due to previous error
+[01:30:53] [main/INFO]: Launching target 'forgeclient' with arguments [--version, 1.21.1, --gameDir, C:\Users\kamau\AppData\Roaming\ModrinthApp\profiles\935 (2), --assetsDir, C:\Users\kamau\AppData\Roaming\ModrinthApp\meta\assets, --uuid, acf27cca4ddf4ab2928283a4feb6d235, --username, SillyEnderer, --assetIndex, 17, --accessToken, ❄❄❄❄❄❄❄❄, --clientId, c4502edb-87c6-40cb-b595-64a280cf8906, --xuid, 0, --userType, msa, --versionType, release, --width, 854, --height, 480]
+[01:30:53] [main/WARN]: Reference map '' for adapter.init.mixins.json could not be read. If this is a development environment you can ignore this message
+[01:30:54] [main/WARN]: Error loading class: net/minecraft/world/level/block/entity/BlockEntityType (java.lang.ClassNotFoundException: net.minecraft.world.level.block.entity.BlockEntityType)
+[01:30:54] [main/WARN]: @Mixin target net.minecraft.world.level.block.entity.BlockEntityType was not found neoforge.mixins.json:BlockEntityTypeAccessor from mod neoforge
+[01:30:54] [main/WARN]: Error loading class: net/minecraft/core/MappedRegistry (java.lang.ClassNotFoundException: net.minecraft.core.MappedRegistry)
+[01:30:54] [main/WARN]: @Mixin target net.minecraft.core.MappedRegistry was not found neoforge.mixins.json:MappedRegistryAccessor from mod neoforge
