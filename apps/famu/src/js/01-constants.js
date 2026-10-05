@@ -17,6 +17,7 @@ const ADMIN_RESET_PASSWORD = 'HSE261781';
 // null = OFFLINE MODE: the app is fully usable, data is stored in this
 // browser only (localStorage), and nothing ever leaves the device.
 const firebaseConfig = {
+   // fork-configured
   apiKey: "AIzaSyBRCk1-fLM8GjxUzfCv-AZAOILJbdHnbCg",
   authDomain: "famu-hcasc.firebaseapp.com",
   databaseURL: "https://famu-hcasc-default-rtdb.firebaseio.com",
