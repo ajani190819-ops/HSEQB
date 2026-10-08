@@ -2,7 +2,7 @@ function createNewSession(){
 const id=Date.now().toString();
 const nameInput=$('newSessionName');
 const name=nameInput?.value.trim()||('Session '+new Date().toLocaleDateString());
-const session={id,name,created:new Date().toISOString(),lastUpdated:new Date().toISOString(),updatedBy:clientId,players:{},teams:[],categories:[...DEFAULT_CATEGORIES],answers:[],answerLog:[]};
+const session={id,name,format:'HCASC',currentRound:1,currentPhase:'Face-Off',rounds:{1:{categories:['History & Culture','Science & Technology','Arts & Humanities','Society & Popular Culture']},2:{categories:['History & Culture','Science & Technology','Arts & Humanities','Society & Popular Culture']},3:{categories:['History & Culture','Science & Technology','Arts & Humanities','Society & Popular Culture']},4:{categories:['History & Culture','Science & Technology','Arts & Humanities','Society & Popular Culture']}},clockRemainingSeconds:240,clockRunning:false,questionNumber:0,activeCategory:'History & Culture',created:new Date().toISOString(),lastUpdated:new Date().toISOString(),updatedBy:clientId,players:{},teams:[],categories:[...DEFAULT_CATEGORIES],answers:[],answerLog:[]};
 state.sessions[id]=session; state.currentSessionId=id; loadSessionData();
 globalPlayersRef.once('value').then(snap=>{
 Object.keys(snap.val()||{}).forEach(n=>{if(!session.players[n]) session.players[n]={name:n,points:0,answers:[]};});

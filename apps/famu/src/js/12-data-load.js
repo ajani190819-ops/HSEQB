@@ -39,7 +39,7 @@ state.sessions[id] ={
 id, name:'Preview Session',
 created:new Date().toISOString(), lastUpdated:new Date().toISOString(),
 updatedBy:'preview', players:{}, teams:[],
-categories:[...DEFAULT_CATEGORIES], answers:[], answerLog:[], tHeard:0
+categories:[...DEFAULT_CATEGORIES], answers:[], answerLog:[], tHeard:0, format:'HCASC', currentRound:1, currentPhase:'Face-Off', clockRemainingSeconds:240, clockRunning:false, questionNumber:0, activeCategory:'History & Culture', rounds:{1:{categories:['History & Culture','Science & Technology','Arts & Humanities','Society & Popular Culture']},2:{categories:['History & Culture','Science & Technology','Arts & Humanities','Society & Popular Culture']},3:{categories:['History & Culture','Science & Technology','Arts & Humanities','Society & Popular Culture']},4:{categories:['History & Culture','Science & Technology','Arts & Humanities','Society & Popular Culture']}}
 };
 state.currentSessionId = id;
 loadSessionData();

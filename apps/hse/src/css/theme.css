@@ -592,7 +592,11 @@ body::before {
   background-image:radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--primary) var(--surface-dot-mix), transparent) 1px, transparent 1.2px);
   background-size:18px 18px;
 }
-.qb-container, .auth-gate { position:relative; z-index:1; }
+.qb-container { position:relative; z-index:1; }
+/* Keep the authentication gate above the app and spanning the full viewport.
+   Do not include it in the container stacking rule: doing so changes its
+   earlier fixed positioning to a short in-flow panel on local-file loads. */
+.auth-gate { position:fixed; inset:0; z-index:1000; min-height:100dvh; }
 
 /* The header keeps its gradient, but its diagonal texture now stays in a light
    lane so the accent color can do the outlining/highlight work elsewhere. */

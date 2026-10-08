@@ -45,6 +45,12 @@ function updatesCurrentLabel(){
   return latestReleaseMeta && typeof latestReleaseMeta === 'object'
     ? (latestReleaseMeta.label || '') : '';
 }
+function updatesDownloadedBuild(){
+  try { return localStorage.getItem('hse_last_downloaded_build') || ''; } catch(e) { return ''; }
+}
+function updatesMarkDownloaded(buildId){
+  try { if (buildId) localStorage.setItem('hse_last_downloaded_build', buildId); } catch(e) {}
+}
 function setLatestReleaseMeta(data){
   if (!data){ latestReleaseMeta = null; }
   else if (typeof data === 'object'){
@@ -92,6 +98,8 @@ function getReleaseHistoryEntries(){
       releaseNotes:current.releaseNotes || '',
       downloadUrl:current.downloadUrl || '',
       hasFirebasePayload:!!current.hasFirebasePayload,
+      payloadBuildId:current.payloadBuildId || '',
+      payloadBytes:Number(current.payloadBytes) || 0,
       publishedAt:current.lastUpdated || current.publishedAt || ''
     });
   }
@@ -130,10 +138,15 @@ function renderReleaseCard(item, currentBuild){
   const by = item.publishedBy ? ` · ${updatesEscapeHtml(item.publishedBy)}` : '';
   const currentPill = isCurrent ? '<span class="updates-current-pill">Current</span>' : '';
   const previewPill = item.preview ? '<span class="updates-preview-pill">Preview</span>' : '';
-  const canDownload = !!item.downloadUrl && /^https?:/i.test(item.downloadUrl) && isCurrent;
-  const encodedDownloadUrl = canDownload ? encodeURIComponent(item.downloadUrl) : '';
+  // Firebase is the primary school-device path. A GitHub URL is only needed
+  // for older releases that were published before the Firebase payload existed.
+  const hasFirebasePackage = !!item.hasFirebasePayload || item.payloadBuildId === item.buildId;
+  const hasHttpFallback = !!item.downloadUrl && /^https?:/i.test(item.downloadUrl);
+  const canDownload = isCurrent && (hasFirebasePackage || hasHttpFallback);
+  const encodedDownloadUrl = hasHttpFallback ? encodeURIComponent(item.downloadUrl) : '';
+  const alreadyDownloaded = isCurrent && updatesDownloadedBuild() === item.buildId;
   const download = canDownload
-    ? `<button class="button updates-card-download" onclick="downloadUpdate(decodeURIComponent('${encodedDownloadUrl}'))">↓ Download build</button>` : '';
+    ? `<button class="button updates-card-download" onclick="downloadUpdate(${hasHttpFallback ? `decodeURIComponent('${encodedDownloadUrl}')` : "''"})">${alreadyDownloaded ? '↓ Download again' : '↓ Download for school device'}</button>` : '';
   return `<article class="updates-release-card${isCurrent ? ' is-current' : ''}">` +
     `<div class="updates-release-rail"><span class="updates-release-dot"></span></div>` +
     `<div class="updates-release-content"><div class="updates-release-meta"><strong>v${updatesEscapeHtml(version)}</strong><span>${updatesFormatDate(item.publishedAt || item.lastUpdated)}${by}</span>${currentPill}${previewPill}</div>` +
@@ -215,6 +228,8 @@ function recordPublishedRelease(payload){
     adminComments:String(payload.adminComments || '').trim().slice(0, 2000),
     downloadUrl:payload.downloadUrl || DOWNLOAD_URL,
     hasFirebasePayload:!!payload.hasFirebasePayload,
+    payloadBuildId:payload.payloadBuildId || '',
+    payloadBytes:Number(payload.payloadBytes) || 0,
     publishedAt:payload.publishedAt || new Date().toISOString(),
     publishedBy:localStorage.getItem('qb_userName') || authUser?.email || 'Admin',
     publishedByUid:authUser?.uid || clientId || ''

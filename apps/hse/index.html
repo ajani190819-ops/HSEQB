@@ -677,7 +677,11 @@ body::before {
   background-image:radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--primary) var(--surface-dot-mix), transparent) 1px, transparent 1.2px);
   background-size:18px 18px;
 }
-.qb-container, .auth-gate { position:relative; z-index:1; }
+.qb-container { position:relative; z-index:1; }
+/* Keep the authentication gate above the app and spanning the full viewport.
+   Do not include it in the container stacking rule: doing so changes its
+   earlier fixed positioning to a short in-flow panel on local-file loads. */
+.auth-gate { position:fixed; inset:0; z-index:1000; min-height:100dvh; }
 
 /* The header keeps its gradient, but its diagonal texture now stays in a light
    lane so the accent color can do the outlining/highlight work elsewhere. */
@@ -967,7 +971,7 @@ html[data-accent-style="stripes"] .qb-section h2{
 </div>
 <div class="qb-container"><div id="sandboxWarning" style="display:none;background:#7c4dff;color:#fff;padding:8px 16px;font-size:.82em;font-weight:600;text-align:center;flex-shrink:0;z-index:300;line-height:1.4;">
       ↓ Running inside Claude's preview — Firebase sync is blocked by the sandbox.
-      <strong>Download the file and open it in your browser for live sync.</strong><button onclick="document.getElementById('sandboxWarning').style.display='none';" style="margin-left:12px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.5);color:#fff;padding:3px 10px;border-radius:6px;cursor:pointer;font-weight:700;font-family:inherit;font-size:.9em;">Dismiss</button></div><script>
+      <strong>Download the single HTML file, save it, then open that saved file in your browser for live sync; no source files or installer are needed.</strong><button onclick="document.getElementById('sandboxWarning').style.display='none';" style="margin-left:12px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.5);color:#fff;padding:3px 10px;border-radius:6px;cursor:pointer;font-weight:700;font-family:inherit;font-size:.9em;">Dismiss</button></div><script>
       try{ if (window.self !== window.top){ document.getElementById('sandboxWarning').style.display = 'block'; document.body.classList.add('is-iframe'); } } catch(e){ document.getElementById('sandboxWarning').style.display = 'block'; document.body.classList.add('is-iframe'); }
     </script><div class="qb-header" id="qbHeader"><div class="qb-header-left"><button class="header-btn sidebar-open-btn hidden" id="sidebarOpenBtn" >&#9654; Menu</button></div><div class="qb-header-center"><h1 data-short="HSE QB" data-medium="HSE QB Tracker">HSE Quiz Bowl Tracker <span class="version-badge" id="versionBadge"></span></h1><div class="header-session-name" id="headerSessionName"></div></div><div class="header-controls"><div style="display:flex;align-items:center;gap:6px;user-select:none;" title="Switch between Tracker and Analytics"><span id="toggleLabelTracker" class="header-toggle-label" style="color:var(--header-control-text);">Tracker</span><div onclick="toggleAnalytics()" id="viewToggleSwitch" style="width:48px;height:24px;background:var(--header-control-bg);border-radius:12px;border:2px solid var(--header-control-border);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;box-shadow:var(--header-control-shadow);"><div id="viewToggleKnob" style="width:16px;height:16px;background:#fff;border-radius:50%;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 2px 8px rgba(0,0,0,.34);"></div></div><span id="toggleLabelAnalytics" class="header-toggle-label" style="color:var(--header-control-text-muted);">Stats</span></div><button class="header-btn updates-header-btn" onclick="openUpdatesModal()" title="Updates &amp; changelog"><span class="updates-header-icon">↻</span><span class="updates-header-label">Updates</span><span id="updatesUnreadBadge" class="updates-unread-badge" aria-label="New updates"></span></button><button class="header-btn round" onclick="openHelpModal()" title="Help / Tutorial">?</button><span id="autosaveStatus" class="auto-save-indicator state-connecting"><span class="save-ring"><svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="8" r="6" stroke="rgba(255,255,255,0.25)" stroke-width="2"/><path d="M8 2 A6 6 0 0 1 14 8" stroke="white" stroke-width="2" stroke-linecap="round"/></svg><span class="save-ring-dot"></span></span><span class="save-label">Connecting…</span></span></div></div><div id="updateBanner"></div><div class="qb-body"><aside class="qb-sidebar" id="mainSidebar"><div class="sidebar-nav"><div class="sidebar-jump-wrapper" id="sidebarJumpWrapper"><button class="sidebar-jump-btn" onclick="toggleJumpDropdown()" type="button"><span id="sidebarJumpLabel">Setup</span><span class="sidebar-jump-arrow">&#9662;</span></button><div class="sidebar-jump-menu"><div class="sidebar-sec-hdr">Setup</div><button onclick="showSection('sec-session')">Session</button><button onclick="showSection('sec-players')">Players</button><button onclick="showSection('sec-teams')">Teams</button><button onclick="showSection('sec-categories')">Categories</button><div class="sidebar-sec-hdr">Settings</div><button onclick="showSection('sec-userid')">User ID</button><button onclick="showSection('sec-visual')">Visual Settings</button><button id="jumpBtn-sec-admin" onclick="showSection('sec-admin')" class="hidden">Admin Panel</button><div class="sidebar-sec-hdr">Session & Data</div><button onclick="showSection('sec-export')">Export / Import</button><button id="jumpBtn-sec-danger" onclick="showSection('sec-danger')" class="hidden">Data Management</button><button id="jumpBtn-sec-debug" onclick="showSection('sec-debug')" class="hidden">Debug Menu</button></div></div><button class="sidebar-close-btn" onclick="toggleSidebar()">&#9664; Hide</button></div><div class="sidebar-sections"><div class="qb-section" id="sec-session"><h2>Session <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div class="session-info"><div class="session-info-row"><span>Name:</span><strong id="sessionName">&#8212;</strong></div><div class="session-info-row"><span>Created:</span><strong id="sessionCreated">&#8212;</strong></div><div class="session-info-row"><span>Last Updated:</span><strong id="sessionLastUpdated">&#8212;</strong></div><div class="session-info-row"><span>Answers:</span><strong id="sessionAnswerCount">0</strong></div></div><div class="input-group"><label>New Session Name:</label><input type="text" id="newSessionName" placeholder="Session name..." /></div><div class="session-controls"><button class="button button-success" onclick="createNewSession()">+ New Session</button><button class="button" onclick="openSessionsModal()">Load</button></div></div></div><div class="qb-section" id="sec-players"><h2>Players <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div class="input-group"><label>Add Player:</label><input type="text" id="playerInput" placeholder="Player name..." onkeydown="if(event.key==='Enter') addToPlayerPool()" /></div><div class="button-group mb-14" ><button class="button" onclick="addToPlayerPool()">Add Player</button><button class="button button-danger" onclick="clearPlayerPool()">Clear All</button></div><div style="padding-bottom:14px;border-bottom:1.5px solid var(--border);margin-bottom:14px;"><div style="font-weight:600;font-size:.85em;margin-bottom:8px;color:var(--text);">Player Management</div><div style="font-size:.78em;color:var(--text2);margin-bottom:10px;">Rename players to fix typos. To merge, click <strong>Merge</strong> on the player you want to <em>remove</em> — their stats will be combined into whichever player you select next.</div><div id="playerMgmtContainer" style="display:flex;flex-direction:column;gap:8px;"></div></div><div class="input-group"><label>Import from File (CSV/TXT):</label><input type="file" accept=".csv,.txt" onchange="handlePlayerImport(event)" /></div><div id="playerPoolDisplay"></div></div></div><div class="qb-section" id="sec-teams"><h2>Teams <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div class="input-group"><label>Team Name:</label><input type="text" id="teamNameInput" placeholder="Team name..." /></div><button class="button" onclick="addTeam()">Add Team</button><div id="teamsContainer" style="margin-top:20px;"></div></div></div><div class="qb-section" id="sec-categories"><h2>Categories <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><p style="font-size:.85em;color:var(--text2);margin-bottom:10px;">Categories and subcategories are fixed. Select a parent category when recording answers to reveal its subcategories.</p><div style="display:flex;flex-direction:column;gap:6px;"></div><div id="categoryTreeDisplay"></div><div id="catFreqSection" style="display:none;margin-top:16px;padding-top:14px;border-top:1.5px solid var(--border);"><div style="font-weight:600;font-size:.85em;margin-bottom:4px;color:var(--text);">Expected Subcategory Frequencies <span class="fw4-82-ml6">Admin only — synced for all users</span></div><p style="font-size:.76em;color:var(--text3);margin-bottom:10px;line-height:1.5;">Enter the expected % of tossups for each subcategory at a typical tournament. Shown under each subcategory breakdown chart.</p><div id="catFreqPickers" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;"></div><div class="button-group"><button class="button" onclick="saveCatFreqs()">Save Frequencies</button><button class="button" style="background:var(--sec-bg);color:var(--text2);border:1.5px solid var(--border);" onclick="resetCatFreqs()">Reset Defaults</button></div><div id="catFreqStatus" class="fs-8-success-mt6"></div></div></div></div><div class="qb-section" id="sec-export"><h2>Export Data <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><p style="margin-bottom:8px;font-weight:600;">Select what to include:</p><div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:var(--sp);"><button class="button-category selected" id="exportPlayers" onclick="this.classList.toggle('selected')">Players &amp; Scores</button><button class="button-category selected" id="exportAnswerLog" onclick="this.classList.toggle('selected')">Answer Log</button><button class="button-category selected" id="exportTeamStats" onclick="this.classList.toggle('selected')">Team Statistics</button></div><div class="button-group"><button class="button button-success" onclick="exportToExcel()">Export to Excel</button><button class="button button-secondary" onclick="exportToJSON()">Export as JSON</button></div><div style="margin-top:22px;padding-top:18px;border-top:1.5px solid var(--border);"><p style="font-weight:600;margin-bottom:6px;">Import Session</p><p style="font-size:.85em;color:var(--text2);margin-bottom:12px;">Load a previously exported JSON file.</p><div class="input-group"><label>Select JSON file:</label><input type="file" id="importSessionFile" accept=".json" onchange="importFromJSON(event)" /></div><div id="importStatus" style="font-size:.85em;margin-top:8px;display:none;"></div></div></div></div><div class="qb-section" id="sec-userid">
   <h2>User ID <span class="toggle-icon">&#9660;</span></h2>
@@ -1397,7 +1401,7 @@ html[data-accent-style="stripes"] .qb-section h2{
 <p class="mb-14">Per-account (Firebase user profile + localStorage cache): theme mode, color theme or custom colors, accent style, hide scrollbars, sidebar collapsed, active sidebar section, analytics open/tab/scroll, low-data/formulas panel collapsed, welcome dismissed, loading source.</p>
 
 <h3 class="h3-primary">Updates &amp; Changelog</h3>
-<p class="mb-14">Open <strong>Updates</strong> in header to see current release summary (kicker, title, notes, version stack, status) and release history timeline. Admin publish form: Update title, Downloadable index.html file (optional when using live page), Public changelog (shown to everyone), Admin notes (internal), Publish button with version. History cards show version, date, author, Current/Preview pills, notes, Download build button for current build. Refresh button re-fetches history. Unread badge shows “New” when Firebase build newer than local.</p>
+<p class="mb-14">Open <strong>Updates</strong> in the header to see the release summary and history. HSE source is split into modules for development, but <strong>index.html is the one self-contained runtime artifact</strong>; users do not need the src folder. For school devices, the Download button reads the verified matching index.html from Firebase first and saves a versioned file such as <code>hse-quiz-bowl-tracker-v3.12.1.html</code>. GitHub is only a legacy fallback. Admins should attach the exact built index.html when publishing; the app refuses a file whose embedded version does not match the release being published. If a file was already downloaded, the Updates card says “Download again” so users do not mistake duplicate downloads for new builds.</p>
 
 <h3 id="help-github" class="h3-primary">Source Code on GitHub</h3>
 <p class="mb-8">Open source – browse code, release history, report bugs.</p>
@@ -1405,7 +1409,7 @@ html[data-accent-style="stripes"] .qb-section h2{
 <p class="mb-14 fs-75-fw4">Repository: <a id="helpGithubLink" class="mono-primary" href="https://github.com/ajani190819-ops/HSEQB" target="_blank" rel="noopener noreferrer">github.com/ajani190819-ops/HSEQB</a></p>
 <p class="mb-14"><strong>Loading source:</strong> <span id="helpLoadingSource" class="mono-primary">—</span></p>
 
-</div></div></div><div id="updatesModal"<div id="updatesModal" class="qb-modal" onclick="if(event.target===this)closeUpdatesModal()"><div class="modal-content updates-modal-content"><div class="modal-header updates-modal-header"><div><h2>Updates &amp; Changelog</h2><p class="updates-modal-subtitle">See what is new in HSE Quiz Bowl Tracker.</p></div><button class="close-modal" onclick="closeUpdatesModal()" aria-label="Close updates">&#215;</button></div><div id="updatesCurrentSummary" class="updates-current-summary" aria-live="polite"></div><div class="updates-toolbar"><span id="updatesLoadStatus" class="updates-load-status">Loading release history…</span><button class="button updates-refresh-btn" onclick="refreshUpdates()">&#8635; Refresh</button></div><div id="updatesAdminPanel" class="updates-admin-panel" style="display:none;"><div class="updates-admin-heading"><div><h3>Publish an update</h3><p>Write the public release log and optionally attach the new file for Firebase downloads.</p></div><span class="updates-admin-pill">Admin</span></div><div id="releasePrompt" class="updates-release-prompt hidden"><strong>New build detected.</strong> Publish it here when the file is ready so users can find the notes and download it.</div><div id="releaseUpToDate" class="updates-release-prompt updates-release-ok" style="display:none;">&#10003; This file is already the published build. You can still update the release log if needed.</div><div class="updates-form-grid"><div class="input-group"><label for="releaseTitleInput">Update title</label><input type="text" id="releaseTitleInput" class="inp-std" maxlength="120" placeholder="e.g. Better analytics and faster logging" /></div><div class="input-group"><label for="releaseFileInput">Downloadable index.html <span class="fs-75-fw4">optional when using the live page</span></label><input type="file" id="releaseFileInput" accept=".html" /></div></div><div class="input-group"><label for="releaseNotesInput">Public changelog <span class="fs-75-fw4">shown to everyone</span></label><textarea id="releaseNotesInput" class="updates-textarea" maxlength="5000" rows="5" placeholder="Tell players what changed, what was fixed, and anything they should know."></textarea></div><div class="input-group"><label for="adminCommentsInput">Admin notes <span class="fs-75-fw4">internal context; not shown in the changelog</span></label><textarea id="adminCommentsInput" class="updates-textarea updates-textarea-small" maxlength="2000" rows="2" placeholder="Optional: testing notes or deployment context"></textarea></div><button class="button button-success updates-publish-btn" onclick="publishRelease()">Publish v<span id="updatesPublishVersion">—</span></button><div id="releaseUploadStatus" class="updates-upload-status" role="status" aria-live="polite"></div></div><div class="updates-history-heading"><div><h3>Release history</h3><p>Updates are synced for every signed-in user.</p></div><span id="updatesHistoryCount" class="updates-history-count"></span></div><div id="updatesList" class="updates-list" aria-live="polite"></div></div></div><div id="sessionsModal" class="qb-modal"><div class="modal-content"><div class="modal-header"><h2>Load Session</h2><button class="close-modal" onclick="closeSessionsModal()">&#215;</button></div><div style="display:flex;gap:8px;flex-wrap:wrap;padding:12px 16px;border-bottom:1.5px solid var(--border);background:var(--sec-bg);"><input type="text" id="sessionsSearchInput" placeholder="Search sessions..." style="flex:1;min-width:150px;padding:8px 12px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:.95em;background:var(--input-bg);color:var(--input-text);" /><select id="sessionsSortSelect" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:.95em;background:var(--input-bg);color:var(--input-text);"><option value="date-desc">Newest First</option><option value="date-asc">Oldest First</option><option value="name">Alphabetical (A-Z)</option><option value="answers-desc">Most Answers</option><option value="answers-asc">Least Answers</option></select></div><div id="sessionBulkBar" class="session-bulk-bar" style="display:none;"><label style="display:flex;align-items:center;gap:6px;font-size:.82em;font-weight:600;color:var(--text2);cursor:pointer;white-space:nowrap;"><input type="checkbox" id="sessionSelectAll" class="session-select-cb" style="margin:0;" onchange="toggleSelectAllSessions(this.checked)" /> Select all visible</label><span id="sessionBulkCount" style="font-size:.82em;font-weight:700;color:var(--primary);">0 selected</span><span class="bulk-spacer"></span><button class="button button-success" style="padding:6px 12px;font-size:.8em;" onclick="bulkSetAnalytics(true)">+ Add to Analytics</button><button class="button" style="padding:6px 12px;font-size:.8em;" onclick="bulkSetAnalytics(false)">− Exclude from Analytics</button><button class="button button-danger" style="padding:6px 12px;font-size:.8em;" onclick="bulkDeleteSessions()">Delete</button></div><div id="sessionsList" class="sessions-list"></div></div></div></div><div id="playerActionModal" class="qb-modal" onclick="if(event.target===this)closePlayerActionModal()"><div class="modal-content" style="max-width:420px;"><div class="modal-header"><h2 id="pamTitle">Player Action</h2><button class="close-modal" onclick="closePlayerActionModal()">&#215;</button></div><div style="padding:16px;"><div id="pamBody"></div></div></div></div><div id="bandModal" class="qb-modal" onclick="if(event.target===this)closeBandModal()"><div class="modal-content" style="max-width:440px;"><div class="modal-header"><h2 id="bandModalTitle">Score Band</h2><button class="close-modal" onclick="closeBandModal()">&#215;</button></div><div id="bandModalBody" style="padding:0 2px;"></div></div></div><div id="playerDetailModal" class="qb-modal"><div class="modal-content" style="max-width:620px;"><div class="modal-header"><h2 id="pdModalTitle">Player Details</h2><button class="close-modal" onclick="closePlayerDetailModal()">&#215;</button></div><div id="pdModalBody"></div></div></div><script src="local-settings.js" onerror="void 0"></script><script>const $=id=>document.getElementById(id);
+</div></div></div><div id="updatesModal"<div id="updatesModal" class="qb-modal" onclick="if(event.target===this)closeUpdatesModal()"><div class="modal-content updates-modal-content"><div class="modal-header updates-modal-header"><div><h2>Updates &amp; Changelog</h2><p class="updates-modal-subtitle">See what is new in HSE Quiz Bowl Tracker.</p></div><button class="close-modal" onclick="closeUpdatesModal()" aria-label="Close updates">&#215;</button></div><div id="updatesCurrentSummary" class="updates-current-summary" aria-live="polite"></div><div class="updates-toolbar"><span id="updatesLoadStatus" class="updates-load-status">Loading release history…</span><button class="button updates-refresh-btn" onclick="refreshUpdates()">&#8635; Refresh</button></div><div id="updatesAdminPanel" class="updates-admin-panel" style="display:none;"><div class="updates-admin-heading"><div><h3>Publish an update</h3><p>Write the public release log and attach the exact built index.html so school devices can download it from Firebase.</p></div><span class="updates-admin-pill">Admin</span></div><div id="releasePrompt" class="updates-release-prompt hidden"><strong>New build detected.</strong> Attach the matching built index.html, then publish it so school-device users can download it from Firebase.</div><div id="releaseUpToDate" class="updates-release-prompt updates-release-ok" style="display:none;">&#10003; This file is already the published build. You can still update the release log if needed.</div><div class="updates-form-grid"><div class="input-group"><label for="releaseTitleInput">Update title</label><input type="text" id="releaseTitleInput" class="inp-std" maxlength="120" placeholder="e.g. Better analytics and faster logging" /></div><div class="input-group"><label for="releaseFileInput">Built offline app: index.html <span class="fs-75-fw4">attach the exact build for school-device downloads</span></label><input type="file" id="releaseFileInput" accept=".html" /></div></div><div class="input-group"><label for="releaseNotesInput">Public changelog <span class="fs-75-fw4">shown to everyone</span></label><textarea id="releaseNotesInput" class="updates-textarea" maxlength="5000" rows="5" placeholder="Tell players what changed, what was fixed, and anything they should know."></textarea></div><div class="input-group"><label for="adminCommentsInput">Admin notes <span class="fs-75-fw4">internal context; not shown in the changelog</span></label><textarea id="adminCommentsInput" class="updates-textarea updates-textarea-small" maxlength="2000" rows="2" placeholder="Optional: testing notes or deployment context"></textarea></div><button class="button button-success updates-publish-btn" onclick="publishRelease()">Publish v<span id="updatesPublishVersion">—</span></button><div id="releaseUploadStatus" class="updates-upload-status" role="status" aria-live="polite"></div></div><div class="updates-history-heading"><div><h3>Release history</h3><p>Updates are synced for every signed-in user.</p></div><span id="updatesHistoryCount" class="updates-history-count"></span></div><div id="updatesList" class="updates-list" aria-live="polite"></div></div></div><div id="sessionsModal" class="qb-modal"><div class="modal-content"><div class="modal-header"><h2>Load Session</h2><button class="close-modal" onclick="closeSessionsModal()">&#215;</button></div><div style="display:flex;gap:8px;flex-wrap:wrap;padding:12px 16px;border-bottom:1.5px solid var(--border);background:var(--sec-bg);"><input type="text" id="sessionsSearchInput" placeholder="Search sessions..." style="flex:1;min-width:150px;padding:8px 12px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:.95em;background:var(--input-bg);color:var(--input-text);" /><select id="sessionsSortSelect" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:.95em;background:var(--input-bg);color:var(--input-text);"><option value="date-desc">Newest First</option><option value="date-asc">Oldest First</option><option value="name">Alphabetical (A-Z)</option><option value="answers-desc">Most Answers</option><option value="answers-asc">Least Answers</option></select></div><div id="sessionBulkBar" class="session-bulk-bar" style="display:none;"><label style="display:flex;align-items:center;gap:6px;font-size:.82em;font-weight:600;color:var(--text2);cursor:pointer;white-space:nowrap;"><input type="checkbox" id="sessionSelectAll" class="session-select-cb" style="margin:0;" onchange="toggleSelectAllSessions(this.checked)" /> Select all visible</label><span id="sessionBulkCount" style="font-size:.82em;font-weight:700;color:var(--primary);">0 selected</span><span class="bulk-spacer"></span><button class="button button-success" style="padding:6px 12px;font-size:.8em;" onclick="bulkSetAnalytics(true)">+ Add to Analytics</button><button class="button" style="padding:6px 12px;font-size:.8em;" onclick="bulkSetAnalytics(false)">− Exclude from Analytics</button><button class="button button-danger" style="padding:6px 12px;font-size:.8em;" onclick="bulkDeleteSessions()">Delete</button></div><div id="sessionsList" class="sessions-list"></div></div></div></div><div id="playerActionModal" class="qb-modal" onclick="if(event.target===this)closePlayerActionModal()"><div class="modal-content" style="max-width:420px;"><div class="modal-header"><h2 id="pamTitle">Player Action</h2><button class="close-modal" onclick="closePlayerActionModal()">&#215;</button></div><div style="padding:16px;"><div id="pamBody"></div></div></div></div><div id="bandModal" class="qb-modal" onclick="if(event.target===this)closeBandModal()"><div class="modal-content" style="max-width:440px;"><div class="modal-header"><h2 id="bandModalTitle">Score Band</h2><button class="close-modal" onclick="closeBandModal()">&#215;</button></div><div id="bandModalBody" style="padding:0 2px;"></div></div></div><div id="playerDetailModal" class="qb-modal"><div class="modal-content" style="max-width:620px;"><div class="modal-header"><h2 id="pdModalTitle">Player Details</h2><button class="close-modal" onclick="closePlayerDetailModal()">&#215;</button></div><div id="pdModalBody"></div></div></div><script src="local-settings.js" onerror="void 0"></script><script>const $=id=>document.getElementById(id);
 const isIframe = (() =>{
 try{
 if (window.self === window.top) return false; // not in an iframe at all
@@ -1439,6 +1443,8 @@ return null;
 }
 }
 const VERSION = '3.12.1'; // auto-managed by bump.js
+// Legacy developer fallback only. School-device downloads use the verified
+// Firebase releaseHtml payload first, so normal users do not need GitHub.
 const DOWNLOAD_URL = 'https://raw.githubusercontent.com/ajani190819-ops/HSEQB/main/apps/hse/index.html';
 const DEFAULT_ACCENT = '#003da5'; // Tricolor blue from the default HSE palette
 const DEFAULT_COLOR_THEME = 'tricolor';
@@ -1866,7 +1872,7 @@ const remoteIsNewer  = remoteBuild && remoteLabel && isNewer(remoteBuild, FILE_B
 const localIsNewer   = remoteBuild && isNewer(FILE_BUILD_ID, remoteBuild);
 const isUnpublishedLocal = !remoteBuild || localIsNewer || FILE_BUILD_ID === remoteBuild;
 if (shouldCheckUpdates && remoteIsNewer){
-showUpdateBanner(remoteLabel, downloadUrl, releaseNotes, hasFirebasePayload);
+showUpdateBanner(remoteLabel, remoteBuild, downloadUrl, releaseNotes, hasFirebasePayload);
 } else if (shouldCheckUpdates && (localIsNewer || !remoteBuild)){
 showDevBanner();
 } else{
@@ -2001,19 +2007,42 @@ if (!el) return;
 el.textContent = msg || '';
 el.style.color = kind === 'ok' ? 'var(--success)' : kind === 'err' ? 'var(--danger)' : 'var(--text2)';
 }
-function clearStaleReleaseHtmlPayload(){
-if (releaseHtmlRef && releaseHtmlRef.set) releaseHtmlRef.set(null).catch(() =>{});
+function extractReleaseBuildId(html){
+if (typeof html !== 'string') return '';
+// Built HSE artifacts always carry VERSION in the inlined constants module.
+// Validating it prevents publishing a new Firebase version label alongside an
+// older page captured before GitHub Pages finished deploying.
+const match = html.match(/(?:const|var)\s+VERSION\s*=\s*['"]([^'"]+)['"]/);
+return match ? String(match[1]).trim() : '';
+}
+function isBuiltReleaseArtifact(html){
+if (typeof html !== 'string') return false;
+// VERSION alone is not enough: a source module can contain the same constant.
+// Require the generated document shape and reject any build placeholders so an
+// admin cannot accidentally publish src/ or the unbuilt template as the app.
+return /^\s*<!doctype html>/i.test(html) &&
+  /<title>HSE Quiz Bowl Tracker<\/title>/i.test(html) &&
+  /id=["']authGate["']/.test(html) &&
+  /id=["']qbHeader["']/.test(html) &&
+  !/@@@(CSS|JS)_[A-Z_]+@@@/.test(html);
 }
 function publishHtmlToFirebase(html, setStatus, finish){
+const embeddedBuild = extractReleaseBuildId(html);
+if (!isBuiltReleaseArtifact(html) || !embeddedBuild || embeddedBuild !== FILE_BUILD_ID){
+const detail = !isBuiltReleaseArtifact(html) ? 'the file is not the generated single-file index.html' : embeddedBuild ? 'the file contains v' + embeddedBuild : 'the file has no embedded VERSION';
+setStatus('Refused to publish: ' + detail + ', but this app is v' + FILE_BUILD_ID + '. Open the matching build and try again.', 'err');
+showToast('The downloadable file does not match the build being published. Nothing was published.', 'warn', 7000);
+return;
+}
 const kb = Math.max(1, Math.round(html.length / 1024));
 if (html.length > 900 * 1024) setStatus('Warning: payload is ' + kb + ' KB — Firebase may reject values this large.', 'err');
 else setStatus('Uploading ' + kb + ' KB to Firebase…');
 releaseHtmlRef.set(html)
-.then(() =>{ setStatus('HTML uploaded to Firebase (' + kb + ' KB).', 'ok'); finish(true, 'HTML uploaded to Firebase (' + kb + ' KB). Published.'); })
+.then(() =>{ setStatus('HTML uploaded to Firebase (' + kb + ' KB).', 'ok'); finish(true, 'HTML uploaded to Firebase (' + kb + ' KB). Published.', { buildId:embeddedBuild, bytes:html.length }); })
 .catch(e =>{
 showFirebaseError('HTML upload failed: ' + e.message);
-clearStaleReleaseHtmlPayload();
-finish(false, 'Metadata published — the HTML payload failed to upload (' + e.message + '), so users will fall back to the GitHub download URL.');
+setStatus('Release was not published because the Firebase HTML upload failed: ' + e.message, 'err');
+showToast('Nothing was published. The previous release remains available; try again with the matching index.html.', 'warn', 8000);
 });
 }
 function publishRelease(){
@@ -2024,13 +2053,15 @@ const notes    = ($('releaseNotesInput')?.value || '').trim().slice(0, 5000);
 const comments = ($('adminCommentsInput')?.value || '').trim().slice(0, 2000);
 if (!title){ showToast('Add a short title for this update.', 'warn'); $('releaseTitleInput')?.focus(); return; }
 if (!notes){ showToast('Write the public changelog before publishing.', 'warn'); $('releaseNotesInput')?.focus(); return; }
-const payload  = { label:FILE_VERSION, buildId:FILE_BUILD_ID, title, downloadUrl:DOWNLOAD_URL, releaseNotes:notes, adminComments:comments, hasFirebasePayload:false, lastUpdated:new Date().toISOString() };
+const payload  = { label:FILE_VERSION, buildId:FILE_BUILD_ID, title, downloadUrl:DOWNLOAD_URL, releaseNotes:notes, adminComments:comments, hasFirebasePayload:false, payloadBuildId:'', payloadBytes:0, lastUpdated:new Date().toISOString() };
 const fileInput = $('releaseFileInput');
 const file = fileInput && fileInput.files && fileInput.files[0];
 const setStatus = (msg, kind) => setReleaseUploadStatus(msg, kind);
 setStatus('Preparing release…');
-const finish = (hasPayload, statusMsg) =>{
+const finish = (hasPayload, statusMsg, artifact) =>{
 payload.hasFirebasePayload = !!hasPayload;
+payload.payloadBuildId = artifact?.buildId || '';
+payload.payloadBytes = artifact?.bytes || 0;
 versionRef.set(payload)
 .then(() => recordPublishedRelease({ ...payload, publishedAt:new Date().toISOString() }))
 .then(() =>{
@@ -2046,13 +2077,13 @@ showFirebaseError(e.message);
 setStatus('Release published, but the changelog could not be saved: ' + e.message, 'err');
 });
 };
-// Publishing metadata without a fresh HTML payload must not leave a stale releaseHtml behind,
-// otherwise users would download an outdated file. Clear it so downloadUpdate falls back to GitHub.
+// A release is not published until its verified single-file HTML payload is uploaded.
+// This keeps appVersion and releaseHtml atomic from the user's perspective.
 if (file){
 setStatus('Reading ' + file.name + '…');
 file.text()
 .then(html => publishHtmlToFirebase(html, setStatus, finish))
-.catch(err =>{ setStatus('Could not read file: ' + err.message, 'err'); clearStaleReleaseHtmlPayload(); showFirebaseError('Release file read failed: ' + err.message); });
+.catch(err =>{ setStatus('Release was not published — could not read file: ' + err.message, 'err'); showFirebaseError('Release file read failed: ' + err.message); });
 return;
 }
 // No file attached — when served over http(s) (GitHub Pages / local server), read the exact current source
@@ -2062,32 +2093,31 @@ fetch(window.location.href, { cache:'no-store' })
 .then(r =>{ if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
 .then(html => publishHtmlToFirebase(html, setStatus, finish))
 .catch(() =>{
-setStatus('No file attached — could not read the current page source. Select the new index.html file to publish via Firebase.', 'err');
-showToast('Attach the new index.html file to publish the download payload via Firebase.', 'warn');
-clearStaleReleaseHtmlPayload();
-finish(false, 'Metadata published — attach the index.html file so users can download it via Firebase instead of GitHub.');
+setStatus('Release was not published — could not read the current page source. Select the new index.html file.', 'err');
+showToast('Attach the new index.html file to publish the Firebase download package. Nothing was published.', 'warn', 7000);
 });
 return;
 }
 // Local file (file://) — the exact source cannot be read from disk, so require the attached file
-setStatus('No file attached — please select the new index.html file to publish.', 'err');
-showToast('Attach the new index.html file so users can download it via Firebase.', 'warn');
-clearStaleReleaseHtmlPayload();
-finish(false, 'Metadata published — attach the index.html file so users can download it via Firebase instead of GitHub.');
+setStatus('Release was not published — select the new index.html file first.', 'err');
+showToast('Attach the new index.html file so school-device users can download it via Firebase. Nothing was published.', 'warn', 7000);
 }
-function showUpdateBanner(newLabel, downloadUrl, notes, hasFirebasePayload){
+function showUpdateBanner(newLabel, newBuild, downloadUrl, notes, hasFirebasePayload){
 const banner = $('updateBanner');
 if (!banner) return;
-const hasUrl = downloadUrl && downloadUrl.startsWith('http');
+const hasUrl = !!(downloadUrl && downloadUrl.startsWith('http'));
 const viaFb  = !!hasFirebasePayload;
+const canOfferDownload = viaFb || hasUrl;
 const encodedDownloadUrl = hasUrl ? encodeURIComponent(downloadUrl) : '';
 const safeLabel = typeof updatesEscapeHtml === 'function' ? updatesEscapeHtml(newLabel) : String(newLabel || '');
 const safeNotes = typeof updatesEscapeHtml === 'function' ? updatesEscapeHtml(notes) : String(notes || '');
+const alreadyDownloaded = typeof updatesDownloadedBuild === 'function' && updatesDownloadedBuild() === String(newBuild || '');
+const downloadArg = hasUrl ? `decodeURIComponent('${encodedDownloadUrl}')` : "''";
 banner.innerHTML =
 `<span class="ub-icon">▲</span>` +
-`<span class="ub-msg">This file is <strong>outdated / unpublished</strong> — published version is <strong>${safeLabel}</strong> (you have ${FILE_VERSION})${notes ? ` — ${safeNotes}` :''}.</span>` +
+`<span class="ub-msg">This file is <strong>outdated / unpublished</strong> — published version is <strong>${safeLabel}</strong> (you have ${FILE_VERSION})${notes ? ` — ${safeNotes}` :''}. ${viaFb ? 'The school-device download is served from Firebase; GitHub is only a fallback.' : ''}</span>` +
 `<button class="ub-btn ub-history" onclick="openUpdatesModal()">View updates</button>` +
-(hasUrl ? `<button class="ub-btn ub-download" onclick="downloadUpdate(decodeURIComponent('${encodedDownloadUrl}'))">↓ Download Update${viaFb ? ' (Firebase)' : ''}</button>` :'') +
+(canOfferDownload ? `<button class="ub-btn ub-download" onclick="downloadUpdate(${downloadArg})">${alreadyDownloaded ? '↓ Download again' : (viaFb ? '↓ Download for school device' : '↓ Download update')}</button>` :'') +
 `<button class="ub-btn ub-dismiss" onclick="hideUpdateBanner()" title="Dismiss">✕</button>`;
 banner.classList.add('show'); }
 function hideUpdateBanner(){
@@ -2102,57 +2132,85 @@ banner.innerHTML =
 `<span class="ub-msg"><strong>Dev / Unpublished — v${FILE_VERSION}</strong> &nbsp;This build hasn't been published to Firebase yet.</span>` +
 `<button class="ub-btn ub-dismiss" onclick="hideUpdateBanner()" title="Dismiss">✕</button>`;
 banner.classList.add('show'); }
-function triggerHtmlDownload(source){
+function triggerHtmlDownload(source, buildId){
 const blob = typeof source === 'string' ? new Blob([source], { type:'text/html' }) : source;
 const a = document.createElement('a');
 a.href = URL.createObjectURL(blob);
-a.download = 'hse-quiz-bowl-tracker.html';
+const safeBuild = String(buildId || '').replace(/[^a-zA-Z0-9._-]/g, '-');
+a.download = safeBuild ? 'hse-quiz-bowl-tracker-v' + safeBuild + '.html' : 'hse-quiz-bowl-tracker.html';
 document.body.appendChild(a);
 a.click();
 document.body.removeChild(a);
 setTimeout(() => URL.revokeObjectURL(a.href), 5000);
 }
 function downloadUpdate(url){
-if (!url){ showToast('No download URL configured for this release.', 'warn'); return Promise.resolve(); }
-showToast('Fetching update…');
-const checkFirebasePayload = () => new Promise(resolve =>{
-if (!db || !releaseHtmlRef || !releaseHtmlRef.once){ resolve(null); return; }
-// Only trust the releaseHtml payload when the published metadata marks it as current
-// (hasFirebasePayload === true) — otherwise a stale/leftover payload could be served.
-Promise.all([
-(versionRef && versionRef.once) ? versionRef.once('value') : Promise.resolve(null),
-releaseHtmlRef.once('value')
-])
+showToast('Preparing school-device download…');
+const readFirebasePayload = () => new Promise(resolve =>{
+if (!db || !versionRef || !releaseHtmlRef || !versionRef.once || !releaseHtmlRef.once){ resolve({ status:'unavailable' }); return; }
+Promise.all([versionRef.once('value'), releaseHtmlRef.once('value')])
 .then(([metaSnap, htmlSnap]) =>{
 const meta = metaSnap && metaSnap.val ? metaSnap.val() : null;
-const html = htmlSnap && htmlSnap.val ? htmlSnap.val() : null;
-const metaOk = meta && typeof meta === 'object' && meta.hasFirebasePayload === true;
-resolve((metaOk && typeof html === 'string' && html) ? html : null);
+const raw = htmlSnap && htmlSnap.val ? htmlSnap.val() : null;
+const html = typeof raw === 'string' ? raw : raw && typeof raw.html === 'string' ? raw.html : '';
+const expected = meta && typeof meta === 'object' ? String(meta.buildId || '') : String(meta || '');
+const declared = meta && typeof meta === 'object' ? String(meta.payloadBuildId || '') : '';
+const metaClaimsPayload = !!(meta && typeof meta === 'object' && meta.hasFirebasePayload === true);
+const embedded = extractReleaseBuildId(html);
+if (html && isBuiltReleaseArtifact(html) && expected && embedded === expected && (!declared || declared === embedded)){
+resolve({ status:'valid', html, buildId:expected });
+} else if (html || metaClaimsPayload){
+resolve({ status:'invalid', expected, declared, embedded });
+} else {
+resolve({ status:'unavailable' });
+}
 })
-.catch(() => resolve(null));
+.catch(() => resolve({ status:'unavailable' }));
 });
-return checkFirebasePayload().then(htmlString =>{
-// Prefer the HTML payload hosted in Firebase — no GitHub request needed, works on school networks
-if (htmlString){
-triggerHtmlDownload(htmlString);
-showToast('Downloaded from Firebase! Replace your existing file with the new one.', 'success');
+return readFirebasePayload().then(result =>{
+// Firebase is the primary path. It works from a downloaded local HTML file and
+// does not send school-device users through GitHub at all.
+if (result.status === 'valid'){
+triggerHtmlDownload(result.html, result.buildId);
+if (typeof updatesMarkDownloaded === 'function') updatesMarkDownloaded(result.buildId);
+showToast('Downloaded v' + result.buildId + ' from Firebase. Open that versioned file from your Downloads folder.', 'success', 6000);
 return true;
 }
-// Fallback: fetch from the GitHub raw URL so older releases without a Firebase payload still work
-return fetch(url)
-.then(r =>{
-if (!r.ok) throw new Error('HTTP ' + r.status);
-return r.blob(); })
-.then(blob =>{
-triggerHtmlDownload(blob);
-showToast('Downloaded! Replace your existing file with the new one.', 'success'); })
-.catch(err =>{
-showToast('Download failed:' + err.message, 'warn');
-return false; });
+if (result.status === 'invalid'){
+// Do not fall through to GitHub with a known-bad package: that is how users
+// repeatedly receive the same old HTML file while the database says a newer
+// version exists.
+showToast('The Firebase download package does not match its published version. Ask an admin to republish the matching index.html; no GitHub download was attempted.', 'warn', 8000);
+return false;
+}
+const firebaseClaimsPayload = !!(typeof latestReleaseMeta === 'object' && latestReleaseMeta && latestReleaseMeta.hasFirebasePayload === true);
+if (!url || firebaseClaimsPayload){
+showToast(firebaseClaimsPayload
+  ? 'Could not read the verified Firebase package. Check your sign-in or ask an admin to republish the matching index.html; no GitHub download was attempted.'
+  : 'No verified school-device package is available for this release. Ask an admin to publish the matching index.html.', 'warn', 8000);
+return false;
+}
+// Legacy fallback: older releases may have no Firebase payload. Validate the
+// fallback too, so a delayed GitHub Pages deploy cannot create a repeat-download loop.
+return fetch(url, { cache:'no-store' })
+.then(r =>{ if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+.then(html =>{
+const expected = updatesCurrentBuild() || '';
+const embedded = extractReleaseBuildId(html);
+if (!isBuiltReleaseArtifact(html)) throw new Error('downloaded file is not the generated single-file index.html');
+if (expected && embedded !== expected) throw new Error('downloaded file is v' + (embedded || 'unknown') + ', expected v' + expected);
+triggerHtmlDownload(html, expected);
+if (typeof updatesMarkDownloaded === 'function') updatesMarkDownloaded(expected);
+showToast('Downloaded v' + (expected || FILE_VERSION) + '. Open the versioned file from your Downloads folder.', 'success', 6000);
+return true;
 })
 .catch(err =>{
-showToast('Download failed:' + err.message, 'warn');
-return false; });
+showToast('Download failed: ' + err.message, 'warn', 7000);
+return false;
+});
+}).catch(err =>{
+showToast('Download failed: ' + err.message, 'warn', 7000);
+return false;
+});
 }
 function loadUserId(){
   const stored = localStorage.getItem('qb_userName') || '';
@@ -5651,6 +5709,12 @@ function updatesCurrentLabel(){
   return latestReleaseMeta && typeof latestReleaseMeta === 'object'
     ? (latestReleaseMeta.label || '') : '';
 }
+function updatesDownloadedBuild(){
+  try { return localStorage.getItem('hse_last_downloaded_build') || ''; } catch(e) { return ''; }
+}
+function updatesMarkDownloaded(buildId){
+  try { if (buildId) localStorage.setItem('hse_last_downloaded_build', buildId); } catch(e) {}
+}
 function setLatestReleaseMeta(data){
   if (!data){ latestReleaseMeta = null; }
   else if (typeof data === 'object'){
@@ -5698,6 +5762,8 @@ function getReleaseHistoryEntries(){
       releaseNotes:current.releaseNotes || '',
       downloadUrl:current.downloadUrl || '',
       hasFirebasePayload:!!current.hasFirebasePayload,
+      payloadBuildId:current.payloadBuildId || '',
+      payloadBytes:Number(current.payloadBytes) || 0,
       publishedAt:current.lastUpdated || current.publishedAt || ''
     });
   }
@@ -5736,10 +5802,15 @@ function renderReleaseCard(item, currentBuild){
   const by = item.publishedBy ? ` · ${updatesEscapeHtml(item.publishedBy)}` : '';
   const currentPill = isCurrent ? '<span class="updates-current-pill">Current</span>' : '';
   const previewPill = item.preview ? '<span class="updates-preview-pill">Preview</span>' : '';
-  const canDownload = !!item.downloadUrl && /^https?:/i.test(item.downloadUrl) && isCurrent;
-  const encodedDownloadUrl = canDownload ? encodeURIComponent(item.downloadUrl) : '';
+  // Firebase is the primary school-device path. A GitHub URL is only needed
+  // for older releases that were published before the Firebase payload existed.
+  const hasFirebasePackage = !!item.hasFirebasePayload || item.payloadBuildId === item.buildId;
+  const hasHttpFallback = !!item.downloadUrl && /^https?:/i.test(item.downloadUrl);
+  const canDownload = isCurrent && (hasFirebasePackage || hasHttpFallback);
+  const encodedDownloadUrl = hasHttpFallback ? encodeURIComponent(item.downloadUrl) : '';
+  const alreadyDownloaded = isCurrent && updatesDownloadedBuild() === item.buildId;
   const download = canDownload
-    ? `<button class="button updates-card-download" onclick="downloadUpdate(decodeURIComponent('${encodedDownloadUrl}'))">↓ Download build</button>` : '';
+    ? `<button class="button updates-card-download" onclick="downloadUpdate(${hasHttpFallback ? `decodeURIComponent('${encodedDownloadUrl}')` : "''"})">${alreadyDownloaded ? '↓ Download again' : '↓ Download for school device'}</button>` : '';
   return `<article class="updates-release-card${isCurrent ? ' is-current' : ''}">` +
     `<div class="updates-release-rail"><span class="updates-release-dot"></span></div>` +
     `<div class="updates-release-content"><div class="updates-release-meta"><strong>v${updatesEscapeHtml(version)}</strong><span>${updatesFormatDate(item.publishedAt || item.lastUpdated)}${by}</span>${currentPill}${previewPill}</div>` +
@@ -5821,6 +5892,8 @@ function recordPublishedRelease(payload){
     adminComments:String(payload.adminComments || '').trim().slice(0, 2000),
     downloadUrl:payload.downloadUrl || DOWNLOAD_URL,
     hasFirebasePayload:!!payload.hasFirebasePayload,
+    payloadBuildId:payload.payloadBuildId || '',
+    payloadBytes:Number(payload.payloadBytes) || 0,
     publishedAt:payload.publishedAt || new Date().toISOString(),
     publishedBy:localStorage.getItem('qb_userName') || authUser?.email || 'Admin',
     publishedByUid:authUser?.uid || clientId || ''

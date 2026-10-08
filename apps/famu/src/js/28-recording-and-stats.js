@@ -39,11 +39,13 @@ const bonusTeam = teamBonusId ? (s0.teams||[]).find(t => t.id === teamBonusId) :
 const recordedPlayer = isTeamBonus
 ? ('— ' + (bonusTeam ? bonusTeam.name :'Team') + ' Bonus —')
 :(state.selectedPlayer || (isMiss ? '— Miss —' :'— Team Bonus —'));
-const pointMap ={'Toss-up':10,'Bonus':10,'Neg':-5,'Power':15,'Miss':0,'Dead':0};
+// HCASC scoring: Face-Offs are 10, Bonuses are team-scored at 20, and
+// Ultimate Challenge answers are 25. Incorrect Face-Offs do not subtract points.
+const pointMap ={'Toss-up':10,'Bonus':20,'Ultimate':25,'Neg':0,'Power':15,'Miss':0,'Dead':0};
 const points   = pointMap[state.selectedPointType];
 const isBuzzIn = ['Toss-up','Power','Neg','Miss','Dead'].includes(state.selectedPointType);
 const effectiveCategory = state.selectedCategory || _selectedParentCat || '—';
-const answer ={id:Date.now().toString(),player:recordedPlayer,pointType:state.selectedPointType,category:effectiveCategory,points,timestamp:new Date().toISOString()};
+const answer ={id:Date.now().toString(),player:recordedPlayer,pointType:state.selectedPointType,category:effectiveCategory,points,timestamp:new Date().toISOString(),...(typeof hcascGetEventMeta === 'function' ? hcascGetEventMeta(isTeamBonus ? null : state.selectedPlayer, state.selectedPointType) : {})};
 const applyAnswer = s =>{
 s.answerLog = toArray(s.answerLog);
 if (isBuzzIn){
@@ -78,7 +80,7 @@ document.addEventListener('keydown', e =>{
 const tag = document.activeElement && document.activeElement.tagName;
 if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
 if (document.activeElement && document.activeElement.isContentEditable) return;
-const keyMap ={'1':'Power','2':'Toss-up','3':'Bonus','4':'Miss','5':'Neg','6':'Dead'};
+const keyMap ={'1':'Toss-up','2':'Bonus','3':'Ultimate','4':'Neg','5':'Miss','6':'Dead'};
 if (keyMap[e.key]){
 e.preventDefault();
 selectPointType(keyMap[e.key]);
@@ -92,13 +94,13 @@ const id = state.currentSessionId; if (!id) return;
 const s0 = getCurrentSession(); if (!s0) return;
 const team = (s0.teams||[]).find(t => t.id === teamId);
 const label = '— ' + (team ? team.name :'Team') + ' Bonus —';
-const answer ={id:Date.now().toString(),player:label,pointType:'Bonus',category:'—',points:10,timestamp:new Date().toISOString()};
+const answer ={id:Date.now().toString(),player:label,pointType:'Bonus',category:'—',points:20,timestamp:new Date().toISOString(),...(typeof hcascGetEventMeta === 'function' ? hcascGetEventMeta(null, 'Bonus') : {})};
 const apply = s =>{
 s.answerLog = toArray(s.answerLog); s.answerLog.push(answer);
-s.teamBonusPoints = (s.teamBonusPoints||0) + 10; };
+s.teamBonusPoints = (s.teamBonusPoints||0) + 20; };
 updateSessionAtomic(id, apply);
 withWriteLock(id, () =>{ const s = getCurrentSession(); if (s) apply(s); });
-showRecordToast((team ? team.name :'Team') + ' Bonus (+10 pts)', '');
+showRecordToast((team ? team.name :'Team') + ' Bonus (+20 pts)', 'bonus');
 renderAll(); }
 function deleteAnswer(answerId){
 const id=state.currentSessionId; if(!id) return;
@@ -146,7 +148,7 @@ const answers=s.answerLog||[];
 el.innerHTML=answers.length
 ?[...answers].reverse().map((a,i)=>`
 <div class="log-entry" data-pt="${a.pointType}">
-<span><strong>${answers.length-i}. ${answerActorLabel(a) === 'Dead TU' ? '<span class="text-3">Dead TU</span>' : isTeamBonusAnswer(a) ? '<span style="color:var(--pt-bonus);">' + answerActorLabel(a) + '</span>' : answerActorLabel(a)}</strong> &mdash; ${a.pointType==='Power'?'TU ⚡︎ Power':a.pointType} (${a.points>0?'+':''}${a.points} Pts) &mdash; ${a.category}</span>
+<span><strong>${answers.length-i}. ${answerActorLabel(a) === 'Dead TU' ? '<span class="text-3">Dead TU</span>' : isTeamBonusAnswer(a) ? '<span style="color:var(--pt-bonus);">' + answerActorLabel(a) + '</span>' : answerActorLabel(a)}</strong> &mdash; ${a.pointType==='Power'?'TU ⚡︎ Power':a.pointType==='Toss-up' && a.phase==='Face-Off' ? (a.turnover ? 'Turnover Face-Off' : 'Face-Off') : a.pointType} (${a.points>0?'+':''}${a.points} Pts) &mdash; ${a.category}${a.phase ? ` <span class="text-3">· ${a.phase}${a.round ? ' · R'+a.round : ''}${a.questionNumber ? ' · Q'+a.questionNumber : ''}</span>` : ''}</span>
 <button class="button button-danger" onclick="deleteAnswer('${a.id}')" style="padding:4px 8px;font-size:.8em;">Delete</button>
 </div>`).join('') :'<p class="text-2">No answers recorded yet.</p>';
 el.onscroll=updateFadeMasks;

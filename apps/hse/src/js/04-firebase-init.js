@@ -67,7 +67,7 @@ const remoteIsNewer  = remoteBuild && remoteLabel && isNewer(remoteBuild, FILE_B
 const localIsNewer   = remoteBuild && isNewer(FILE_BUILD_ID, remoteBuild);
 const isUnpublishedLocal = !remoteBuild || localIsNewer || FILE_BUILD_ID === remoteBuild;
 if (shouldCheckUpdates && remoteIsNewer){
-showUpdateBanner(remoteLabel, downloadUrl, releaseNotes, hasFirebasePayload);
+showUpdateBanner(remoteLabel, remoteBuild, downloadUrl, releaseNotes, hasFirebasePayload);
 } else if (shouldCheckUpdates && (localIsNewer || !remoteBuild)){
 showDevBanner();
 } else{

@@ -10,7 +10,7 @@ if (!players.length){ el.innerHTML = '<p style="color:var(--text2);font-size:.85
 const allPlayers = Object.keys(s.players || {});
 const cats = s.categories || [];
 const hasCats = cats.length > 0;
-const teamBonusButtons = teams.map(team => `<button class="ql-team-bonus" onclick="recordTeamBonus('${team.id}')" title="Record a team bonus for ${team.name}">★ ${team.name} Bonus +10</button>`).join('');
+const teamBonusButtons = teams.map(team => `<button class="ql-team-bonus" onclick="recordTeamBonus('${team.id}')" title="Record a team bonus for ${team.name}">★ ${team.name} Bonus +20</button>`).join('');
 const playerRows = players.map(player =>{
 const disp = getDisplayName(player, allPlayers);
 const safe = player.replace(/'/g,"\\'");
@@ -23,7 +23,7 @@ const selected = pending && _qlPending.cat === c ? 'selected' : '';
 return `<span class="ql-cat-chip ${selected}" onclick="qlSelectCat('${safe}','${cSafe}')">${c}</span>`;
 }).join('') + `<button class="ql-confirm-btn" onclick="qlConfirm('${safe}')">✔ Log</button><button class="ql-cancel-btn" onclick="qlCancel()">✕</button>` : '';
 const pendingTag = pending ? `<span style="font-size:.68em;font-weight:700;color:var(--primary);margin-left:3px;white-space:nowrap;">${_qlPending.type}</span>` : '';
-return `<div class="ql-row" id="${pid}_row"><div class="ql-name" title="${player}">${disp}${pendingTag}</div><div class="ql-btns"><button class="ql-btn ql-power" onclick="qlTap('${safe}','Power')" title="Toss-up ⚡︎ Power (+15)">⚡︎<br>+15</button><button class="ql-btn ql-tu" onclick="qlTap('${safe}','Toss-up')" title="Toss-up (+10)">✔<br>+10</button><button class="ql-btn ql-miss" onclick="qlTap('${safe}','Miss')" title="Miss (0)">○<br>0</button><button class="ql-btn ql-neg" onclick="qlTap('${safe}','Neg')" title="Neg (−5)">✗<br>−5</button></div></div><div class="ql-cat-row ${catRowOpen}" id="${pid}_cats">${catChips}</div>`;
+return `<div class="ql-row" id="${pid}_row"><div class="ql-name" title="${player}">${disp}${pendingTag}</div><div class="ql-btns"><button class="ql-btn ql-tu" onclick="qlTap('${safe}','Toss-up')" title="Face-Off correct (+10)">✔<br>+10</button><button class="ql-btn ql-miss" onclick="qlTap('${safe}','Miss')" title="Pass / miss (0)">○<br>0</button><button class="ql-btn ql-neg" onclick="qlTap('${safe}','Neg')" title="Face-Off incorrect (0)">✗<br>0</button></div></div><div class="ql-cat-row ${catRowOpen}" id="${pid}_cats">${catChips}</div>`;
 }).join('');
 el.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">${teamBonusButtons}</div>${playerRows}`;
 }
@@ -44,12 +44,12 @@ function qlCancel(){ _qlPending = null; renderQuickLog(); }
 function qlQuickRecord(player, type, cat){
 _qlPending = null;
 const id = state.currentSessionId; if (!id) return;
-const pointMap ={'Toss-up':10,'Bonus':10,'Neg':-5,'Power':15,'Miss':0,'Dead':0};
+const pointMap ={'Toss-up':10,'Bonus':20,'Ultimate':25,'Neg':0,'Power':15,'Miss':0,'Dead':0};
 const points   = pointMap[type];
 const isBuzzIn = ['Toss-up','Power','Neg','Miss','Dead'].includes(type);
 const recordedPlayer = type === 'Bonus' ? '— Team Bonus —' : player;
 const effectiveCategory = cat || '—';
-const answer ={id:Date.now().toString(),player:recordedPlayer,pointType:type,category:effectiveCategory,points,timestamp:new Date().toISOString()};
+const answer ={id:Date.now().toString(),player:recordedPlayer,pointType:type,category:effectiveCategory,points,timestamp:new Date().toISOString(),...(typeof hcascGetEventMeta === 'function' ? hcascGetEventMeta(type === 'Bonus' ? null : player, type) : {})};
 const applyAnswer = s =>{
 s.answerLog = toArray(s.answerLog);
 if (isBuzzIn){

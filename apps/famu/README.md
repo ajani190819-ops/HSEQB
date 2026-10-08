@@ -1,9 +1,23 @@
 # FAMU HCASC — Quiz Bowl Tracker
 
 The Florida A&M University **Honda Campus All-Star Challenge** tracker: live
-scoring, player/team management, sessions, and cross-session analytics.
+HCASC-format scoring, round clocks, official team scoreboards, player/team
+management, match audit logs, sessions, and cross-session analytics.
 Forked from the [`apps/template/`](../template/) QB Tracker base — every
 feature, FAMU branding, and **zero connection to the HSE app or its data**.
+
+## HCASC match mode
+
+The Tracker view follows the official game shape: three four-minute Face-Off
+rounds, four categories per round, Face-Offs worth **10**, team Bonuses worth
+**20**, and an Ultimate Challenge for each team with **60 seconds**, up to ten
+questions, and **25 points per correct answer**. Incorrect Face-Offs, passes, and
+misses score zero; there are no power bonuses or negative-point penalties.
+
+Each scoreboard event records the round, phase, category, team, responder,
+question number/ID, points, and timestamp. The Answer Log is the scorekeeper's
+correction trail. The official Honda rules and tournament officials remain the
+final authority; see the in-app HCASC rules card for the operational summary.
 
 - **App name:** FAMU HCASC
 - **Colors:** FAMU orange & green — the default **FAMU** theme uses official

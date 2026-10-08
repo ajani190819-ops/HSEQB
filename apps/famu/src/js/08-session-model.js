@@ -35,7 +35,7 @@ return cat;                              // unknown / legacy
 }
 // Official scoring model: bonuses belong to the team, not to an individual player.
 // Keep all Bonus events in the log, but never include them in player skill metrics.
-const PLAYER_PERFORMANCE_TYPES = new Set(['Power', 'Toss-up', 'Neg', 'Miss']);
+const PLAYER_PERFORMANCE_TYPES = new Set(['Power', 'Toss-up', 'Face-Off', 'Ultimate', 'Neg', 'Miss']);
 function isPlayerPerformanceAnswer(answer){
 return !!answer && PLAYER_PERFORMANCE_TYPES.has(answer.pointType);
 }

@@ -867,6 +867,159 @@ html[data-accent-style="stripes"] .qb-section h2{
   position:relative;
   z-index:1;
 }
+
+/* ========================================================================== */
+/* FAMU HCASC match board                                                     */
+/* ========================================================================== */
+.hcasc-board {
+  --hcasc-orange: #f4811f;
+  --hcasc-green: #008344;
+  --hcasc-ink: #173c32;
+  flex-shrink: 0;
+  padding: 18px clamp(14px, 2.2vw, 28px) 16px;
+  color: var(--text);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--hcasc-green) 96%, #071c16), color-mix(in srgb, var(--hcasc-green) 73%, #0b3b2d) 62%, var(--hcasc-orange));
+  border-bottom: 4px solid var(--hcasc-orange);
+  box-shadow: 0 5px 20px rgba(0, 59, 43, .18);
+}
+.hcasc-board-topline {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  color: #fff;
+}
+.hcasc-eyebrow {
+  display: block;
+  margin-bottom: 4px;
+  color: #ffd3a8;
+  font-size: .66em;
+  font-weight: 850;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+.hcasc-board h2 { margin: 0 0 2px; color: #fff; font-size: clamp(1.08rem, 2vw, 1.38rem); letter-spacing: -.015em; }
+.hcasc-board p { margin: 0; color: rgba(255,255,255,.78); font-size: .74rem; line-height: 1.4; }
+.hcasc-rule-chip {
+  align-self: center;
+  max-width: 280px;
+  padding: 7px 10px;
+  border: 1px solid rgba(255,255,255,.24);
+  border-radius: 999px;
+  color: #fff;
+  background: rgba(0,0,0,.17);
+  font-size: .68rem;
+  font-weight: 750;
+  line-height: 1.25;
+  text-align: center;
+}
+.hcasc-score-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
+.hcasc-score-card {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 10px;
+  padding: 11px 13px;
+  color: #fff;
+  background: rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.23);
+  border-radius: 12px;
+  box-shadow: inset 0 1px rgba(255,255,255,.09);
+}
+.hcasc-score-card-a { border-left: 4px solid var(--hcasc-orange); }
+.hcasc-score-card-b { border-left: 4px solid #b8e3c6; }
+.hcasc-team-mark { display: grid; flex: 0 0 30px; height: 30px; place-items: center; border-radius: 9px; background: rgba(255,255,255,.16); color: #fff; font-size: .78rem; font-weight: 900; }
+.hcasc-team-copy { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: 2px; }
+.hcasc-team-copy span { overflow: hidden; font-size: .9rem; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+.hcasc-team-copy small { overflow: hidden; color: rgba(255,255,255,.69); font-size: .63rem; text-overflow: ellipsis; white-space: nowrap; }
+.hcasc-score-card > strong { min-width: 42px; color: #fff; font-size: 1.8rem; font-variant-numeric: tabular-nums; line-height: 1; text-align: right; }
+.hcasc-empty-state { grid-column: 1 / -1; padding: 13px; color: rgba(255,255,255,.84); background: rgba(0,0,0,.16); border: 1px dashed rgba(255,255,255,.4); border-radius: 10px; font-size: .8rem; text-align: center; }
+.hcasc-round-strip { display: flex; align-items: stretch; justify-content: space-between; gap: 12px; margin-top: 13px; }
+.hcasc-round-tabs { display: flex; min-width: 0; gap: 5px; }
+.hcasc-round-tab {
+  display: flex;
+  min-width: 65px;
+  flex-direction: column;
+  gap: 2px;
+  padding: 7px 9px;
+  color: rgba(255,255,255,.73);
+  background: rgba(0,0,0,.16);
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 8px;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+.hcasc-round-tab b { font-size: .68rem; letter-spacing: .05em; }
+.hcasc-round-tab span { font-size: .62rem; white-space: nowrap; }
+.hcasc-round-tab:hover, .hcasc-round-tab.active { color: #fff; background: var(--hcasc-orange); border-color: #ffb06f; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+.hcasc-clock { display: flex; align-items: center; gap: 7px; padding: 5px 7px 5px 10px; background: rgba(0,0,0,.21); border: 1px solid rgba(255,255,255,.24); border-radius: 10px; }
+.hcasc-clock-label { color: rgba(255,255,255,.64); font-size: .57rem; font-weight: 850; letter-spacing: .08em; }
+.hcasc-clock strong { min-width: 50px; color: #fff; font-size: 1.12rem; font-variant-numeric: tabular-nums; letter-spacing: .03em; }
+.hcasc-clock button { padding: 5px 8px; color: #fff; background: rgba(255,255,255,.13); border: 1px solid rgba(255,255,255,.28); border-radius: 6px; cursor: pointer; font: inherit; font-size: .68rem; font-weight: 750; }
+.hcasc-clock button:hover { background: rgba(255,255,255,.25); }
+.hcasc-clock .hcasc-clock-reset { padding: 4px 6px; font-size: .9rem; }
+.hcasc-clock.is-warning { border-color: #ffd166; }
+.hcasc-clock.is-critical { border-color: #ffb4a2; background: rgba(170,25,22,.42); animation: hcasc-pulse 1s ease-in-out infinite alternate; }
+@keyframes hcasc-pulse { from { box-shadow: 0 0 0 rgba(255,180,160,0); } to { box-shadow: 0 0 14px rgba(255,180,160,.32); } }
+.hcasc-round-note { display: flex; justify-content: space-between; gap: 10px; margin-top: 8px; color: rgba(255,255,255,.72); font-size: .68rem; }
+.hcasc-round-note b { color: #fff; }
+.hcasc-category-row { display: flex; align-items: stretch; gap: 6px; margin-top: 10px; overflow-x: auto; padding-bottom: 2px; }
+.hcasc-category-label { align-self: center; min-width: 68px; color: rgba(255,255,255,.64); font-size: .62rem; font-weight: 800; line-height: 1.15; text-transform: uppercase; }
+.hcasc-category { display: flex; min-width: 112px; flex: 1; flex-direction: column; justify-content: center; gap: 2px; padding: 8px 9px; color: rgba(255,255,255,.83); background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.18); border-radius: 8px; cursor: pointer; font: inherit; text-align: left; }
+.hcasc-category span { overflow: hidden; font-size: .72rem; font-weight: 750; text-overflow: ellipsis; white-space: nowrap; }
+.hcasc-category small { color: rgba(255,255,255,.52); font-size: .56rem; }
+.hcasc-category:hover, .hcasc-category.active { color: #fff; background: rgba(244,129,31,.38); border-color: #ffbd86; }
+.hcasc-log-panel { margin-top: 11px; padding: 11px; color: var(--text); background: var(--card); border: 1px solid rgba(255,255,255,.22); border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,.12); }
+.hcasc-log-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.hcasc-log-heading .hcasc-eyebrow { margin-bottom: 2px; color: var(--hcasc-green); }
+.hcasc-log-heading h3 { margin: 0; color: var(--text); font-size: .9rem; }
+.hcasc-next-question { padding: 7px 9px; color: var(--hcasc-green); background: color-mix(in srgb, var(--hcasc-green) 7%, transparent); border: 1px solid color-mix(in srgb, var(--hcasc-green) 33%, var(--border)); border-radius: 7px; cursor: pointer; font: inherit; font-size: .68rem; font-weight: 800; }
+.hcasc-next-question:hover { background: color-mix(in srgb, var(--hcasc-green) 14%, transparent); }
+.hcasc-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 9px; }
+.hcasc-field { display: flex; flex-direction: column; gap: 4px; color: var(--text2); font-size: .65rem; font-weight: 750; }
+.hcasc-field select { min-width: 0; padding: 7px 8px; color: var(--input-text); background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 6px; font: inherit; font-size: .8rem; }
+.hcasc-field select:focus { outline: 2px solid color-mix(in srgb, var(--hcasc-orange) 45%, transparent); outline-offset: 1px; }
+.hcasc-action-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 8px; }
+.hcasc-action { display: flex; min-height: 48px; flex-direction: column; justify-content: center; gap: 2px; padding: 6px 5px; color: var(--text); background: var(--sec-bg); border: 1px solid var(--border); border-radius: 7px; cursor: pointer; font: inherit; text-align: center; }
+.hcasc-action b { color: var(--hcasc-green); font-size: 1rem; line-height: 1; }
+.hcasc-action span { color: var(--text2); font-size: .62rem; font-weight: 700; line-height: 1.1; }
+.hcasc-action:hover { border-color: var(--hcasc-orange); background: color-mix(in srgb, var(--hcasc-orange) 9%, var(--sec-bg)); transform: translateY(-1px); }
+.hcasc-action-bonus b { color: var(--hcasc-orange); }
+.hcasc-action-turnover b { color: #3f8fc4; }
+.hcasc-action-neutral b { color: var(--text2); }
+.hcasc-audit-note { margin-top: 8px !important; color: var(--text3) !important; font-size: .61rem !important; }
+.dark-mode .hcasc-board { box-shadow: 0 5px 24px rgba(0,0,0,.3); }
+.dark-mode .hcasc-log-panel { background: color-mix(in srgb, var(--card) 94%, #000); }
+@media (max-width: 760px) {
+  .hcasc-board { padding: 13px 12px 12px; }
+  .hcasc-board-topline { gap: 8px; }
+  .hcasc-rule-chip { display: none; }
+  .hcasc-round-strip { flex-direction: column; gap: 8px; }
+  .hcasc-round-tabs { width: 100%; }
+  .hcasc-round-tab { min-width: 0; flex: 1; padding: 6px 5px; text-align: center; }
+  .hcasc-round-tab span { overflow: hidden; text-overflow: ellipsis; }
+  .hcasc-clock { justify-content: center; }
+  .hcasc-controls { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 500px) {
+  .hcasc-score-grid { gap: 6px; }
+  .hcasc-score-card { gap: 6px; padding: 8px; }
+  .hcasc-team-mark { flex-basis: 24px; height: 24px; font-size: .68rem; }
+  .hcasc-team-copy span { font-size: .76rem; }
+  .hcasc-team-copy small { font-size: .53rem; }
+  .hcasc-score-card > strong { min-width: 34px; font-size: 1.45rem; }
+  .hcasc-action-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hcasc-round-note { flex-direction: column; gap: 2px; }
+  .hcasc-category-label { display: none; }
+  .hcasc-category { min-width: 105px; }
+  .hcasc-log-heading { align-items: flex-start; flex-direction: column; }
+  .hcasc-next-question { width: 100%; }
+}
+.hcasc-format-warning { margin-top: 9px; padding: 7px 9px; color: #fff3df; background: rgba(121, 54, 14, .34); border: 1px solid rgba(255, 214, 162, .38); border-radius: 7px; font-size: .68rem; font-weight: 700; }
+.hcasc-category:disabled { cursor: not-allowed; opacity: .45; filter: grayscale(.35); }
+.hcasc-category:disabled:hover { color: rgba(255,255,255,.83); background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.18); transform: none; }
 </style>
 <script>/* Apply the cached choice before the sign-in form paints, including on a cold load. */
 (function () {
@@ -1067,8 +1220,13 @@ html[data-accent-style="stripes"] .qb-section h2{
     <div id="catColorSection" style="display:none;padding-top:14px;border-top:1.5px solid var(--border);"><div style="font-weight:600;font-size:.85em;margin-bottom:8px;color:var(--text);">Category Colors <span class="fw4-82-ml6">Admin only — synced for all users</span></div><div id="catColorPickers" style="display:flex;flex-direction:column;gap:7px;margin-bottom:10px;"></div><div class="button-group"><button class="button" onclick="saveCatColors()">Save Colors</button><button class="button" style="background:var(--sec-bg);color:var(--text2);border:1.5px solid var(--border);" onclick="resetCatColors()">Reset Defaults</button></div><div id="catColorStatus" class="fs-8-success-mt6"></div></div>
   </div>
 </div>
-<div class="qb-section updates-admin-section" id="sec-admin" style="border:2px solid var(--primary);display:none;"><h2 class="primary">Admin Panel <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><p style="font-size:.82em;color:var(--text2);margin-bottom:12px;line-height:1.5;">Manage administrator access with Firebase UIDs. UID-based access is enforced by Firebase, so display names alone cannot grant publishing permissions.</p><div id="adminListDisplay" style="border:1.5px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:12px;background:var(--card);"></div><div class="input-group" style="margin-bottom:0;"><label for="adminUidInput">Add admin Firebase UID:</label><input type="text" id="adminUidInput" placeholder="Paste the Firebase UID" maxlength="128" onkeydown="if(event.key==='Enter') addAdmin()" /></div><div style="font-size:.75em;color:var(--text2);line-height:1.45;margin-top:7px;">Find your UID in the User ID section. After the owner UID is seeded in Firebase rules, admins can add other UIDs here.</div><div class="button-group" style="margin-top:10px;margin-bottom:18px;"><button class="button button-success" onclick="addAdmin()">Add UID admin</button></div><div class="admin-updates-link"><div class="admin-updates-link-icon">↻</div><div class="admin-updates-link-copy"><strong>Publish release notes</strong><span>Share new builds, write a changelog entry, and upload the downloadable file from Updates.</span></div><button class="button button-success" onclick="openUpdatesModal()">Open Updates</button></div><div style="border-top:1.5px solid var(--border);padding-top:16px;margin-top:16px;"><div style="background:var(--sec-bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;font-size:.8em;color:var(--text2);line-height:1.6;"><strong>Build status</strong><br>This file (display):<span class="mono-primary" id="displayVersionDisplay"></span><br>This file (internal):<span class="mono-primary" id="internalVersionDisplay"></span><br>Published in Firebase:<span style="font-family:monospace;color:var(--success);" id="liveFirebaseBuildDisplay">—</span> <span style="font-family:monospace;color:var(--text3);" id="liveFirebaseLabelDisplay"></span><br>Published on GitHub:<span id="githubPublishedDisplay" style="font-family:monospace;color:var(--text3);">—</span></div></div></div></div><div class="qb-section" id="sec-danger" style="border:2px solid var(--danger);display:none;"><h2 class="danger">Data Management <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div style="margin-bottom:18px;padding-bottom:16px;border-bottom:1.5px solid var(--border);"><div style="font-weight:700;font-size:.92em;color:var(--text);margin-bottom:10px;">&#9881; Performance Score Settings</div><p style="font-size:.78em;color:var(--text2);margin-bottom:12px;padding:8px 10px;background:var(--hover);border-radius:6px;border:1.5px solid var(--border);"><strong>Global settings</strong> &#8212; Synced across all devices and sessions.</p><div style="font-size:.78em;color:var(--text2);padding:8px 10px;background:var(--sec-bg);border-radius:6px;border:1.5px solid var(--border);line-height:1.45;margin-bottom:12px;">Ranking requires a full session. A player earns a Leaderboard Score (and appears in the distribution chart) only after hearing at least 20 toss-ups — one full session — so partial-session players never skew the standings. The system automatically sets k to the median TU heard among ranked players, so the typical ranked player is 50% trusted.</div><div style="font-size:.78em;color:var(--text2);padding:8px 10px;background:var(--sec-bg);border-radius:6px;border:1.5px solid var(--border);line-height:1.45;margin-top:14px;"><strong style="color:var(--text);">Automatic k:</strong> calculated from the median Toss-Ups Heard among ranked players (those with at least one full 20-toss-up session). This makes the typical ranked player 50% trusted and adapts as the dataset grows.</div><div style="font-size:.78em;color:var(--text2);padding:8px 12px;background:var(--sec-bg);border-radius:6px;border:1.5px solid var(--border);line-height:1.5;"><strong style="color:var(--text);">Official player model:</strong> Leaderboard Score is the only overall ranking score, and it is earned after one full session (20 toss-ups heard). Reliability, Power Rate, and TU/20 are diagnostic measures. Bonuses remain team-scored and are excluded from player rankings.</div></div><div style="margin-bottom:18px;padding-bottom:16px;border-bottom:1.5px solid var(--border);"><div style="font-weight:700;font-size:.92em;color:var(--text);margin-bottom:6px;">Expected Subcategory Frequencies <span class="fw4-82-ml6">Admin only — synced for all users</span></div><p style="font-size:.78em;color:var(--text2);margin-bottom:12px;line-height:1.4;">Set how often each subcategory should appear. Used to calculate expected bonus opportunities.</p><div id="catFreqPickers" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;"></div><div class="button-group"><button class="button" onclick="saveCatFreqs()">Save Frequencies</button><button class="button" style="background:var(--sec-bg);color:var(--text2);border:1.5px solid var(--border);" onclick="resetCatFreqs()">Reset Defaults</button></div><div id="catFreqStatus" class="fs-8-success-mt6"></div></div><div style="border:2px solid var(--danger);border-radius:var(--radius-sm);overflow:hidden;"><div id="dangerZoneHeader" onclick="toggleDangerZone()" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(220,53,69,.07);cursor:pointer;user-select:none;"><span style="font-weight:700;font-size:.9em;color:var(--danger);">&#9888; Danger Zone</span><span id="dangerZoneArrow" style="font-size:.8em;color:var(--danger);transition:transform .25s;transform:rotate(-90deg);">&#9660;</span></div><div id="dangerZoneBody" style="display:none;padding:14px;border-top:1.5px solid rgba(220,53,69,.25);"><p style="font-size:.82em;color:var(--text2);margin-bottom:12px;line-height:1.5;">This permanently deletes <strong>all sessions and all data</strong> across every device. There is no undo. Export your data first.</p><div style="margin-bottom:10px;"><div style="font-weight:600;font-size:.82em;color:var(--text2);margin-bottom:6px;">Export format before deleting:</div><div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="button button-success" style="flex:1;" onclick="exportAllData('xlsx')">&#8595; Export All as Excel</button><button class="button button-success" style="flex:1;" onclick="exportAllData('csv')">&#8595; Export All as CSV</button><button class="button button-success" style="flex:1;" onclick="exportAllData('json')">&#8595; Export All as JSON</button></div></div><button class="button button-danger" style="width:100%;" onclick="resetAllData()">Delete All Data</button></div></div></div></div><div class="qb-section" id="sec-debug" style="border:2px solid var(--warning);display:none;"><h2 class="warning">[ Debug Menu <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><p style="font-size:.82em;color:var(--text2);margin-bottom:14px;line-height:1.5;">Inject realistic placeholder data into the current session to simulate a Firebase-populated game. Useful for testing UI, stats, and analytics without a live connection.</p><label style="font-size:.85em;font-weight:600;color:var(--text2);display:block;margin-bottom:6px;">Scenario</label><select id="debugScenario" class="inp-std inp-mb"><option value="mid">Mid-game (~20 questions)</option><option value="full">Full game (~30 questions)</option><option value="blowout">Blowout (one team dominant)</option></select><button class="button" style="width:100%;background:linear-gradient(135deg,var(--warning),#e67e22);" onclick="injectDebugData();loadSessionData();renderAll();">Inject Debug Data</button><button class="button button-secondary" style="width:100%;margin-top:8px;" onclick="clearDebugData()">Clear Session Data</button><div id="debugStatus" style="margin-top:10px;font-size:.82em;color:var(--text2);min-height:1.4em;"></div></div></div></div></aside><div id="trackerView" style="flex:1;display:flex;flex-direction:column;overflow:hidden;"><div class="qb-scroll" id="qbScroll"><div class="qb-section" style="overflow:visible;"><h2>Record Answer <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div class="input-group"><label>Select Player:<span id="playerOptionalHint" style="font-weight:400;font-size:.85em;color:var(--text2);display:none;">(Bonus is team-scored; Miss may be unattributed)</span></label><div id="playerButtonsContainer" class="player-buttons"></div></div><div class="input-group"><label>Point Type:<span style="font-weight:400;font-size:.8em;color:var(--text3);">1–6 keys</span></label><div class="point-type-buttons"><button class="button-point-type" onclick="selectPointType('Power')"   data-key="1">Toss-up <span class="pwr-bolt">&#9889;</span> Power (+15) <kbd>1</kbd></button><button class="button-point-type" onclick="selectPointType('Toss-up')" data-key="2">Toss-up (+10) <kbd>2</kbd></button><button class="button-point-type" onclick="selectPointType('Bonus')"   data-key="3">Team Bonus (+10) <kbd>3</kbd></button><button class="button-point-type" onclick="selectPointType('Miss')"    data-key="4">Miss (0) <kbd>4</kbd></button><button class="button-point-type" onclick="selectPointType('Neg')"     data-key="5">Neg (-5) <kbd>5</kbd></button><button class="button-point-type" onclick="selectPointType('Dead')"    data-key="6">Dead (0) <kbd>6</kbd></button></div></div><div class="input-group" id="categoryInputGroup"><label>Category:<span style="font-weight:400;font-size:.85em;color:var(--text2);">(Optional)</span></label><div id="categoryButtonsContainer"></div></div><div style="display:flex;align-items:center;gap:12px;margin-top:14px;padding:12px 14px;background:var(--sec-bg);border:2px solid var(--border);border-radius:8px;"><div style="flex:1;"><div style="font-weight:700;font-size:.9em;color:var(--text2);margin-bottom:2px;">Toss-Ups Heard <span style="font-weight:400;font-size:.85em;">(Auto-tracks once per toss-up)</span></div><div style="font-size:1.6em;font-weight:700;color:var(--primary);" id="tHeardDisplay">0</div></div><div style="display:flex;gap:6px;align-items:center;"><button onclick="adjustTHeard(-1)" class="btn-icon-danger">−</button><button onclick="adjustTHeard(1)" class="btn-icon-success">+</button></div></div><button class="button button-success" id="recordAnswerBtn" onclick="recordAnswer()" style="width:100%;margin-top:10px;padding:16px;font-size:1.05em;">Record Answer <kbd style="font-size:.75em;opacity:.7;margin-left:6px;">Enter</kbd></button></div></div><div class="qb-section"><h2>Substitutions <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div id="subPanelContent"></div></div></div><div class="qb-section"><h2>Statistics <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div id="statisticsContainer"></div></div></div><div class="qb-section"><h2>Answer Log <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><button class="button button-danger" onclick="clearAnswerLog()">Clear Log</button><div class="log-container-wrap"><div id="answerLog" class="log-container"></div></div></div></div></div></div><div id="analyticsView" style="flex:1;display:none;flex-direction:column;overflow:hidden;"><div style="padding:10px var(--hsp);border-bottom:1.5px solid var(--border);background:var(--card);flex-shrink:0;display:flex;gap:6px;flex-wrap:wrap;"><button class="analytics-tab active" onclick="switchAnalyticsTab('overview',this)">Overview</button><button class="analytics-tab" onclick="switchAnalyticsTab('players',this)">Players</button><button class="analytics-tab" onclick="switchAnalyticsTab('charts',this)">Charts</button><button class="analytics-tab" onclick="switchAnalyticsTab('teams',this)">Team Compositions</button></div><div class="analytics-scroll" id="analyticsScroll"><div id="an-overview" class="analytics-panel active"></div><div id="an-players" class="analytics-panel"></div><div id="an-charts" class="analytics-panel"></div><div id="an-teams" class="analytics-panel"></div></div></div></div></div><div id="helpModal" class="qb-modal"><div class="modal-content" style="max-width:740px;"><div class="modal-header"><h2>Help &amp; Tutorial</h2><button class="close-modal" onclick="closeHelpModal()">&#215;</button></div><div style="line-height:1.7;color:var(--text);font-size:.92em;">
-
+<div class="qb-section updates-admin-section" id="sec-admin" style="border:2px solid var(--primary);display:none;"><h2 class="primary">Admin Panel <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><p style="font-size:.82em;color:var(--text2);margin-bottom:12px;line-height:1.5;">Manage administrator access with Firebase UIDs. UID-based access is enforced by Firebase, so display names alone cannot grant publishing permissions.</p><div id="adminListDisplay" style="border:1.5px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:12px;background:var(--card);"></div><div class="input-group" style="margin-bottom:0;"><label for="adminUidInput">Add admin Firebase UID:</label><input type="text" id="adminUidInput" placeholder="Paste the Firebase UID" maxlength="128" onkeydown="if(event.key==='Enter') addAdmin()" /></div><div style="font-size:.75em;color:var(--text2);line-height:1.45;margin-top:7px;">Find your UID in the User ID section. After the owner UID is seeded in Firebase rules, admins can add other UIDs here.</div><div class="button-group" style="margin-top:10px;margin-bottom:18px;"><button class="button button-success" onclick="addAdmin()">Add UID admin</button></div><div class="admin-updates-link"><div class="admin-updates-link-icon">↻</div><div class="admin-updates-link-copy"><strong>Publish release notes</strong><span>Share new builds, write a changelog entry, and upload the downloadable file from Updates.</span></div><button class="button button-success" onclick="openUpdatesModal()">Open Updates</button></div><div style="border-top:1.5px solid var(--border);padding-top:16px;margin-top:16px;"><div style="background:var(--sec-bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;font-size:.8em;color:var(--text2);line-height:1.6;"><strong>Build status</strong><br>This file (display):<span class="mono-primary" id="displayVersionDisplay"></span><br>This file (internal):<span class="mono-primary" id="internalVersionDisplay"></span><br>Published in Firebase:<span style="font-family:monospace;color:var(--success);" id="liveFirebaseBuildDisplay">—</span> <span style="font-family:monospace;color:var(--text3);" id="liveFirebaseLabelDisplay"></span><br>Published on GitHub:<span id="githubPublishedDisplay" style="font-family:monospace;color:var(--text3);">—</span></div></div></div></div><div class="qb-section" id="sec-danger" style="border:2px solid var(--danger);display:none;"><h2 class="danger">Data Management <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div style="margin-bottom:18px;padding-bottom:16px;border-bottom:1.5px solid var(--border);"><div style="font-weight:700;font-size:.92em;color:var(--text);margin-bottom:10px;">&#9881; Performance Score Settings</div><p style="font-size:.78em;color:var(--text2);margin-bottom:12px;padding:8px 10px;background:var(--hover);border-radius:6px;border:1.5px solid var(--border);"><strong>Global settings</strong> &#8212; Synced across all devices and sessions.</p><div style="font-size:.78em;color:var(--text2);padding:8px 10px;background:var(--sec-bg);border-radius:6px;border:1.5px solid var(--border);line-height:1.45;margin-bottom:12px;">Ranking requires a full session. A player earns a Leaderboard Score (and appears in the distribution chart) only after hearing at least 20 toss-ups — one full session — so partial-session players never skew the standings. The system automatically sets k to the median TU heard among ranked players, so the typical ranked player is 50% trusted.</div><div style="font-size:.78em;color:var(--text2);padding:8px 10px;background:var(--sec-bg);border-radius:6px;border:1.5px solid var(--border);line-height:1.45;margin-top:14px;"><strong style="color:var(--text);">Automatic k:</strong> calculated from the median Toss-Ups Heard among ranked players (those with at least one full 20-toss-up session). This makes the typical ranked player 50% trusted and adapts as the dataset grows.</div><div style="font-size:.78em;color:var(--text2);padding:8px 12px;background:var(--sec-bg);border-radius:6px;border:1.5px solid var(--border);line-height:1.5;"><strong style="color:var(--text);">Official player model:</strong> Leaderboard Score is the only overall ranking score, and it is earned after one full session (20 toss-ups heard). Reliability, Power Rate, and TU/20 are diagnostic measures. Bonuses remain team-scored and are excluded from player rankings.</div></div><div style="margin-bottom:18px;padding-bottom:16px;border-bottom:1.5px solid var(--border);"><div style="font-weight:700;font-size:.92em;color:var(--text);margin-bottom:6px;">Expected Subcategory Frequencies <span class="fw4-82-ml6">Admin only — synced for all users</span></div><p style="font-size:.78em;color:var(--text2);margin-bottom:12px;line-height:1.4;">Set how often each subcategory should appear. Used to calculate expected bonus opportunities.</p><div id="catFreqPickers" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;"></div><div class="button-group"><button class="button" onclick="saveCatFreqs()">Save Frequencies</button><button class="button" style="background:var(--sec-bg);color:var(--text2);border:1.5px solid var(--border);" onclick="resetCatFreqs()">Reset Defaults</button></div><div id="catFreqStatus" class="fs-8-success-mt6"></div></div><div style="border:2px solid var(--danger);border-radius:var(--radius-sm);overflow:hidden;"><div id="dangerZoneHeader" onclick="toggleDangerZone()" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(220,53,69,.07);cursor:pointer;user-select:none;"><span style="font-weight:700;font-size:.9em;color:var(--danger);">&#9888; Danger Zone</span><span id="dangerZoneArrow" style="font-size:.8em;color:var(--danger);transition:transform .25s;transform:rotate(-90deg);">&#9660;</span></div><div id="dangerZoneBody" style="display:none;padding:14px;border-top:1.5px solid rgba(220,53,69,.25);"><p style="font-size:.82em;color:var(--text2);margin-bottom:12px;line-height:1.5;">This permanently deletes <strong>all sessions and all data</strong> across every device. There is no undo. Export your data first.</p><div style="margin-bottom:10px;"><div style="font-weight:600;font-size:.82em;color:var(--text2);margin-bottom:6px;">Export format before deleting:</div><div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="button button-success" style="flex:1;" onclick="exportAllData('xlsx')">&#8595; Export All as Excel</button><button class="button button-success" style="flex:1;" onclick="exportAllData('csv')">&#8595; Export All as CSV</button><button class="button button-success" style="flex:1;" onclick="exportAllData('json')">&#8595; Export All as JSON</button></div></div><button class="button button-danger" style="width:100%;" onclick="resetAllData()">Delete All Data</button></div></div></div></div><div class="qb-section" id="sec-debug" style="border:2px solid var(--warning);display:none;"><h2 class="warning">[ Debug Menu <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><p style="font-size:.82em;color:var(--text2);margin-bottom:14px;line-height:1.5;">Inject realistic placeholder data into the current session to simulate a Firebase-populated game. Useful for testing UI, stats, and analytics without a live connection.</p><label style="font-size:.85em;font-weight:600;color:var(--text2);display:block;margin-bottom:6px;">Scenario</label><select id="debugScenario" class="inp-std inp-mb"><option value="mid">Mid-game (~20 questions)</option><option value="full">Full game (~30 questions)</option><option value="blowout">Blowout (one team dominant)</option></select><button class="button" style="width:100%;background:linear-gradient(135deg,var(--warning),#e67e22);" onclick="injectDebugData();loadSessionData();renderAll();">Inject Debug Data</button><button class="button button-secondary" style="width:100%;margin-top:8px;" onclick="clearDebugData()">Clear Session Data</button><div id="debugStatus" style="margin-top:10px;font-size:.82em;color:var(--text2);min-height:1.4em;"></div></div></div></div></aside><div id="trackerView" style="flex:1;display:flex;flex-direction:column;overflow:hidden;"><div id="hcascBoard" class="hcasc-board" aria-label="HCASC official match scoreboard"></div><div class="qb-scroll" id="qbScroll"><div class="qb-section" style="overflow:visible;"><h2>Record Answer <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div class="input-group"><label>Select Player:<span id="playerOptionalHint" style="font-weight:400;font-size:.85em;color:var(--text2);display:none;">(Bonus is team-scored; Miss may be unattributed)</span></label><div id="playerButtonsContainer" class="player-buttons"></div></div><div class="input-group"><label>HCASC ruling:<span style="font-weight:400;font-size:.8em;color:var(--text3);">1–6 keys</span></label><div class="point-type-buttons"><button class="button-point-type" onclick="selectPointType('Toss-up')" data-key="1">Face-Off correct (+10) <kbd>1</kbd></button><button class="button-point-type" onclick="selectPointType('Bonus')" data-key="2">Team Bonus (+20) <kbd>2</kbd></button><button class="button-point-type" onclick="selectPointType('Ultimate')" data-key="3">Ultimate correct (+25) <kbd>3</kbd></button><button class="button-point-type" onclick="selectPointType('Neg')" data-key="4">Face-Off incorrect (0) <kbd>4</kbd></button><button class="button-point-type" onclick="selectPointType('Miss')" data-key="5">Pass / miss (0) <kbd>5</kbd></button><button class="button-point-type" onclick="selectPointType('Dead')" data-key="6">No score (0) <kbd>6</kbd></button></div></div><div class="input-group" id="categoryInputGroup"><label>Category:<span style="font-weight:400;font-size:.85em;color:var(--text2);">(Optional)</span></label><div id="categoryButtonsContainer"></div></div><div style="display:flex;align-items:center;gap:12px;margin-top:14px;padding:12px 14px;background:var(--sec-bg);border:2px solid var(--border);border-radius:8px;"><div style="flex:1;"><div style="font-weight:700;font-size:.9em;color:var(--text2);margin-bottom:2px;">Toss-Ups Heard <span style="font-weight:400;font-size:.85em;">(Auto-tracks once per toss-up)</span></div><div style="font-size:1.6em;font-weight:700;color:var(--primary);" id="tHeardDisplay">0</div></div><div style="display:flex;gap:6px;align-items:center;"><button onclick="adjustTHeard(-1)" class="btn-icon-danger">−</button><button onclick="adjustTHeard(1)" class="btn-icon-success">+</button></div></div><button class="button button-success" id="recordAnswerBtn" onclick="recordAnswer()" style="width:100%;margin-top:10px;padding:16px;font-size:1.05em;">Record Answer <kbd style="font-size:.75em;opacity:.7;margin-left:6px;">Enter</kbd></button></div></div><div class="qb-section"><h2>Substitutions <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div id="subPanelContent"></div></div></div><div class="qb-section"><h2>Statistics <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><div id="statisticsContainer"></div></div></div><div class="qb-section"><h2>Answer Log <span class="toggle-icon">&#9660;</span></h2><div class="collapsible-content"><button class="button button-danger" onclick="clearAnswerLog()">Clear Log</button><div class="log-container-wrap"><div id="answerLog" class="log-container"></div></div></div></div></div></div><div id="analyticsView" style="flex:1;display:none;flex-direction:column;overflow:hidden;"><div style="padding:10px var(--hsp);border-bottom:1.5px solid var(--border);background:var(--card);flex-shrink:0;display:flex;gap:6px;flex-wrap:wrap;"><button class="analytics-tab active" onclick="switchAnalyticsTab('overview',this)">Overview</button><button class="analytics-tab" onclick="switchAnalyticsTab('players',this)">Players</button><button class="analytics-tab" onclick="switchAnalyticsTab('charts',this)">Charts</button><button class="analytics-tab" onclick="switchAnalyticsTab('teams',this)">Team Compositions</button></div><div class="analytics-scroll" id="analyticsScroll"><div id="an-overview" class="analytics-panel active"></div><div id="an-players" class="analytics-panel"></div><div id="an-charts" class="analytics-panel"></div><div id="an-teams" class="analytics-panel"></div></div></div></div></div><div id="helpModal" class="qb-modal"><div class="modal-content" style="max-width:740px;"><div class="modal-header"><h2>Help &amp; Tutorial</h2><button class="close-modal" onclick="closeHelpModal()">&#215;</button></div><div style="line-height:1.7;color:var(--text);font-size:.92em;">
+<div id="help-hcasc-rules" style="background:linear-gradient(135deg,color-mix(in srgb,var(--primary) 9%,transparent),color-mix(in srgb,var(--accent-line) 9%,transparent));border:2px solid color-mix(in srgb,var(--primary) 35%,var(--border));border-radius:10px;padding:15px 16px;margin-bottom:18px;">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px;"><strong style="color:var(--primary);font-size:1.05em;">HCASC official game format</strong><span style="font-size:.68em;color:var(--text3);font-weight:800;letter-spacing:.08em;">FAMU MATCH MODE</span></div>
+<p style="margin-bottom:9px;color:var(--text2);">Use the scoreboard for official-format tracking. The game is played between two teams of three players, with a fourth roster member eligible for substitutions between games.</p>
+<ul style="margin:0;padding-left:20px;color:var(--text2);font-size:.86em;line-height:1.55;"><li><strong>Face-Off rounds 1–3:</strong> each lasts four minutes. Three Face-Off questions per category; Face-Offs are worth 10 points.</li><li><strong>Turnovers:</strong> an incorrect Face-Off is turned over to the other player; it scores 0, not −5. A correct Face-Off earns that team one related Bonus worth 20 points.</li><li><strong>Ultimate Challenge:</strong> both teams play, 60 seconds each, up to 10 rapid-fire questions. Each correct answer is worth 25 points; passes and misses score 0.</li><li><strong>Win condition:</strong> the highest cumulative score after both Ultimate Challenges wins. A tie goes to sudden-death Face-Offs worth 10 points.</li></ul>
+<p style="margin-top:9px;color:var(--text3);font-size:.76em;">The official Honda rules and tournament officials control final rulings. This tracker records the scorekeeper’s ruling, team, responder, round, category, question number, and time. <a href="https://ffl.hcasc.com/pub/gamerules.asp" target="_blank" rel="noopener" style="color:var(--primary);font-weight:700;">Read the full HCASC rules ↗</a></p>
+</div>
 
 <div style="background:var(--sec-bg);border:1.5px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:18px;">
 <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;">
@@ -1195,27 +1353,10 @@ html[data-accent-style="stripes"] .qb-section h2{
 </li>
 </ul>
 
-<h3 id="help-record" class="h3-primary">Recording Answers</h3>
-<p class="mb-8">In <strong>Record Answer</strong> panel:</p>
-<ol class="m14-pl20" style="margin-bottom:10px;">
-<li><strong>Select Player</strong> – grouped by team, display uses first name + last initial when duplicates exist. For <em>Team Bonus</em> you select a <em>team</em> pill instead (dashed, full-width). Miss and Dead can be unattributed.</li>
-<li><strong>Point Type</strong> – choose one (click or 1-6 keys):
-<table style="width:100%;border-collapse:collapse;margin:8px 0 12px;font-size:.88em;">
-<tr class="sec-bg"><th class="cell-pad-left">Type</th><th class="cell-pad-left">Key</th><th class="cell-pad-left">Color</th><th class="cell-pad-left">Points</th><th class="cell-pad-left">Notes</th></tr>
-<tr><td class="cell-pad">Power ⚡︎</td><td class="cell-pad"><kbd>1</kbd></td><td class="cell-pad"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:var(--pt-power);vertical-align:middle;margin-right:4px;"></span>Gold</td><td class="cell-pad">+15</td><td class="cell-pad">Early correct buzz before power mark</td></tr>
-<tr class="sec-bg"><td class="cell-pad">Toss-up</td><td class="cell-pad"><kbd>2</kbd></td><td class="cell-pad"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:var(--pt-tossup);vertical-align:middle;margin-right:4px;"></span>Green</td><td class="cell-pad">+10</td><td class="cell-pad">Correct after power</td></tr>
-<tr><td class="cell-pad">Team Bonus</td><td class="cell-pad"><kbd>3</kbd></td><td class="cell-pad"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:var(--pt-bonus);vertical-align:middle;margin-right:4px;"></span>Blue</td><td class="cell-pad">+10 per part</td><td class="cell-pad">Team-scored, pick team pill. Never assigned to individual</td></tr>
-<tr class="sec-bg"><td class="cell-pad">Miss</td><td class="cell-pad"><kbd>4</kbd></td><td class="cell-pad"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:var(--pt-miss);vertical-align:middle;margin-right:4px;"></span>Grey</td><td class="cell-pad">0</td><td class="cell-pad">Incorrect after power or no answer – can be unattributed</td></tr>
-<tr><td class="cell-pad">Neg</td><td class="cell-pad"><kbd>5</kbd></td><td class="cell-pad"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:var(--pt-neg);vertical-align:middle;margin-right:4px;"></span>Red</td><td class="cell-pad">−5</td><td class="cell-pad">Incorrect early interrupt – category hidden/optional</td></tr>
-<tr class="sec-bg"><td class="cell-pad">Dead</td><td class="cell-pad"><kbd>6</kbd></td><td class="cell-pad"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:var(--pt-dead);vertical-align:middle;margin-right:4px;"></span>Dark Grey</td><td class="cell-pad">0</td><td class="cell-pad">No team buzzed – can be unattributed, category hidden</td></tr>
-</table>
-<p style="font-size:.78em;color:var(--text2);margin:-6px 0 12px;padding:6px 10px;background:var(--sec-bg);border-radius:6px;border:1.5px solid var(--border);"><strong>Color coding:</strong> Power is <span style="color:var(--pt-power);font-weight:700;">gold</span>, Toss-up is <span style="color:var(--pt-tossup);font-weight:700;">green</span>, <span style="color:var(--pt-neg);font-weight:700;">red</span> for Negs, <span style="color:var(--pt-bonus);font-weight:700;">blue</span> for Bonuses, <span style="color:var(--pt-miss);font-weight:700;">grey</span> for Misses, and <span style="color:var(--pt-dead);font-weight:700;">dark grey</span> for Dead. Charts, log entries, and buttons all use this palette, with light/dark variants for contrast.</p>
-</li>
-<li><strong>Category</strong> – optional, hidden for Neg/Dead. Click parent label for general parent, or specific sub chip. Selected parent stored if no sub picked.</li>
-<li><strong>Toss-Ups Heard</strong> – auto-tracks: increments once on first outcome per toss-up. Logic: if previous log entry was Neg/Miss and current is Power/Toss-up, it’s treated as follow-up to same question (no increment). Manual +/− buttons to correct. Required for normalized metrics like TU/20 and Leaderboard Score.</li>
-<li><strong>Record Answer (Enter)</strong> – logs, shows colored toast (green success, red Neg, gray Miss/Dead), clears selection.</li>
-</ol>
-<p class="mb-14"><strong>Answer Log</strong> below shows reverse chronological entries with player/team, type, points, category, Delete per entry, and Clear Log button. Deleting also adjusts Toss-Ups Heard if that entry was the first outcome of its question and removes team bonus points / player mirror.</p>
+<h3 id="help-record" class="h3-primary">Recording an HCASC ruling</h3>
+<p class="mb-8">For a live match, use the <strong>Match scoreboard</strong> at the top of Tracker. It is the safest path because it keeps the official round, team, category, responder, question number, and timestamp together.</p>
+<ol class="m14-pl20" style="margin-bottom:10px;"><li><strong>Choose a round:</strong> Face-Off 1, 2, 3, or Ultimate Challenge. Start/pause the four-minute Face-Off clock or 60-second Ultimate clock.</li><li><strong>Choose the category, team, and responder.</strong> Double-click a category tile to rename the round’s board. Use <strong>+ New Face-Off question</strong> before the next question.</li><li><strong>Log the ruling:</strong> Face-Off correct is <strong>+10</strong>; a Team Bonus is <strong>+20</strong>; Ultimate correct is <strong>+25</strong>; incorrect, pass, and missed answers are <strong>0</strong>. Use Turnover correct when the second player answers the same Face-Off.</li><li><strong>Review the answer log</strong> below. Delete remains available for scorekeeper corrections, and every new scoreboard event carries an audit trail.</li></ol>
+<p class="mb-14"><strong>Legacy Record Answer</strong> is retained for imports and quick corrections. It uses the same HCASC point values and does not create a negative score for an incorrect Face-Off.</p>
 
 <h3 id="help-subs" class="h3-primary">Substitutions</h3>
 <p class="mb-14">Sub panel lists <strong>Active</strong> players (assigned to teams) and <strong>Bench</strong> (in session pool but not active). Pick one Sub Out chip and one Sub In chip – button shows “⇄ Out → In” when ready, otherwise disabled. Executes substitution across all teams (removes out, adds in). Toasts guide you if you miss a pick.</p>
@@ -1269,33 +1410,10 @@ html[data-accent-style="stripes"] .qb-section h2{
 </li>
 </ul>
 
-<h3 id="help-metrics" class="h3-primary">Formula Symbols &amp; Player Metrics</h3>
-<p class="mb-6">All formulas count <strong>official toss-up decisions only</strong> – bonuses excluded.</p>
-<ul class="m14-pl20" style="margin-bottom:8px;">
-<li><code>P</code> – Powers (+15)</li>
-<li><code>T</code> – Toss-ups (+10)</li>
-<li><code>N</code> – Negs (−5)</li>
-<li><code>M</code> – Misses (0)</li>
-<li><code>H</code> – Toss-Ups Heard – opportunities player was in room for (session counter accumulated across valid sessions, adjustable via override)</li>
-<li><code>k</code> – confidence constant – auto-set to median <code>H</code> among ranked players; at <code>H=k</code> player is 50% trusted</li>
-<li><code>Team Average</code> – mean Raw TU/20 of ranked players</li>
-</ul>
-<p class="mb-8"><strong>Ranked vs provisional:</strong> ranked only when <code>H ≥ 20</code>. Provisional gets diagnostics but no Leaderboard Score, excluded from team average, k, and distribution chart.</p>
-<table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:.88em;">
-<tr class="sec-bg"><th class="cell-pad-left">Metric</th><th class="cell-pad-left">Formula</th><th class="cell-pad-left">Meaning</th></tr>
-<tr><td class="cell-pad">Total Points</td><td class="cell-pad"><code>15P+10T−5N</code></td><td class="cell-pad">Individual toss-up points</td></tr>
-<tr><td class="cell-pad">Raw TU/20</td><td class="cell-pad"><code>(15P+10T−5N)/H×20</code></td><td class="cell-pad">Net points at 20 TU pace</td></tr>
-<tr class="sec-bg"><td class="cell-pad">Leaderboard Score</td><td class="cell-pad"><code>Conf×Raw + (1−Conf)×Avg</code></td><td class="cell-pad">Only overall ranking score, shrunk toward team avg when sample small</td></tr>
-<tr><td class="cell-pad">Reliability</td><td class="cell-pad"><code>(P+T)/(P+T+N+M)×100</code></td><td class="cell-pad">Correct decisions / all decisions</td></tr>
-<tr class="sec-bg"><td class="cell-pad">Power Rate</td><td class="cell-pad"><code>P/(P+T+N+M)×100</code></td><td class="cell-pad">Powers / all decisions – negs/misses penalize</td></tr>
-<tr><td class="cell-pad">TU/20</td><td class="cell-pad"><code>(P+T+N+M)/H×20</code></td><td class="cell-pad">Participation pace – can exceed 20 due to multiple buzzes per TU</td></tr>
-<tr class="sec-bg"><td class="cell-pad">Confidence</td><td class="cell-pad"><code>H/(H+k)</code></td><td class="cell-pad">Sample-size weight – 50% at H=k, 75% at H=3k</td></tr>
-</table>
-
-<h3 class="h3-primary">Official Score System</h3>
-<p class="mb-8">Leaderboard Score is the <em>only</em> overall ranking score. Earned after 20 TU heard. Formula:</p>
-<p style="margin-bottom:14px;font-family:monospace;font-size:.85em;background:var(--sec-bg);padding:8px 12px;border-radius:6px;border:1.5px solid var(--border);">Leaderboard Score = Confidence × Raw TU/20 + (1 − Confidence) × Team Average</p>
-<p class="mb-14">Bonuses are team-scored, shown in team totals and answer log, never in individual rankings.</p>
+<h3 id="help-metrics" class="h3-primary">HCASC scorekeeping notes</h3>
+<p class="mb-6">The match score is cumulative team scoring. The board intentionally follows the official values rather than power/neg quiz-bowl scoring.</p>
+<ul class="m14-pl20" style="margin-bottom:8px;"><li><strong>Face-Off:</strong> +10 for a correct answer; an incorrect answer scores 0 and may be turned over.</li><li><strong>Bonus:</strong> +20 to the team only. Bonus points are never assigned to an individual responder.</li><li><strong>Ultimate:</strong> +25 for each correct answer, up to 10 questions per team in 60 seconds. Passes and misses score 0.</li><li><strong>Toss-Ups Heard:</strong> remains available for practice analytics, but it is separate from the official team score.</li></ul>
+<p class="mb-14">The Answer Log is the source of truth for scorekeeper review. The scoreboard also records the current round, phase, category, team, responder, question ID, and timestamp so a practice session can be audited or exported later.</p>
 
 <h3 id="help-export" class="h3-primary">Export &amp; Import</h3>
 <ul class="m14-pl20" style="margin-bottom:14px;">
@@ -1375,7 +1493,7 @@ html[data-accent-style="stripes"] .qb-section h2{
 <li><strong>Update banner</strong> – appears at top when new deploy succeeds while you have page open, with Refresh button</li>
 <li><strong>Keyboard shortcuts</strong> (when not typing in input):
   <ul style="margin:6px 0 0 16px;">
-    <li><kbd>1</kbd> Power, <kbd>2</kbd> Toss-up, <kbd>3</kbd> Bonus, <kbd>4</kbd> Miss, <kbd>5</kbd> Neg, <kbd>6</kbd> Dead</li>
+    <li><kbd>1</kbd> Face-Off correct, <kbd>2</kbd> Team Bonus, <kbd>3</kbd> Ultimate correct, <kbd>4</kbd> Face-Off incorrect, <kbd>5</kbd> Pass/miss, <kbd>6</kbd> No score</li>
     <li><kbd>Enter</kbd> Record Answer</li>
   </ul>
   On touch devices kbd hints hidden, tap targets enlarged to ≥44px, no blue tap flash, long-press callout disabled, edge-scroll contained, safe-area insets respected.
@@ -2428,7 +2546,7 @@ return cat;                              // unknown / legacy
 }
 // Official scoring model: bonuses belong to the team, not to an individual player.
 // Keep all Bonus events in the log, but never include them in player skill metrics.
-const PLAYER_PERFORMANCE_TYPES = new Set(['Power', 'Toss-up', 'Neg', 'Miss']);
+const PLAYER_PERFORMANCE_TYPES = new Set(['Power', 'Toss-up', 'Face-Off', 'Ultimate', 'Neg', 'Miss']);
 function isPlayerPerformanceAnswer(answer){
 return !!answer && PLAYER_PERFORMANCE_TYPES.has(answer.pointType);
 }
@@ -2589,7 +2707,7 @@ state.sessions[id] ={
 id, name:'Preview Session',
 created:new Date().toISOString(), lastUpdated:new Date().toISOString(),
 updatedBy:'preview', players:{}, teams:[],
-categories:[...DEFAULT_CATEGORIES], answers:[], answerLog:[], tHeard:0
+categories:[...DEFAULT_CATEGORIES], answers:[], answerLog:[], tHeard:0, format:'HCASC', currentRound:1, currentPhase:'Face-Off', clockRemainingSeconds:240, clockRunning:false, questionNumber:0, activeCategory:'History & Culture', rounds:{1:{categories:['History & Culture','Science & Technology','Arts & Humanities','Society & Popular Culture']},2:{categories:['History & Culture','Science & Technology','Arts & Humanities','Society & Popular Culture']},3:{categories:['History & Culture','Science & Technology','Arts & Humanities','Society & Popular Culture']},4:{categories:['History & Culture','Science & Technology','Arts & Humanities','Society & Popular Culture']}}
 };
 state.currentSessionId = id;
 loadSessionData();
@@ -2637,7 +2755,7 @@ function createNewSession(){
 const id=Date.now().toString();
 const nameInput=$('newSessionName');
 const name=nameInput?.value.trim()||('Session '+new Date().toLocaleDateString());
-const session={id,name,created:new Date().toISOString(),lastUpdated:new Date().toISOString(),updatedBy:clientId,players:{},teams:[],categories:[...DEFAULT_CATEGORIES],answers:[],answerLog:[]};
+const session={id,name,format:'HCASC',currentRound:1,currentPhase:'Face-Off',rounds:{1:{categories:['History & Culture','Science & Technology','Arts & Humanities','Society & Popular Culture']},2:{categories:['History & Culture','Science & Technology','Arts & Humanities','Society & Popular Culture']},3:{categories:['History & Culture','Science & Technology','Arts & Humanities','Society & Popular Culture']},4:{categories:['History & Culture','Science & Technology','Arts & Humanities','Society & Popular Culture']}},clockRemainingSeconds:240,clockRunning:false,questionNumber:0,activeCategory:'History & Culture',created:new Date().toISOString(),lastUpdated:new Date().toISOString(),updatedBy:clientId,players:{},teams:[],categories:[...DEFAULT_CATEGORIES],answers:[],answerLog:[]};
 state.sessions[id]=session; state.currentSessionId=id; loadSessionData();
 globalPlayersRef.once('value').then(snap=>{
 Object.keys(snap.val()||{}).forEach(n=>{if(!session.players[n]) session.players[n]={name:n,points:0,answers:[]};});
@@ -4997,7 +5115,7 @@ if (!players.length){ el.innerHTML = '<p style="color:var(--text2);font-size:.85
 const allPlayers = Object.keys(s.players || {});
 const cats = s.categories || [];
 const hasCats = cats.length > 0;
-const teamBonusButtons = teams.map(team => `<button class="ql-team-bonus" onclick="recordTeamBonus('${team.id}')" title="Record a team bonus for ${team.name}">★ ${team.name} Bonus +10</button>`).join('');
+const teamBonusButtons = teams.map(team => `<button class="ql-team-bonus" onclick="recordTeamBonus('${team.id}')" title="Record a team bonus for ${team.name}">★ ${team.name} Bonus +20</button>`).join('');
 const playerRows = players.map(player =>{
 const disp = getDisplayName(player, allPlayers);
 const safe = player.replace(/'/g,"\\'");
@@ -5010,7 +5128,7 @@ const selected = pending && _qlPending.cat === c ? 'selected' : '';
 return `<span class="ql-cat-chip ${selected}" onclick="qlSelectCat('${safe}','${cSafe}')">${c}</span>`;
 }).join('') + `<button class="ql-confirm-btn" onclick="qlConfirm('${safe}')">✔ Log</button><button class="ql-cancel-btn" onclick="qlCancel()">✕</button>` : '';
 const pendingTag = pending ? `<span style="font-size:.68em;font-weight:700;color:var(--primary);margin-left:3px;white-space:nowrap;">${_qlPending.type}</span>` : '';
-return `<div class="ql-row" id="${pid}_row"><div class="ql-name" title="${player}">${disp}${pendingTag}</div><div class="ql-btns"><button class="ql-btn ql-power" onclick="qlTap('${safe}','Power')" title="Toss-up ⚡︎ Power (+15)">⚡︎<br>+15</button><button class="ql-btn ql-tu" onclick="qlTap('${safe}','Toss-up')" title="Toss-up (+10)">✔<br>+10</button><button class="ql-btn ql-miss" onclick="qlTap('${safe}','Miss')" title="Miss (0)">○<br>0</button><button class="ql-btn ql-neg" onclick="qlTap('${safe}','Neg')" title="Neg (−5)">✗<br>−5</button></div></div><div class="ql-cat-row ${catRowOpen}" id="${pid}_cats">${catChips}</div>`;
+return `<div class="ql-row" id="${pid}_row"><div class="ql-name" title="${player}">${disp}${pendingTag}</div><div class="ql-btns"><button class="ql-btn ql-tu" onclick="qlTap('${safe}','Toss-up')" title="Face-Off correct (+10)">✔<br>+10</button><button class="ql-btn ql-miss" onclick="qlTap('${safe}','Miss')" title="Pass / miss (0)">○<br>0</button><button class="ql-btn ql-neg" onclick="qlTap('${safe}','Neg')" title="Face-Off incorrect (0)">✗<br>0</button></div></div><div class="ql-cat-row ${catRowOpen}" id="${pid}_cats">${catChips}</div>`;
 }).join('');
 el.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">${teamBonusButtons}</div>${playerRows}`;
 }
@@ -5031,12 +5149,12 @@ function qlCancel(){ _qlPending = null; renderQuickLog(); }
 function qlQuickRecord(player, type, cat){
 _qlPending = null;
 const id = state.currentSessionId; if (!id) return;
-const pointMap ={'Toss-up':10,'Bonus':10,'Neg':-5,'Power':15,'Miss':0,'Dead':0};
+const pointMap ={'Toss-up':10,'Bonus':20,'Ultimate':25,'Neg':0,'Power':15,'Miss':0,'Dead':0};
 const points   = pointMap[type];
 const isBuzzIn = ['Toss-up','Power','Neg','Miss','Dead'].includes(type);
 const recordedPlayer = type === 'Bonus' ? '— Team Bonus —' : player;
 const effectiveCategory = cat || '—';
-const answer ={id:Date.now().toString(),player:recordedPlayer,pointType:type,category:effectiveCategory,points,timestamp:new Date().toISOString()};
+const answer ={id:Date.now().toString(),player:recordedPlayer,pointType:type,category:effectiveCategory,points,timestamp:new Date().toISOString(),...(typeof hcascGetEventMeta === 'function' ? hcascGetEventMeta(type === 'Bonus' ? null : player, type) : {})};
 const applyAnswer = s =>{
 s.answerLog = toArray(s.answerLog);
 if (isBuzzIn){
@@ -5320,11 +5438,13 @@ const bonusTeam = teamBonusId ? (s0.teams||[]).find(t => t.id === teamBonusId) :
 const recordedPlayer = isTeamBonus
 ? ('— ' + (bonusTeam ? bonusTeam.name :'Team') + ' Bonus —')
 :(state.selectedPlayer || (isMiss ? '— Miss —' :'— Team Bonus —'));
-const pointMap ={'Toss-up':10,'Bonus':10,'Neg':-5,'Power':15,'Miss':0,'Dead':0};
+// HCASC scoring: Face-Offs are 10, Bonuses are team-scored at 20, and
+// Ultimate Challenge answers are 25. Incorrect Face-Offs do not subtract points.
+const pointMap ={'Toss-up':10,'Bonus':20,'Ultimate':25,'Neg':0,'Power':15,'Miss':0,'Dead':0};
 const points   = pointMap[state.selectedPointType];
 const isBuzzIn = ['Toss-up','Power','Neg','Miss','Dead'].includes(state.selectedPointType);
 const effectiveCategory = state.selectedCategory || _selectedParentCat || '—';
-const answer ={id:Date.now().toString(),player:recordedPlayer,pointType:state.selectedPointType,category:effectiveCategory,points,timestamp:new Date().toISOString()};
+const answer ={id:Date.now().toString(),player:recordedPlayer,pointType:state.selectedPointType,category:effectiveCategory,points,timestamp:new Date().toISOString(),...(typeof hcascGetEventMeta === 'function' ? hcascGetEventMeta(isTeamBonus ? null : state.selectedPlayer, state.selectedPointType) : {})};
 const applyAnswer = s =>{
 s.answerLog = toArray(s.answerLog);
 if (isBuzzIn){
@@ -5359,7 +5479,7 @@ document.addEventListener('keydown', e =>{
 const tag = document.activeElement && document.activeElement.tagName;
 if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
 if (document.activeElement && document.activeElement.isContentEditable) return;
-const keyMap ={'1':'Power','2':'Toss-up','3':'Bonus','4':'Miss','5':'Neg','6':'Dead'};
+const keyMap ={'1':'Toss-up','2':'Bonus','3':'Ultimate','4':'Neg','5':'Miss','6':'Dead'};
 if (keyMap[e.key]){
 e.preventDefault();
 selectPointType(keyMap[e.key]);
@@ -5373,13 +5493,13 @@ const id = state.currentSessionId; if (!id) return;
 const s0 = getCurrentSession(); if (!s0) return;
 const team = (s0.teams||[]).find(t => t.id === teamId);
 const label = '— ' + (team ? team.name :'Team') + ' Bonus —';
-const answer ={id:Date.now().toString(),player:label,pointType:'Bonus',category:'—',points:10,timestamp:new Date().toISOString()};
+const answer ={id:Date.now().toString(),player:label,pointType:'Bonus',category:'—',points:20,timestamp:new Date().toISOString(),...(typeof hcascGetEventMeta === 'function' ? hcascGetEventMeta(null, 'Bonus') : {})};
 const apply = s =>{
 s.answerLog = toArray(s.answerLog); s.answerLog.push(answer);
-s.teamBonusPoints = (s.teamBonusPoints||0) + 10; };
+s.teamBonusPoints = (s.teamBonusPoints||0) + 20; };
 updateSessionAtomic(id, apply);
 withWriteLock(id, () =>{ const s = getCurrentSession(); if (s) apply(s); });
-showRecordToast((team ? team.name :'Team') + ' Bonus (+10 pts)', '');
+showRecordToast((team ? team.name :'Team') + ' Bonus (+20 pts)', 'bonus');
 renderAll(); }
 function deleteAnswer(answerId){
 const id=state.currentSessionId; if(!id) return;
@@ -5427,7 +5547,7 @@ const answers=s.answerLog||[];
 el.innerHTML=answers.length
 ?[...answers].reverse().map((a,i)=>`
 <div class="log-entry" data-pt="${a.pointType}">
-<span><strong>${answers.length-i}. ${answerActorLabel(a) === 'Dead TU' ? '<span class="text-3">Dead TU</span>' : isTeamBonusAnswer(a) ? '<span style="color:var(--pt-bonus);">' + answerActorLabel(a) + '</span>' : answerActorLabel(a)}</strong> &mdash; ${a.pointType==='Power'?'TU ⚡︎ Power':a.pointType} (${a.points>0?'+':''}${a.points} Pts) &mdash; ${a.category}</span>
+<span><strong>${answers.length-i}. ${answerActorLabel(a) === 'Dead TU' ? '<span class="text-3">Dead TU</span>' : isTeamBonusAnswer(a) ? '<span style="color:var(--pt-bonus);">' + answerActorLabel(a) + '</span>' : answerActorLabel(a)}</strong> &mdash; ${a.pointType==='Power'?'TU ⚡︎ Power':a.pointType==='Toss-up' && a.phase==='Face-Off' ? (a.turnover ? 'Turnover Face-Off' : 'Face-Off') : a.pointType} (${a.points>0?'+':''}${a.points} Pts) &mdash; ${a.category}${a.phase ? ` <span class="text-3">· ${a.phase}${a.round ? ' · R'+a.round : ''}${a.questionNumber ? ' · Q'+a.questionNumber : ''}</span>` : ''}</span>
 <button class="button button-danger" onclick="deleteAnswer('${a.id}')" style="padding:4px 8px;font-size:.8em;">Delete</button>
 </div>`).join('') :'<p class="text-2">No answers recorded yet.</p>';
 el.onscroll=updateFadeMasks;
@@ -5494,8 +5614,9 @@ if(!data.sessionName||(!data.players&&!data.answerLog)) throw new Error('Not a v
 const existingId=Object.keys(state.sessions).find(id=>state.sessions[id].name===data.sessionName);
 const doImport = () =>{
 const sid=existingId||Date.now().toString();
-const imported={id:sid,name:data.sessionName,created:data.created||new Date().toISOString(),lastUpdated:new Date().toISOString(),players:data.players||{},teams:data.teams||[],categories:data.categories||[],answers:data.answers||[],answerLog:data.answerLog||[]};
+const imported={id:sid,name:data.sessionName,created:data.created||new Date().toISOString(),lastUpdated:new Date().toISOString(),format:data.format,currentRound:data.currentRound||1,currentPhase:data.currentPhase||'Face-Off',rounds:data.rounds||undefined,players:data.players||{},teams:data.teams||[],categories:data.categories||[],answers:data.answers||[],answerLog:data.answerLog||[]};
 Object.keys(imported.players).forEach(name=>{imported.players[name].answers=imported.answerLog.filter(a=>a.player===name);imported.players[name].points=imported.players[name].answers.filter(isPlayerPerformanceAnswer).reduce((s,a)=>s+(a.points||0),0);});
+if (typeof hcascEnsureSession === 'function') hcascEnsureSession(imported);
 state.sessions[sid]=imported; state.currentSessionId=sid;
 loadSessionData(); saveAllData(); renderAll();
 statusEl.style.color='var(--success)'; statusEl.textContent='Imported "'+imported.name+'" with '+imported.answerLog.length+' answers.';
@@ -5514,7 +5635,7 @@ const s=getCurrentSession(); if(!s) return;
 const ps=calculatePlayerStats(),ts=calculateTeamStats(),csv=[];
 if($('exportPlayers').classList.contains('selected')){csv.push('Player Statistics','Player Name,Total Toss-up Points,Total Decisions,Correct TUs,Powered TUs,Negs,Misses');ps.forEach(p=>csv.push([p.name,p.points,p.totalAnswers,p.powers+p.tossupsCorrect,p.powers,p.negs,p.misses].join(',')));csv.push('');}
 if($('exportTeamStats').classList.contains('selected')&&ts.length){csv.push('Team Statistics','Team Name,Total Points,Total Answers,Members');ts.forEach(t=>csv.push([t.name,t.totalPoints,t.totalAnswers,'"'+t.members.join(', ')+'"'].join(',')));csv.push('');}
-if($('exportAnswerLog').classList.contains('selected')){csv.push('Answer Log','Player,Point Type,Category,Points,Timestamp');(s.answerLog||[]).forEach(a=>csv.push([a.player,a.pointType,a.category,a.points,new Date(a.timestamp).toLocaleString()].join(',')));}
+if($('exportAnswerLog').classList.contains('selected')){csv.push('Answer Log','Player,Point Type,Phase,Round,Team ID,Question Number,Question ID,Category,Points,Timestamp');(s.answerLog||[]).forEach(a=>csv.push([a.player,a.pointType,a.phase||'',a.round||'',a.teamId||'',a.questionNumber||'',a.questionId||'',a.category,a.points,new Date(a.timestamp).toLocaleString()].join(',')));}
 downloadFile(csv.join('\n'),'quiz-bowl-'+s.name+'-'+new Date().toISOString().split('T')[0]+'.csv','text/csv');
 }
 function exportAllData(format){
@@ -5529,10 +5650,10 @@ showToast('All sessions exported as JSON.', 'success');
 if (typeof XLSX === 'undefined'){ showToast('Excel library not loaded yet — try again.', 'warn'); return; }
 const wb = XLSX.utils.book_new();
 // Sheet 1: Answer Log (all sessions)
-const logRows = [['Session','Player','Point Type','Category','Points','Timestamp']];
+const logRows = [['Session','Player','Point Type','Phase','Round','Team ID','Question Number','Question ID','Category','Points','Timestamp']];
 allSessions.forEach(s =>{
 (s.answerLog||[]).forEach(a =>{
-logRows.push([s.name||'', a.player||'', a.pointType||'', a.category||'', a.points, new Date(a.timestamp).toLocaleString()]);
+logRows.push([s.name||'', a.player||'', a.pointType||'', a.phase||'', a.round||'', a.teamId||'', a.questionNumber||'', a.questionId||'', a.category||'', a.points, new Date(a.timestamp).toLocaleString()]);
 });
 });
 XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(logRows), 'Answer Log');
@@ -5562,13 +5683,14 @@ XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(summaryRows), 'Session 
 XLSX.writeFile(wb, APP_FILE_BASENAME + '-all-sessions-'+date+'.xlsx');
 showToast('All sessions exported as Excel.', 'success');
 } else {
-const rows = ['Session,Player,Point Type,Category,Points,Timestamp'];
+const rows = ['Session,Player,Point Type,Phase,Round,Team ID,Question Number,Question ID,Category,Points,Timestamp'];
 allSessions.forEach(s =>{
 (s.answerLog||[]).forEach(a =>{
 rows.push([
 '"'+(s.name||'').replace(/"/g,'""')+'"',
 '"'+(a.player||'').replace(/"/g,'""')+'"',
-a.pointType, '"'+(a.category||'').replace(/"/g,'""')+'"',
+a.pointType, '"'+(a.phase||'').replace(/"/g,'""')+'"',
+a.round||'', '"'+(a.teamId||'').replace(/"/g,'""')+'"', a.questionNumber||'', '"'+(a.questionId||'').replace(/"/g,'""')+'"', '"'+(a.category||'').replace(/"/g,'""')+'"',
 a.points, new Date(a.timestamp).toLocaleString()
 ].join(','));
 });
@@ -5579,7 +5701,7 @@ showToast('All sessions exported as CSV.', 'success');
 }
 function exportToJSON(){
 const s=getCurrentSession(); if(!s) return;
-downloadFile(JSON.stringify({sessionName:s.name,created:s.created,lastUpdated:s.lastUpdated,players:s.players,teams:s.teams,answerLog:s.answerLog,categories:state.categories},null,2),'quiz-bowl-'+s.name+'-'+new Date().toISOString().split('T')[0]+'.json','application/json');
+downloadFile(JSON.stringify({sessionName:s.name,created:s.created,lastUpdated:s.lastUpdated,format:s.format,currentRound:s.currentRound,currentPhase:s.currentPhase,rounds:s.rounds,players:s.players,teams:s.teams,answerLog:s.answerLog,categories:state.categories},null,2),'famu-hcasc-'+s.name+'-'+new Date().toISOString().split('T')[0]+'.json','application/json');
 }
 function downloadFile(content,filename,mimeType){
 const a=document.createElement('a');
@@ -5965,6 +6087,496 @@ if (typeof document !== 'undefined'){
   document.addEventListener('keydown', event =>{
     if (event.key === 'Escape' && $('updatesModal')?.classList.contains('open')) closeUpdatesModal();
   });
+}
+/*
+ * HCASC match mode
+ *
+ * The original tracker was designed around generic quiz-bowl scoring.  HCASC
+ * has a deliberately different shape: three four-minute Face-Off rounds,
+ * team bonuses, and a two-team, 60-second Ultimate Challenge.  This module
+ * keeps the existing player analytics and exports intact while adding an
+ * official-format scoreboard and richer event metadata to every new entry.
+ */
+const HCASC_FORMAT = 'HCASC';
+const HCASC_ROUNDS = Object.freeze({
+  1: { label:'Face-Off 1', short:'FO 1', seconds:240 },
+  2: { label:'Face-Off 2', short:'FO 2', seconds:240 },
+  3: { label:'Face-Off 3', short:'FO 3', seconds:240 },
+  4: { label:'Ultimate Challenge', short:'Ultimate', seconds:60 }
+});
+const HCASC_POINTS = Object.freeze({ faceOff:10, bonus:20, ultimate:25, tiebreaker:10, incorrect:0 });
+const HCASC_DEFAULT_BOARD = ['History & Culture', 'Science & Technology', 'Arts & Humanities', 'Society & Popular Culture'];
+
+function hcascEscape(value){
+  return String(value == null ? '' : value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+function hcascRoundNumber(value){
+  const n = Number(value);
+  return HCASC_ROUNDS[n] ? n : 1;
+}
+function hcascRoundDefaults(){
+  return {
+    1:{ categories:[...HCASC_DEFAULT_BOARD], questions:0, faceOffPoints:0, bonusPoints:0 },
+    2:{ categories:[...HCASC_DEFAULT_BOARD], questions:0, faceOffPoints:0, bonusPoints:0 },
+    3:{ categories:[...HCASC_DEFAULT_BOARD], questions:0, faceOffPoints:0, bonusPoints:0 },
+    4:{ categories:[...HCASC_DEFAULT_BOARD], questions:0, faceOffPoints:0, bonusPoints:0 }
+  };
+}
+function hcascEnsureSession(session){
+  if (!session) return session;
+  // Sessions created before HCASC mode used power/neg quiz-bowl scoring. Do a
+  // one-time, explicit migration so opening an existing FAMU session cannot
+  // quietly display a non-HCASC score on the official scoreboard.
+  if (!session.format){
+    session.answerLog = toArray(session.answerLog).map(answer =>{
+      const migrated = {...answer};
+      migrated.legacyPointType = answer.pointType || null;
+      if (answer.pointType === 'Power' || answer.pointType === 'Toss-up'){
+        migrated.pointType = 'Toss-up';
+        migrated.points = HCASC_POINTS.faceOff;
+        migrated.phase = 'Face-Off';
+      } else if (answer.pointType === 'Bonus'){
+        migrated.points = HCASC_POINTS.bonus;
+        migrated.phase = 'Bonus';
+      } else if (answer.pointType === 'Neg' || answer.pointType === 'Miss' || answer.pointType === 'Dead'){
+        migrated.points = HCASC_POINTS.incorrect;
+        migrated.phase = 'Face-Off';
+      }
+      migrated.format = HCASC_FORMAT;
+      migrated.round = Number(answer.round) || 1;
+      return migrated;
+    });
+    Object.values(session.players || {}).forEach(player =>{
+      player.answers = session.answerLog.filter(answer => answer.player === player.name && isPlayerPerformanceAnswer(answer));
+      player.points = player.answers.reduce((sum, answer) => sum + (Number(answer.points) || 0), 0);
+    });
+    session.format = HCASC_FORMAT;
+    session.scoreModel = 'HCASC-2026';
+  }
+  session.format = session.format || HCASC_FORMAT;
+  session.currentRound = hcascRoundNumber(session.currentRound);
+  session.currentPhase = session.currentPhase || (session.currentRound === 4 ? 'Ultimate' : 'Face-Off');
+  session.rounds = session.rounds && typeof session.rounds === 'object' ? session.rounds : hcascRoundDefaults();
+  const defaults = hcascRoundDefaults();
+  Object.keys(defaults).forEach(key =>{
+    const round = session.rounds[key] = session.rounds[key] || {};
+    round.categories = Array.isArray(round.categories) && round.categories.length
+      ? round.categories.slice(0, 4) : [...defaults[key].categories];
+    while (round.categories.length < 4) round.categories.push(defaults[key].categories[round.categories.length]);
+    if (typeof round.questions !== 'number') round.questions = 0;
+    if (typeof round.faceOffPoints !== 'number') round.faceOffPoints = 0;
+    if (typeof round.bonusPoints !== 'number') round.bonusPoints = 0;
+  });
+  if (typeof session.questionNumber !== 'number') session.questionNumber = 0;
+  if (typeof session.clockRemainingSeconds !== 'number') session.clockRemainingSeconds = HCASC_ROUNDS[session.currentRound].seconds;
+  if (typeof session.clockRunning !== 'boolean') session.clockRunning = false;
+  if (typeof session.clockStartedAt !== 'number') session.clockStartedAt = 0;
+  session.activeCategory = session.activeCategory || session.rounds[session.currentRound].categories[0];
+  session.activeQuestionId = session.activeQuestionId || null;
+  session.activeTeamId = session.activeTeamId || null;
+  session.activePlayer = session.activePlayer || null;
+  session.roundPlayers = session.roundPlayers && typeof session.roundPlayers === 'object' ? session.roundPlayers : {};
+  session.ultimateCounts = session.ultimateCounts && typeof session.ultimateCounts === 'object' ? session.ultimateCounts : {};
+  session.ultimateClocks = session.ultimateClocks && typeof session.ultimateClocks === 'object' ? session.ultimateClocks : {};
+  session.ultimateCategoriesUsed = session.ultimateCategoriesUsed && typeof session.ultimateCategoriesUsed === 'object' ? session.ultimateCategoriesUsed : {};
+  session.ultimateTeamId = session.ultimateTeamId || null;
+  return session;
+}
+
+// Normalize both Firebase/local records and imported records before they reach
+// the board.  The base normalizer still owns the legacy map/array migrations.
+const _hcascBaseNormalizeSession = normalizeSession;
+normalizeSession = function(session){
+  return hcascEnsureSession(_hcascBaseNormalizeSession(session));
+};
+
+function hcascTeamForPlayer(session, player){
+  if (!session || !player) return null;
+  return (session.teams || []).find(team => (team.playerMembers || []).includes(player)) || null;
+}
+function hcascTeamIdForAnswer(session, answer){
+  if (answer && answer.teamId) return String(answer.teamId);
+  if (!answer) return null;
+  if (isTeamBonusAnswer(answer)){
+    const match = String(answer.player || '').match(/^—\s*(.*?)\s+Bonus\s*—$/);
+    if (match){
+      const team = (session.teams || []).find(t => t.name === match[1]);
+      if (team) return team.id;
+    }
+  }
+  return hcascTeamForPlayer(session, answer.player)?.id || null;
+}
+function hcascTeamScore(session, teamId){
+  if (!session || !teamId) return 0;
+  return toArray(session.answerLog).reduce((total, answer) =>{
+    return hcascTeamIdForAnswer(session, answer) === String(teamId) ? total + (Number(answer.points) || 0) : total;
+  }, 0);
+}
+function hcascTeamAnswers(session, teamId){
+  return toArray(session?.answerLog).filter(answer => hcascTeamIdForAnswer(session, answer) === String(teamId));
+}
+function hcascTeamLabel(session, teamId){
+  return (session?.teams || []).find(team => String(team.id) === String(teamId))?.name || 'Team';
+}
+function hcascTeamOptions(session){
+  return (session?.teams || []).filter(team => (team.playerMembers || []).length).map(team =>
+    `<option value="${hcascEscape(team.id)}">${hcascEscape(team.name)}</option>`).join('');
+}
+function hcascPlayerOptions(session, teamId){
+  const team = (session?.teams || []).find(item => String(item.id) === String(teamId));
+  return (team?.playerMembers || []).map(player =>
+    `<option value="${hcascEscape(player)}">${hcascEscape(getDisplayName(player, Object.keys(session.players || {})))}</option>`).join('');
+}
+function hcascSelectionChanged(kind, value){
+  const session = getCurrentSession();
+  if (!session) return;
+  hcascEnsureSession(session);
+  if (kind === 'team'){
+    session.activeTeamId = value || null;
+    const team = (session.teams || []).find(item => String(item.id) === String(value));
+    session.activePlayer = team?.playerMembers?.[0] || null;
+  } else if (kind === 'player') session.activePlayer = value || null;
+  saveAllData();
+  hcascRenderBoard();
+}
+function hcascSetRound(round){
+  const session = getCurrentSession();
+  if (!session) return;
+  hcascEnsureSession(session);
+  const next = hcascRoundNumber(round);
+  session.currentRound = next;
+  session.currentPhase = next === 4 ? 'Ultimate' : 'Face-Off';
+  session.clockRunning = false;
+  session.clockStartedAt = 0;
+  session.clockRemainingSeconds = HCASC_ROUNDS[next].seconds;
+  session.activeQuestionId = null;
+  session.activeCategory = session.rounds[next].categories[0];
+  if (next === 4){
+    if (!session.ultimateTeamId){
+      const teams = (session.teams || []).filter(t => (t.playerMembers || []).length);
+      session.ultimateTeamId = teams[0]?.id || null;
+    }
+    const chosen = Object.entries(session.ultimateCategoriesUsed).find(([, owner]) => String(owner) === String(session.ultimateTeamId));
+    session.activeCategory = chosen?.[0] || session.rounds[4].categories.find(category => !session.ultimateCategoriesUsed[category]) || session.rounds[4].categories[0];
+  }
+  saveAllData();
+  hcascRenderBoard();
+}
+function hcascSelectCategory(category){
+  const session = getCurrentSession();
+  if (!session) return;
+  hcascEnsureSession(session);
+  if (session.currentRound === 4){
+    const usedBy = session.ultimateCategoriesUsed[category];
+    if (usedBy && String(usedBy) !== String(session.ultimateTeamId)){
+      showToast('That Ultimate Challenge category has already been used.', 'warn');
+      return;
+    }
+    if (session.ultimateTeamId) session.ultimateCategoriesUsed[category] = session.ultimateTeamId;
+  }
+  session.activeCategory = category;
+  saveAllData();
+  hcascRenderBoard();
+}
+function hcascRenameCategory(index){
+  const session = getCurrentSession();
+  if (!session) return;
+  const round = hcascRoundNumber(session.currentRound);
+  const old = session.rounds[round].categories[index] || 'Category';
+  const next = window.prompt('Category name for this round:', old);
+  if (next == null || !next.trim()) return;
+  session.rounds[round].categories[index] = next.trim().slice(0, 80);
+  if (session.activeCategory === old) session.activeCategory = session.rounds[round].categories[index];
+  saveAllData();
+  hcascRenderBoard();
+}
+function hcascClockSeconds(){
+  const session = getCurrentSession();
+  if (!session) return 0;
+  hcascEnsureSession(session);
+  if (!session.clockRunning || !session.clockStartedAt) return Math.max(0, session.clockRemainingSeconds);
+  const elapsed = Math.floor((Date.now() - session.clockStartedAt) / 1000);
+  return Math.max(0, session.clockRemainingSeconds - elapsed);
+}
+function hcascFormatClock(seconds){
+  const safe = Math.max(0, Number(seconds) || 0);
+  return String(Math.floor(safe / 60)).padStart(2, '0') + ':' + String(safe % 60).padStart(2, '0');
+}
+function hcascPersistClock(){
+  const session = getCurrentSession();
+  if (!session) return;
+  if (session.clockRunning){
+    const current = hcascClockSeconds();
+    session.clockRemainingSeconds = current;
+    session.clockStartedAt = Date.now();
+    if (current <= 0) session.clockRunning = false;
+  }
+  saveAllData();
+}
+function hcascToggleClock(){
+  const session = getCurrentSession();
+  if (!session) return;
+  hcascEnsureSession(session);
+  if (session.clockRunning){
+    session.clockRemainingSeconds = hcascClockSeconds();
+    session.clockRunning = false;
+    session.clockStartedAt = 0;
+  } else {
+    if (hcascClockSeconds() <= 0) session.clockRemainingSeconds = HCASC_ROUNDS[session.currentRound].seconds;
+    session.clockStartedAt = Date.now();
+    session.clockRunning = true;
+  }
+  saveAllData();
+  hcascRenderBoard();
+}
+function hcascResetClock(){
+  const session = getCurrentSession();
+  if (!session) return;
+  hcascEnsureSession(session);
+  session.clockRunning = false;
+  session.clockStartedAt = 0;
+  session.clockRemainingSeconds = HCASC_ROUNDS[session.currentRound].seconds;
+  saveAllData();
+  hcascRenderBoard();
+}
+function hcascNextQuestion(){
+  const session = getCurrentSession();
+  if (!session) return;
+  hcascEnsureSession(session);
+  session.questionNumber += 1;
+  session.activeQuestionId = 'hcasc-q-' + Date.now() + '-' + session.questionNumber;
+  if (session.currentRound < 4) session.rounds[session.currentRound].questions += 1;
+  saveAllData();
+  hcascRenderBoard();
+}
+function hcascSetUltimateTeam(teamId){
+  const session = getCurrentSession();
+  if (!session) return;
+  hcascEnsureSession(session);
+  const previousTeamId = session.ultimateTeamId;
+  if (previousTeamId && String(previousTeamId) !== String(teamId)){
+    session.ultimateClocks[previousTeamId] = { remaining:hcascClockSeconds(), running:false };
+  }
+  session.ultimateTeamId = teamId || null;
+  session.activeTeamId = teamId || null;
+  const savedClock = session.ultimateClocks[teamId];
+  session.clockRunning = false;
+  session.clockStartedAt = 0;
+  session.clockRemainingSeconds = savedClock ? Math.max(0, Number(savedClock.remaining) || 0) : ((session.ultimateCounts[teamId] || 0) >= 10 ? 0 : 60);
+  const team = (session.teams || []).find(item => String(item.id) === String(teamId));
+  session.activePlayer = team?.playerMembers?.[0] || null;
+  if (session.currentRound === 4){
+    const chosen = Object.entries(session.ultimateCategoriesUsed).find(([, owner]) => String(owner) === String(teamId));
+    if (chosen) session.activeCategory = chosen[0];
+    else session.activeCategory = session.rounds[4].categories.find(category => !session.ultimateCategoriesUsed[category]) || session.rounds[4].categories[0];
+  }
+  saveAllData();
+  hcascRenderBoard();
+}
+function hcascEventMetadata(session, player, pointType){
+  hcascEnsureSession(session);
+  const team = hcascTeamForPlayer(session, player);
+  return {
+    format: HCASC_FORMAT,
+    round: session.currentRound,
+    phase: session.currentRound === 4 ? 'Ultimate' : (pointType === 'Bonus' ? 'Bonus' : 'Face-Off'),
+    teamId: team?.id || null,
+    questionId: session.activeQuestionId || null,
+    questionNumber: session.questionNumber || 0,
+    hcascCategory: session.activeCategory || '—'
+  };
+}
+// Used by the legacy Record Answer surface so entries from either surface have
+// the same audit fields.  It intentionally does not change the selected event.
+function hcascGetEventMeta(player, pointType){
+  const session = getCurrentSession();
+  return session ? hcascEventMetadata(session, player, pointType) : {};
+}
+
+function hcascAppendAnswer(session, answer){
+  hcascEnsureSession(session);
+  session.answerLog = toArray(session.answerLog);
+  session.answerLog.push(answer);
+  if (!session.players) session.players = {};
+  if (answer.player && !String(answer.player).startsWith('— ') && isPlayerPerformanceAnswer(answer)){
+    const player = session.players[answer.player] || (session.players[answer.player] = {name:answer.player, points:0, answers:[]});
+    player.answers = toArray(player.answers);
+    player.answers.push(answer);
+    player.points = player.answers.filter(isPlayerPerformanceAnswer).reduce((sum, item) => sum + (Number(item.points) || 0), 0);
+  }
+  if (answer.pointType === 'Bonus') session.teamBonusPoints = (session.teamBonusPoints || 0) + (Number(answer.points) || 0);
+  if (answer.round && session.rounds[answer.round]){
+    const round = session.rounds[answer.round];
+    if (answer.pointType === 'Bonus') round.bonusPoints += Number(answer.points) || 0;
+    if (answer.phase === 'Face-Off' && answer.points > 0) round.faceOffPoints += Number(answer.points) || 0;
+  }
+}
+function hcascRecordEvent(kind){
+  const session = getCurrentSession();
+  if (!session) return;
+  hcascEnsureSession(session);
+  const teams = (session.teams || []).filter(item => (item.playerMembers || []).length);
+  const teamId = session.currentRound === 4 ? (session.ultimateTeamId || teams[0]?.id) : (session.activeTeamId || teams[0]?.id);
+  const team = teams.find(item => String(item.id) === String(teamId));
+  if (!team){ showToast('Set up two teams before recording HCASC scoring.', 'warn'); return; }
+  const player = session.activePlayer || team.playerMembers?.[0] || null;
+  const isUltimate = session.currentRound === 4;
+  const event = {
+    faceOffCorrect:{ pointType:'Toss-up', label:'Face-Off', points:HCASC_POINTS.faceOff, phase:'Face-Off' },
+    faceOffIncorrect:{ pointType:'Neg', label:'Face-Off incorrect', points:HCASC_POINTS.incorrect, phase:'Face-Off' },
+    turnoverCorrect:{ pointType:'Toss-up', label:'Turnover Face-Off', points:HCASC_POINTS.faceOff, phase:'Face-Off', turnover:true },
+    bonus:{ pointType:'Bonus', label:'Bonus', points:HCASC_POINTS.bonus, phase:'Bonus' },
+    ultimateCorrect:{ pointType:'Ultimate', label:'Ultimate correct', points:HCASC_POINTS.ultimate, phase:'Ultimate' },
+    ultimateMiss:{ pointType:'Miss', label:'Ultimate pass/miss', points:HCASC_POINTS.incorrect, phase:'Ultimate' }
+  }[kind];
+  if (!event) return;
+  if (isUltimate && event.phase !== 'Ultimate') { showToast('Face-Off scoring is not available during the Ultimate Challenge.', 'warn'); return; }
+  if (!isUltimate && event.phase === 'Ultimate') { showToast('Switch to the Ultimate round before logging Ultimate answers.', 'warn'); return; }
+  if (event.phase === 'Bonus' && !session.activeQuestionId){ showToast('Start a Face-Off question before recording its Bonus.', 'warn'); return; }
+  if (!session.activeQuestionId){
+    session.questionNumber += 1;
+    session.activeQuestionId = 'hcasc-q-' + Date.now() + '-' + session.questionNumber;
+    if (!isUltimate) session.rounds[session.currentRound].questions += 1;
+  }
+  if (event.phase === 'Bonus'){
+    const questionAnswers = toArray(session.answerLog).filter(answer => answer.questionId === session.activeQuestionId);
+    const earnedBonus = questionAnswers.some(answer => answer.teamId === team.id && answer.phase === 'Face-Off' && Number(answer.points) === HCASC_POINTS.faceOff);
+    const alreadyLogged = questionAnswers.some(answer => answer.teamId === team.id && answer.pointType === 'Bonus');
+    if (!earnedBonus || alreadyLogged){ showToast('A Bonus is available only after that team answers its Face-Off correctly.', 'warn'); return; }
+  }
+  if (isUltimate && (session.ultimateCounts[team.id] || 0) >= 10){
+    showToast(`${team.name} has used all 10 Ultimate Challenge questions.`, 'warn');
+    return;
+  }
+  if (!isUltimate && event.phase === 'Face-Off'){
+    const assigned = session.roundPlayers?.[session.currentRound]?.[team.id];
+    if (assigned && assigned !== player){
+      showToast(`${team.name} is represented by ${assigned} for this Face-Off round. Players may change between rounds, not during a game.`, 'warn');
+      return;
+    }
+  }
+  const now = new Date().toISOString();
+  const answer = {
+    id:'hcasc-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
+    player:event.phase === 'Bonus' ? `— ${team.name} Bonus —` : (player || `— ${team.name} —`),
+    pointType:event.pointType,
+    category:session.activeCategory || '—',
+    points:event.points,
+    timestamp:now,
+    format:HCASC_FORMAT,
+    round:session.currentRound,
+    phase:event.phase,
+    teamId:team.id,
+    questionId:session.activeQuestionId || null,
+    questionNumber:session.questionNumber || 0,
+    turnover:!!event.turnover,
+    ultimateTeamId:isUltimate ? team.id : null
+  };
+  const apply = current =>{
+    hcascEnsureSession(current);
+    current.currentRound = session.currentRound;
+    current.currentPhase = session.currentPhase;
+    current.activeQuestionId = answer.questionId;
+    current.questionNumber = answer.questionNumber;
+    current.activeCategory = answer.category;
+    current.activeTeamId = session.activeTeamId || team.id;
+    if (isUltimate) current.ultimateTeamId = team.id;
+    if (!isUltimate && event.phase === 'Face-Off'){
+      current.roundPlayers[answer.round] = current.roundPlayers[answer.round] || {};
+      current.roundPlayers[answer.round][team.id] = player;
+    }
+    if (isUltimate) current.ultimateCounts[team.id] = (current.ultimateCounts[team.id] || 0) + 1;
+    hcascAppendAnswer(current, answer);
+  };
+  updateSessionAtomic(session.id, apply);
+  withWriteLock(session.id, () => { const current = getCurrentSession(); if (current) apply(current); });
+  showRecordToast(`${team.name} — ${event.label} (${event.points > 0 ? '+' : ''}${event.points} pts)`, event.points > 0 ? 'pts' : 'miss');
+  renderAll();
+}
+function hcascScoreSummary(session){
+  const teams = (session?.teams || []).filter(team => (team.playerMembers || []).length);
+  return teams.map(team =>{
+    const answers = hcascTeamAnswers(session, team.id);
+    return {
+      id:team.id, name:team.name, score:answers.reduce((sum, answer) => sum + (Number(answer.points) || 0), 0),
+      faceOff:answers.filter(answer => answer.phase === 'Face-Off' && answer.points > 0).reduce((sum, answer) => sum + answer.points, 0),
+      bonuses:answers.filter(answer => answer.pointType === 'Bonus').reduce((sum, answer) => sum + (Number(answer.points) || 0), 0),
+      ultimate:answers.filter(answer => answer.phase === 'Ultimate').reduce((sum, answer) => sum + (Number(answer.points) || 0), 0),
+      members:team.playerMembers || []
+    };
+  });
+}
+function hcascRenderBoard(){
+  const board = $('hcascBoard');
+  const session = getCurrentSession();
+  if (!board || !session) return;
+  hcascEnsureSession(session);
+  const round = session.currentRound;
+  const roundInfo = HCASC_ROUNDS[round];
+  const teams = (session.teams || []).filter(team => (team.playerMembers || []).length);
+  const summaries = hcascScoreSummary(session);
+  const selectedTeam = session.activeTeamId || session.ultimateTeamId || teams[0]?.id || '';
+  const selectedTeamObj = teams.find(team => String(team.id) === String(selectedTeam)) || teams[0];
+  const assignedPlayer = round !== 4 ? session.roundPlayers?.[round]?.[selectedTeamObj?.id] : null;
+  const selectedPlayer = assignedPlayer || session.activePlayer || selectedTeamObj?.playerMembers?.[0] || '';
+  const categories = session.rounds[round].categories;
+  const seconds = hcascClockSeconds();
+  const clockClass = seconds <= 10 ? ' is-critical' : seconds <= 30 ? ' is-warning' : '';
+  const scoreCards = summaries.length ? summaries.map((item, index) => `
+    <article class="hcasc-score-card ${index === 0 ? 'hcasc-score-card-a' : 'hcasc-score-card-b'}">
+      <div class="hcasc-team-mark">${index === 0 ? 'A' : 'B'}</div>
+      <div class="hcasc-team-copy"><span>${hcascEscape(item.name)}</span><small>${item.faceOff} Face-Off · ${item.bonuses} Bonus · ${item.ultimate} Ultimate</small></div>
+      <strong>${item.score}</strong>
+    </article>`).join('') : `<div class="hcasc-empty-state">Add two teams with players in Setup to start an official HCASC match.</div>`;
+  const teamOptions = hcascTeamOptions(session);
+  const playerOptions = selectedTeamObj ? hcascPlayerOptions(session, selectedTeamObj.id) : '';
+  const teamSelect = round === 4 ? `
+    <label class="hcasc-field"><span>Ultimate team</span><select onchange="hcascSetUltimateTeam(this.value)">${teamOptions || '<option>No teams yet</option>'}</select></label>` : `
+    <label class="hcasc-field"><span>Scoring team</span><select onchange="hcascSelectionChanged('team', this.value)">${teamOptions || '<option>No teams yet</option>'}</select></label>`;
+  board.innerHTML = `
+    <div class="hcasc-board-topline"><div><span class="hcasc-eyebrow">FAMU HCASC · OFFICIAL FORMAT</span><h2>Match scoreboard</h2><p>Three Face-Off rounds, team Bonuses, then the 60-second Ultimate Challenge.</p></div><div class="hcasc-rule-chip">No neg penalties · FO 10 · Bonus 20 · Ultimate 25</div></div>
+    ${teams.length !== 2 ? `<div class="hcasc-format-warning">Official HCASC matches use two teams of three active players. This practice session currently has ${teams.length} configured team${teams.length === 1 ? '' : 's'}.</div>` : teams.some(team => (team.playerMembers || []).length !== 3) ? '<div class="hcasc-format-warning">Official matches use three players per team; use the fourth roster player as a between-game substitute.</div>' : ''}
+    <div class="hcasc-score-grid">${scoreCards}</div>
+    <div class="hcasc-round-strip"><div class="hcasc-round-tabs">${Object.entries(HCASC_ROUNDS).map(([key, info]) => `<button class="hcasc-round-tab ${Number(key) === round ? 'active' : ''}" onclick="hcascSetRound(${key})"><b>${info.short}</b><span>${info.label.replace('Face-Off ', '')}</span></button>`).join('')}</div><div class="hcasc-clock${clockClass}"><span class="hcasc-clock-label">${round === 4 ? 'TEAM CLOCK' : 'ROUND CLOCK'}</span><strong id="hcascClock">${hcascFormatClock(seconds)}</strong><button onclick="hcascToggleClock()">${session.clockRunning ? 'Pause' : 'Start'}</button><button class="hcasc-clock-reset" onclick="hcascResetClock()" title="Reset clock">↺</button></div></div>
+    <div class="hcasc-round-note"><span><b>${roundInfo.label}</b> · ${round === 4 ? '60 seconds / team · ' + (session.ultimateCounts[selectedTeamObj?.id] || 0) + '/10 questions · 25 points each' : '4 minutes · three Face-Off / Bonus pairs per category'}</span><span>Question ${session.questionNumber || 0}${session.activeCategory ? ' · ' + hcascEscape(session.activeCategory) : ''}</span></div>
+    <div class="hcasc-category-row"><span class="hcasc-category-label">${round === 4 ? 'Choose one category' : 'Category board'}</span>${categories.map((category, index) => { const usedBy = session.ultimateCategoriesUsed[category]; const locked = round === 4 && usedBy && String(usedBy) !== String(session.ultimateTeamId); return `<button class="hcasc-category ${session.activeCategory === category ? 'active' : ''}${locked ? ' locked' : ''}" ${locked ? 'disabled' : ''} onclick="hcascSelectCategory(decodeURIComponent('${encodeURIComponent(category)}'))" ondblclick="hcascRenameCategory(${index})"><span>${hcascEscape(category)}</span><small>${locked ? 'Already used' : 'Double-click to edit'}</small></button>`; }).join('')}</div>
+    <div class="hcasc-log-panel"><div class="hcasc-log-heading"><div><span class="hcasc-eyebrow">LIVE SCORING</span><h3>Log the next ruling</h3></div><button class="hcasc-next-question" onclick="hcascNextQuestion()">${round === 4 ? '+ Next Ultimate question' : '+ New Face-Off question'}</button></div><div class="hcasc-controls">${teamSelect}<label class="hcasc-field"><span>${assignedPlayer ? 'Face-Off player (locked)' : 'Player / responder'}</span><select ${assignedPlayer ? 'disabled' : ''} onchange="hcascSelectionChanged('player', this.value)">${playerOptions || '<option>No players yet</option>'}</select></label></div><div class="hcasc-action-grid">${round === 4 ? `<button class="hcasc-action hcasc-action-primary" onclick="hcascRecordEvent('ultimateCorrect')"><b>+25</b><span>Ultimate correct</span></button><button class="hcasc-action hcasc-action-neutral" onclick="hcascRecordEvent('ultimateMiss')"><b>0</b><span>Pass / incorrect</span></button>` : `<button class="hcasc-action hcasc-action-primary" onclick="hcascRecordEvent('faceOffCorrect')"><b>+10</b><span>Face-Off correct</span></button><button class="hcasc-action hcasc-action-bonus" onclick="hcascRecordEvent('bonus')"><b>+20</b><span>Team Bonus</span></button><button class="hcasc-action hcasc-action-neutral" onclick="hcascRecordEvent('faceOffIncorrect')"><b>0</b><span>Face-Off incorrect</span></button><button class="hcasc-action hcasc-action-turnover" onclick="hcascRecordEvent('turnoverCorrect')"><b>+10</b><span>Turnover correct</span></button>`}</div><p class="hcasc-audit-note">Every ruling stores its round, category, team, responder, question number, and timestamp in the answer log.</p></div>`;
+  const teamSelectEl = board.querySelector('select');
+  if (teamSelectEl) teamSelectEl.value = selectedTeam;
+  const selects = board.querySelectorAll('select');
+  if (selects[1]) selects[1].value = selectedPlayer;
+}
+function hcascTick(){
+  const session = getCurrentSession();
+  const clock = $('hcascClock');
+  if (!session || !clock) return;
+  const seconds = hcascClockSeconds();
+  clock.textContent = hcascFormatClock(seconds);
+  clock.closest('.hcasc-clock')?.classList.toggle('is-critical', seconds <= 10);
+  clock.closest('.hcasc-clock')?.classList.toggle('is-warning', seconds > 10 && seconds <= 30);
+  if (session.clockRunning && seconds <= 0){
+    session.clockRunning = false;
+    session.clockStartedAt = 0;
+    session.clockRemainingSeconds = 0;
+    saveAllData();
+    hcascRenderBoard();
+    showToast('Time!', 'warn');
+  }
+}
+
+// Add the board after the existing source-defined tracker has rendered, so
+// existing sessions and all existing analytics continue to work unchanged.
+const _hcascBaseRenderAll = renderAll;
+renderAll = function(){
+  _hcascBaseRenderAll();
+  const session = getCurrentSession();
+  if (session) hcascEnsureSession(session);
+  hcascRenderBoard();
+};
+
+if (typeof window !== 'undefined'){
+  window.setInterval(hcascTick, 500);
+  window.addEventListener('beforeunload', hcascPersistClock);
 }
 </script><div id="recordToast"></div><div id="appToast"></div><div id="confirmToast"><div class="ct-msg" id="confirmToastMsg"></div><div class="ct-btns"><button class="ct-cancel" onclick="resolveConfirmToast(false)">Cancel</button><button class="ct-ok" id="confirmToastOk" onclick="resolveConfirmToast(true)">Confirm</button></div></div><div id="welcomeToast"><div class="wt-title">Welcome to FAMU HCASC!</div><div class="wt-sub">New here? The Help guide covers everything — players, teams, recording answers, and analytics.</div><div class="wt-btns"><button class="wt-btn-primary" onclick="dismissWelcomeToast(true)">Open Help Guide</button><button class="wt-btn-dismiss" onclick="dismissWelcomeToast(false)">Maybe Later</button></div></div>
 </body>

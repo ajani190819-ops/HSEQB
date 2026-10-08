@@ -1,4 +1,6 @@
 const VERSION = '3.12.1'; // auto-managed by bump.js
+// Legacy developer fallback only. School-device downloads use the verified
+// Firebase releaseHtml payload first, so normal users do not need GitHub.
 const DOWNLOAD_URL = 'https://raw.githubusercontent.com/ajani190819-ops/HSEQB/main/apps/hse/index.html';
 const DEFAULT_ACCENT = '#003da5'; // Tricolor blue from the default HSE palette
 const DEFAULT_COLOR_THEME = 'tricolor';
