@@ -3,7 +3,9 @@
 Single-file web app for running live quiz-bowl sessions: real-time scoring,
 player/team management, session library, and cross-session analytics.
 State syncs through Firebase Realtime Database; the committed **`index.html`
-is the deployable artifact** (static GitHub Pages).
+is the deployable artifact**. The `src/` split is build-time organization only:
+users receive one self-contained HTML file, not the source modules or `src/`
+directory.
 
 > **Location:** this app lives in `apps/hse/` of the HSEQB monorepo
 > (alongside the white-label `apps/template/`). It is served at
@@ -126,6 +128,25 @@ git push                 # then open / merge the PR — main now carries the
   runs `npm run bump` as part of a release. `npm run check` is the gate that
   keeps the three files honest before every push.
 
+## Release delivery and school-device downloads
+
+The normal user path is the **Firebase-backed Download for school device**
+button in Updates. It reads the release HTML stored at `releaseHtml`, so a
+school network does not need to reach GitHub. The browser saves a versioned
+filename such as `hse-quiz-bowl-tracker-v3.12.1.html`; the user opens that
+file from Downloads and replaces the old offline copy. Downloading the same
+build again is explicit and labeled “Download again,” rather than looking like
+a new release.
+
+When publishing, an admin should open the matching built app and attach the
+exact generated `apps/hse/index.html` (or let the served page be read). The
+publisher checks the embedded `VERSION` against the metadata before writing
+`releaseHtml`; a mismatch is refused, rather than publishing a newer label
+with an older payload. Download validation repeats that check and will not
+silently fall back to GitHub when Firebase contains a mismatched payload.
+GitHub remains a developer/legacy fallback for releases that predate a
+Firebase payload. Do not ask users to assemble `src/` modules manually.
+
 ## Data model
 
 Firebase RTDB (root `qb/…` under the app's nodes):
@@ -191,12 +212,16 @@ Score and are excluded from the team average and automatic `k`.
   [Automatic versioning](#automatic-versioning)); never hand-edit the
   number. The header badge polls GitHub Actions runs for deploy status;
   admins publish a build to Firebase (`publishRelease`), which drives the
-  update banner shown to local-file users. `publishRelease` uploads the new `index.html` string to
-  the `releaseHtml` node and keeps `appVersion` lightweight (label, buildId,
-  releaseNotes, downloadUrl fallback, `hasFirebasePayload` flag); regular app
-  loads only read `appVersion`, and `downloadUpdate` pulls the HTML payload
-  from `releaseHtml` in-memory (Blob download) before falling back to the
-  GitHub raw URL for older releases.
+  update banner shown to local-file users. `publishRelease` uploads the exact
+  `index.html` string to `releaseHtml` and keeps `appVersion` lightweight
+  (label, buildId, releaseNotes, downloadUrl fallback, `hasFirebasePayload`,
+  `payloadBuildId`, and `payloadBytes`). The publisher refuses an attached or
+  fetched HTML file whose embedded `VERSION` does not equal `buildId`.
+  Regular app loads read `appVersion`; `downloadUpdate` validates the
+  Firebase payload's embedded build before creating a versioned Blob download,
+  records the downloaded build in localStorage, and only then uses the GitHub
+  raw URL as a legacy fallback. A mismatched Firebase payload is an error,
+  not a reason to send school-device users to GitHub.
 - **`local-settings.js`** is an *optional* local-only override file
   (loaded with `onerror="void 0"`); it is intentionally not in the repo.
   `window.LOCAL_SETTINGS` can pre-seed visual settings.
